@@ -1,0 +1,11 @@
+dist
+dev-dist
+coverage
+playwright-report
+test-results
+package-lock.json
+public/polices
+src/partage/api/schema.d.ts
+CLAUDE.md
+docs
+.vscode

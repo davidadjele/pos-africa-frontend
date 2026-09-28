@@ -1,0 +1,50 @@
+{
+  "erreurs": {
+    "REQUETE_INVALIDE": "Certaines informations sont invalides. Corrigez les champs indiqués puis réessayez.",
+    "NON_AUTHENTIFIE": "Votre session a expiré. Reconnectez-vous pour continuer.",
+    "ACCES_REFUSE": "Vous n’avez pas l’autorisation de faire cette action. Demandez à un gérant.",
+    "RESSOURCE_INTROUVABLE": "Cet élément n’existe plus ou a été supprimé.",
+    "METHODE_NON_AUTORISEE": "Cette opération n’est pas prise en charge.",
+    "CONFLIT_MODIFICATION": "Cet élément a été modifié sur un autre appareil. Il a été rechargé : vérifiez-le puis recommencez.",
+    "STOCK_INSUFFISANT": "Stock insuffisant pour cet article. Retirez-le de la note ou choisissez un autre produit.",
+    "ERREUR_INTERNE": "Une erreur inattendue est survenue. Réessayez ; si elle persiste, donnez le code affiché au support.",
+    "RESEAU_INDISPONIBLE": "Le serveur est injoignable. Vérifiez la connexion et réessayez."
+  },
+  "commun": {
+    "navigationPrincipale": "Navigation principale",
+    "gestion": "Gestion"
+  },
+  "caisse": {
+    "vide": {
+      "titre": "Aucun produit à vendre pour l’instant",
+      "phrase": "La prise de commande et l’encaissement arrivent au prochain lot, avec le catalogue des produits."
+    }
+  },
+  "gestion": {
+    "menu": {
+      "tableauDeBord": "Tableau de bord",
+      "caisse": "Caisse"
+    },
+    "tableauDeBord": {
+      "titre": "Tableau de bord",
+      "vide": {
+        "titre": "Aucune vente enregistrée",
+        "phrase": "Les ventes du jour, le stock à surveiller et les sessions de caisse s’afficheront ici dès les premiers encaissements."
+      }
+    }
+  },
+  "recu": {
+    "titre": "Reçu pas encore consultable",
+    "reference": "Référence",
+    "phrase": "L’affichage des reçus partagés arrive au prochain lot. Gardez ce lien : il restera valable."
+  },
+  "introuvable": {
+    "titre": "Page introuvable",
+    "phrase": "L’adresse {{chemin}} ne correspond à aucun écran. Vérifiez le lien ou revenez à la caisse.",
+    "retour": "Revenir à la caisse"
+  },
+  "miseAJour": {
+    "message": "Une nouvelle version de Tonti est disponible.",
+    "recharger": "Recharger"
+  }
+}
