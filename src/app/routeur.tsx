@@ -1,5 +1,6 @@
+import type { QueryClient } from '@tanstack/react-query'
 import {
-  createRootRoute,
+  createRootRouteWithContext,
   createRoute,
   createRouter,
   Outlet,
@@ -7,28 +8,70 @@ import {
   type RouterHistory,
 } from '@tanstack/react-router'
 import { EcranCaisse } from '../fonctionnalites/caisse/EcranCaisse'
+import { PageChoixEntreprise } from '../fonctionnalites/connexion/PageChoixEntreprise'
+import { PageConnexion } from '../fonctionnalites/connexion/PageConnexion'
+import { PageEtablissements } from '../fonctionnalites/etablissements/PageEtablissements'
 import { TableauDeBord } from '../fonctionnalites/gestion/TableauDeBord'
+import { PageInscription } from '../fonctionnalites/inscription/PageInscription'
+import { PageEntreprises } from '../fonctionnalites/plateforme/PageEntreprises'
+import { PageNouvelleEntreprise } from '../fonctionnalites/plateforme/PageNouvelleEntreprise'
 import { PageRecu } from '../fonctionnalites/recu/PageRecu'
+import {
+  exigerChoixEntreprise,
+  exigerInscriptionOuverte,
+  exigerPortee,
+  redirigerSiSessionOuverte,
+} from './gardes'
 import { MiseEnPageCaisse } from './mises-en-page/MiseEnPageCaisse'
 import { MiseEnPageGestion } from './mises-en-page/MiseEnPageGestion'
+import { MiseEnPagePlateforme } from './mises-en-page/MiseEnPagePlateforme'
+import { PageErreur } from './PageErreur'
 import { PageIntrouvable } from './PageIntrouvable'
 
-const racine = createRootRoute({
+export interface ContexteRouteur {
+  clientRequetes: QueryClient
+}
+
+const racine = createRootRouteWithContext<ContexteRouteur>()({
   component: Outlet,
   notFoundComponent: PageIntrouvable,
+  errorComponent: PageErreur,
 })
 
 const accueil = createRoute({
   getParentRoute: () => racine,
   path: '/',
-  beforeLoad: () => {
-    throw redirect({ to: '/caisse', replace: true })
+  beforeLoad: async ({ context }) => {
+    await redirigerSiSessionOuverte(context.clientRequetes)
+    throw redirect({ to: '/connexion', replace: true })
   },
+})
+
+const connexion = createRoute({
+  getParentRoute: () => racine,
+  path: '/connexion',
+  beforeLoad: ({ context }) => redirigerSiSessionOuverte(context.clientRequetes),
+  component: PageConnexion,
+})
+
+const choixEntreprise = createRoute({
+  getParentRoute: () => racine,
+  path: '/choix-entreprise',
+  beforeLoad: ({ context }) => exigerChoixEntreprise(context.clientRequetes),
+  component: PageChoixEntreprise,
+})
+
+const inscription = createRoute({
+  getParentRoute: () => racine,
+  path: '/inscription',
+  beforeLoad: ({ context }) => exigerInscriptionOuverte(context.clientRequetes),
+  component: PageInscription,
 })
 
 const caisse = createRoute({
   getParentRoute: () => racine,
   path: '/caisse',
+  beforeLoad: ({ context }) => exigerPortee(context.clientRequetes, 'ENTREPRISE'),
   component: MiseEnPageCaisse,
 })
 
@@ -41,6 +84,7 @@ const caisseAccueil = createRoute({
 const gestion = createRoute({
   getParentRoute: () => racine,
   path: '/gestion',
+  beforeLoad: ({ context }) => exigerPortee(context.clientRequetes, 'ENTREPRISE'),
   component: MiseEnPageGestion,
 })
 
@@ -48,6 +92,44 @@ const gestionAccueil = createRoute({
   getParentRoute: () => gestion,
   path: '/',
   component: TableauDeBord,
+})
+
+const etablissements = createRoute({
+  getParentRoute: () => gestion,
+  path: '/etablissements',
+  component: PageEtablissements,
+})
+
+const plateforme = createRoute({
+  getParentRoute: () => racine,
+  path: '/plateforme',
+  beforeLoad: ({ context }) => exigerPortee(context.clientRequetes, 'PLATEFORME'),
+  component: MiseEnPagePlateforme,
+})
+
+export interface RechercheEntreprises {
+  /** Nom de l'entreprise tout juste créée, pour le confirmer. */
+  creee?: string
+  compteExistant?: boolean
+}
+
+const plateformeAccueil = createRoute({
+  getParentRoute: () => plateforme,
+  path: '/',
+  validateSearch: (recherche: Record<string, unknown>): RechercheEntreprises => ({
+    ...(typeof recherche.creee === 'string' ? { creee: recherche.creee } : {}),
+    ...(recherche.compteExistant === true ? { compteExistant: true } : {}),
+  }),
+  component: function RouteEntreprises() {
+    const recherche = plateformeAccueil.useSearch()
+    return <PageEntreprises recherche={recherche} />
+  },
+})
+
+const nouvelleEntreprise = createRoute({
+  getParentRoute: () => plateforme,
+  path: '/entreprises/nouvelle',
+  component: PageNouvelleEntreprise,
 })
 
 const recu = createRoute({
@@ -61,14 +143,25 @@ const recu = createRoute({
 
 const arbre = racine.addChildren([
   accueil,
+  connexion,
+  choixEntreprise,
+  inscription,
   caisse.addChildren([caisseAccueil]),
-  gestion.addChildren([gestionAccueil]),
+  gestion.addChildren([gestionAccueil, etablissements]),
+  plateforme.addChildren([plateformeAccueil, nouvelleEntreprise]),
   recu,
 ])
 
-export function creerRouteur(historique?: RouterHistory) {
+export function creerRouteur({
+  clientRequetes,
+  historique,
+}: {
+  clientRequetes: QueryClient
+  historique?: RouterHistory
+}) {
   return createRouter({
     routeTree: arbre,
+    context: { clientRequetes },
     // Une adresse inconnue affiche la page introuvable complète, jamais dans une mise en page d'espace.
     notFoundMode: 'root',
     ...(historique ? { history: historique } : {}),

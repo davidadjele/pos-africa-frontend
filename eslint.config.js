@@ -77,7 +77,7 @@ export default defineConfig(
     extends: [tseslint.configs.disableTypeChecked],
   },
   {
-    files: ['*.config.{js,ts}', 'scripts/**', 'e2e/**'],
+    files: ['*.config.{js,ts}', 'scripts/**', 'e2e/**', 'e2e-reel/**'],
     languageOptions: { globals: { ...globals.node } },
   },
 )

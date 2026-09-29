@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { BarreHaute } from '../../partage/ui/BarreHaute'
 import { EtatVide } from '../../partage/ui/EtatVide'
 
-export function PageRecu({ jeton }: { jeton: string }) {
+export function PageRecu({ jeton }: Readonly<{ jeton: string }>) {
   const { t } = useTranslation()
   return (
     <div className="flex min-h-dvh flex-col bg-fond">

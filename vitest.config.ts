@@ -15,7 +15,6 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./tests/configuration.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
-    env: { VITE_URL_API: 'http://api.test' },
     restoreMocks: true,
     unstubEnvs: true,
     coverage: {

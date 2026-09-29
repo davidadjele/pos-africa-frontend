@@ -2,17 +2,36 @@
   "erreurs": {
     "REQUETE_INVALIDE": "Certaines informations sont invalides. Corrigez les champs indiqués puis réessayez.",
     "NON_AUTHENTIFIE": "Votre session a expiré. Reconnectez-vous pour continuer.",
+    "IDENTIFIANTS_INVALIDES": "Identifiant ou mot de passe incorrect. Vérifiez votre saisie et réessayez.",
+    "SESSION_EXPIREE": "Votre session a expiré. Reconnectez-vous pour continuer.",
     "ACCES_REFUSE": "Vous n’avez pas l’autorisation de faire cette action. Demandez à un gérant.",
+    "AUCUNE_ENTREPRISE": "Ce compte n’est rattaché à aucune entreprise active. Contactez le propriétaire de votre établissement.",
+    "ENTREPRISE_SUSPENDUE": "L’accès à cette entreprise est suspendu. Contactez le support de Tonti.",
     "RESSOURCE_INTROUVABLE": "Cet élément n’existe plus ou a été supprimé.",
     "METHODE_NON_AUTORISEE": "Cette opération n’est pas prise en charge.",
     "CONFLIT_MODIFICATION": "Cet élément a été modifié sur un autre appareil. Il a été rechargé : vérifiez-le puis recommencez.",
+    "CODE_ETABLISSEMENT_DEJA_UTILISE": "Ce code est déjà utilisé par un autre établissement. Choisissez-en un autre.",
     "STOCK_INSUFFISANT": "Stock insuffisant pour cet article. Retirez-le de la note ou choisissez un autre produit.",
+    "COMPTE_VERROUILLE": "Trop d’essais infructueux : le compte est verrouillé pendant quelques minutes. Réessayez plus tard.",
+    "TROP_DE_TENTATIVES": "Trop de tentatives. Patientez quelques minutes avant de réessayer.",
     "ERREUR_INTERNE": "Une erreur inattendue est survenue. Réessayez ; si elle persiste, donnez le code affiché au support.",
     "RESEAU_INDISPONIBLE": "Le serveur est injoignable. Vérifiez la connexion et réessayez."
   },
+  "erreursAvecDelai": {
+    "COMPTE_VERROUILLE": "Trop d’essais infructueux : le compte est verrouillé. Réessayez dans {{duree}}.",
+    "TROP_DE_TENTATIVES": "Trop de tentatives. Réessayez dans {{duree}}."
+  },
+  "duree": {
+    "secondes": "{{nombre}} s",
+    "minutes": "{{nombre}} min"
+  },
   "commun": {
     "navigationPrincipale": "Navigation principale",
-    "gestion": "Gestion"
+    "gestion": "Gestion",
+    "codeSupport": "Code pour le support :",
+    "reessayer": "Réessayer",
+    "annuler": "Annuler",
+    "chargement": "Chargement…"
   },
   "caisse": {
     "vide": {
@@ -23,7 +42,8 @@
   "gestion": {
     "menu": {
       "tableauDeBord": "Tableau de bord",
-      "caisse": "Caisse"
+      "caisse": "Caisse",
+      "etablissements": "Établissements"
     },
     "tableauDeBord": {
       "titre": "Tableau de bord",
@@ -40,11 +60,175 @@
   },
   "introuvable": {
     "titre": "Page introuvable",
-    "phrase": "L’adresse {{chemin}} ne correspond à aucun écran. Vérifiez le lien ou revenez à la caisse.",
-    "retour": "Revenir à la caisse"
+    "phrase": "L’adresse {{chemin}} ne correspond à aucun écran. Vérifiez le lien ou revenez à l’accueil.",
+    "retour": "Revenir à l’accueil"
   },
   "miseAJour": {
     "message": "Une nouvelle version de Tonti est disponible.",
     "recharger": "Recharger"
+  },
+  "pagination": {
+    "libelle": "Pagination",
+    "resume": "{{debut}}–{{fin}} sur {{total}}",
+    "precedente": "Page précédente",
+    "suivante": "Page suivante"
+  },
+  "validation": {
+    "obligatoire": "Ce champ est obligatoire.",
+    "codeFormat": "2 à 10 lettres majuscules ou chiffres, sans espace.",
+    "tropLong": "Ce texte est trop long.",
+    "motDePasseCourt": "Le mot de passe doit faire au moins 8 caractères.",
+    "contact": "Saisissez un téléphone ou un e-mail.",
+    "email": "Adresse e-mail invalide."
+  },
+  "barre": {
+    "entreprise": "Entreprise",
+    "deconnexion": "Se déconnecter"
+  },
+  "connexion": {
+    "titre": "Se connecter",
+    "phrase": "Avec le téléphone ou l’e-mail de votre compte Tonti.",
+    "identifiant": "Téléphone ou e-mail",
+    "identifiantAide": "Téléphone : numéro local ({{pays}}), espaces facultatifs. Autre pays : commencez par « + » et son indicatif.",
+    "motDePasse": "Mot de passe",
+    "envoyer": "Se connecter",
+    "enCours": "Connexion…",
+    "oubli": "Mot de passe oublié ? Contactez le propriétaire de votre établissement.",
+    "pasDeCompte": "Pas encore de compte Tonti ?",
+    "inscription": "Créer mon entreprise",
+    "validation": {
+      "identifiant": "Saisissez votre téléphone ou votre e-mail.",
+      "motDePasse": "Saisissez votre mot de passe."
+    }
+  },
+  "choixEntreprise": {
+    "titre": "Choisir l’entreprise",
+    "phrase": "Votre compte donne accès à plusieurs entreprises. Vous pourrez en changer depuis la barre du haut.",
+    "liste": "Entreprises de votre compte"
+  },
+  "etablissements": {
+    "titre": "Établissements",
+    "ajouter": "Ajouter un établissement",
+    "tableau": "Établissements de l’entreprise",
+    "colonnes": {
+      "code": "Code",
+      "nom": "Nom",
+      "ville": "Ville",
+      "fuseau": "Fuseau horaire",
+      "actions": "Actions"
+    },
+    "modifier": "Modifier",
+    "modifierNomme": "Modifier {{nom}}",
+    "chargement": "Chargement des établissements…",
+    "vide": {
+      "titre": "Aucun établissement",
+      "phrase": "Ajoutez votre premier point de vente pour y ouvrir une caisse.",
+      "phraseSansDroit": "Seul un responsable avec le droit de gérer les établissements peut en ajouter."
+    },
+    "formulaire": {
+      "titreCreation": "Nouvel établissement",
+      "titreModification": "Modifier {{nom}}",
+      "code": "Code",
+      "codeAide": "2 à 10 lettres majuscules ou chiffres, par exemple BE.",
+      "nom": "Nom",
+      "ville": "Ville",
+      "adresse": "Adresse",
+      "fuseau": "Fuseau horaire",
+      "creer": "Créer l’établissement",
+      "enregistrer": "Enregistrer les modifications"
+    },
+    "cree": "{{nom}} a été créé.",
+    "modifie": "{{nom}} a été modifié."
+  },
+  "plateforme": {
+    "titreBarre": "Administration de la plateforme",
+    "entreprises": {
+      "titre": "Entreprises",
+      "creer": "Créer une entreprise",
+      "tableau": "Entreprises clientes",
+      "colonnes": {
+        "entreprise": "Entreprise",
+        "pays": "Pays",
+        "etablissements": "Établissements",
+        "statut": "Statut",
+        "actions": "Actions"
+      },
+      "creeeLe": "Créée le {{date}}",
+      "statut": {
+        "ACTIVE": "Active",
+        "SUSPENDUE": "Suspendue"
+      },
+      "suspendre": "Suspendre",
+      "suspendreNomme": "Suspendre {{nom}}",
+      "reactiver": "Réactiver",
+      "reactiverNomme": "Réactiver {{nom}}",
+      "chargement": "Chargement des entreprises…",
+      "vide": {
+        "titre": "Aucune entreprise",
+        "phrase": "Créez la première entreprise cliente : son propriétaire pourra ensuite se connecter."
+      },
+      "creee": "{{nom}} a été créée. Le propriétaire se connecte avec son téléphone ou son e-mail et le mot de passe provisoire.",
+      "creeeCompteExistant": "{{nom}} a été créée et rattachée au compte existant du propriétaire, qui garde son mot de passe.",
+      "suspension": {
+        "titre": "Suspendre {{nom}} ?",
+        "consequence": "Plus personne ne pourra se connecter à cette entreprise et les sessions en cours seront coupées. Vous pourrez la réactiver à tout moment.",
+        "annuler": "Garder l’entreprise active",
+        "confirmer": "Suspendre l’entreprise",
+        "faite": "{{nom}} est suspendue."
+      },
+      "reactivation": {
+        "titre": "Réactiver {{nom}} ?",
+        "consequence": "Ses utilisateurs pourront de nouveau se connecter.",
+        "annuler": "Laisser suspendue",
+        "confirmer": "Réactiver l’entreprise",
+        "faite": "{{nom}} est de nouveau active."
+      }
+    },
+    "nouvelle": {
+      "titre": "Nouvelle entreprise",
+      "retour": "Retour aux entreprises"
+    }
+  },
+  "formulaireEntreprise": {
+    "sections": {
+      "entreprise": "Entreprise",
+      "proprietaire": "Propriétaire",
+      "etablissement": "Premier établissement"
+    },
+    "nomEntreprise": "Nom de l’entreprise",
+    "pays": "Pays",
+    "devise": "Devise",
+    "fuseau": "Fuseau horaire",
+    "langue": "Langue",
+    "langues": {
+      "fr": "Français",
+      "en": "English"
+    },
+    "prenom": "Prénom",
+    "nom": "Nom",
+    "telephone": "Téléphone",
+    "telephoneAide": "Numéro local ({{pays}}), espaces facultatifs. Autre pays : commencez par « + » et son indicatif.",
+    "email": "E-mail",
+    "contactAide": "Un téléphone ou un e-mail au moins : il sert d’identifiant de connexion.",
+    "motDePasseProvisoire": "Mot de passe provisoire",
+    "motDePasseProvisoireAide": "8 caractères au minimum. Obligatoire si le propriétaire n’a pas encore de compte Tonti.",
+    "motDePasse": "Mot de passe",
+    "motDePasseAide": "8 caractères au minimum.",
+    "nomEtablissement": "Nom de l’établissement",
+    "code": "Code de l’établissement",
+    "codeAide": "2 à 10 lettres majuscules ou chiffres, par exemple BE.",
+    "ville": "Ville",
+    "adresse": "Adresse",
+    "creer": "Créer l’entreprise"
+  },
+  "inscription": {
+    "titre": "Créer mon entreprise",
+    "phrase": "Votre entreprise, votre premier établissement et votre compte de propriétaire, en une seule fois.",
+    "envoyer": "Créer mon entreprise",
+    "dejaCompte": "Déjà un compte Tonti ?",
+    "connexion": "Se connecter"
+  },
+  "erreurPage": {
+    "titre": "Impossible d’afficher cette page"
   }
 }

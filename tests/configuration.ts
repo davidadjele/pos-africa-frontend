@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
 import { afterAll, afterEach, beforeAll } from 'vitest'
+import { reinitialiserSession } from '../src/partage/auth/session'
 import '../src/partage/i18n/i18n'
 import { serveurMsw } from './serveurMsw'
 
@@ -14,6 +15,8 @@ beforeAll(() => {
 afterEach(() => {
   cleanup()
   serveurMsw.resetHandlers()
+  // La session vit dans des variables de module : chaque test repart d'une application neuve.
+  reinitialiserSession()
 })
 
 afterAll(() => {

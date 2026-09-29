@@ -1,18 +1,18 @@
 import { Link, Outlet } from '@tanstack/react-router'
 import { LayoutDashboard } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useSession } from '../../partage/auth/useSession'
 import { BarreHaute } from '../../partage/ui/BarreHaute'
-import { ETABLISSEMENT_PROVISOIRE } from '../etablissementProvisoire'
+import { CLASSES_CONTROLE_BARRE } from './MenuCompte'
 
 export function MiseEnPageCaisse() {
   const { t } = useTranslation()
+  const { moi } = useSession()
+  const entreprise = moi?.entrepriseCourante
   return (
     <div className="flex h-dvh flex-col bg-fond">
-      <BarreHaute etablissement={ETABLISSEMENT_PROVISOIRE}>
-        <Link
-          to="/gestion"
-          className="inline-flex min-h-cible-min items-center gap-2 rounded-normal border border-barre-trait px-3 text-libelle text-barre-texte hover:bg-barre-trait"
-        >
+      <BarreHaute {...(entreprise ? { contexte: { titre: entreprise.nom } } : {})}>
+        <Link to="/gestion" className={CLASSES_CONTROLE_BARRE}>
           <LayoutDashboard aria-hidden="true" size={18} />
           {t('commun.gestion')}
         </Link>

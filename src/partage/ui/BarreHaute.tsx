@@ -1,30 +1,33 @@
 import type { ReactNode } from 'react'
 
-export interface Etablissement {
-  nom: string
-  quartier: string
+/** Où l'on se trouve : entreprise et ville, ou espace (administration de la plateforme). */
+export interface ContexteBarre {
+  titre: string
+  detail?: string | undefined
 }
 
 export function BarreHaute({
-  etablissement,
+  contexte,
   children,
-}: {
-  etablissement?: Etablissement
+}: Readonly<{
+  contexte?: ContexteBarre
   children?: ReactNode
-}) {
+}>) {
   return (
     <header
       data-zone="barre"
-      className="flex h-barre-hauteur shrink-0 items-center gap-5 bg-barre-fond px-5 text-barre-texte"
+      className="flex h-barre-hauteur shrink-0 items-center gap-3 bg-barre-fond px-4 text-barre-texte sm:gap-5 sm:px-5"
     >
       <span className="text-marque uppercase">TONTI</span>
-      {etablissement && (
-        <div className="flex min-w-0 flex-col border-l border-barre-trait pl-5">
-          <span className="truncate text-libelle font-semibold">{etablissement.nom}</span>
-          <span className="truncate text-legende text-barre-attenue">{etablissement.quartier}</span>
+      {contexte && (
+        <div className="flex min-w-0 flex-col border-l border-barre-trait pl-3 sm:pl-5">
+          <span className="truncate text-libelle font-semibold">{contexte.titre}</span>
+          {contexte.detail !== undefined && (
+            <span className="truncate text-legende text-barre-attenue">{contexte.detail}</span>
+          )}
         </div>
       )}
-      {children && <div className="ml-auto flex items-center gap-2">{children}</div>}
+      {children && <div className="ml-auto flex shrink-0 items-center gap-2">{children}</div>}
     </header>
   )
 }

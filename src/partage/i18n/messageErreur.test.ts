@@ -54,4 +54,35 @@ describe('messageErreur', () => {
       expect(en.erreurs[code], code).toBeTruthy()
     }
   })
+  it('indique en minutes le délai imposé après trop de tentatives', () => {
+    const erreur = new ErreurApi(
+      { statut: 429, code: 'TROP_DE_TENTATIVES', message: 'Trop de tentatives.' },
+      90,
+    )
+
+    expect(messageErreur(erreur)).toBe('Trop de tentatives. Réessayez dans 2 min.')
+  })
+
+  it('indique en secondes un délai de moins d’une minute', () => {
+    const erreur = new ErreurApi(
+      { statut: 429, code: 'TROP_DE_TENTATIVES', message: 'Trop de tentatives.' },
+      45,
+    )
+
+    expect(messageErreur(erreur)).toBe('Trop de tentatives. Réessayez dans 45 s.')
+  })
+
+  it('reste générique sur la durée du verrouillage quand le serveur ne la donne pas', () => {
+    const erreur = new ErreurApi({ statut: 423, code: 'COMPTE_VERROUILLE', message: 'x' })
+
+    expect(messageErreur(erreur)).toBe(fr.erreurs.COMPTE_VERROUILLE)
+  })
+
+  it('ne dit jamais lequel de l’identifiant ou du mot de passe est faux', () => {
+    const erreur = new ErreurApi({ statut: 401, code: 'IDENTIFIANTS_INVALIDES', message: 'x' })
+
+    expect(messageErreur(erreur)).toBe(
+      'Identifiant ou mot de passe incorrect. Vérifiez votre saisie et réessayez.',
+    )
+  })
 })
