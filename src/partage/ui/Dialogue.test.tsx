@@ -106,4 +106,27 @@ describe('Dialogue', () => {
     expect(screen.getByRole('button', { name: 'Réactiver l’entreprise' })).toBeDisabled()
     expect(screen.getByText('Erreur éventuelle')).toBeInTheDocument()
   })
+
+  it('sans action d’annulation, n’offre qu’un bouton et ne se ferme pas sur Échap', async () => {
+    const noter = vi.fn()
+    render(
+      <Dialogue
+        titre="Nouveau PIN de Kossi Agbeko"
+        consequence="Ce PIN temporaire ne sera plus affiché."
+        libelleConfirmer="J’ai noté le PIN"
+        surConfirmer={noter}
+      >
+        <p>730 264</p>
+      </Dialogue>,
+    )
+
+    const seulBouton = screen.getByRole('button')
+    expect(seulBouton).toHaveAccessibleName('J’ai noté le PIN')
+    expect(seulBouton).toHaveFocus()
+    await userEvent.keyboard('{Escape}')
+    expect(noter).not.toHaveBeenCalled()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    await userEvent.click(seulBouton)
+    expect(noter).toHaveBeenCalledOnce()
+  })
 })

@@ -5,7 +5,7 @@
     "IDENTIFIANTS_INVALIDES": "Incorrect identifier or password. Check what you typed and try again.",
     "SESSION_EXPIREE": "Your session has expired. Sign in again to continue.",
     "ACCES_REFUSE": "You are not allowed to do this. Ask a manager.",
-    "AUCUNE_ENTREPRISE": "This account is not linked to any active business. Contact the owner of your venue.",
+    "AUCUNE_ENTREPRISE": "This account has no back-office access to any active business. Contact the owner of your venue.",
     "ENTREPRISE_SUSPENDUE": "Access to this business is suspended. Contact Tonti support.",
     "RESSOURCE_INTROUVABLE": "This item no longer exists or has been deleted.",
     "METHODE_NON_AUTORISEE": "This operation is not supported.",
@@ -31,7 +31,9 @@
     "codeSupport": "Code for support:",
     "reessayer": "Try again",
     "annuler": "Cancel",
-    "chargement": "Loading…"
+    "chargement": "Loading…",
+    "copier": "Copy",
+    "copie": "Copied"
   },
   "caisse": {
     "vide": {
@@ -43,7 +45,8 @@
     "menu": {
       "tableauDeBord": "Dashboard",
       "caisse": "Till",
-      "etablissements": "Venues"
+      "etablissements": "Venues",
+      "personnel": "Staff"
     },
     "tableauDeBord": {
       "titre": "Dashboard",
@@ -167,7 +170,7 @@
         "titre": "No business",
         "phrase": "Create the first client business: its owner will then be able to sign in."
       },
-      "creee": "{{nom}} has been created. The owner signs in with their phone or email and the temporary password.",
+      "creee": "{{nom}} has been created.",
       "creeeCompteExistant": "{{nom}} has been created and linked to the owner's existing account, who keeps their password.",
       "suspension": {
         "titre": "Suspend {{nom}}?",
@@ -210,8 +213,6 @@
     "telephoneAide": "Local number ({{pays}}), spaces optional. Other countries: start with “+” and the country code.",
     "email": "Email",
     "contactAide": "At least a phone number or an email: it is used to sign in.",
-    "motDePasseProvisoire": "Temporary password",
-    "motDePasseProvisoireAide": "At least 8 characters. Required if the owner has no Tonti account yet.",
     "motDePasse": "Password",
     "motDePasseAide": "At least 8 characters.",
     "nomEtablissement": "Venue name",
@@ -230,5 +231,127 @@
   },
   "erreurPage": {
     "titre": "This page cannot be displayed"
+  },
+  "roles": {
+    "PROPRIETAIRE": "Owner",
+    "ADMIN": "Administrator",
+    "GERANT": "Manager",
+    "CAISSIER": "Cashier",
+    "SERVEUR": "Server",
+    "CUISINE": "Kitchen",
+    "PERSONNALISE": "Custom role"
+  },
+  "personnel": {
+    "titre": "Staff",
+    "phrase": "Each employee has one role per venue. The till opens with a PIN; the back office, with an account.",
+    "ajouter": "Add an employee",
+    "tableau": "Company staff",
+    "colonnes": {
+      "employe": "Employee",
+      "roles": "Role per venue",
+      "acces": "Access",
+      "pin": "Till PIN",
+      "statut": "Status",
+      "actions": "Actions"
+    },
+    "caisseSeulement": "Till only",
+    "touteLEntreprise": "Whole company",
+    "roleDans": "{{lieu}}: {{role}}",
+    "acces": {
+      "backOffice": "Back office",
+      "caisse": "Till"
+    },
+    "pin": {
+      "aChanger": "To change",
+      "defini": "Set"
+    },
+    "statut": {
+      "actif": "Active",
+      "desactive": "Deactivated"
+    },
+    "modifier": "Edit",
+    "modifierNomme": "Edit {{nom}}",
+    "reinitialiserPin": "Reset PIN",
+    "desactiver": "Deactivate",
+    "reactiver": "Reactivate",
+    "reactiverNomme": "Reactivate {{nom}}",
+    "chargement": "Loading staff…",
+    "vide": {
+      "titre": "No employees",
+      "phrase": "Add your servers, cashiers and managers: each will get a PIN to open the till."
+    },
+    "cree": "{{nom}} has been added to the staff.",
+    "modifie": "{{nom}} has been updated.",
+    "reactive": "{{nom}} is active again.",
+    "desactive": "{{nom}} is deactivated.",
+    "desactivation": {
+      "titre": "Deactivate {{nom}}?",
+      "consequence": "{{nom}} will no longer be able to sign in, neither at the till nor in the back office, and open sessions will be closed. Their sales stay under their name.",
+      "annuler": "Keep the employee active",
+      "confirmer": "Deactivate the employee"
+    },
+    "pinConfirmation": {
+      "titre": "Reset {{nom}}’s PIN?",
+      "consequence": "The old PIN will stop working. A new temporary PIN will be shown once; it must be changed at the next till sign-in.",
+      "annuler": "Cancel",
+      "confirmer": "Generate a new PIN"
+    },
+    "codes": {
+      "titre": "Access codes for {{nom}}",
+      "titrePin": "New PIN for {{nom}}",
+      "consequence": "Hand them over in person or in writing. They will not be shown again: they will be replaced at first sign-in.",
+      "pin": "Temporary till PIN",
+      "motDePasse": "Temporary back-office password",
+      "identifiant": "Sign-in identifier: {{identifiant}}",
+      "perdu": "Lost code? “Reset PIN” generates a new one.",
+      "noter": "I have noted the codes",
+      "noterPin": "I have noted the PIN",
+      "compteExistant": "This phone number or email already had a Tonti account: {{nom}} will sign in to the back office with their usual password and see {{entreprise}} among their businesses. Check with the person that it really is their number or email; otherwise, remove their access."
+    },
+    "formulaire": {
+      "titreCreation": "Add an employee",
+      "titreModification": "Edit {{nom}}",
+      "identite": "Identity",
+      "prenom": "First name",
+      "nom": "Last name",
+      "roles": "Role",
+      "rolesAide": "One role per venue. Leave “None” where the employee does not work.",
+      "aucun": "None",
+      "roleA": "Role at {{lieu}}",
+      "adminAide": "All rights, in every venue, including those opened later.",
+      "acces": "Back-office access",
+      "donnerAcces": "Give back-office access",
+      "accesAide": "The chosen role allows it. Servers, cashiers and kitchen staff only use the till.",
+      "accesImpossible": "None of the chosen roles opens the back office: the employee will use the till with their PIN.",
+      "accesSansRole": "Choose a role first: the back office opens with the {{roles}} role.",
+      "accesExistant": "Signs in to the back office with {{identifiant}}.",
+      "codesInfo": "On saving, a temporary PIN is generated, and a temporary password if back-office access is given. They are shown only once.",
+      "creer": "Save the employee",
+      "enregistrer": "Save changes",
+      "conflit": "This employee was changed in the meantime: the form now shows the up-to-date information. Redo your changes.",
+      "ou": "or",
+      "portee": "Scope of rights",
+      "parEtablissement": "Role per venue: manager, cashier, server or kitchen",
+      "touteLEntreprise": "Administrator of the whole company"
+    },
+    "validation": {
+      "role": "Choose at least one role."
+    },
+    "autresEtablissements_one": "+ {{count}} other venue",
+    "autresEtablissements_other": "+ {{count}} other venues",
+    "plusDActions": "More actions for {{nom}}"
+  },
+  "motDePasse": {
+    "titre": "Choose your password",
+    "phrase": "This is your first sign-in: replace the temporary password with a personal one.",
+    "actuel": "Temporary password",
+    "nouveau": "New password",
+    "nouveauAide": "At least 8 characters.",
+    "confirmation": "Confirm the new password",
+    "envoyer": "Save and sign in again",
+    "enCours": "Saving…",
+    "sessions": "Your other open sessions will be closed.",
+    "different": "The two passwords do not match.",
+    "change": "Password saved. Sign in again with your new password."
   }
 }

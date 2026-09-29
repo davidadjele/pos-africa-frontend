@@ -13,7 +13,11 @@ export const MAQUIS = { id: '6b0e6a52-7a6a-4d57-9d3e-1c1a9b1f0a01', nom: 'Maquis
 export const FLAMBOYANT = { id: '6b0e6a52-7a6a-4d57-9d3e-1c1a9b1f0a02', nom: 'Bar Le Flamboyant' }
 
 export const MOI_TANTI: ReponseMoi = {
-  compte: { id: '0d6a8f3e-0000-4c1b-9a51-5d7b9b0e0001', administrateurPlateforme: false },
+  compte: {
+    id: '0d6a8f3e-0000-4c1b-9a51-5d7b9b0e0001',
+    administrateurPlateforme: false,
+    motDePasseAChanger: false,
+  },
   portee: 'ENTREPRISE',
   utilisateur: { id: '0d6a8f3e-0000-4c1b-9a51-5d7b9b0e0101', prenom: 'Tanti', nom: 'Akouvi' },
   entrepriseCourante: {
@@ -24,7 +28,7 @@ export const MOI_TANTI: ReponseMoi = {
     fuseauHoraire: 'Africa/Lome',
   },
   entreprises: [MAQUIS],
-  permissions: ['ETABLISSEMENT_GERER'],
+  permissions: ['BACK_OFFICE', 'ETABLISSEMENT_GERER', 'PERSONNEL_GERER'],
 }
 
 export const MOI_SERVEUR: ReponseMoi = {
@@ -37,6 +41,7 @@ export const MOI_ADMIN: ReponseMoi = {
   compte: {
     id: '0d6a8f3e-0000-4c1b-9a51-5d7b9b0e0009',
     administrateurPlateforme: true,
+    motDePasseAChanger: false,
     email: 'admin@tonti.africa',
   },
   portee: 'PLATEFORME',

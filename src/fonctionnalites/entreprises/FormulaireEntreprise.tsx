@@ -20,8 +20,8 @@ import { Bouton } from '../../partage/ui/Bouton'
 import { ChampSaisie, ChampSelection } from '../../partage/ui/ChampSaisie'
 
 /**
- * Plateforme : l'équipe Tonti crée l'entreprise, avec un mot de passe provisoire facultatif (un
- * propriétaire qui a déjà un compte le garde). Inscription : le propriétaire choisit son mot de passe.
+ * Plateforme : l'équipe Tonti crée l'entreprise ; le serveur génère un mot de passe temporaire pour un
+ * nouveau propriétaire (celui qui a déjà un compte le garde). Inscription : il choisit son mot de passe.
  */
 export type ModeFormulaire = 'plateforme' | 'inscription'
 
@@ -68,8 +68,7 @@ function creerSchema(mode: ModeFormulaire) {
           message: 'validation.contact',
         })
       }
-      const motDePasseExige = mode === 'inscription' || proprietaire.motDePasse !== ''
-      if (motDePasseExige && proprietaire.motDePasse.length < 8) {
+      if (mode === 'inscription' && proprietaire.motDePasse.length < 8) {
         contexte.addIssue({
           code: 'custom',
           path: ['proprietaire', 'motDePasse'],
@@ -130,12 +129,7 @@ export function demandeDepuis(
   }
   return {
     entreprise,
-    proprietaire: {
-      prenom,
-      nom,
-      ...sansVides(contact),
-      ...(motDePasse === '' ? {} : { motDePasseProvisoire: motDePasse }),
-    },
+    proprietaire: { prenom, nom, ...sansVides(contact) },
     etablissement: etablissementComplet,
   }
 }
@@ -184,10 +178,7 @@ export function FormulaireEntreprise({
     try {
       await surEnvoyer(saisie)
     } catch (erreurEnvoi) {
-      placerErreursServeur(erreurEnvoi, setError, {
-        champs: CHAMPS,
-        alias: { 'proprietaire.motDePasseProvisoire': 'proprietaire.motDePasse' },
-      })
+      placerErreursServeur(erreurEnvoi, setError, { champs: CHAMPS })
       setErreur(erreurEnvoi)
     }
   }
@@ -294,24 +285,18 @@ export function FormulaireEntreprise({
           erreur={message(errors.proprietaire?.email?.message)}
           {...register('proprietaire.email')}
         />
-        <ChampSaisie
-          libelle={
-            mode === 'inscription'
-              ? t('formulaireEntreprise.motDePasse')
-              : t('formulaireEntreprise.motDePasseProvisoire')
-          }
-          type={mode === 'inscription' ? 'password' : 'text'}
-          autoComplete="new-password"
-          obligatoire={mode === 'inscription'}
-          maxLength={128}
-          aide={
-            mode === 'inscription'
-              ? t('formulaireEntreprise.motDePasseAide')
-              : t('formulaireEntreprise.motDePasseProvisoireAide')
-          }
-          erreur={message(errors.proprietaire?.motDePasse?.message)}
-          {...register('proprietaire.motDePasse')}
-        />
+        {mode === 'inscription' && (
+          <ChampSaisie
+            libelle={t('formulaireEntreprise.motDePasse')}
+            type="password"
+            autoComplete="new-password"
+            obligatoire
+            maxLength={128}
+            aide={t('formulaireEntreprise.motDePasseAide')}
+            erreur={message(errors.proprietaire?.motDePasse?.message)}
+            {...register('proprietaire.motDePasse')}
+          />
+        )}
       </Section>
 
       <Section titre={t('formulaireEntreprise.sections.etablissement')}>

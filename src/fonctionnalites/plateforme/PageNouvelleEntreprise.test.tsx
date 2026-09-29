@@ -28,7 +28,6 @@ async function remplir() {
   await userEvent.type(proprietaire.getByLabelText(/^Prénom/), 'Tanti')
   await userEvent.type(proprietaire.getByLabelText(/^Nom/), 'Akouvi')
   await userEvent.type(proprietaire.getByLabelText(/^Téléphone/), '+228 90 11 22 33')
-  await userEvent.type(proprietaire.getByLabelText(/^Mot de passe provisoire/), 'Tanti-2026')
   const etablissement = section('Premier établissement')
   await userEvent.type(etablissement.getByLabelText(/^Nom de l’établissement/), 'Bè Kpota')
   await userEvent.type(etablissement.getByLabelText(/^Code/), 'BE')
@@ -97,6 +96,7 @@ describe('PageNouvelleEntreprise', () => {
             etablissementId: '9a1f0c2e-0000-4b8e-8f6a-000000000001',
             proprietaireCompteId: '0d6a8f3e-0000-4c1b-9a51-5d7b9b0e0001',
             compteExistant: false,
+            motDePasseTemporaire: 'kp7mzr4qtx9w',
           },
           { status: 201 },
         )
@@ -106,6 +106,11 @@ describe('PageNouvelleEntreprise', () => {
 
     await remplir()
     await userEvent.click(screen.getByRole('button', { name: 'Créer l’entreprise' }))
+
+    const codes = await screen.findByRole('dialog', { name: 'Codes d’accès de Tanti Akouvi' })
+    expect(within(codes).getByText('zr4q')).toBeVisible()
+    expect(codes).toHaveTextContent('+228 90 11 22 33')
+    await userEvent.click(within(codes).getByRole('button', { name: 'J’ai noté les codes' }))
 
     expect(await screen.findByRole('status')).toHaveTextContent('Maquis Chez Tanti a été créée.')
     expect(routeur.state.location.pathname).toBe('/plateforme')
@@ -121,7 +126,6 @@ describe('PageNouvelleEntreprise', () => {
         prenom: 'Tanti',
         nom: 'Akouvi',
         telephone: '+228 90 11 22 33',
-        motDePasseProvisoire: 'Tanti-2026',
       },
       etablissement: { nom: 'Bè Kpota', code: 'BE', ville: 'Lomé' },
     })
@@ -145,13 +149,7 @@ describe('PageNouvelleEntreprise', () => {
             statut: 400,
             code: 'REQUETE_INVALIDE',
             message: 'x',
-            champs: [
-              { champ: 'proprietaire.telephone', message: 'numéro de téléphone invalide' },
-              {
-                champ: 'proprietaire.motDePasseProvisoire',
-                message: 'obligatoire pour un nouveau compte',
-              },
-            ],
+            champs: [{ champ: 'proprietaire.telephone', message: 'numéro de téléphone invalide' }],
           },
           { status: 400 },
         ),
@@ -168,9 +166,7 @@ describe('PageNouvelleEntreprise', () => {
         'numéro de téléphone invalide',
       )
     })
-    expect(proprietaire.getByLabelText(/^Mot de passe provisoire/)).toHaveAccessibleDescription(
-      'obligatoire pour un nouveau compte',
-    )
+    expect(proprietaire.queryByLabelText(/^Mot de passe/)).not.toBeInTheDocument()
   })
 
   it('dit quand le propriétaire avait déjà un compte', async () => {

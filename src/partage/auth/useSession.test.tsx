@@ -13,7 +13,12 @@ const MAQUIS = { id: '6b0e6a52-7a6a-4d57-9d3e-1c1a9b1f0a01', nom: 'Maquis Chez T
 const FLAMBOYANT = { id: '6b0e6a52-7a6a-4d57-9d3e-1c1a9b1f0a02', nom: 'Bar Le Flamboyant' }
 
 const MOI_TANTI: ReponseMoi = {
-  compte: { id: 'c1', administrateurPlateforme: false, telephone: '+22890112233' },
+  compte: {
+    id: 'c1',
+    administrateurPlateforme: false,
+    motDePasseAChanger: false,
+    telephone: '+22890112233',
+  },
   portee: 'ENTREPRISE',
   utilisateur: { id: 'u1', prenom: 'Tanti', nom: 'Akouvi' },
   entrepriseCourante: {
@@ -109,7 +114,12 @@ describe('nomAffiche', () => {
       nomAffiche({
         ...sansUtilisateur,
         portee: 'PLATEFORME',
-        compte: { id: 'a', administrateurPlateforme: true, email: 'admin@tonti.africa' },
+        compte: {
+          id: 'a',
+          administrateurPlateforme: true,
+          motDePasseAChanger: false,
+          email: 'admin@tonti.africa',
+        },
       }),
     ).toBe('admin@tonti.africa')
     expect(nomAffiche(sansUtilisateur)).toBe('+22890112233')

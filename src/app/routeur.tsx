@@ -8,17 +8,20 @@ import {
   type RouterHistory,
 } from '@tanstack/react-router'
 import { EcranCaisse } from '../fonctionnalites/caisse/EcranCaisse'
+import { PageChangerMotDePasse } from '../fonctionnalites/connexion/PageChangerMotDePasse'
 import { PageChoixEntreprise } from '../fonctionnalites/connexion/PageChoixEntreprise'
 import { PageConnexion } from '../fonctionnalites/connexion/PageConnexion'
 import { PageEtablissements } from '../fonctionnalites/etablissements/PageEtablissements'
 import { TableauDeBord } from '../fonctionnalites/gestion/TableauDeBord'
 import { PageInscription } from '../fonctionnalites/inscription/PageInscription'
+import { PagePersonnel } from '../fonctionnalites/personnel/PagePersonnel'
 import { PageEntreprises } from '../fonctionnalites/plateforme/PageEntreprises'
 import { PageNouvelleEntreprise } from '../fonctionnalites/plateforme/PageNouvelleEntreprise'
 import { PageRecu } from '../fonctionnalites/recu/PageRecu'
 import {
   exigerChoixEntreprise,
   exigerInscriptionOuverte,
+  exigerMotDePasseTemporaire,
   exigerPortee,
   redirigerSiSessionOuverte,
 } from './gardes'
@@ -47,11 +50,28 @@ const accueil = createRoute({
   },
 })
 
+export interface RechercheConnexion {
+  /** Le mot de passe vient d'être changé : toutes les sessions sont fermées, on le dit. */
+  motDePasseChange?: boolean
+}
+
 const connexion = createRoute({
   getParentRoute: () => racine,
   path: '/connexion',
+  validateSearch: (recherche: Record<string, unknown>): RechercheConnexion =>
+    recherche.motDePasseChange === true ? { motDePasseChange: true } : {},
   beforeLoad: ({ context }) => redirigerSiSessionOuverte(context.clientRequetes),
-  component: PageConnexion,
+  component: function RouteConnexion() {
+    const { motDePasseChange } = connexion.useSearch()
+    return <PageConnexion motDePasseChange={motDePasseChange === true} />
+  },
+})
+
+const changerMotDePasse = createRoute({
+  getParentRoute: () => racine,
+  path: '/changer-mot-de-passe',
+  beforeLoad: ({ context }) => exigerMotDePasseTemporaire(context.clientRequetes),
+  component: PageChangerMotDePasse,
 })
 
 const choixEntreprise = createRoute({
@@ -100,6 +120,12 @@ const etablissements = createRoute({
   component: PageEtablissements,
 })
 
+const personnel = createRoute({
+  getParentRoute: () => gestion,
+  path: '/personnel',
+  component: PagePersonnel,
+})
+
 const plateforme = createRoute({
   getParentRoute: () => racine,
   path: '/plateforme',
@@ -144,10 +170,11 @@ const recu = createRoute({
 const arbre = racine.addChildren([
   accueil,
   connexion,
+  changerMotDePasse,
   choixEntreprise,
   inscription,
   caisse.addChildren([caisseAccueil]),
-  gestion.addChildren([gestionAccueil, etablissements]),
+  gestion.addChildren([gestionAccueil, etablissements, personnel]),
   plateforme.addChildren([plateformeAccueil, nouvelleEntreprise]),
   recu,
 ])

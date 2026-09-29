@@ -8,7 +8,7 @@ import { z } from 'zod'
 import { requeteConfiguration } from '../../app/gardes'
 import { useSession } from '../../partage/auth/useSession'
 import { nomPays, PAYS_PAR_DEFAUT } from '../../partage/referentiel/pays'
-import { AlerteErreur } from '../../partage/ui/Alerte'
+import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
 import { Bouton, classesBouton } from '../../partage/ui/Bouton'
 import { ChampSaisie } from '../../partage/ui/ChampSaisie'
 import { MiseEnPageEntree } from './MiseEnPageEntree'
@@ -20,7 +20,9 @@ const schema = z.object({
 
 type Saisie = z.infer<typeof schema>
 
-export function PageConnexion() {
+export function PageConnexion({
+  motDePasseChange = false,
+}: Readonly<{ motDePasseChange?: boolean }>) {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const { connecter } = useSession()
@@ -49,6 +51,7 @@ export function PageConnexion() {
 
   return (
     <MiseEnPageEntree titre={t('connexion.titre')} phrase={t('connexion.phrase')}>
+      {motDePasseChange && <Alerte ton="succes">{t('motDePasse.change')}</Alerte>}
       <form
         noValidate
         onSubmit={(evenement) => void handleSubmit(envoyer)(evenement)}

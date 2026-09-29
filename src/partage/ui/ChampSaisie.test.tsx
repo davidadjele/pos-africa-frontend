@@ -32,6 +32,20 @@ describe('ChampSaisie', () => {
     expect(champ).toHaveValue('90 11 23 45')
   })
 
+  it('peut masquer son libellé à l’écran sans l’ôter aux lecteurs d’écran', () => {
+    render(
+      <ChampSelection
+        libelle="Rôle à Bè Kpota"
+        libelleMasque
+        name="role"
+        options={[{ valeur: '', libelle: 'Aucun' }]}
+      />,
+    )
+
+    expect(screen.getByRole('combobox', { name: 'Rôle à Bè Kpota' })).toBeInTheDocument()
+    expect(screen.getByText('Rôle à Bè Kpota')).toHaveClass('sr-only')
+  })
+
   it('relie l’aide au champ', () => {
     render(
       <ChampSaisie libelle="Code" name="code" aide="2 à 10 lettres ou chiffres, par exemple BE." />,
