@@ -18,7 +18,9 @@
     "RESEAU_INDISPONIBLE": "Le serveur est injoignable. Vérifiez la connexion et réessayez.",
     "CODE_APPAIRAGE_INVALIDE": "Code invalide ou expiré. Demandez un nouveau code au gérant.",
     "PIN_INCORRECT": "Code incorrect. Au 5e code erroné, le profil est bloqué.",
-    "PROFIL_BLOQUE": "Profil bloqué après 5 codes erronés. Un gérant doit réinitialiser le PIN."
+    "PROFIL_BLOQUE": "Profil bloqué après 5 codes erronés. Un gérant doit réinitialiser le PIN.",
+    "VALIDATION_REQUISE": "Cette action demande la validation d’un gérant.",
+    "VALIDATION_INVALIDE": "Validation expirée ou déjà utilisée. Redemandez-la au gérant."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Trop d’essais infructueux : le compte est verrouillé. Réessayez dans {{duree}}.",
@@ -131,7 +133,15 @@
     "tropLong": "Ce texte est trop long.",
     "motDePasseCourt": "Le mot de passe doit faire au moins 8 caractères.",
     "contact": "Saisissez un téléphone ou un e-mail.",
-    "email": "Adresse e-mail invalide."
+    "email": "Adresse e-mail invalide.",
+    "badge": "Validation d’un gérant",
+    "qui": "Gérant qui valide",
+    "note": "Cette validation ne vaut que pour cette action, pendant 60 secondes. Elle est enregistrée avec le nom du gérant.",
+    "choisir": "Touchez le nom du gérant qui valide.",
+    "code": "Code de {{nom}}",
+    "valider": "Valider",
+    "chargement": "Chargement des gérants…",
+    "aucun": "Personne dans cet établissement ne peut valider cette action avec son PIN. Un gérant doit d’abord choisir son code sur une caisse."
   },
   "barre": {
     "entreprise": "Entreprise",
