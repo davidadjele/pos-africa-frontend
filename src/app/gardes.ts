@@ -6,6 +6,7 @@ import { ErreurApi } from '../partage/api/ErreurApi'
 import { effacerJetonAcces } from '../partage/api/jetonAcces'
 import { demarrerSession } from '../partage/auth/session'
 import { requeteMoi } from '../partage/auth/useSession'
+import { requeteAppareil } from '../fonctionnalites/tablette/requetes'
 
 // Les gardes choisissent l'écran à montrer ; la sécurité reste celle du backend, qui refuse tout
 // appel hors de la portée du jeton.
@@ -72,6 +73,29 @@ export async function exigerChoixEntreprise(clientRequetes: QueryClient): Promis
   if (etat.statut === 'choixEntreprise') return
   await redirigerSiSessionOuverte(clientRequetes)
   throw redirect({ to: '/connexion', replace: true })
+}
+
+/** Espace caisse : réservé à une tablette enregistrée (cookie d'appareil), pas à une session du back-office. */
+export async function exigerTablette(clientRequetes: QueryClient): Promise<void> {
+  try {
+    await clientRequetes.query(requeteAppareil)
+  } catch (erreur) {
+    if (erreur instanceof ErreurApi && erreur.statut === 401) {
+      throw redirect({ to: '/enregistrement-tablette', replace: true })
+    }
+    throw erreur
+  }
+}
+
+/** Écran d'enregistrement : une tablette déjà enregistrée va directement à sa caisse. */
+export async function redirigerSiTabletteEnregistree(clientRequetes: QueryClient): Promise<void> {
+  try {
+    await clientRequetes.query(requeteAppareil)
+  } catch (erreur) {
+    if (erreur instanceof ErreurApi && erreur.statut === 401) return
+    throw erreur
+  }
+  throw redirect({ to: '/caisse', replace: true })
 }
 
 export async function exigerInscriptionOuverte(clientRequetes: QueryClient): Promise<void> {

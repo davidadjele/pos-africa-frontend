@@ -12,7 +12,8 @@ import {
 } from './session'
 
 /** Permissions que l'interface reflète (le backend les applique dans tous les cas). */
-export type Permission = 'BACK_OFFICE' | 'ETABLISSEMENT_GERER' | 'PERSONNEL_GERER'
+export type Permission =
+  'APPAREIL_GERER' | 'BACK_OFFICE' | 'ETABLISSEMENT_GERER' | 'PERSONNEL_GERER'
 
 export const requeteMoi = queryOptions({
   queryKey: ['session', 'moi'],

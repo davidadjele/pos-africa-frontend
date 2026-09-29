@@ -57,6 +57,17 @@ async function simulerApi(page: Page, { connecte }: { connecte: boolean }) {
     route.fulfill({ json: { inscriptionOuverte: false } }),
   )
   await page.route('**/api/etablissements?*', (route) => route.fulfill({ json: ETABLISSEMENTS }))
+  // Cette machine est une tablette enregistrée comme caisse de Bè Kpota.
+  await page.route('**/api/appareil', (route) =>
+    route.fulfill({
+      json: {
+        id: '7c2a0000-0000-4000-8000-000000000001',
+        nom: 'Caisse 1, bar',
+        entreprise: MAQUIS,
+        etablissement: { id: ETABLISSEMENTS.elements[0]?.id, nom: 'Bè Kpota', ville: 'Lomé' },
+      },
+    }),
+  )
 }
 
 function surveillerErreursConsole(page: Page): string[] {

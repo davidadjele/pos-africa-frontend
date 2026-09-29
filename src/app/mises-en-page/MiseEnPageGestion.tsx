@@ -1,5 +1,12 @@
 import { Link, Outlet } from '@tanstack/react-router'
-import { Building2, LayoutDashboard, Store, Users, type LucideIcon } from 'lucide-react'
+import {
+  Building2,
+  LayoutDashboard,
+  Store,
+  TabletSmartphone,
+  Users,
+  type LucideIcon,
+} from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSession, type Permission } from '../../partage/auth/useSession'
@@ -9,7 +16,8 @@ import { BarreHaute } from '../../partage/ui/BarreHaute'
 import { MenuCompte } from './MenuCompte'
 
 interface EntreeNavigation {
-  vers: '/gestion' | '/caisse' | '/gestion/etablissements' | '/gestion/personnel'
+  vers:
+    '/gestion' | '/caisse' | '/gestion/etablissements' | '/gestion/personnel' | '/gestion/tablettes'
   cle: string
   icone: LucideIcon
   /** Entrée masquée sans cette permission : l'écran ne servirait qu'à afficher un refus. */
@@ -35,6 +43,12 @@ const REGLAGES: EntreeNavigation[] = [
     cle: 'gestion.menu.personnel',
     icone: Users,
     permission: 'PERSONNEL_GERER',
+  },
+  {
+    vers: '/gestion/tablettes',
+    cle: 'gestion.menu.tablettes',
+    icone: TabletSmartphone,
+    permission: 'APPAREIL_GERER',
   },
 ]
 

@@ -15,7 +15,8 @@
     "COMPTE_VERROUILLE": "Trop d’essais infructueux : le compte est verrouillé pendant quelques minutes. Réessayez plus tard.",
     "TROP_DE_TENTATIVES": "Trop de tentatives. Patientez quelques minutes avant de réessayer.",
     "ERREUR_INTERNE": "Une erreur inattendue est survenue. Réessayez ; si elle persiste, donnez le code affiché au support.",
-    "RESEAU_INDISPONIBLE": "Le serveur est injoignable. Vérifiez la connexion et réessayez."
+    "RESEAU_INDISPONIBLE": "Le serveur est injoignable. Vérifiez la connexion et réessayez.",
+    "CODE_APPAIRAGE_INVALIDE": "Code invalide ou expiré. Demandez un nouveau code au gérant."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Trop d’essais infructueux : le compte est verrouillé. Réessayez dans {{duree}}.",
@@ -46,7 +47,8 @@
       "tableauDeBord": "Tableau de bord",
       "caisse": "Caisse",
       "etablissements": "Établissements",
-      "personnel": "Personnel"
+      "personnel": "Personnel",
+      "tablettes": "Tablettes"
     },
     "tableauDeBord": {
       "titre": "Tableau de bord",
@@ -353,5 +355,77 @@
     "sessions": "Vos autres sessions ouvertes seront fermées.",
     "different": "Les deux mots de passe ne correspondent pas.",
     "change": "Mot de passe enregistré. Reconnectez-vous avec votre nouveau mot de passe."
+  },
+  "clavier": {
+    "effacer": "Effacer le dernier chiffre"
+  },
+  "tablette": {
+    "nonEnregistree": "Tablette non enregistrée",
+    "titre": "Enregistrer cette tablette",
+    "phrase": "Un gérant ouvre Tonti sur son téléphone, dans la gestion : Tablettes, puis Enregistrer une tablette. Il choisit l’établissement et le nom de cette caisse, et obtient un code à 6 chiffres. Tapez ce code ici.",
+    "etape1": "Le gérant génère le code sur son téléphone.",
+    "etape2": "Vous le tapez sur cette tablette, dans les 10 minutes.",
+    "etape3": "La tablette devient une caisse de l’établissement : le personnel s’y connecte avec son PIN.",
+    "motDePasse": "Le mot de passe du gérant n’est jamais saisi sur cette tablette.",
+    "code": "Code d’enregistrement",
+    "chiffresSaisis_one": "{{count}} chiffre saisi sur {{total}}",
+    "chiffresSaisis_other": "{{count}} chiffres saisis sur {{total}}",
+    "aide": "Le code se valide seul au 6e chiffre. Code expiré ou erroné : demandez-en un nouveau au gérant."
+  },
+  "tablettes": {
+    "titre": "Tablettes",
+    "phrase": "Les appareils autorisés à servir de caisse. Une tablette perdue ou volée se révoque ici : elle est coupée aussitôt.",
+    "enregistrer": "Enregistrer une tablette",
+    "tableau": "Tablettes de l’entreprise",
+    "chargement": "Chargement des tablettes…",
+    "colonnes": {
+      "nom": "Nom",
+      "etablissement": "Établissement",
+      "activite": "Dernière activité",
+      "statut": "Statut",
+      "actions": "Actions"
+    },
+    "statut": {
+      "active": "Active",
+      "revoquee": "Révoquée"
+    },
+    "renommer": "Renommer",
+    "renommerNomme": "Renommer {{nom}}",
+    "revoquer": "Révoquer",
+    "plusDActions": "Plus d’actions pour {{nom}}",
+    "vide": {
+      "titre": "Aucune tablette",
+      "phrase": "Enregistrez la tablette de chaque caisse : le personnel s’y connectera avec son PIN."
+    },
+    "formulaire": {
+      "etablissement": "Établissement",
+      "nom": "Nom de la caisse",
+      "nomAide": "Tel que le personnel le verra, par exemple « Caisse 1, bar ».",
+      "generer": "Générer le code"
+    },
+    "code": {
+      "titre": "Code d’enregistrement",
+      "pour": "Pour « {{nom}} ». Sur la tablette, ouvrez Tonti puis tapez ce code.",
+      "aTaper": "Code à taper sur la tablette",
+      "valable": "Valable encore",
+      "attente": "En attente de la tablette : cet écran se met à jour quand elle est enregistrée.",
+      "annuler": "Annuler ce code",
+      "enregistree": "La tablette « {{nom}} » est enregistrée.",
+      "terminer": "Terminer",
+      "expire": "Ce code a expiré sans être utilisé.",
+      "nouveau": "Générer un nouveau code"
+    },
+    "revocation": {
+      "titre": "Révoquer « {{nom}} » ?",
+      "consequence": "La tablette est coupée aussitôt : plus personne ne pourra s’y connecter. Pour la réutiliser, il faudra l’enregistrer de nouveau avec un code.",
+      "annuler": "Garder la tablette",
+      "confirmer": "Révoquer la tablette",
+      "faite": "« {{nom}} » est révoquée."
+    },
+    "renommage": {
+      "titre": "Renommer « {{nom}} »",
+      "consequence": "Le nouveau nom s’affiche sur la tablette et dans cette liste.",
+      "fait": "La tablette s’appelle maintenant « {{nom}} »."
+    }
   }
 }

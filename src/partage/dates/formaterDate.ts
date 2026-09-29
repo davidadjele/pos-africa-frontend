@@ -7,3 +7,13 @@ export function formaterDate(instant: string, fuseauHoraire: string): string {
     timeZone: fuseauHoraire,
   }).format(new Date(instant))
 }
+
+/** Date et heure (« 28/09/2026, 20:41 ») : dernière activité, événements. Virgule plutôt que « · ». */
+export function formaterDateHeure(instant: string, fuseauHoraire: string): string {
+  const heure = new Intl.DateTimeFormat('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: fuseauHoraire,
+  }).format(new Date(instant))
+  return `${formaterDate(instant, fuseauHoraire)}, ${heure}`
+}

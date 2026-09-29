@@ -261,3 +261,49 @@ test('Tanti ajoute son personnel, et la gérante ne voit que le sien', async ({ 
   await page.setViewportSize({ width: 390, height: 844 })
   await capturer(page, '11-personnel-vue-gerante-telephone')
 })
+
+test('Tanti enregistre une tablette avec un code, puis la révoque', async ({ page, browser }) => {
+  await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
+  await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
+  await page
+    .getByRole('navigation', { name: 'Navigation principale' })
+    .getByRole('link', { name: 'Tablettes' })
+    .click()
+  await page.getByRole('button', { name: 'Enregistrer une tablette' }).click()
+  const formulaire = page.getByRole('form', { name: 'Enregistrer une tablette' })
+  await formulaire.getByLabel(/^Établissement/).selectOption({ label: 'Bè Kpota' })
+  await formulaire.getByLabel(/^Nom de la caisse/).fill('Caisse 1, bar')
+  await formulaire.getByRole('button', { name: 'Générer le code' }).click()
+  const panneau = page.getByRole('region', { name: 'Code d’enregistrement' })
+  const code = ((await panneau.locator('[data-code]').textContent()) ?? '').replace(/\D/g, '')
+  expect(code).toMatch(/^\d{6}$/)
+  await capturer(page, '12-tablettes-code')
+
+  // Une autre fenêtre joue la tablette : aucune session, seulement le code.
+  const contexteTablette = await browser.newContext({ viewport: { width: 1280, height: 800 } })
+  const tablette = await contexteTablette.newPage()
+  await tablette.goto('/caisse')
+  await expect(tablette).toHaveURL(/\/enregistrement-tablette$/)
+  await capturer(tablette, '13-tablette-enregistrement')
+  for (const chiffre of code) {
+    await tablette.getByRole('button', { name: chiffre, exact: true }).click()
+  }
+  await expect(tablette).toHaveURL(/\/caisse$/)
+  await expect(tablette.getByRole('banner')).toContainText('Bè Kpota, Caisse 1, bar')
+  await capturer(tablette, '14-tablette-caisse')
+
+  await expect(panneau).toContainText('La tablette « Caisse 1, bar » est enregistrée.')
+  await panneau.getByRole('button', { name: 'Terminer' }).click()
+  const tableau = page.getByRole('table', { name: 'Tablettes de l’entreprise' })
+  await expect(tableau.getByRole('row', { name: /Caisse 1, bar/ })).toContainText('Active')
+  await capturer(page, '15-tablettes-liste')
+
+  // Révoquée, la tablette revient à l'écran d'enregistrement.
+  await page.getByRole('button', { name: 'Plus d’actions pour Caisse 1, bar' }).click()
+  await page.getByRole('menuitem', { name: 'Révoquer' }).click()
+  await page.getByRole('button', { name: 'Révoquer la tablette' }).click()
+  await expect(tableau.getByRole('row', { name: /Caisse 1, bar/ })).toContainText('Révoquée')
+  await tablette.reload()
+  await expect(tablette).toHaveURL(/\/enregistrement-tablette$/)
+  await contexteTablette.close()
+})

@@ -16,8 +16,13 @@ export const PREFIXE_API = '/api'
 const MESSAGE_RESEAU = 'Le serveur est injoignable. Vérifiez la connexion et réessayez.'
 const MESSAGE_INTERNE = 'Une erreur inattendue est survenue. Réessayez.'
 
+/**
+ * Routes authentifiées par cookie et non par jeton d'accès : la session (/auth) et la tablette
+ * (/appareil, pas /appareils du back-office). Elles portent l'en-tête anti-CSRF, et un refus 401 n'y
+ * déclenche pas de rafraîchissement de session.
+ */
 export function estRouteAuthentification(chemin: string): boolean {
-  return chemin.startsWith('/auth/')
+  return chemin.startsWith('/auth/') || chemin === '/appareil' || chemin.startsWith('/appareil/')
 }
 
 /** Un appel HTTP brut, sans nouvel essai : les erreurs sont normalisées en ErreurApi. */

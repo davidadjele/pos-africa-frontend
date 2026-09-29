@@ -7,7 +7,16 @@ import { Bouton } from './Bouton'
  * Code d'accès temporaire (PIN, mot de passe), affiché une seule fois. Les groupes sont séparés
  * par la mise en page et non par des espaces ; le bouton copie le code exact.
  */
-export function CodeSecret({ libelle, code }: Readonly<{ libelle: string; code: string }>) {
+export function CodeSecret({
+  libelle,
+  code,
+  copiable = true,
+}: Readonly<{
+  libelle: string
+  code: string
+  /** Faux pour un code à taper sur un autre appareil (tablette) plutôt qu'à coller. */
+  copiable?: boolean
+}>) {
   const { t } = useTranslation()
   const idLibelle = useId()
   const [copie, setCopie] = useState(false)
@@ -40,13 +49,15 @@ export function CodeSecret({ libelle, code }: Readonly<{ libelle: string; code: 
             </span>
           ))}
         </span>
-        <Bouton
-          icone={copie ? Check : Copy}
-          aria-describedby={idLibelle}
-          onClick={() => void copier()}
-        >
-          {copie ? t('commun.copie') : t('commun.copier')}
-        </Bouton>
+        {copiable && (
+          <Bouton
+            icone={copie ? Check : Copy}
+            aria-describedby={idLibelle}
+            onClick={() => void copier()}
+          >
+            {copie ? t('commun.copie') : t('commun.copier')}
+          </Bouton>
+        )}
       </div>
     </div>
   )

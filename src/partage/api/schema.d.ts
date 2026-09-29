@@ -4,6 +4,141 @@
  */
 
 export interface paths {
+    "/appareil": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Reconnaître cette tablette
+         * @description Avec le cookie « appareil ». Erreur : NON_AUTHENTIFIE (401) si la tablette n'est pas enregistrée, ou a été révoquée : elle affiche alors l'écran d'enregistrement.
+         */
+        get: operations["courant"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/appareil/appairage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Enregistrer cette tablette avec le code du gérant
+         * @description Pose le cookie HttpOnly « appareil ». Exige l'en-tête X-Demande-Tonti: 1 et une origine autorisée. Erreurs : CODE_APPAIRAGE_INVALIDE (inconnu, expiré ou déjà utilisé), TROP_DE_TENTATIVES (Retry-After).
+         */
+        post: operations["appairer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/appareils": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lister les tablettes visibles, actives d'abord */
+        get: operations["lister_3"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/appareils/codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Générer un code d'enregistrement de tablette
+         * @description Code à 6 chiffres, valable 10 minutes, renvoyé une seule fois. Erreurs : ACCES_REFUSE (établissement hors périmètre), REQUETE_INVALIDE (établissement inconnu).
+         */
+        post: operations["genererCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/appareils/codes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Suivre un code : en attente, utilisé ou expiré */
+        get: operations["statutCode"];
+        put?: never;
+        post?: never;
+        /** Annuler un code encore en attente */
+        delete: operations["annulerCode"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/appareils/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Renommer une tablette
+         * @description Erreur : CONFLIT_MODIFICATION (409, version dépassée).
+         */
+        put: operations["renommer"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/appareils/{id}/revocation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Révoquer une tablette
+         * @description Son jeton ne vaut plus rien : elle doit être réenregistrée.
+         */
+        post: operations["revoquer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/connexion": {
         parameters: {
             query?: never;
@@ -361,9 +496,35 @@ export interface components {
             etablissementId?: string;
             role: string;
         };
+        AppareilCourant: {
+            entreprise: components["schemas"]["Entreprise"];
+            etablissement: components["schemas"]["Etablissement"];
+            /** Format: uuid */
+            id: string;
+            nom: string;
+        };
+        AppareilResume: {
+            /** Format: date-time */
+            derniereActiviteLe?: string;
+            /** Format: uuid */
+            etablissementId: string;
+            /** Format: uuid */
+            id: string;
+            nom: string;
+            revoquee: boolean;
+            /** Format: int64 */
+            version: number;
+        };
         ChampInvalide: {
             champ: string;
             message: string;
+        };
+        CodeGenere: {
+            code: string;
+            /** Format: date-time */
+            expireLe: string;
+            /** Format: uuid */
+            id: string;
         };
         ConfigurationPublique: {
             inscriptionOuverte: boolean;
@@ -374,9 +535,19 @@ export interface components {
             /** @example SERVEUR */
             role: string;
         };
+        DemandeAppairage: {
+            /** @example 482915 */
+            code: string;
+        };
         DemandeChangementMotDePasse: {
             motDePasseActuel: string;
             nouveauMotDePasse: string;
+        };
+        DemandeCodeAppairage: {
+            /** Format: uuid */
+            etablissementId: string;
+            /** @example Caisse 1, bar */
+            nom: string;
         };
         DemandeConnexion: {
             /** @example 90 11 22 33 */
@@ -441,6 +612,11 @@ export interface components {
             /** Format: uuid */
             entrepriseId?: string;
         };
+        DemandeRenommageAppareil: {
+            nom: string;
+            /** Format: int64 */
+            version: number;
+        };
         DonneesEntreprise: {
             /** @example XOF */
             devise: string;
@@ -499,6 +675,11 @@ export interface components {
             /** Format: int64 */
             version: number;
         };
+        Entreprise: {
+            /** Format: uuid */
+            id: string;
+            nom: string;
+        };
         EntrepriseAccessible: {
             /** Format: uuid */
             id: string;
@@ -535,6 +716,12 @@ export interface components {
             /** @enum {string} */
             statut: "ACTIVE" | "SUSPENDUE";
         };
+        Etablissement: {
+            /** Format: uuid */
+            id: string;
+            nom: string;
+            ville?: string;
+        };
         EtablissementResume: {
             actif: boolean;
             adresse?: string;
@@ -546,6 +733,15 @@ export interface components {
             /** Format: int64 */
             version: number;
             ville?: string;
+        };
+        PageResultatsAppareilResume: {
+            elements: components["schemas"]["AppareilResume"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            taille: number;
+            /** Format: int64 */
+            total: number;
         };
         PageResultatsEmployeResume: {
             elements: components["schemas"]["EmployeResume"][];
@@ -633,6 +829,12 @@ export interface components {
             code: string;
             touteLEntreprise: boolean;
         };
+        StatutCode: {
+            /** Format: date-time */
+            expireLe: string;
+            /** @enum {string} */
+            statut: "EN_ATTENTE" | "UTILISE" | "EXPIRE";
+        };
     };
     responses: never;
     parameters: never;
@@ -642,6 +844,259 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    courant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppareilCourant"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    appairer: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Demande-Tonti": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeAppairage"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppareilCourant"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    lister_3: {
+        parameters: {
+            query?: {
+                page?: number;
+                taille?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageResultatsAppareilResume"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    genererCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeCodeAppairage"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodeGenere"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    statutCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StatutCode"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    annulerCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    renommer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeRenommageAppareil"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppareilResume"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    revoquer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
     connecter: {
         parameters: {
             query?: never;
