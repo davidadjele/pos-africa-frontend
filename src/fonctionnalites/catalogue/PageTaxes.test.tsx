@@ -134,6 +134,26 @@ describe('PageTaxes', () => {
     })
   })
 
+  it('explique pourquoi une taxe encore appliquée ne se désactive pas', async () => {
+    backendSimule()
+    serveurMsw.use(
+      http.post(`${API}/taxes/:id/desactivation`, () =>
+        HttpResponse.json(
+          { statut: 409, code: 'TAXE_EN_USAGE', message: 'x', traceId: 't' },
+          { status: 409 },
+        ),
+      ),
+    )
+    await ouvrirTaxes()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Plus d’actions pour TVA' }))
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Désactiver' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      '« TVA » s’applique encore à 15 produits actifs : changez d’abord leur taxe dans leur fiche, puis désactivez-la.',
+    )
+  })
+
   it('montre les taxes sans pouvoir les changer sans la permission', async () => {
     backendSimule()
     await ouvrirTaxes(MOI_TANTI.permissions)

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appelerApi } from '../../partage/api/appelerApi'
 import type { DemandeTaxe, TaxeResume } from '../../partage/api/contrat'
+import { ErreurApi } from '../../partage/api/ErreurApi'
 import { useSession } from '../../partage/auth/useSession'
 import { formaterTaux, lireTaux } from '../../partage/montants/taxes'
 import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
@@ -38,7 +39,12 @@ export function PageTaxes() {
       setConfirmation(t(taxe.active ? 'taxes.desactivee' : 'taxes.reactivee', { nom: taxe.nom }))
       await clientRequetes.invalidateQueries({ queryKey: ['catalogue'] })
     } catch (refus) {
-      setErreur(refus)
+      // Refus attendu : il se dit avec le nom et le nombre de produits concernés.
+      setErreur(
+        refus instanceof ErreurApi && refus.code === 'TAXE_EN_USAGE'
+          ? new Error(t('taxes.enUsage', { nom: taxe.nom, count: taxe.nbProduits }))
+          : refus,
+      )
     }
   }
 
@@ -128,7 +134,11 @@ export function PageTaxes() {
       </div>
 
       {confirmation !== null && <Alerte ton="succes">{confirmation}</Alerte>}
-      {erreur !== null && <AlerteErreur erreur={erreur} />}
+      {erreur instanceof Error && !(erreur instanceof ErreurApi) ? (
+        <Alerte ton="danger">{erreur.message}</Alerte>
+      ) : (
+        erreur !== null && <AlerteErreur erreur={erreur} />
+      )}
       {requete.isPending && <Chargement texte={t('taxes.chargement')} />}
       {requete.isError && (
         <AlerteErreur

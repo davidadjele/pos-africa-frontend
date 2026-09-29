@@ -119,6 +119,30 @@ describe('PageProduits', () => {
     })
   })
 
+  it('explique pourquoi une catégorie qui a des produits ne se désactive pas', async () => {
+    backendSimule()
+    serveurMsw.use(
+      http.post(`${API}/categories/:id/desactivation`, () =>
+        HttpResponse.json(
+          { statut: 409, code: 'CATEGORIE_EN_USAGE', message: 'x', traceId: 't' },
+          { status: 409 },
+        ),
+      ),
+    )
+    await ouvrirProduits()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Gérer les catégories' }))
+    const dialogue = await screen.findByRole('dialog', { name: 'Catégories de la carte' })
+    await userEvent.click(
+      await within(dialogue).findByRole('button', { name: 'Plus d’actions pour Bières' }),
+    )
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Désactiver' }))
+
+    expect(await within(dialogue).findByRole('alert')).toHaveTextContent(
+      '« Bières » contient encore 1 produit actif : déplacez-le vers une autre catégorie ou désactivez-le d’abord.',
+    )
+  })
+
   it('laisse consulter la carte sans permettre de la modifier', async () => {
     backendSimule()
     const tableau = await ouvrirProduits(MOI_TANTI.permissions)

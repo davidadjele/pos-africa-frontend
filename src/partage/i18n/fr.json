@@ -20,7 +20,9 @@
     "PIN_INCORRECT": "Code incorrect. Au 5e code erroné, le profil est bloqué.",
     "PROFIL_BLOQUE": "Profil bloqué après 5 codes erronés. Un gérant doit réinitialiser le PIN.",
     "VALIDATION_REQUISE": "Cette action demande la validation d’un gérant.",
-    "VALIDATION_INVALIDE": "Validation expirée ou déjà utilisée. Redemandez-la au gérant."
+    "VALIDATION_INVALIDE": "Validation expirée ou déjà utilisée. Redemandez-la au gérant.",
+    "TAXE_EN_USAGE": "Des produits actifs sont soumis à cette taxe : changez d’abord leur taxe.",
+    "CATEGORIE_EN_USAGE": "Cette catégorie contient des produits actifs : déplacez-les ou désactivez-les d’abord."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Trop d’essais infructueux : le compte est verrouillé. Réessayez dans {{duree}}.",
@@ -553,7 +555,9 @@
     "creee": "La taxe « {{nom}} » est ajoutée.",
     "modifiee": "La taxe « {{nom}} » est enregistrée.",
     "desactivee": "La taxe « {{nom}} » est désactivée.",
-    "reactivee": "La taxe « {{nom}} » est réactivée."
+    "reactivee": "La taxe « {{nom}} » est réactivée.",
+    "enUsage_one": "« {{nom}} » s’applique encore à {{count}} produit actif : changez d’abord sa taxe dans sa fiche, puis désactivez-la.",
+    "enUsage_other": "« {{nom}} » s’applique encore à {{count}} produits actifs : changez d’abord leur taxe dans leur fiche, puis désactivez-la."
   },
   "produits": {
     "titre": "Produits",
@@ -648,6 +652,8 @@
     "ajouter": "Ajouter la catégorie",
     "enregistrer": "Enregistrer",
     "annuler": "Annuler",
-    "regle": "Une catégorie qui contient des produits actifs ne se désactive pas : déplacez ou désactivez d’abord ses produits."
+    "regle": "Une catégorie qui contient des produits actifs ne se désactive pas : déplacez ou désactivez d’abord ses produits.",
+    "enUsage_one": "« {{nom}} » contient encore {{count}} produit actif : déplacez-le vers une autre catégorie ou désactivez-le d’abord.",
+    "enUsage_other": "« {{nom}} » contient encore {{count}} produits actifs : déplacez-les vers une autre catégorie ou désactivez-les d’abord."
   }
 }

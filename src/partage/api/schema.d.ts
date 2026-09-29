@@ -408,7 +408,7 @@ export interface paths {
         put?: never;
         /**
          * Désactiver une catégorie
-         * @description Refusé (REQUETE_INVALIDE) tant qu'elle a des produits actifs.
+         * @description Refusé (CATEGORIE_EN_USAGE, 409) tant qu'elle a des produits actifs.
          */
         post: operations["desactiver_3"];
         delete?: never;
@@ -859,7 +859,7 @@ export interface paths {
         put?: never;
         /**
          * Désactiver une taxe
-         * @description Refusé (REQUETE_INVALIDE) tant que des produits actifs y sont soumis.
+         * @description Refusé (TAXE_EN_USAGE, 409) tant que des produits actifs y sont soumis.
          */
         post: operations["desactiver"];
         delete?: never;

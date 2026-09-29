@@ -5,7 +5,8 @@ import { useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appelerApi } from '../../partage/api/appelerApi'
 import type { CategorieResume, CouleurCategorie, DemandeCategorie } from '../../partage/api/contrat'
-import { AlerteErreur } from '../../partage/ui/Alerte'
+import { ErreurApi } from '../../partage/api/ErreurApi'
+import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
 import { BadgeStatut } from '../../partage/ui/BadgeStatut'
 import { Bouton } from '../../partage/ui/Bouton'
 import { ChampSaisie } from '../../partage/ui/ChampSaisie'
@@ -30,13 +31,18 @@ export function DialogueCategories({ surFermer }: Readonly<{ surFermer: () => vo
   const [edition, setEdition] = useState<CategorieResume | null>(null)
   const [erreur, setErreur] = useState<unknown>(null)
 
-  async function agir(action: () => Promise<unknown>) {
+  async function agir(action: () => Promise<unknown>, categorie?: CategorieResume) {
     setErreur(null)
     try {
       await action()
       await clientRequetes.invalidateQueries({ queryKey: ['catalogue'] })
     } catch (refus) {
-      setErreur(refus)
+      // Refus attendu : il se dit avec le nom et le nombre de produits concernés.
+      setErreur(
+        categorie !== undefined && refus instanceof ErreurApi && refus.code === 'CATEGORIE_EN_USAGE'
+          ? new Error(t('categories.enUsage', { nom: categorie.nom, count: categorie.nbProduits }))
+          : refus,
+      )
     }
   }
 
@@ -74,7 +80,11 @@ export function DialogueCategories({ surFermer }: Readonly<{ surFermer: () => vo
         </div>
         {erreur !== null && (
           <div className="px-6 pb-3">
-            <AlerteErreur erreur={erreur} />
+            {erreur instanceof Error && !(erreur instanceof ErreurApi) ? (
+              <Alerte ton="danger">{erreur.message}</Alerte>
+            ) : (
+              <AlerteErreur erreur={erreur} />
+            )}
           </div>
         )}
         {requete.isPending && (
@@ -143,11 +153,13 @@ export function DialogueCategories({ surFermer }: Readonly<{ surFermer: () => vo
                       icone: Power,
                       ...(categorie.active ? { ton: 'danger' as const } : {}),
                       surChoisir: () =>
-                        void agir(() =>
-                          appelerApi(
-                            `/categories/${categorie.id}/${categorie.active ? 'desactivation' : 'reactivation'}`,
-                            { methode: 'POST' },
-                          ),
+                        void agir(
+                          () =>
+                            appelerApi(
+                              `/categories/${categorie.id}/${categorie.active ? 'desactivation' : 'reactivation'}`,
+                              { methode: 'POST' },
+                            ),
+                          categorie,
                         ),
                     },
                   ]}
