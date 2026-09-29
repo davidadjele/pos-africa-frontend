@@ -16,7 +16,9 @@
     "TROP_DE_TENTATIVES": "Too many attempts. Wait a few minutes before trying again.",
     "ERREUR_INTERNE": "An unexpected error occurred. Try again; if it persists, give the code shown to support.",
     "RESEAU_INDISPONIBLE": "The server cannot be reached. Check the connection and try again.",
-    "CODE_APPAIRAGE_INVALIDE": "Invalid or expired code. Ask the manager for a new code."
+    "CODE_APPAIRAGE_INVALIDE": "Invalid or expired code. Ask the manager for a new code.",
+    "PIN_INCORRECT": "Wrong code. After the 5th wrong code, the profile is blocked.",
+    "PROFIL_BLOQUE": "Profile blocked after 5 wrong codes. A manager must reset the PIN."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Too many failed attempts: the account is locked. Try again in {{duree}}.",
@@ -40,6 +42,51 @@
     "vide": {
       "titre": "No products to sell yet",
       "phrase": "Order taking and checkout arrive in the next release, along with the product catalogue."
+    },
+    "prise": {
+      "titre": "Who is taking the till?",
+      "phrase": "Tap your name, then type your code.",
+      "chargement": "Loading staff…",
+      "vide": {
+        "titre": "Nobody can take this till yet",
+        "phrase": "A manager adds the staff of {{etablissement}} in the back office, Staff: each gets a PIN to open the till."
+      },
+      "verrouillage_one": "The till locks itself after {{count}} minute without activity and comes back here.",
+      "verrouillage_other": "The till locks itself after {{count}} minutes without activity and comes back here.",
+      "bloque": "Blocked",
+      "choisir": "Tap your name to open the till.",
+      "tapezCode": "Type your code",
+      "chiffresSaisis_one": "{{count}} digit typed",
+      "chiffresSaisis_other": "{{count}} digits typed",
+      "ouvrir": "Open the till",
+      "autreProfil": "Choose another profile"
+    },
+    "bloque": {
+      "titre": "Profile blocked",
+      "phrase": "Five wrong codes were typed. To protect your account, this profile can no longer open the till.",
+      "debloquer": "To unblock it",
+      "marche": "A manager opens the back office, Staff, then “Reset PIN” for {{prenom}}. You will get a new temporary code, then choose your own."
+    },
+    "nouveauPin": {
+      "bienvenue": "Welcome, {{prenom}}",
+      "roleIci": "{{role}} at {{etablissement}}",
+      "titre": "Choose your personal code",
+      "phrase": "The code from your manager was temporary. Choose one nobody else knows: it signs your orders and payments.",
+      "etapes": "Steps",
+      "etape1": "1. New code",
+      "etape2": "2. Confirmation",
+      "regle": "4 to 6 digits. Avoid codes that are too simple (0000, 1234) and your birth date: they are refused.",
+      "saisir": "Type your new code",
+      "confirmer": "Type your new code again",
+      "continuer": "Continue",
+      "enregistrer": "Save my code",
+      "recommencer": "Start again",
+      "tropSimple": "Code too easy to guess: avoid sequences (1234) and repeated digits (1111).",
+      "different": "The two codes do not match. Start again."
+    },
+    "session": {
+      "changer": "Switch user",
+      "utilisateur": "Till held by {{nom}}"
     }
   },
   "gestion": {
@@ -140,7 +187,11 @@
       "adresse": "Address",
       "fuseau": "Time zone",
       "creer": "Create the venue",
-      "enregistrer": "Save changes"
+      "enregistrer": "Save changes",
+      "verrouillage": "Till lock",
+      "verrouillageAide": "After this long without activity, the till goes back to “Who is taking the till?”.",
+      "minutes_one": "{{count}} minute",
+      "minutes_other": "{{count}} minutes"
     },
     "cree": "{{nom}} has been created.",
     "modifie": "{{nom}} has been updated."

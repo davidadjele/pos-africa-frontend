@@ -16,7 +16,9 @@
     "TROP_DE_TENTATIVES": "Trop de tentatives. Patientez quelques minutes avant de réessayer.",
     "ERREUR_INTERNE": "Une erreur inattendue est survenue. Réessayez ; si elle persiste, donnez le code affiché au support.",
     "RESEAU_INDISPONIBLE": "Le serveur est injoignable. Vérifiez la connexion et réessayez.",
-    "CODE_APPAIRAGE_INVALIDE": "Code invalide ou expiré. Demandez un nouveau code au gérant."
+    "CODE_APPAIRAGE_INVALIDE": "Code invalide ou expiré. Demandez un nouveau code au gérant.",
+    "PIN_INCORRECT": "Code incorrect. Au 5e code erroné, le profil est bloqué.",
+    "PROFIL_BLOQUE": "Profil bloqué après 5 codes erronés. Un gérant doit réinitialiser le PIN."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Trop d’essais infructueux : le compte est verrouillé. Réessayez dans {{duree}}.",
@@ -40,6 +42,51 @@
     "vide": {
       "titre": "Aucun produit à vendre pour l’instant",
       "phrase": "La prise de commande et l’encaissement arrivent au prochain lot, avec le catalogue des produits."
+    },
+    "prise": {
+      "titre": "Qui prend la caisse ?",
+      "phrase": "Touchez votre nom, puis tapez votre code.",
+      "chargement": "Chargement du personnel…",
+      "vide": {
+        "titre": "Personne ne peut encore prendre cette caisse",
+        "phrase": "Un gérant ajoute le personnel de {{etablissement}} dans la gestion, Personnel : chacun reçoit un PIN pour ouvrir la caisse."
+      },
+      "verrouillage_one": "La caisse se verrouille seule après {{count}} minute sans activité et revient ici.",
+      "verrouillage_other": "La caisse se verrouille seule après {{count}} minutes sans activité et revient ici.",
+      "bloque": "Bloqué",
+      "choisir": "Touchez votre nom pour ouvrir la caisse.",
+      "tapezCode": "Tapez votre code",
+      "chiffresSaisis_one": "{{count}} chiffre saisi",
+      "chiffresSaisis_other": "{{count}} chiffres saisis",
+      "ouvrir": "Ouvrir la caisse",
+      "autreProfil": "Choisir un autre profil"
+    },
+    "bloque": {
+      "titre": "Profil bloqué",
+      "phrase": "Cinq codes erronés ont été tapés. Pour protéger votre compte, ce profil ne peut plus ouvrir la caisse.",
+      "debloquer": "Pour le débloquer",
+      "marche": "Un gérant ouvre la gestion, Personnel, puis « Réinitialiser le PIN » de {{prenom}}. Un nouveau code temporaire vous sera donné ; vous choisirez ensuite le vôtre."
+    },
+    "nouveauPin": {
+      "bienvenue": "Bienvenue, {{prenom}}",
+      "roleIci": "{{role}} à {{etablissement}}",
+      "titre": "Choisissez votre code personnel",
+      "phrase": "Le code donné par votre gérant était temporaire. Choisissez-en un que personne d’autre ne connaît : il signe vos commandes et vos encaissements.",
+      "etapes": "Étapes",
+      "etape1": "1. Nouveau code",
+      "etape2": "2. Confirmation",
+      "regle": "4 à 6 chiffres. Évitez les codes trop simples (0000, 1234) et votre date de naissance : ils sont refusés.",
+      "saisir": "Tapez votre nouveau code",
+      "confirmer": "Retapez votre nouveau code",
+      "continuer": "Continuer",
+      "enregistrer": "Enregistrer mon code",
+      "recommencer": "Recommencer",
+      "tropSimple": "Code trop facile à deviner : évitez les suites (1234) et les chiffres répétés (1111).",
+      "different": "Les deux codes ne correspondent pas. Recommencez."
+    },
+    "session": {
+      "changer": "Changer d’utilisateur",
+      "utilisateur": "Caisse tenue par {{nom}}"
     }
   },
   "gestion": {
@@ -140,7 +187,11 @@
       "adresse": "Adresse",
       "fuseau": "Fuseau horaire",
       "creer": "Créer l’établissement",
-      "enregistrer": "Enregistrer les modifications"
+      "enregistrer": "Enregistrer les modifications",
+      "verrouillage": "Verrouillage de la caisse",
+      "verrouillageAide": "Sans activité pendant ce délai, la caisse revient à « Qui prend la caisse ? ».",
+      "minutes_one": "{{count}} minute",
+      "minutes_other": "{{count}} minutes"
     },
     "cree": "{{nom}} a été créé.",
     "modifie": "{{nom}} a été modifié."

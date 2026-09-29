@@ -163,8 +163,12 @@ describe('routeur', () => {
 
   it('ouvre la caisse d’une tablette enregistrée en plein écran, sous le nom de la caisse', async () => {
     tablette(CAISSE_BAR)
+    serveurMsw.use(http.get(`${API}/appareil/personnel`, () => HttpResponse.json([])))
     ouvrir('/caisse')
 
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Qui prend la caisse ?' }),
+    ).toBeVisible()
     const barre = await screen.findByRole('banner')
     await waitFor(() => {
       expect(barre).toHaveTextContent('Maquis Chez Tanti')

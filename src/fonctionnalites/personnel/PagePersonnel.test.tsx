@@ -18,6 +18,7 @@ const BE_KPOTA: EtablissementResume = {
   nom: 'Bè Kpota',
   ville: 'Lomé',
   fuseauHoraire: 'Africa/Lome',
+  delaiVerrouillageMinutes: 3,
   actif: true,
   version: 0,
 }

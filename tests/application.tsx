@@ -54,6 +54,7 @@ export const CAISSE_BAR: AppareilCourant = {
   nom: 'Caisse 1, bar',
   entreprise: MAQUIS,
   etablissement: { id: '9a1f0c2e-0000-4b8e-8f6a-000000000001', nom: 'Bè Kpota', ville: 'Lomé' },
+  delaiVerrouillageMinutes: 3,
 }
 
 /** La tablette présente son cookie d'appareil (ou non, avec null). */
