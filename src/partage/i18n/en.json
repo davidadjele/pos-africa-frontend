@@ -2,17 +2,36 @@
   "erreurs": {
     "REQUETE_INVALIDE": "Some information is invalid. Correct the highlighted fields and try again.",
     "NON_AUTHENTIFIE": "Your session has expired. Sign in again to continue.",
+    "IDENTIFIANTS_INVALIDES": "Incorrect identifier or password. Check what you typed and try again.",
+    "SESSION_EXPIREE": "Your session has expired. Sign in again to continue.",
     "ACCES_REFUSE": "You are not allowed to do this. Ask a manager.",
+    "AUCUNE_ENTREPRISE": "This account is not linked to any active business. Contact the owner of your venue.",
+    "ENTREPRISE_SUSPENDUE": "Access to this business is suspended. Contact Tonti support.",
     "RESSOURCE_INTROUVABLE": "This item no longer exists or has been deleted.",
     "METHODE_NON_AUTORISEE": "This operation is not supported.",
     "CONFLIT_MODIFICATION": "This item was changed on another device. It has been reloaded: check it and try again.",
+    "CODE_ETABLISSEMENT_DEJA_UTILISE": "This code is already used by another venue. Choose another one.",
     "STOCK_INSUFFISANT": "Not enough stock for this item. Remove it from the bill or choose another product.",
+    "COMPTE_VERROUILLE": "Too many failed attempts: the account is locked for a few minutes. Try again later.",
+    "TROP_DE_TENTATIVES": "Too many attempts. Wait a few minutes before trying again.",
     "ERREUR_INTERNE": "An unexpected error occurred. Try again; if it persists, give the code shown to support.",
     "RESEAU_INDISPONIBLE": "The server cannot be reached. Check the connection and try again."
   },
+  "erreursAvecDelai": {
+    "COMPTE_VERROUILLE": "Too many failed attempts: the account is locked. Try again in {{duree}}.",
+    "TROP_DE_TENTATIVES": "Too many attempts. Try again in {{duree}}."
+  },
+  "duree": {
+    "secondes": "{{nombre}} s",
+    "minutes": "{{nombre}} min"
+  },
   "commun": {
     "navigationPrincipale": "Main navigation",
-    "gestion": "Back office"
+    "gestion": "Back office",
+    "codeSupport": "Code for support:",
+    "reessayer": "Try again",
+    "annuler": "Cancel",
+    "chargement": "Loading…"
   },
   "caisse": {
     "vide": {
@@ -23,7 +42,8 @@
   "gestion": {
     "menu": {
       "tableauDeBord": "Dashboard",
-      "caisse": "Till"
+      "caisse": "Till",
+      "etablissements": "Venues"
     },
     "tableauDeBord": {
       "titre": "Dashboard",
@@ -40,11 +60,175 @@
   },
   "introuvable": {
     "titre": "Page not found",
-    "phrase": "The address {{chemin}} does not match any screen. Check the link or go back to the till.",
-    "retour": "Back to the till"
+    "phrase": "The address {{chemin}} does not match any screen. Check the link or go back to the home screen.",
+    "retour": "Back to home"
   },
   "miseAJour": {
     "message": "A new version of Tonti is available.",
     "recharger": "Reload"
+  },
+  "pagination": {
+    "libelle": "Pagination",
+    "resume": "{{debut}}–{{fin}} of {{total}}",
+    "precedente": "Previous page",
+    "suivante": "Next page"
+  },
+  "validation": {
+    "obligatoire": "This field is required.",
+    "codeFormat": "2 to 10 capital letters or digits, no spaces.",
+    "tropLong": "This text is too long.",
+    "motDePasseCourt": "The password must be at least 8 characters long.",
+    "contact": "Enter a phone number or an email address.",
+    "email": "Invalid email address."
+  },
+  "barre": {
+    "entreprise": "Business",
+    "deconnexion": "Sign out"
+  },
+  "connexion": {
+    "titre": "Sign in",
+    "phrase": "With the phone number or email of your Tonti account.",
+    "identifiant": "Phone or email",
+    "identifiantAide": "Phone: local number ({{pays}}), spaces optional. Other countries: start with “+” and the country code.",
+    "motDePasse": "Password",
+    "envoyer": "Sign in",
+    "enCours": "Signing in…",
+    "oubli": "Forgot your password? Contact the owner of your venue.",
+    "pasDeCompte": "No Tonti account yet?",
+    "inscription": "Create my business",
+    "validation": {
+      "identifiant": "Enter your phone number or email.",
+      "motDePasse": "Enter your password."
+    }
+  },
+  "choixEntreprise": {
+    "titre": "Choose the business",
+    "phrase": "Your account gives access to several businesses. You can switch from the top bar.",
+    "liste": "Businesses of your account"
+  },
+  "etablissements": {
+    "titre": "Venues",
+    "ajouter": "Add a venue",
+    "tableau": "Venues of the business",
+    "colonnes": {
+      "code": "Code",
+      "nom": "Name",
+      "ville": "City",
+      "fuseau": "Time zone",
+      "actions": "Actions"
+    },
+    "modifier": "Edit",
+    "modifierNomme": "Edit {{nom}}",
+    "chargement": "Loading venues…",
+    "vide": {
+      "titre": "No venue",
+      "phrase": "Add your first point of sale to open a till there.",
+      "phraseSansDroit": "Only a manager allowed to manage venues can add one."
+    },
+    "formulaire": {
+      "titreCreation": "New venue",
+      "titreModification": "Edit {{nom}}",
+      "code": "Code",
+      "codeAide": "2 to 10 capital letters or digits, for example BE.",
+      "nom": "Name",
+      "ville": "City",
+      "adresse": "Address",
+      "fuseau": "Time zone",
+      "creer": "Create the venue",
+      "enregistrer": "Save changes"
+    },
+    "cree": "{{nom}} has been created.",
+    "modifie": "{{nom}} has been updated."
+  },
+  "plateforme": {
+    "titreBarre": "Platform administration",
+    "entreprises": {
+      "titre": "Businesses",
+      "creer": "Create a business",
+      "tableau": "Client businesses",
+      "colonnes": {
+        "entreprise": "Business",
+        "pays": "Country",
+        "etablissements": "Venues",
+        "statut": "Status",
+        "actions": "Actions"
+      },
+      "creeeLe": "Created on {{date}}",
+      "statut": {
+        "ACTIVE": "Active",
+        "SUSPENDUE": "Suspended"
+      },
+      "suspendre": "Suspend",
+      "suspendreNomme": "Suspend {{nom}}",
+      "reactiver": "Reactivate",
+      "reactiverNomme": "Reactivate {{nom}}",
+      "chargement": "Loading businesses…",
+      "vide": {
+        "titre": "No business",
+        "phrase": "Create the first client business: its owner will then be able to sign in."
+      },
+      "creee": "{{nom}} has been created. The owner signs in with their phone or email and the temporary password.",
+      "creeeCompteExistant": "{{nom}} has been created and linked to the owner's existing account, who keeps their password.",
+      "suspension": {
+        "titre": "Suspend {{nom}}?",
+        "consequence": "Nobody will be able to sign in to this business and current sessions will be cut. You can reactivate it at any time.",
+        "annuler": "Keep the business active",
+        "confirmer": "Suspend the business",
+        "faite": "{{nom}} is suspended."
+      },
+      "reactivation": {
+        "titre": "Reactivate {{nom}}?",
+        "consequence": "Its users will be able to sign in again.",
+        "annuler": "Leave suspended",
+        "confirmer": "Reactivate the business",
+        "faite": "{{nom}} is active again."
+      }
+    },
+    "nouvelle": {
+      "titre": "New business",
+      "retour": "Back to businesses"
+    }
+  },
+  "formulaireEntreprise": {
+    "sections": {
+      "entreprise": "Business",
+      "proprietaire": "Owner",
+      "etablissement": "First venue"
+    },
+    "nomEntreprise": "Business name",
+    "pays": "Country",
+    "devise": "Currency",
+    "fuseau": "Time zone",
+    "langue": "Language",
+    "langues": {
+      "fr": "Français",
+      "en": "English"
+    },
+    "prenom": "First name",
+    "nom": "Last name",
+    "telephone": "Phone",
+    "telephoneAide": "Local number ({{pays}}), spaces optional. Other countries: start with “+” and the country code.",
+    "email": "Email",
+    "contactAide": "At least a phone number or an email: it is used to sign in.",
+    "motDePasseProvisoire": "Temporary password",
+    "motDePasseProvisoireAide": "At least 8 characters. Required if the owner has no Tonti account yet.",
+    "motDePasse": "Password",
+    "motDePasseAide": "At least 8 characters.",
+    "nomEtablissement": "Venue name",
+    "code": "Venue code",
+    "codeAide": "2 to 10 capital letters or digits, for example BE.",
+    "ville": "City",
+    "adresse": "Address",
+    "creer": "Create the business"
+  },
+  "inscription": {
+    "titre": "Create my business",
+    "phrase": "Your business, your first venue and your owner account, all at once.",
+    "envoyer": "Create my business",
+    "dejaCompte": "Already have a Tonti account?",
+    "connexion": "Sign in"
+  },
+  "erreurPage": {
+    "titre": "This page cannot be displayed"
   }
 }

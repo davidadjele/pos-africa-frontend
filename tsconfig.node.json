@@ -20,8 +20,10 @@
     "vite.config.ts",
     "vitest.config.ts",
     "playwright.config.ts",
+    "playwright.reel.config.ts",
     "eslint.config.js",
     "e2e",
+    "e2e-reel",
     "scripts"
   ]
 }

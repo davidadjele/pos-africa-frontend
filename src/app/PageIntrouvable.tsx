@@ -17,7 +17,7 @@ export function PageIntrouvable() {
             titre={t('introuvable.titre')}
             phrase={t('introuvable.phrase', { chemin: pathname })}
             action={
-              <Link to="/caisse" className={classesBouton('principal')}>
+              <Link to="/" className={classesBouton('principal')}>
                 {t('introuvable.retour')}
               </Link>
             }

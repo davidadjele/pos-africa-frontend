@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { definirJetonAcces, effacerJetonAcces, lireJetonAcces } from './jetonAcces'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { abonnerJeton, definirJetonAcces, effacerJetonAcces, lireJetonAcces } from './jetonAcces'
 
 describe('jetonAcces', () => {
   afterEach(() => {
@@ -23,5 +23,27 @@ describe('jetonAcces', () => {
 
     expect(localStorage.length).toBe(0)
     expect(sessionStorage.length).toBe(0)
+  })
+
+  it('prévient les abonnés quand le jeton change, et plus après le désabonnement', () => {
+    const ecouteur = vi.fn()
+    const desabonner = abonnerJeton(ecouteur)
+
+    definirJetonAcces('eyJ.jeton.court')
+    effacerJetonAcces()
+    expect(ecouteur).toHaveBeenCalledTimes(2)
+
+    desabonner()
+    definirJetonAcces('eyJ.autre')
+    expect(ecouteur).toHaveBeenCalledTimes(2)
+  })
+
+  it('ne prévient personne quand le jeton ne change pas', () => {
+    const ecouteur = vi.fn()
+    abonnerJeton(ecouteur)
+
+    effacerJetonAcces()
+
+    expect(ecouteur).not.toHaveBeenCalled()
   })
 })

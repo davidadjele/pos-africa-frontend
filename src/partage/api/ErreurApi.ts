@@ -4,10 +4,13 @@ import type { ReponseErreur } from './ReponseErreur'
 export class ErreurApi extends Error {
   override readonly name = 'ErreurApi'
   readonly reponse: ReponseErreur
+  /** Délai imposé par l'en-tête Retry-After (trop de tentatives), en secondes. */
+  readonly reessayerApresSecondes: number | undefined
 
-  constructor(reponse: ReponseErreur) {
+  constructor(reponse: ReponseErreur, reessayerApresSecondes?: number) {
     super(reponse.message)
     this.reponse = reponse
+    this.reessayerApresSecondes = reessayerApresSecondes
   }
 
   get statut(): number {

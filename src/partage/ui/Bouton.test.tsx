@@ -81,4 +81,28 @@ describe('Bouton', () => {
     expect(icone).not.toBeNull()
     expect(icone).toHaveAttribute('aria-hidden', 'true')
   })
+  it('en cours, reste à sa couleur mais n’agit plus et l’annonce', async () => {
+    const connecter = vi.fn()
+    render(
+      <Bouton variante="principal" type="submit" enCours onClick={connecter}>
+        Se connecter
+      </Bouton>,
+    )
+
+    const bouton = screen.getByRole('button', { name: 'Se connecter' })
+    await userEvent.click(bouton)
+
+    expect(connecter).not.toHaveBeenCalled()
+    expect(bouton).toBeDisabled()
+    expect(bouton).toHaveAttribute('aria-busy', 'true')
+    expect(bouton).toHaveClass('bg-accent')
+  })
+
+  it('confirme une action destructrice en danger plein, jamais en navy', () => {
+    render(<Bouton variante="confirmationDanger">Suspendre l’entreprise</Bouton>)
+
+    const bouton = screen.getByRole('button', { name: 'Suspendre l’entreprise' })
+    expect(bouton).toHaveClass('bg-danger', 'text-surface')
+    expect(bouton).not.toHaveClass('bg-accent')
+  })
 })

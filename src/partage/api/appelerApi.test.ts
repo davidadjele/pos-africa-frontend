@@ -3,10 +3,11 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { serveurMsw } from '../../../tests/serveurMsw'
 import { appelerApi } from './appelerApi'
 import { ErreurApi } from './ErreurApi'
-import { definirJetonAcces, effacerJetonAcces } from './jetonAcces'
+import { definirJetonAcces, effacerJetonAcces, lireJetonAcces } from './jetonAcces'
+import { oublierRafraichissementEnCours } from './rafraichissement'
 import type { ReponseErreur } from './ReponseErreur'
 
-const API = 'http://api.test'
+const API = `${window.location.origin}/api`
 
 async function capturerErreur(promesse: Promise<unknown>): Promise<ErreurApi> {
   try {
@@ -21,9 +22,10 @@ async function capturerErreur(promesse: Promise<unknown>): Promise<ErreurApi> {
 describe('appelerApi', () => {
   afterEach(() => {
     effacerJetonAcces()
+    oublierRafraichissementEnCours()
   })
 
-  it('renvoie le corps JSON d’une réponse réussie, depuis l’URL de base configurée', async () => {
+  it('renvoie le corps JSON d’une réponse réussie, sur la même origine sous le préfixe /api', async () => {
     serveurMsw.use(
       http.get(`${API}/produits/42`, () =>
         HttpResponse.json({ id: 42, nom: 'Poulet braisé', prix: 4500 }),
@@ -203,6 +205,204 @@ describe('appelerApi', () => {
 
     await expect(appelerApi('/produits', { signal: controleur.signal })).rejects.toMatchObject({
       name: 'AbortError',
+    })
+  })
+  it('envoie le cookie et l’en-tête anti-CSRF sur les routes /auth', async () => {
+    let requete = null as Request | null
+    serveurMsw.use(
+      http.post(`${API}/auth/deconnexion`, ({ request }) => {
+        requete = request
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+
+    await appelerApi('/auth/deconnexion', { methode: 'POST' })
+
+    expect(requete?.headers.get('X-Demande-Tonti')).toBe('1')
+    expect(requete?.credentials).toBe('include')
+  })
+
+  it('n’envoie pas l’en-tête anti-CSRF hors des routes /auth', async () => {
+    let entetePresent = true
+    serveurMsw.use(
+      http.get(`${API}/etablissements`, ({ request }) => {
+        entetePresent = request.headers.has('X-Demande-Tonti')
+        return HttpResponse.json({})
+      }),
+    )
+
+    await appelerApi('/etablissements')
+
+    expect(entetePresent).toBe(false)
+  })
+
+  it('transmet le délai Retry-After d’un refus pour trop de tentatives', async () => {
+    serveurMsw.use(
+      http.post(`${API}/auth/connexion`, () =>
+        HttpResponse.json(
+          { statut: 429, code: 'TROP_DE_TENTATIVES', message: 'Trop de tentatives.' },
+          { status: 429, headers: { 'Retry-After': '90' } },
+        ),
+      ),
+    )
+
+    const erreur = await capturerErreur(appelerApi('/auth/connexion', { methode: 'POST' }))
+
+    expect(erreur.code).toBe('TROP_DE_TENTATIVES')
+    expect(erreur.reessayerApresSecondes).toBe(90)
+  })
+
+  it('ignore un Retry-After illisible', async () => {
+    serveurMsw.use(
+      http.post(`${API}/auth/connexion`, () =>
+        HttpResponse.json(
+          { statut: 429, code: 'TROP_DE_TENTATIVES', message: 'Trop de tentatives.' },
+          { status: 429, headers: { 'Retry-After': 'Wed, 21 Oct 2026 07:28:00 GMT' } },
+        ),
+      ),
+    )
+
+    const erreur = await capturerErreur(appelerApi('/auth/connexion', { methode: 'POST' }))
+
+    expect(erreur.reessayerApresSecondes).toBeUndefined()
+  })
+
+  describe('jeton d’accès expiré', () => {
+    const NON_AUTHENTIFIE = {
+      statut: 401,
+      code: 'NON_AUTHENTIFIE',
+      message: 'Authentification requise.',
+    }
+
+    function etablissementsAvecJeton(jetonValide: string) {
+      return http.get(`${API}/etablissements`, ({ request }) =>
+        request.headers.get('Authorization') === `Bearer ${jetonValide}`
+          ? HttpResponse.json({ elements: [], page: 0, taille: 50, total: 0 })
+          : HttpResponse.json(NON_AUTHENTIFIE, { status: 401 }),
+      )
+    }
+
+    it('rafraîchit le jeton une fois puis rejoue la requête avec le nouveau', async () => {
+      definirJetonAcces('eyJ.expire')
+      let rafraichissements = 0
+      serveurMsw.use(
+        etablissementsAvecJeton('eyJ.neuf'),
+        http.post(`${API}/auth/rafraichir`, () => {
+          rafraichissements += 1
+          return HttpResponse.json({ jetonAcces: 'eyJ.neuf', entreprises: [] })
+        }),
+      )
+
+      await expect(appelerApi('/etablissements')).resolves.toMatchObject({ total: 0 })
+
+      expect(rafraichissements).toBe(1)
+      expect(lireJetonAcces()).toBe('eyJ.neuf')
+    })
+
+    it('ne lance qu’un seul rafraîchissement pour plusieurs requêtes refusées en même temps', async () => {
+      definirJetonAcces('eyJ.expire')
+      let rafraichissements = 0
+      serveurMsw.use(
+        etablissementsAvecJeton('eyJ.neuf'),
+        http.post(`${API}/auth/rafraichir`, async () => {
+          rafraichissements += 1
+          await new Promise((resoudre) => setTimeout(resoudre, 20))
+          return HttpResponse.json({ jetonAcces: 'eyJ.neuf', entreprises: [] })
+        }),
+      )
+
+      await Promise.all([
+        appelerApi('/etablissements'),
+        appelerApi('/etablissements'),
+        appelerApi('/etablissements'),
+      ])
+
+      expect(rafraichissements).toBe(1)
+    })
+
+    it('ne rejoue la requête qu’une seule fois', async () => {
+      definirJetonAcces('eyJ.expire')
+      let appels = 0
+      serveurMsw.use(
+        http.get(`${API}/etablissements`, () => {
+          appels += 1
+          return HttpResponse.json(NON_AUTHENTIFIE, { status: 401 })
+        }),
+        http.post(`${API}/auth/rafraichir`, () =>
+          HttpResponse.json({ jetonAcces: 'eyJ.neuf', entreprises: [] }),
+        ),
+      )
+
+      const erreur = await capturerErreur(appelerApi('/etablissements'))
+
+      expect(erreur.code).toBe('NON_AUTHENTIFIE')
+      expect(appels).toBe(2)
+    })
+
+    it('oublie le jeton et remonte SESSION_EXPIREE quand la session est finie', async () => {
+      definirJetonAcces('eyJ.expire')
+      serveurMsw.use(
+        etablissementsAvecJeton('eyJ.neuf'),
+        http.post(`${API}/auth/rafraichir`, () =>
+          HttpResponse.json(
+            { statut: 401, code: 'SESSION_EXPIREE', message: 'Votre session a expiré.' },
+            { status: 401 },
+          ),
+        ),
+      )
+
+      const erreur = await capturerErreur(appelerApi('/etablissements'))
+
+      expect(erreur.code).toBe('SESSION_EXPIREE')
+      expect(lireJetonAcces()).toBeNull()
+    })
+
+    it('rejoue sans rafraîchir si un autre appel a déjà renouvelé le jeton entre-temps', async () => {
+      definirJetonAcces('eyJ.expire')
+      let rafraichissements = 0
+      serveurMsw.use(
+        http.get(`${API}/etablissements`, ({ request }) => {
+          if (request.headers.get('Authorization') === 'Bearer eyJ.neuf') {
+            return HttpResponse.json({ total: 0 })
+          }
+          definirJetonAcces('eyJ.neuf')
+          return HttpResponse.json(NON_AUTHENTIFIE, { status: 401 })
+        }),
+        http.post(`${API}/auth/rafraichir`, () => {
+          rafraichissements += 1
+          return HttpResponse.json({ jetonAcces: 'eyJ.autre', entreprises: [] })
+        }),
+      )
+
+      await expect(appelerApi('/etablissements')).resolves.toEqual({ total: 0 })
+      expect(rafraichissements).toBe(0)
+    })
+
+    it('ne rafraîchit pas sans jeton envoyé, ni pour un refus des routes /auth', async () => {
+      let rafraichissements = 0
+      serveurMsw.use(
+        http.get(`${API}/moi`, () => HttpResponse.json(NON_AUTHENTIFIE, { status: 401 })),
+        http.post(`${API}/auth/connexion`, () =>
+          HttpResponse.json(
+            {
+              statut: 401,
+              code: 'IDENTIFIANTS_INVALIDES',
+              message: 'Identifiant ou mot de passe incorrect.',
+            },
+            { status: 401 },
+          ),
+        ),
+        http.post(`${API}/auth/rafraichir`, () => {
+          rafraichissements += 1
+          return HttpResponse.json({ entreprises: [] })
+        }),
+      )
+
+      await capturerErreur(appelerApi('/moi'))
+      definirJetonAcces('eyJ.valide')
+      await capturerErreur(appelerApi('/auth/connexion', { methode: 'POST', corps: {} }))
+
+      expect(rafraichissements).toBe(0)
     })
   })
 })
