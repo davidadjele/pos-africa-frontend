@@ -15,7 +15,12 @@
     "COMPTE_VERROUILLE": "Trop d’essais infructueux : le compte est verrouillé pendant quelques minutes. Réessayez plus tard.",
     "TROP_DE_TENTATIVES": "Trop de tentatives. Patientez quelques minutes avant de réessayer.",
     "ERREUR_INTERNE": "Une erreur inattendue est survenue. Réessayez ; si elle persiste, donnez le code affiché au support.",
-    "RESEAU_INDISPONIBLE": "Le serveur est injoignable. Vérifiez la connexion et réessayez."
+    "RESEAU_INDISPONIBLE": "Le serveur est injoignable. Vérifiez la connexion et réessayez.",
+    "CODE_APPAIRAGE_INVALIDE": "Code invalide ou expiré. Demandez un nouveau code au gérant.",
+    "PIN_INCORRECT": "Code incorrect. Au 5e code erroné, le profil est bloqué.",
+    "PROFIL_BLOQUE": "Profil bloqué après 5 codes erronés. Un gérant doit réinitialiser le PIN.",
+    "VALIDATION_REQUISE": "Cette action demande la validation d’un gérant.",
+    "VALIDATION_INVALIDE": "Validation expirée ou déjà utilisée. Redemandez-la au gérant."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Trop d’essais infructueux : le compte est verrouillé. Réessayez dans {{duree}}.",
@@ -39,6 +44,51 @@
     "vide": {
       "titre": "Aucun produit à vendre pour l’instant",
       "phrase": "La prise de commande et l’encaissement arrivent au prochain lot, avec le catalogue des produits."
+    },
+    "prise": {
+      "titre": "Qui prend la caisse ?",
+      "phrase": "Touchez votre nom, puis tapez votre code.",
+      "chargement": "Chargement du personnel…",
+      "vide": {
+        "titre": "Personne ne peut encore prendre cette caisse",
+        "phrase": "Un gérant ajoute le personnel de {{etablissement}} dans la gestion, Personnel : chacun reçoit un PIN pour ouvrir la caisse."
+      },
+      "verrouillage_one": "La caisse se verrouille seule après {{count}} minute sans activité et revient ici.",
+      "verrouillage_other": "La caisse se verrouille seule après {{count}} minutes sans activité et revient ici.",
+      "bloque": "Bloqué",
+      "choisir": "Touchez votre nom pour ouvrir la caisse.",
+      "tapezCode": "Tapez votre code",
+      "chiffresSaisis_one": "{{count}} chiffre saisi",
+      "chiffresSaisis_other": "{{count}} chiffres saisis",
+      "ouvrir": "Ouvrir la caisse",
+      "autreProfil": "Choisir un autre profil"
+    },
+    "bloque": {
+      "titre": "Profil bloqué",
+      "phrase": "Cinq codes erronés ont été tapés. Pour protéger votre compte, ce profil ne peut plus ouvrir la caisse.",
+      "debloquer": "Pour le débloquer",
+      "marche": "Un gérant ouvre la gestion, Personnel, puis « Réinitialiser le PIN » de {{prenom}}. Un nouveau code temporaire vous sera donné ; vous choisirez ensuite le vôtre."
+    },
+    "nouveauPin": {
+      "bienvenue": "Bienvenue, {{prenom}}",
+      "roleIci": "{{role}} à {{etablissement}}",
+      "titre": "Choisissez votre code personnel",
+      "phrase": "Le code donné par votre gérant était temporaire. Choisissez-en un que personne d’autre ne connaît : il signe vos commandes et vos encaissements.",
+      "etapes": "Étapes",
+      "etape1": "1. Nouveau code",
+      "etape2": "2. Confirmation",
+      "regle": "4 à 6 chiffres. Évitez les codes trop simples (0000, 1234) et votre date de naissance : ils sont refusés.",
+      "saisir": "Tapez votre nouveau code",
+      "confirmer": "Retapez votre nouveau code",
+      "continuer": "Continuer",
+      "enregistrer": "Enregistrer mon code",
+      "recommencer": "Recommencer",
+      "tropSimple": "Code trop facile à deviner : évitez les suites (1234) et les chiffres répétés (1111).",
+      "different": "Les deux codes ne correspondent pas. Recommencez."
+    },
+    "session": {
+      "changer": "Changer d’utilisateur",
+      "utilisateur": "Caisse tenue par {{nom}}"
     }
   },
   "gestion": {
@@ -46,7 +96,8 @@
       "tableauDeBord": "Tableau de bord",
       "caisse": "Caisse",
       "etablissements": "Établissements",
-      "personnel": "Personnel"
+      "personnel": "Personnel",
+      "tablettes": "Tablettes"
     },
     "tableauDeBord": {
       "titre": "Tableau de bord",
@@ -82,7 +133,15 @@
     "tropLong": "Ce texte est trop long.",
     "motDePasseCourt": "Le mot de passe doit faire au moins 8 caractères.",
     "contact": "Saisissez un téléphone ou un e-mail.",
-    "email": "Adresse e-mail invalide."
+    "email": "Adresse e-mail invalide.",
+    "badge": "Validation d’un gérant",
+    "qui": "Gérant qui valide",
+    "note": "Cette validation ne vaut que pour cette action, pendant 60 secondes. Elle est enregistrée avec le nom du gérant.",
+    "choisir": "Touchez le nom du gérant qui valide.",
+    "code": "Code de {{nom}}",
+    "valider": "Valider",
+    "chargement": "Chargement des gérants…",
+    "aucun": "Personne dans cet établissement ne peut valider cette action avec son PIN. Un gérant doit d’abord choisir son code sur une caisse."
   },
   "barre": {
     "entreprise": "Entreprise",
@@ -138,7 +197,11 @@
       "adresse": "Adresse",
       "fuseau": "Fuseau horaire",
       "creer": "Créer l’établissement",
-      "enregistrer": "Enregistrer les modifications"
+      "enregistrer": "Enregistrer les modifications",
+      "verrouillage": "Verrouillage de la caisse",
+      "verrouillageAide": "Sans activité pendant ce délai, la caisse revient à « Qui prend la caisse ? ».",
+      "minutes_one": "{{count}} minute",
+      "minutes_other": "{{count}} minutes"
     },
     "cree": "{{nom}} a été créé.",
     "modifie": "{{nom}} a été modifié."
@@ -353,5 +416,77 @@
     "sessions": "Vos autres sessions ouvertes seront fermées.",
     "different": "Les deux mots de passe ne correspondent pas.",
     "change": "Mot de passe enregistré. Reconnectez-vous avec votre nouveau mot de passe."
+  },
+  "clavier": {
+    "effacer": "Effacer le dernier chiffre"
+  },
+  "tablette": {
+    "nonEnregistree": "Tablette non enregistrée",
+    "titre": "Enregistrer cette tablette",
+    "phrase": "Un gérant ouvre Tonti sur son téléphone, dans la gestion : Tablettes, puis Enregistrer une tablette. Il choisit l’établissement et le nom de cette caisse, et obtient un code à 6 chiffres. Tapez ce code ici.",
+    "etape1": "Le gérant génère le code sur son téléphone.",
+    "etape2": "Vous le tapez sur cette tablette, dans les 10 minutes.",
+    "etape3": "La tablette devient une caisse de l’établissement : le personnel s’y connecte avec son PIN.",
+    "motDePasse": "Le mot de passe du gérant n’est jamais saisi sur cette tablette.",
+    "code": "Code d’enregistrement",
+    "chiffresSaisis_one": "{{count}} chiffre saisi sur {{total}}",
+    "chiffresSaisis_other": "{{count}} chiffres saisis sur {{total}}",
+    "aide": "Le code se valide seul au 6e chiffre. Code expiré ou erroné : demandez-en un nouveau au gérant."
+  },
+  "tablettes": {
+    "titre": "Tablettes",
+    "phrase": "Les appareils autorisés à servir de caisse. Une tablette perdue ou volée se révoque ici : elle est coupée aussitôt.",
+    "enregistrer": "Enregistrer une tablette",
+    "tableau": "Tablettes de l’entreprise",
+    "chargement": "Chargement des tablettes…",
+    "colonnes": {
+      "nom": "Nom",
+      "etablissement": "Établissement",
+      "activite": "Dernière activité",
+      "statut": "Statut",
+      "actions": "Actions"
+    },
+    "statut": {
+      "active": "Active",
+      "revoquee": "Révoquée"
+    },
+    "renommer": "Renommer",
+    "renommerNomme": "Renommer {{nom}}",
+    "revoquer": "Révoquer",
+    "plusDActions": "Plus d’actions pour {{nom}}",
+    "vide": {
+      "titre": "Aucune tablette",
+      "phrase": "Enregistrez la tablette de chaque caisse : le personnel s’y connectera avec son PIN."
+    },
+    "formulaire": {
+      "etablissement": "Établissement",
+      "nom": "Nom de la caisse",
+      "nomAide": "Tel que le personnel le verra, par exemple « Caisse 1, bar ».",
+      "generer": "Générer le code"
+    },
+    "code": {
+      "titre": "Code d’enregistrement",
+      "pour": "Pour « {{nom}} ». Sur la tablette, ouvrez Tonti puis tapez ce code.",
+      "aTaper": "Code à taper sur la tablette",
+      "valable": "Valable encore",
+      "attente": "En attente de la tablette : cet écran se met à jour quand elle est enregistrée.",
+      "annuler": "Annuler ce code",
+      "enregistree": "La tablette « {{nom}} » est enregistrée.",
+      "terminer": "Terminer",
+      "expire": "Ce code a expiré sans être utilisé.",
+      "nouveau": "Générer un nouveau code"
+    },
+    "revocation": {
+      "titre": "Révoquer « {{nom}} » ?",
+      "consequence": "La tablette est coupée aussitôt : plus personne ne pourra s’y connecter. Pour la réutiliser, il faudra l’enregistrer de nouveau avec un code.",
+      "annuler": "Garder la tablette",
+      "confirmer": "Révoquer la tablette",
+      "faite": "« {{nom}} » est révoquée."
+    },
+    "renommage": {
+      "titre": "Renommer « {{nom}} »",
+      "consequence": "Le nouveau nom s’affiche sur la tablette et dans cette liste.",
+      "fait": "La tablette s’appelle maintenant « {{nom}} »."
+    }
   }
 }

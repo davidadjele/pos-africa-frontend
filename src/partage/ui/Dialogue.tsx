@@ -1,5 +1,6 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { useId, useRef, type ReactNode } from 'react'
 import { Bouton } from './Bouton'
+import { usePiegeFocus } from './usePiegeFocus'
 
 /**
  * Confirmation d'une action qui compte (suspendre, annuler une ligne envoyée). Jamais pour une
@@ -34,43 +35,7 @@ export function Dialogue({
   // Bouton qui reçoit le focus : l'action sûre (annuler), ou l'unique bouton d'une information.
   const boutonSur = useRef<HTMLButtonElement>(null)
 
-  useEffect(() => {
-    const origine = document.activeElement
-    boutonSur.current?.focus()
-    return () => {
-      if (origine instanceof HTMLElement) origine.focus()
-    }
-  }, [])
-
-  // Écouté sur le document : Échap doit fermer même si le focus a quitté le dialogue.
-  useEffect(() => {
-    function surTouche(evenement: KeyboardEvent) {
-      if (evenement.key === 'Escape') {
-        evenement.preventDefault()
-        surAnnuler?.()
-        return
-      }
-      if (evenement.key !== 'Tab' || cadre.current === null) return
-      const focalisables = Array.from(
-        cadre.current.querySelectorAll<HTMLElement>(
-          'button:not([disabled]), [href], input, select',
-        ),
-      )
-      const premier = focalisables[0]
-      const dernier = focalisables.at(-1)
-      if (evenement.shiftKey && document.activeElement === premier) {
-        evenement.preventDefault()
-        dernier?.focus()
-      } else if (!evenement.shiftKey && document.activeElement === dernier) {
-        evenement.preventDefault()
-        premier?.focus()
-      }
-    }
-    document.addEventListener('keydown', surTouche)
-    return () => {
-      document.removeEventListener('keydown', surTouche)
-    }
-  }, [surAnnuler])
+  usePiegeFocus(cadre, boutonSur, surAnnuler)
 
   return (
     <div className="fixed inset-0 z-10 flex items-end justify-center bg-voile sm:items-center sm:p-4">

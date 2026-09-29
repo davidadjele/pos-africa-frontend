@@ -236,6 +236,39 @@ describe('appelerApi', () => {
     expect(entetePresent).toBe(false)
   })
 
+  it('traite les routes de la tablette comme des routes à cookie, sans rafraîchir de session', async () => {
+    definirJetonAcces('eyJ.expire')
+    let requete = null as Request | null
+    let rafraichissements = 0
+    serveurMsw.use(
+      http.post(`${API}/appareil/appairage`, ({ request }) => {
+        requete = request
+        return HttpResponse.json(
+          { statut: 400, code: 'CODE_APPAIRAGE_INVALIDE', message: 'x' },
+          { status: 400 },
+        )
+      }),
+      http.get(`${API}/appareil`, () =>
+        HttpResponse.json({ statut: 401, code: 'NON_AUTHENTIFIE', message: 'x' }, { status: 401 }),
+      ),
+      http.post(`${API}/auth/rafraichir`, () => {
+        rafraichissements++
+        return HttpResponse.json({ jetonAcces: 'eyJ.neuf', entreprises: [] })
+      }),
+    )
+
+    await expect(
+      appelerApi('/appareil/appairage', { methode: 'POST', corps: { code: '482915' } }),
+    ).rejects.toMatchObject({
+      code: 'CODE_APPAIRAGE_INVALIDE',
+    })
+    await expect(appelerApi('/appareil')).rejects.toMatchObject({ statut: 401 })
+
+    expect(requete?.headers.get('X-Demande-Tonti')).toBe('1')
+    expect(requete?.credentials).toBe('include')
+    expect(rafraichissements).toBe(0)
+  })
+
   it('transmet le délai Retry-After d’un refus pour trop de tentatives', async () => {
     serveurMsw.use(
       http.post(`${API}/auth/connexion`, () =>

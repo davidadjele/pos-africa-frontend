@@ -9,7 +9,9 @@ import {
   MOI_ADMIN,
   MOI_SERVEUR,
   MOI_TANTI,
+  CAISSE_BAR,
   ouvrir,
+  tablette,
   sessionAbsente,
   sessionOuverte,
 } from '../../tests/application'
@@ -68,19 +70,16 @@ describe('routeur', () => {
   })
 
   describe('gardes', () => {
-    it.each([
-      '/gestion',
-      '/gestion/etablissements',
-      '/gestion/personnel',
-      '/caisse',
-      '/plateforme',
-    ])('renvoie %s vers la connexion sans session', async (chemin) => {
-      sessionAbsente()
-      const { routeur } = ouvrir(chemin)
+    it.each(['/gestion', '/gestion/etablissements', '/gestion/personnel', '/plateforme'])(
+      'renvoie %s vers la connexion sans session',
+      async (chemin) => {
+        sessionAbsente()
+        const { routeur } = ouvrir(chemin)
 
-      await screen.findByRole('heading', { name: 'Se connecter' })
-      await attendreChemin(routeur, '/connexion')
-    })
+        await screen.findByRole('heading', { name: 'Se connecter' })
+        await attendreChemin(routeur, '/connexion')
+      },
+    )
 
     it.each([
       ['/plateforme', 'hors de portée d’une session d’entreprise'],
@@ -94,14 +93,14 @@ describe('routeur', () => {
       await attendreChemin(routeur, '/gestion')
     })
 
-    it('garde la gestion et la caisse hors de portée d’une session plateforme', async () => {
+    it('garde la gestion hors de portée d’une session plateforme', async () => {
       sessionOuverte(MOI_ADMIN)
       serveurMsw.use(
         http.get(`${API}/plateforme/entreprises`, () =>
           HttpResponse.json({ elements: [], page: 0, taille: 50, total: 0 }),
         ),
       )
-      const { routeur } = ouvrir('/caisse')
+      const { routeur } = ouvrir('/gestion')
 
       await screen.findByRole('heading', { level: 1, name: 'Entreprises' })
       await attendreChemin(routeur, '/plateforme')
@@ -162,12 +161,30 @@ describe('routeur', () => {
     })
   })
 
-  it('ouvre la caisse en plein écran, sous la barre de l’entreprise', async () => {
-    sessionOuverte(MOI_TANTI)
+  it('ouvre la caisse d’une tablette enregistrée en plein écran, sous le nom de la caisse', async () => {
+    tablette(CAISSE_BAR)
+    serveurMsw.use(http.get(`${API}/appareil/personnel`, () => HttpResponse.json([])))
     ouvrir('/caisse')
 
-    expect(await screen.findByRole('banner')).toHaveTextContent('Maquis Chez Tanti')
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Qui prend la caisse ?' }),
+    ).toBeVisible()
+    const barre = await screen.findByRole('banner')
+    await waitFor(() => {
+      expect(barre).toHaveTextContent('Maquis Chez Tanti')
+    })
+    expect(barre).toHaveTextContent('Bè Kpota, Caisse 1, bar')
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
+  })
+
+  it('mène une tablette non enregistrée à l’écran d’enregistrement', async () => {
+    tablette(null)
+    const { routeur } = ouvrir('/caisse')
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Enregistrer cette tablette' }),
+    ).toBeVisible()
+    await attendreChemin(routeur, '/enregistrement-tablette')
   })
 
   it('ouvre la gestion avec sa navigation latérale et l’entrée active marquée', async () => {

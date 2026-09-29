@@ -18,12 +18,16 @@ import { PagePersonnel } from '../fonctionnalites/personnel/PagePersonnel'
 import { PageEntreprises } from '../fonctionnalites/plateforme/PageEntreprises'
 import { PageNouvelleEntreprise } from '../fonctionnalites/plateforme/PageNouvelleEntreprise'
 import { PageRecu } from '../fonctionnalites/recu/PageRecu'
+import { PageEnregistrementTablette } from '../fonctionnalites/tablette/PageEnregistrementTablette'
+import { PageTablettes } from '../fonctionnalites/tablette/PageTablettes'
 import {
   exigerChoixEntreprise,
   exigerInscriptionOuverte,
   exigerMotDePasseTemporaire,
   exigerPortee,
+  exigerTablette,
   redirigerSiSessionOuverte,
+  redirigerSiTabletteEnregistree,
 } from './gardes'
 import { MiseEnPageCaisse } from './mises-en-page/MiseEnPageCaisse'
 import { MiseEnPageGestion } from './mises-en-page/MiseEnPageGestion'
@@ -91,8 +95,15 @@ const inscription = createRoute({
 const caisse = createRoute({
   getParentRoute: () => racine,
   path: '/caisse',
-  beforeLoad: ({ context }) => exigerPortee(context.clientRequetes, 'ENTREPRISE'),
+  beforeLoad: ({ context }) => exigerTablette(context.clientRequetes),
   component: MiseEnPageCaisse,
+})
+
+const enregistrementTablette = createRoute({
+  getParentRoute: () => racine,
+  path: '/enregistrement-tablette',
+  beforeLoad: ({ context }) => redirigerSiTabletteEnregistree(context.clientRequetes),
+  component: PageEnregistrementTablette,
 })
 
 const caisseAccueil = createRoute({
@@ -124,6 +135,12 @@ const personnel = createRoute({
   getParentRoute: () => gestion,
   path: '/personnel',
   component: PagePersonnel,
+})
+
+const tablettes = createRoute({
+  getParentRoute: () => gestion,
+  path: '/tablettes',
+  component: PageTablettes,
 })
 
 const plateforme = createRoute({
@@ -174,7 +191,8 @@ const arbre = racine.addChildren([
   choixEntreprise,
   inscription,
   caisse.addChildren([caisseAccueil]),
-  gestion.addChildren([gestionAccueil, etablissements, personnel]),
+  enregistrementTablette,
+  gestion.addChildren([gestionAccueil, etablissements, personnel, tablettes]),
   plateforme.addChildren([plateformeAccueil, nouvelleEntreprise]),
   recu,
 ])

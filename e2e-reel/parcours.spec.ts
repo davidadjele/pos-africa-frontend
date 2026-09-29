@@ -100,6 +100,9 @@ async function creerEntreprise(
 
 test.describe.configure({ mode: 'serial' })
 
+/** PIN temporaire de Kossi, donné par Tanti, que Kossi remplace à sa première prise de caisse. */
+let pinTemporaireKossi = ''
+
 test('l’admin crée Maquis Chez Tanti, puis Tanti gère ses établissements', async ({ page }) => {
   await page.goto('/')
   await expect(page).toHaveURL(/\/connexion$/)
@@ -210,8 +213,18 @@ test('Tanti ajoute son personnel, et la gérante ne voit que le sien', async ({ 
   await formulaire.getByLabel(/^Nom/).fill('Agbeko')
   await formulaire.getByLabel('Rôle à Bè Kpota').selectOption({ label: 'Serveur' })
   await page.getByRole('button', { name: 'Enregistrer l’employé' }).click()
-  const pin = await noterCode(page, 'PIN de caisse temporaire', 'J’ai noté les codes')
-  expect(pin).toMatch(/^\d{6}$/)
+  pinTemporaireKossi = await noterCode(page, 'PIN de caisse temporaire', 'J’ai noté les codes')
+  expect(pinTemporaireKossi).toMatch(/^\d{6}$/)
+
+  // Une serveuse partagée entre les deux établissements.
+  await page.getByRole('button', { name: 'Ajouter un employé' }).click()
+  formulaire = page.getByRole('form', { name: 'Ajouter un employé' })
+  await formulaire.getByLabel(/^Prénom/).fill('Sena')
+  await formulaire.getByLabel(/^Nom/).fill('Gbeasor')
+  await formulaire.getByLabel('Rôle à Bè Kpota').selectOption({ label: 'Serveur' })
+  await formulaire.getByLabel('Rôle à Agbalépédo').selectOption({ label: 'Serveur' })
+  await page.getByRole('button', { name: 'Enregistrer l’employé' }).click()
+  await noterCode(page, 'PIN de caisse temporaire', 'J’ai noté les codes')
 
   // Une gérante à Bè Kpota, avec un accès au back-office.
   await page.getByRole('button', { name: 'Ajouter un employé' }).click()
@@ -258,6 +271,100 @@ test('Tanti ajoute son personnel, et la gérante ne voit que le sien', async ({ 
   await expect(vueGerante).toContainText('Kossi Agbeko')
   await expect(vueGerante).not.toContainText('Tanti Akouvi')
   await capturer(page, '11-personnel-vue-gerante')
+
+  // Sena travaille aussi à Agbalépédo : Afi ne la modifie ni ne la désactive, mais peut la débloquer.
+  await expect(vueGerante.getByRole('row', { name: /Sena Gbeasor/ })).toContainText(
+    'Bè Kpota : Serveur',
+  )
+  await expect(page.getByRole('button', { name: 'Modifier Sena Gbeasor' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Plus d’actions pour Sena Gbeasor' }).click()
+  await expect(page.getByRole('menuitem', { name: 'Désactiver' })).toHaveCount(0)
+  await capturer(page, '11-personnel-employe-partage')
+  await page.getByRole('menuitem', { name: 'Réinitialiser le PIN' }).click()
+  await page.getByRole('button', { name: 'Générer un nouveau PIN' }).click()
+  await expect(page.getByRole('dialog', { name: 'Nouveau PIN de Sena Gbeasor' })).toBeVisible()
+  const nouveauPinSena = await noterCode(page, 'PIN de caisse temporaire', 'J’ai noté le PIN')
+  expect(nouveauPinSena).toMatch(/^\d{6}$/)
   await page.setViewportSize({ width: 390, height: 844 })
   await capturer(page, '11-personnel-vue-gerante-telephone')
+})
+
+async function taperCode(page: Page, code: string) {
+  for (const chiffre of code) {
+    await page.getByRole('button', { name: chiffre, exact: true }).click()
+  }
+}
+
+test('Tanti enregistre une tablette avec un code, Kossi y prend la caisse, puis Tanti la révoque', async ({
+  page,
+  browser,
+}) => {
+  await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
+  await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
+  await page
+    .getByRole('navigation', { name: 'Navigation principale' })
+    .getByRole('link', { name: 'Tablettes' })
+    .click()
+  await page.getByRole('button', { name: 'Enregistrer une tablette' }).click()
+  const formulaire = page.getByRole('form', { name: 'Enregistrer une tablette' })
+  await formulaire.getByLabel(/^Établissement/).selectOption({ label: 'Bè Kpota' })
+  await formulaire.getByLabel(/^Nom de la caisse/).fill('Caisse 1, bar')
+  await formulaire.getByRole('button', { name: 'Générer le code' }).click()
+  const panneau = page.getByRole('region', { name: 'Code d’enregistrement' })
+  const code = ((await panneau.locator('[data-code]').textContent()) ?? '').replace(/\D/g, '')
+  expect(code).toMatch(/^\d{6}$/)
+  await capturer(page, '12-tablettes-code')
+
+  // Une autre fenêtre joue la tablette : aucune session, seulement le code.
+  const contexteTablette = await browser.newContext({ viewport: { width: 1280, height: 800 } })
+  const tablette = await contexteTablette.newPage()
+  await tablette.goto('/caisse')
+  await expect(tablette).toHaveURL(/\/enregistrement-tablette$/)
+  await capturer(tablette, '13-tablette-enregistrement')
+  await taperCode(tablette, code)
+  await expect(tablette).toHaveURL(/\/caisse$/)
+  await expect(tablette.getByRole('banner')).toContainText('Bè Kpota, Caisse 1, bar')
+  await expect(
+    tablette.getByRole('heading', { level: 1, name: 'Qui prend la caisse ?' }),
+  ).toBeVisible()
+  await capturer(tablette, '14-tablette-qui-prend-la-caisse')
+
+  // Kossi tape le PIN temporaire donné par Tanti, puis choisit le sien, tapé deux fois.
+  await tablette.getByRole('button', { name: /Kossi A\./ }).click()
+  await taperCode(tablette, pinTemporaireKossi)
+  await capturer(tablette, '14-tablette-pin')
+  await tablette.getByRole('button', { name: 'Ouvrir la caisse' }).click()
+  await expect(
+    tablette.getByRole('heading', { level: 1, name: 'Choisissez votre code personnel' }),
+  ).toBeVisible()
+  await taperCode(tablette, '4827')
+  await tablette.getByRole('button', { name: 'Continuer' }).click()
+  await taperCode(tablette, '4827')
+  await capturer(tablette, '14-tablette-nouveau-pin')
+  await tablette.getByRole('button', { name: 'Enregistrer mon code' }).click()
+  const barreTablette = tablette.getByRole('banner')
+  await expect(barreTablette).toContainText('Kossi A.')
+  await capturer(tablette, '14-tablette-caisse-ouverte')
+
+  // Changement d'utilisateur, puis retour de Kossi avec son propre code.
+  await barreTablette.getByRole('button', { name: 'Changer d’utilisateur' }).click()
+  await tablette.getByRole('button', { name: /Kossi A\./ }).click()
+  await taperCode(tablette, '4827')
+  await tablette.getByRole('button', { name: 'Ouvrir la caisse' }).click()
+  await expect(barreTablette).toContainText('Kossi A.')
+
+  await expect(panneau).toContainText('La tablette « Caisse 1, bar » est enregistrée.')
+  await panneau.getByRole('button', { name: 'Terminer' }).click()
+  const tableau = page.getByRole('table', { name: 'Tablettes de l’entreprise' })
+  await expect(tableau.getByRole('row', { name: /Caisse 1, bar/ })).toContainText('Active')
+  await capturer(page, '15-tablettes-liste')
+
+  // Révoquée, la tablette revient à l'écran d'enregistrement.
+  await page.getByRole('button', { name: 'Plus d’actions pour Caisse 1, bar' }).click()
+  await page.getByRole('menuitem', { name: 'Révoquer' }).click()
+  await page.getByRole('button', { name: 'Révoquer la tablette' }).click()
+  await expect(tableau.getByRole('row', { name: /Caisse 1, bar/ })).toContainText('Révoquée')
+  await tablette.reload()
+  await expect(tablette).toHaveURL(/\/enregistrement-tablette$/)
+  await contexteTablette.close()
 })

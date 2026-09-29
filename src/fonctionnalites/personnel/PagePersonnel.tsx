@@ -237,8 +237,25 @@ export function PagePersonnel() {
       cle: 'actions',
       entete: t('personnel.colonnes.actions'),
       rendu: (e) => {
-        if (!e.gerable) return null
         const nom = nomDe(e)
+        const reinitialiserPin = {
+          libelle: t('personnel.reinitialiserPin'),
+          icone: KeyRound,
+          surChoisir: () => {
+            demander('pin', e)
+          },
+        }
+        // Employé aussi affecté hors du périmètre : seul son PIN se réinitialise d'ici (déblocage en service).
+        if (!e.gerable) {
+          return e.actif && e.pinReinitialisable ? (
+            <div className="flex justify-end">
+              <MenuActions
+                libelle={t('personnel.plusDActions', { nom })}
+                actions={[reinitialiserPin]}
+              />
+            </div>
+          ) : null
+        }
         if (!e.actif) {
           return (
             <Bouton
@@ -263,13 +280,7 @@ export function PagePersonnel() {
             <MenuActions
               libelle={t('personnel.plusDActions', { nom })}
               actions={[
-                {
-                  libelle: t('personnel.reinitialiserPin'),
-                  icone: KeyRound,
-                  surChoisir: () => {
-                    demander('pin', e)
-                  },
-                },
+                reinitialiserPin,
                 {
                   libelle: t('personnel.desactiver'),
                   icone: UserX,

@@ -28,12 +28,24 @@ const schema = z.object({
   ville: z.string().max(100, 'validation.tropLong'),
   adresse: z.string().max(255, 'validation.tropLong'),
   fuseauHoraire: z.string().min(1, 'validation.obligatoire'),
+  delaiVerrouillageMinutes: z.coerce.number<string>().int().min(1).max(30),
 })
+
+/** Choix proposés : court dans un bar animé, plus long dans un restaurant calme. */
+const DELAIS_VERROUILLAGE = [1, 2, 3, 5, 10, 15, 30]
+const DELAI_PAR_DEFAUT = '3'
 
 type Saisie = z.input<typeof schema>
 type Valide = z.output<typeof schema>
 
-const CHAMPS = ['code', 'nom', 'ville', 'adresse', 'fuseauHoraire'] as const
+const CHAMPS = [
+  'code',
+  'nom',
+  'ville',
+  'adresse',
+  'fuseauHoraire',
+  'delaiVerrouillageMinutes',
+] as const
 
 function valeursDe(etablissement: EtablissementResume): Saisie {
   return {
@@ -42,6 +54,7 @@ function valeursDe(etablissement: EtablissementResume): Saisie {
     ville: etablissement.ville ?? '',
     adresse: etablissement.adresse ?? '',
     fuseauHoraire: etablissement.fuseauHoraire,
+    delaiVerrouillageMinutes: String(etablissement.delaiVerrouillageMinutes),
   }
 }
 
@@ -54,6 +67,7 @@ function demandeDe(saisie: Valide): DemandeEtablissement {
     ...(ville === undefined ? {} : { ville }),
     ...(adresse === undefined ? {} : { adresse }),
     fuseauHoraire: saisie.fuseauHoraire,
+    delaiVerrouillageMinutes: saisie.delaiVerrouillageMinutes,
   }
 }
 
@@ -90,7 +104,14 @@ export function FormulaireEtablissement({
     resolver: zodResolver(schema),
     defaultValues: etablissement
       ? valeursDe(etablissement)
-      : { code: '', nom: '', ville: '', adresse: '', fuseauHoraire: fuseauParDefaut },
+      : {
+          code: '',
+          nom: '',
+          ville: '',
+          adresse: '',
+          fuseauHoraire: fuseauParDefaut,
+          delaiVerrouillageMinutes: DELAI_PAR_DEFAUT,
+        },
   })
 
   async function envoyer(saisie: Valide) {
@@ -195,6 +216,17 @@ export function FormulaireEtablissement({
           options={optionsFuseaux()}
           erreur={message(errors.fuseauHoraire?.message)}
           {...register('fuseauHoraire')}
+        />
+        <ChampSelection
+          libelle={t('etablissements.formulaire.verrouillage')}
+          aide={t('etablissements.formulaire.verrouillageAide')}
+          obligatoire
+          options={DELAIS_VERROUILLAGE.map((minutes) => ({
+            valeur: String(minutes),
+            libelle: t('etablissements.formulaire.minutes', { count: minutes }),
+          }))}
+          erreur={message(errors.delaiVerrouillageMinutes?.message)}
+          {...register('delaiVerrouillageMinutes')}
         />
       </div>
       {erreur !== null && <AlerteErreur erreur={erreur} />}

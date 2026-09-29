@@ -57,6 +57,32 @@ async function simulerApi(page: Page, { connecte }: { connecte: boolean }) {
     route.fulfill({ json: { inscriptionOuverte: false } }),
   )
   await page.route('**/api/etablissements?*', (route) => route.fulfill({ json: ETABLISSEMENTS }))
+  // Cette machine est une tablette enregistrée comme caisse de Bè Kpota.
+  await page.route('**/api/appareil', (route) =>
+    route.fulfill({
+      json: {
+        id: '7c2a0000-0000-4000-8000-000000000001',
+        nom: 'Caisse 1, bar',
+        entreprise: MAQUIS,
+        etablissement: { id: ETABLISSEMENTS.elements[0]?.id, nom: 'Bè Kpota', ville: 'Lomé' },
+        delaiVerrouillageMinutes: 3,
+      },
+    }),
+  )
+  await page.route('**/api/appareil/personnel', (route) =>
+    route.fulfill({
+      json: [
+        {
+          utilisateurId: '0d6a8f3e-0000-4c1b-9a51-5d7b9b0e0201',
+          prenom: 'Kossi',
+          nomCourt: 'Kossi A.',
+          role: 'SERVEUR',
+          bloque: false,
+          pinAChanger: false,
+        },
+      ],
+    }),
+  )
 }
 
 function surveillerErreursConsole(page: Page): string[] {
@@ -129,6 +155,8 @@ test('la gestion présente sa navigation et mène à la caisse', async ({ page }
   await navigation.getByRole('link', { name: 'Caisse' }).click()
   await expect(page).toHaveURL(/\/caisse$/)
   await expect(page.getByRole('banner')).toContainText('Maquis Chez Tanti')
+  await expect(page.getByRole('heading', { level: 1, name: 'Qui prend la caisse ?' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Kossi A\./ })).toBeVisible()
   await verifierSansDefilementHorizontal(page)
   expect(erreurs).toEqual([])
 })

@@ -13,6 +13,7 @@ const BE_KPOTA: EtablissementResume = {
   ville: 'Lomé',
   adresse: 'Rue de la Plage',
   fuseauHoraire: 'Africa/Lome',
+  delaiVerrouillageMinutes: 3,
   actif: true,
   version: 0,
 }
@@ -106,6 +107,7 @@ describe('PageEtablissements', () => {
     await userEvent.type(within(formulaire).getByLabelText(/^Nom/), 'Agbalépédo')
     await userEvent.type(within(formulaire).getByLabelText(/^Ville/), 'Lomé')
     expect(within(formulaire).getByLabelText(/^Fuseau horaire/)).toHaveValue('Africa/Lome')
+    expect(within(formulaire).getByLabelText(/^Verrouillage de la caisse/)).toHaveValue('3')
     await userEvent.click(screen.getByRole('button', { name: 'Créer l’établissement' }))
 
     expect(await screen.findByRole('status')).toHaveTextContent('Agbalépédo a été créé.')
@@ -114,6 +116,7 @@ describe('PageEtablissements', () => {
       nom: 'Agbalépédo',
       ville: 'Lomé',
       fuseauHoraire: 'Africa/Lome',
+      delaiVerrouillageMinutes: 3,
     })
     expect(await screen.findByRole('cell', { name: 'AG' })).toBeVisible()
     expect(screen.queryByRole('form')).not.toBeInTheDocument()
@@ -202,6 +205,10 @@ describe('PageEtablissements', () => {
     expect(within(formulaire).getByLabelText(/^Code/)).toHaveValue('BE')
     await userEvent.clear(within(formulaire).getByLabelText(/^Nom/))
     await userEvent.type(within(formulaire).getByLabelText(/^Nom/), 'Bè Kpota Plage')
+    await userEvent.selectOptions(
+      within(formulaire).getByLabelText(/^Verrouillage de la caisse/),
+      '5 minutes',
+    )
     await userEvent.click(screen.getByRole('button', { name: 'Enregistrer les modifications' }))
 
     expect(await screen.findByRole('status')).toHaveTextContent('Bè Kpota Plage a été modifié.')
@@ -211,6 +218,7 @@ describe('PageEtablissements', () => {
       ville: 'Lomé',
       adresse: 'Rue de la Plage',
       fuseauHoraire: 'Africa/Lome',
+      delaiVerrouillageMinutes: 5,
       version: 0,
     })
   })

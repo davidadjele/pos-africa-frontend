@@ -4,6 +4,201 @@
  */
 
 export interface paths {
+    "/appareil": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Reconnaître cette tablette
+         * @description Avec le cookie « appareil ». Erreur : NON_AUTHENTIFIE (401) si la tablette n'est pas enregistrée, ou a été révoquée : elle affiche alors l'écran d'enregistrement.
+         */
+        get: operations["courant"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/appareil/appairage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Enregistrer cette tablette avec le code du gérant
+         * @description Pose le cookie HttpOnly « appareil ». Exige l'en-tête X-Demande-Tonti: 1 et une origine autorisée. Erreurs : CODE_APPAIRAGE_INVALIDE (inconnu, expiré ou déjà utilisé), TROP_DE_TENTATIVES (Retry-After).
+         */
+        post: operations["appairer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/appareil/connexion": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Prendre la caisse avec son PIN
+         * @description PIN_A_CHANGER si le code saisi est le PIN temporaire : l'employé choisit le sien (POST /appareil/pin). Erreurs : PIN_INCORRECT (401), PROFIL_BLOQUE (423, au 5e code erroné : un gérant réinitialise le PIN), RESSOURCE_INTROUVABLE (employé absent de cette tablette), TROP_DE_TENTATIVES (Retry-After).
+         */
+        post: operations["prendre"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/appareil/personnel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Qui peut prendre cette caisse
+         * @description Employés actifs avec un PIN et un rôle dans l'établissement de la tablette (ou toute l'entreprise). Erreur : NON_AUTHENTIFIE (401) si la tablette n'est pas enregistrée.
+         */
+        get: operations["personnel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/appareil/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Choisir son PIN et prendre la caisse
+         * @description 4 à 6 chiffres, ni suite (1234) ni répétition (1111). Mêmes erreurs que la prise de caisse, plus REQUETE_INVALIDE (champ nouveauPin).
+         */
+        post: operations["changerPin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/appareils": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lister les tablettes visibles, actives d'abord */
+        get: operations["lister_3"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/appareils/codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Générer un code d'enregistrement de tablette
+         * @description Code à 6 chiffres, valable 10 minutes, renvoyé une seule fois. Erreurs : ACCES_REFUSE (établissement hors périmètre), REQUETE_INVALIDE (établissement inconnu).
+         */
+        post: operations["genererCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/appareils/codes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Suivre un code : en attente, utilisé ou expiré */
+        get: operations["statutCode"];
+        put?: never;
+        post?: never;
+        /** Annuler un code encore en attente */
+        delete: operations["annulerCode"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/appareils/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Renommer une tablette
+         * @description Erreur : CONFLIT_MODIFICATION (409, version dépassée).
+         */
+        put: operations["renommer"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/appareils/{id}/revocation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Révoquer une tablette
+         * @description Son jeton ne vaut plus rien : elle doit être réenregistrée.
+         */
+        post: operations["revoquer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/connexion": {
         parameters: {
             query?: never;
@@ -58,6 +253,83 @@ export interface paths {
          * @description Échange le cookie « rafraichissement » contre un nouveau (rotation) et un jeton d'accès pour l'entreprise demandée ou l'entreprise courante. Exige l'en-tête X-Demande-Tonti: 1 et une origine autorisée. Erreurs : SESSION_EXPIREE, ACCES_REFUSE (entreprise étrangère ou requête hors frontend).
          */
         post: operations["rafraichir"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/moi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Employé qui tient la caisse, son rôle ici et ses permissions */
+        get: operations["moi_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Prolonger la session de caisse
+         * @description Appelé tant que la caisse sert, avant l'expiration du jeton (15 minutes). NON_AUTHENTIFIE (401) si la tablette a été révoquée, le PIN réinitialisé ou l'employé désactivé : retour à « Qui prend la caisse ? ».
+         */
+        post: operations["renouveler"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/validateurs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Qui peut valider cette action ici
+         * @description Employés qui ont la permission dans l'établissement de la tablette, avec un PIN choisi, hors l'employé qui tient la caisse.
+         */
+        get: operations["validateurs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/validations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Valider une action sensible avec le PIN d'un gérant
+         * @description Valable 60 secondes, une seule fois, pour cette permission, cet objet, cette tablette et l'employé qui tient la caisse. Erreurs : PIN_INCORRECT (401), PROFIL_BLOQUE (423), ACCES_REFUSE (le validateur n'a pas la permission ici), RESSOURCE_INTROUVABLE, TROP_DE_TENTATIVES.
+         */
+        post: operations["valider"];
         delete?: never;
         options?: never;
         head?: never;
@@ -361,9 +633,37 @@ export interface components {
             etablissementId?: string;
             role: string;
         };
+        AppareilCourant: {
+            /** Format: int32 */
+            delaiVerrouillageMinutes: number;
+            entreprise: components["schemas"]["Entreprise"];
+            etablissement: components["schemas"]["Etablissement"];
+            /** Format: uuid */
+            id: string;
+            nom: string;
+        };
+        AppareilResume: {
+            /** Format: date-time */
+            derniereActiviteLe?: string;
+            /** Format: uuid */
+            etablissementId: string;
+            /** Format: uuid */
+            id: string;
+            nom: string;
+            revoquee: boolean;
+            /** Format: int64 */
+            version: number;
+        };
         ChampInvalide: {
             champ: string;
             message: string;
+        };
+        CodeGenere: {
+            code: string;
+            /** Format: date-time */
+            expireLe: string;
+            /** Format: uuid */
+            id: string;
         };
         ConfigurationPublique: {
             inscriptionOuverte: boolean;
@@ -374,9 +674,27 @@ export interface components {
             /** @example SERVEUR */
             role: string;
         };
+        DemandeAppairage: {
+            /** @example 482915 */
+            code: string;
+        };
         DemandeChangementMotDePasse: {
             motDePasseActuel: string;
             nouveauMotDePasse: string;
+        };
+        DemandeChangementPin: {
+            /** @example 4827 */
+            nouveauPin: string;
+            /** @example 610294 */
+            pinActuel: string;
+            /** Format: uuid */
+            utilisateurId: string;
+        };
+        DemandeCodeAppairage: {
+            /** Format: uuid */
+            etablissementId: string;
+            /** @example Caisse 1, bar */
+            nom: string;
         };
         DemandeConnexion: {
             /** @example 90 11 22 33 */
@@ -404,6 +722,12 @@ export interface components {
             adresse?: string;
             /** @example BE */
             code: string;
+            /**
+             * Format: int32
+             * @description Minutes sans activité avant le retour à « Qui prend la caisse ? » (3 par défaut)
+             * @example 3
+             */
+            delaiVerrouillageMinutes?: number;
             /** @example Africa/Lome */
             fuseauHoraire: string;
             /** @example Bè Kpota */
@@ -429,6 +753,12 @@ export interface components {
             adresse?: string;
             /** @example BE */
             code: string;
+            /**
+             * Format: int32
+             * @description Minutes sans activité avant le retour à « Qui prend la caisse ? » (3 par défaut)
+             * @example 3
+             */
+            delaiVerrouillageMinutes?: number;
             /** @example Africa/Lome */
             fuseauHoraire: string;
             /** @example Bè Kpota */
@@ -437,9 +767,33 @@ export interface components {
             version: number;
             ville?: string;
         };
+        DemandePriseDeCaisse: {
+            /** @example 4827 */
+            pin: string;
+            /** Format: uuid */
+            utilisateurId: string;
+        };
         DemandeRafraichissement: {
             /** Format: uuid */
             entrepriseId?: string;
+        };
+        DemandeRenommageAppareil: {
+            nom: string;
+            /** Format: int64 */
+            version: number;
+        };
+        DemandeValidation: {
+            /** Format: uuid */
+            objetId: string;
+            /**
+             * @example LIGNE_ANNULER_APRES_ENVOI
+             * @enum {string}
+             */
+            permission: "COMMANDE_CREER" | "LIGNE_ANNULER_APRES_ENVOI" | "TABLE_TRANSFERER" | "REMISE_APPLIQUER" | "REMISE_AU_DELA_PLAFOND" | "ARTICLE_OFFRIR" | "PAIEMENT_ENCAISSER" | "PAIEMENT_REMBOURSER" | "CAISSE_OUVRIR" | "CAISSE_FERMER" | "CAISSE_MOUVEMENT" | "STOCK_RECEPTIONNER" | "STOCK_AJUSTER" | "CATALOGUE_GERER" | "PRIX_MODIFIER" | "RAPPORT_VENTES" | "RAPPORT_FINANCIER" | "CLIENT_CREDIT" | "PERSONNEL_GERER" | "ETABLISSEMENT_GERER" | "BACK_OFFICE" | "APPAREIL_GERER";
+            /** @example 5937 */
+            pin: string;
+            /** Format: uuid */
+            validateurId: string;
         };
         DonneesEntreprise: {
             /** @example XOF */
@@ -494,10 +848,16 @@ export interface components {
             id: string;
             nom: string;
             pinAChanger: boolean;
+            pinReinitialisable: boolean;
             prenom: string;
             telephone?: string;
             /** Format: int64 */
             version: number;
+        };
+        Entreprise: {
+            /** Format: uuid */
+            id: string;
+            nom: string;
         };
         EntrepriseAccessible: {
             /** Format: uuid */
@@ -535,10 +895,18 @@ export interface components {
             /** @enum {string} */
             statut: "ACTIVE" | "SUSPENDUE";
         };
+        Etablissement: {
+            /** Format: uuid */
+            id: string;
+            nom: string;
+            ville?: string;
+        };
         EtablissementResume: {
             actif: boolean;
             adresse?: string;
             code: string;
+            /** Format: int32 */
+            delaiVerrouillageMinutes: number;
             fuseauHoraire: string;
             /** Format: uuid */
             id: string;
@@ -546,6 +914,15 @@ export interface components {
             /** Format: int64 */
             version: number;
             ville?: string;
+        };
+        PageResultatsAppareilResume: {
+            elements: components["schemas"]["AppareilResume"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            taille: number;
+            /** Format: int64 */
+            total: number;
         };
         PageResultatsEmployeResume: {
             elements: components["schemas"]["EmployeResume"][];
@@ -574,6 +951,15 @@ export interface components {
             /** Format: int64 */
             total: number;
         };
+        ProfilCaisse: {
+            bloque: boolean;
+            nomCourt: string;
+            pinAChanger: boolean;
+            prenom: string;
+            role: string;
+            /** Format: uuid */
+            utilisateurId: string;
+        };
         ReponseConnexion: {
             compte: components["schemas"]["ResumeCompte"];
             /** Format: uuid */
@@ -592,13 +978,16 @@ export interface components {
             statut: number;
             traceId?: string;
         };
+        ReponseJetonCaisse: {
+            jetonAcces: string;
+        };
         ReponseMoi: {
             compte: components["schemas"]["ResumeCompte"];
             entrepriseCourante?: components["schemas"]["EntrepriseCourante"];
             entreprises: components["schemas"]["EntrepriseAccessible"][];
             permissions: string[];
             /** @enum {string} */
-            portee: "ENTREPRISE" | "PLATEFORME";
+            portee: "ENTREPRISE" | "PLATEFORME" | "CAISSE";
             utilisateur?: components["schemas"]["ResumeUtilisateur"];
         };
         ReponseRafraichissement: {
@@ -612,6 +1001,11 @@ export interface components {
             employe: components["schemas"]["EmployeResume"];
             motDePasseTemporaire?: string;
             pinTemporaire?: string;
+        };
+        ResultatPriseDeCaisse: {
+            jetonAcces?: string;
+            /** @enum {string} */
+            statut: "CONNECTE" | "PIN_A_CHANGER";
         };
         ResumeCompte: {
             administrateurPlateforme: boolean;
@@ -633,6 +1027,26 @@ export interface components {
             code: string;
             touteLEntreprise: boolean;
         };
+        SessionCaisseCourante: {
+            nomCourt: string;
+            permissions: string[];
+            prenom: string;
+            role: string;
+            /** Format: uuid */
+            utilisateurId: string;
+        };
+        StatutCode: {
+            /** Format: date-time */
+            expireLe: string;
+            /** @enum {string} */
+            statut: "EN_ATTENTE" | "UTILISE" | "EXPIRE";
+        };
+        ValidationAccordee: {
+            /** Format: date-time */
+            expireLe: string;
+            /** Format: uuid */
+            id: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -642,6 +1056,358 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    courant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppareilCourant"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    appairer: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Demande-Tonti": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeAppairage"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppareilCourant"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    prendre: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Demande-Tonti": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandePriseDeCaisse"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultatPriseDeCaisse"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    personnel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfilCaisse"][];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    changerPin: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Demande-Tonti": "1";
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeChangementPin"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultatPriseDeCaisse"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    lister_3: {
+        parameters: {
+            query?: {
+                page?: number;
+                taille?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageResultatsAppareilResume"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    genererCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeCodeAppairage"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CodeGenere"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    statutCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StatutCode"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    annulerCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    renommer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeRenommageAppareil"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppareilResume"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    revoquer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
     connecter: {
         parameters: {
             query?: never;
@@ -726,6 +1492,128 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReponseRafraichissement"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    moi_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionCaisseCourante"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    renouveler: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseJetonCaisse"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    validateurs: {
+        parameters: {
+            query: {
+                permission: "COMMANDE_CREER" | "LIGNE_ANNULER_APRES_ENVOI" | "TABLE_TRANSFERER" | "REMISE_APPLIQUER" | "REMISE_AU_DELA_PLAFOND" | "ARTICLE_OFFRIR" | "PAIEMENT_ENCAISSER" | "PAIEMENT_REMBOURSER" | "CAISSE_OUVRIR" | "CAISSE_FERMER" | "CAISSE_MOUVEMENT" | "STOCK_RECEPTIONNER" | "STOCK_AJUSTER" | "CATALOGUE_GERER" | "PRIX_MODIFIER" | "RAPPORT_VENTES" | "RAPPORT_FINANCIER" | "CLIENT_CREDIT" | "PERSONNEL_GERER" | "ETABLISSEMENT_GERER" | "BACK_OFFICE" | "APPAREIL_GERER";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfilCaisse"][];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    valider: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeValidation"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ValidationAccordee"];
                 };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */

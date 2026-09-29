@@ -15,7 +15,12 @@
     "COMPTE_VERROUILLE": "Too many failed attempts: the account is locked for a few minutes. Try again later.",
     "TROP_DE_TENTATIVES": "Too many attempts. Wait a few minutes before trying again.",
     "ERREUR_INTERNE": "An unexpected error occurred. Try again; if it persists, give the code shown to support.",
-    "RESEAU_INDISPONIBLE": "The server cannot be reached. Check the connection and try again."
+    "RESEAU_INDISPONIBLE": "The server cannot be reached. Check the connection and try again.",
+    "CODE_APPAIRAGE_INVALIDE": "Invalid or expired code. Ask the manager for a new code.",
+    "PIN_INCORRECT": "Wrong code. After the 5th wrong code, the profile is blocked.",
+    "PROFIL_BLOQUE": "Profile blocked after 5 wrong codes. A manager must reset the PIN.",
+    "VALIDATION_REQUISE": "This action needs a manager’s approval.",
+    "VALIDATION_INVALIDE": "Approval expired or already used. Ask the manager again."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Too many failed attempts: the account is locked. Try again in {{duree}}.",
@@ -39,6 +44,51 @@
     "vide": {
       "titre": "No products to sell yet",
       "phrase": "Order taking and checkout arrive in the next release, along with the product catalogue."
+    },
+    "prise": {
+      "titre": "Who is taking the till?",
+      "phrase": "Tap your name, then type your code.",
+      "chargement": "Loading staff…",
+      "vide": {
+        "titre": "Nobody can take this till yet",
+        "phrase": "A manager adds the staff of {{etablissement}} in the back office, Staff: each gets a PIN to open the till."
+      },
+      "verrouillage_one": "The till locks itself after {{count}} minute without activity and comes back here.",
+      "verrouillage_other": "The till locks itself after {{count}} minutes without activity and comes back here.",
+      "bloque": "Blocked",
+      "choisir": "Tap your name to open the till.",
+      "tapezCode": "Type your code",
+      "chiffresSaisis_one": "{{count}} digit typed",
+      "chiffresSaisis_other": "{{count}} digits typed",
+      "ouvrir": "Open the till",
+      "autreProfil": "Choose another profile"
+    },
+    "bloque": {
+      "titre": "Profile blocked",
+      "phrase": "Five wrong codes were typed. To protect your account, this profile can no longer open the till.",
+      "debloquer": "To unblock it",
+      "marche": "A manager opens the back office, Staff, then “Reset PIN” for {{prenom}}. You will get a new temporary code, then choose your own."
+    },
+    "nouveauPin": {
+      "bienvenue": "Welcome, {{prenom}}",
+      "roleIci": "{{role}} at {{etablissement}}",
+      "titre": "Choose your personal code",
+      "phrase": "The code from your manager was temporary. Choose one nobody else knows: it signs your orders and payments.",
+      "etapes": "Steps",
+      "etape1": "1. New code",
+      "etape2": "2. Confirmation",
+      "regle": "4 to 6 digits. Avoid codes that are too simple (0000, 1234) and your birth date: they are refused.",
+      "saisir": "Type your new code",
+      "confirmer": "Type your new code again",
+      "continuer": "Continue",
+      "enregistrer": "Save my code",
+      "recommencer": "Start again",
+      "tropSimple": "Code too easy to guess: avoid sequences (1234) and repeated digits (1111).",
+      "different": "The two codes do not match. Start again."
+    },
+    "session": {
+      "changer": "Switch user",
+      "utilisateur": "Till held by {{nom}}"
     }
   },
   "gestion": {
@@ -46,7 +96,8 @@
       "tableauDeBord": "Dashboard",
       "caisse": "Till",
       "etablissements": "Venues",
-      "personnel": "Staff"
+      "personnel": "Staff",
+      "tablettes": "Tablets"
     },
     "tableauDeBord": {
       "titre": "Dashboard",
@@ -82,7 +133,15 @@
     "tropLong": "This text is too long.",
     "motDePasseCourt": "The password must be at least 8 characters long.",
     "contact": "Enter a phone number or an email address.",
-    "email": "Invalid email address."
+    "email": "Invalid email address.",
+    "badge": "Manager approval",
+    "qui": "Approving manager",
+    "note": "This approval covers this action only, for 60 seconds. It is recorded with the manager’s name.",
+    "choisir": "Tap the name of the approving manager.",
+    "code": "{{nom}}’s code",
+    "valider": "Approve",
+    "chargement": "Loading managers…",
+    "aucun": "Nobody at this venue can approve this action with a PIN. A manager must first choose their code on a till."
   },
   "barre": {
     "entreprise": "Business",
@@ -138,7 +197,11 @@
       "adresse": "Address",
       "fuseau": "Time zone",
       "creer": "Create the venue",
-      "enregistrer": "Save changes"
+      "enregistrer": "Save changes",
+      "verrouillage": "Till lock",
+      "verrouillageAide": "After this long without activity, the till goes back to “Who is taking the till?”.",
+      "minutes_one": "{{count}} minute",
+      "minutes_other": "{{count}} minutes"
     },
     "cree": "{{nom}} has been created.",
     "modifie": "{{nom}} has been updated."
@@ -353,5 +416,77 @@
     "sessions": "Your other open sessions will be closed.",
     "different": "The two passwords do not match.",
     "change": "Password saved. Sign in again with your new password."
+  },
+  "clavier": {
+    "effacer": "Delete the last digit"
+  },
+  "tablette": {
+    "nonEnregistree": "Unregistered tablet",
+    "titre": "Register this tablet",
+    "phrase": "A manager opens Tonti on their phone, in the back office: Tablets, then Register a tablet. They choose the venue and the name of this till, and get a 6-digit code. Type that code here.",
+    "etape1": "The manager generates the code on their phone.",
+    "etape2": "You type it on this tablet, within 10 minutes.",
+    "etape3": "The tablet becomes a till of the venue: staff sign in with their PIN.",
+    "motDePasse": "The manager’s password is never typed on this tablet.",
+    "code": "Registration code",
+    "chiffresSaisis_one": "{{count}} digit typed out of {{total}}",
+    "chiffresSaisis_other": "{{count}} digits typed out of {{total}}",
+    "aide": "The code is submitted at the 6th digit. Expired or wrong code: ask the manager for a new one."
+  },
+  "tablettes": {
+    "titre": "Tablets",
+    "phrase": "Devices allowed to act as a till. A lost or stolen tablet is revoked here: it is cut off immediately.",
+    "enregistrer": "Register a tablet",
+    "tableau": "Company tablets",
+    "chargement": "Loading tablets…",
+    "colonnes": {
+      "nom": "Name",
+      "etablissement": "Venue",
+      "activite": "Last activity",
+      "statut": "Status",
+      "actions": "Actions"
+    },
+    "statut": {
+      "active": "Active",
+      "revoquee": "Revoked"
+    },
+    "renommer": "Rename",
+    "renommerNomme": "Rename {{nom}}",
+    "revoquer": "Revoke",
+    "plusDActions": "More actions for {{nom}}",
+    "vide": {
+      "titre": "No tablets",
+      "phrase": "Register the tablet of each till: staff will sign in there with their PIN."
+    },
+    "formulaire": {
+      "etablissement": "Venue",
+      "nom": "Till name",
+      "nomAide": "As staff will see it, for example “Till 1, bar”.",
+      "generer": "Generate the code"
+    },
+    "code": {
+      "titre": "Registration code",
+      "pour": "For “{{nom}}”. On the tablet, open Tonti and type this code.",
+      "aTaper": "Code to type on the tablet",
+      "valable": "Valid for",
+      "attente": "Waiting for the tablet: this screen updates once it is registered.",
+      "annuler": "Cancel this code",
+      "enregistree": "The tablet “{{nom}}” is registered.",
+      "terminer": "Done",
+      "expire": "This code expired without being used.",
+      "nouveau": "Generate a new code"
+    },
+    "revocation": {
+      "titre": "Revoke “{{nom}}”?",
+      "consequence": "The tablet is cut off immediately: nobody can sign in on it any more. To reuse it, register it again with a code.",
+      "annuler": "Keep the tablet",
+      "confirmer": "Revoke the tablet",
+      "faite": "“{{nom}}” is revoked."
+    },
+    "renommage": {
+      "titre": "Rename “{{nom}}”",
+      "consequence": "The new name shows on the tablet and in this list.",
+      "fait": "The tablet is now called “{{nom}}”."
+    }
   }
 }
