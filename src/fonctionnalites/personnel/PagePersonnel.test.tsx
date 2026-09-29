@@ -133,6 +133,12 @@ async function ajouter({
   return formulaire
 }
 
+/** Les actions secondaires d'une ligne sont dans son menu « Plus d'actions ». */
+async function choisirAction(nom: string, action: string) {
+  await userEvent.click(await screen.findByRole('button', { name: `Plus d’actions pour ${nom}` }))
+  await userEvent.click(screen.getByRole('menuitem', { name: action }))
+}
+
 describe('PagePersonnel', () => {
   it('liste le personnel avec le rôle par établissement, l’accès, le PIN et le statut', async () => {
     backendSimule()
@@ -289,9 +295,7 @@ describe('PagePersonnel', () => {
     const requetes = backendSimule()
     await ouvrirPersonnel()
 
-    await userEvent.click(
-      await screen.findByRole('button', { name: 'Réinitialiser le PIN de Kossi Agbeko' }),
-    )
+    await choisirAction('Kossi Agbeko', 'Réinitialiser le PIN')
     const confirmation = await screen.findByRole('dialog', {
       name: 'Réinitialiser le PIN de Kossi Agbeko ?',
     })
@@ -308,7 +312,7 @@ describe('PagePersonnel', () => {
     const requetes = backendSimule()
     await ouvrirPersonnel()
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Désactiver Kossi Agbeko' }))
+    await choisirAction('Kossi Agbeko', 'Désactiver')
     const dialogue = await screen.findByRole('dialog', { name: 'Désactiver Kossi Agbeko ?' })
     expect(dialogue).toHaveTextContent('Ses ventes restent à son nom')
     await userEvent.click(within(dialogue).getByRole('button', { name: 'Désactiver l’employé' }))

@@ -12,6 +12,7 @@ import { Chargement } from '../../partage/ui/Chargement'
 import { CodeSecret } from '../../partage/ui/CodeSecret'
 import { Dialogue } from '../../partage/ui/Dialogue'
 import { EtatVide } from '../../partage/ui/EtatVide'
+import { MenuActions } from '../../partage/ui/MenuActions'
 import { Pagination, Tableau, type ColonneTableau } from '../../partage/ui/Tableau'
 import { requeteEtablissements } from '../etablissements/requetes'
 import { FormulaireEmploye } from './FormulaireEmploye'
@@ -249,7 +250,7 @@ export function PagePersonnel() {
           )
         }
         return (
-          <div className="flex flex-wrap justify-end gap-2">
+          <div className="flex justify-end gap-2">
             <Bouton
               icone={Pencil}
               aria-label={t('personnel.modifierNomme', { nom })}
@@ -259,25 +260,26 @@ export function PagePersonnel() {
             >
               {t('personnel.modifier')}
             </Bouton>
-            <Bouton
-              icone={KeyRound}
-              aria-label={t('personnel.reinitialiserPinNomme', { nom })}
-              onClick={() => {
-                demander('pin', e)
-              }}
-            >
-              {t('personnel.reinitialiserPin')}
-            </Bouton>
-            <Bouton
-              variante="danger"
-              icone={UserX}
-              aria-label={t('personnel.desactiverNomme', { nom })}
-              onClick={() => {
-                demander('desactivation', e)
-              }}
-            >
-              {t('personnel.desactiver')}
-            </Bouton>
+            <MenuActions
+              libelle={t('personnel.plusDActions', { nom })}
+              actions={[
+                {
+                  libelle: t('personnel.reinitialiserPin'),
+                  icone: KeyRound,
+                  surChoisir: () => {
+                    demander('pin', e)
+                  },
+                },
+                {
+                  libelle: t('personnel.desactiver'),
+                  icone: UserX,
+                  ton: 'danger',
+                  surChoisir: () => {
+                    demander('desactivation', e)
+                  },
+                },
+              ]}
+            />
           </div>
         )
       },

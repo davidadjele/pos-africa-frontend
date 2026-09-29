@@ -272,9 +272,7 @@
     "modifier": "Edit",
     "modifierNomme": "Edit {{nom}}",
     "reinitialiserPin": "Reset PIN",
-    "reinitialiserPinNomme": "Reset {{nom}}’s PIN",
     "desactiver": "Deactivate",
-    "desactiverNomme": "Deactivate {{nom}}",
     "reactiver": "Reactivate",
     "reactiverNomme": "Reactivate {{nom}}",
     "chargement": "Loading staff…",
@@ -340,7 +338,8 @@
       "role": "Choose at least one role."
     },
     "autresEtablissements_one": "+ {{count}} other venue",
-    "autresEtablissements_other": "+ {{count}} other venues"
+    "autresEtablissements_other": "+ {{count}} other venues",
+    "plusDActions": "More actions for {{nom}}"
   },
   "motDePasse": {
     "titre": "Choose your password",

@@ -41,14 +41,13 @@ async function noterCode(page: Page, libelle: string, bouton: string): Promise<s
   return valeur
 }
 
-/** Première connexion : le mot de passe temporaire est remplacé, puis on se reconnecte. */
-async function premiereConnexion(
+/** Sur l'écran obligatoire : remplace le mot de passe temporaire, puis se reconnecte avec le nouveau. */
+async function remplacerMotDePasse(
   page: Page,
   identifiant: string,
   temporaire: string,
   choisi: string,
 ) {
-  await seConnecter(page, identifiant, temporaire)
   await expect(page).toHaveURL(/\/changer-mot-de-passe$/)
   await page.getByLabel(/^Mot de passe temporaire/).fill(temporaire)
   await page.getByLabel(/^Nouveau mot de passe/).fill(choisi)
@@ -58,6 +57,17 @@ async function premiereConnexion(
   await page.getByLabel(/Téléphone ou e-mail/).fill(identifiant)
   await page.getByLabel(/Mot de passe/).fill(choisi)
   await page.getByRole('button', { name: 'Se connecter' }).click()
+}
+
+/** Première connexion avec le mot de passe temporaire, qu'il faut aussitôt remplacer. */
+async function premiereConnexion(
+  page: Page,
+  identifiant: string,
+  temporaire: string,
+  choisi: string,
+) {
+  await seConnecter(page, identifiant, temporaire)
+  await remplacerMotDePasse(page, identifiant, temporaire, choisi)
 }
 
 /** @returns le mot de passe temporaire du propriétaire, s'il n'avait pas encore de compte */
@@ -223,13 +233,22 @@ test('Tanti ajoute son personnel, et la gérante ne voit que le sien', async ({ 
   const tableau = page.getByRole('table', { name: 'Personnel de l’entreprise' })
   await expect(tableau.getByRole('row', { name: /Afi Mensah/ })).toContainText('Back-office')
   await capturer(page, '09-personnel-liste')
+  await page.getByRole('button', { name: 'Plus d’actions pour Kossi Agbeko' }).click()
+  await expect(page.getByRole('menuitem', { name: 'Réinitialiser le PIN' })).toBeFocused()
+  await capturer(page, '09-personnel-menu-actions')
+  await page.keyboard.press('Escape')
+  // Dernière ligne : le menu sort du tableau au lieu d'y être coupé.
+  await page.getByRole('button', { name: 'Plus d’actions pour Afi Mensah' }).click()
+  await expect(page.getByRole('menuitem', { name: 'Désactiver' })).toBeInViewport()
+  await capturer(page, '09-personnel-menu-derniere-ligne')
+  await page.keyboard.press('Escape')
   await seDeconnecter(page)
 
   // Afi remplace son mot de passe temporaire, puis ne voit que le personnel de Bè Kpota.
   await seConnecter(page, AFI.telephone, motDePasseAfi)
   await expect(page).toHaveURL(/\/changer-mot-de-passe$/)
   await capturer(page, '10-mot-de-passe-obligatoire')
-  await premiereConnexion(page, AFI.telephone, motDePasseAfi, AFI.motDePasse)
+  await remplacerMotDePasse(page, AFI.telephone, motDePasseAfi, AFI.motDePasse)
   await expect(page).toHaveURL(/\/gestion$/)
   await page
     .getByRole('navigation', { name: 'Navigation principale' })

@@ -272,9 +272,7 @@
     "modifier": "Modifier",
     "modifierNomme": "Modifier {{nom}}",
     "reinitialiserPin": "Réinitialiser le PIN",
-    "reinitialiserPinNomme": "Réinitialiser le PIN de {{nom}}",
     "desactiver": "Désactiver",
-    "desactiverNomme": "Désactiver {{nom}}",
     "reactiver": "Réactiver",
     "reactiverNomme": "Réactiver {{nom}}",
     "chargement": "Chargement du personnel…",
@@ -340,7 +338,8 @@
       "role": "Choisissez au moins un rôle."
     },
     "autresEtablissements_one": "+ {{count}} autre établissement",
-    "autresEtablissements_other": "+ {{count}} autres établissements"
+    "autresEtablissements_other": "+ {{count}} autres établissements",
+    "plusDActions": "Plus d’actions pour {{nom}}"
   },
   "motDePasse": {
     "titre": "Choisissez votre mot de passe",
