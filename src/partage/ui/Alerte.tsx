@@ -18,11 +18,11 @@ export function Alerte({
   ton,
   children,
   action,
-}: {
+}: Readonly<{
   ton: TonAlerte
   children: ReactNode
   action?: ReactNode
-}) {
+}>) {
   return (
     <div
       role={ton === 'danger' ? 'alert' : 'status'}
@@ -38,7 +38,10 @@ export function Alerte({
 }
 
 /** Erreur d'API : message traduit depuis le code, et traceId à donner au support. */
-export function AlerteErreur({ erreur, action }: { erreur: unknown; action?: ReactNode }) {
+export function AlerteErreur({
+  erreur,
+  action,
+}: Readonly<{ erreur: unknown; action?: ReactNode }>) {
   const { t } = useTranslation()
   const traceId = erreur instanceof ErreurApi ? erreur.reponse.traceId : undefined
   return (

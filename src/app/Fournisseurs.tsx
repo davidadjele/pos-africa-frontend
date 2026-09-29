@@ -10,11 +10,11 @@ export function Fournisseurs({
   routeur,
   clientRequetes,
   children,
-}: {
+}: Readonly<{
   routeur: Routeur
   clientRequetes: QueryClient
   children?: ReactNode
-}) {
+}>) {
   return (
     <I18nextProvider i18n={i18n}>
       <QueryClientProvider client={clientRequetes}>

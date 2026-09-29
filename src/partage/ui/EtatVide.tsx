@@ -5,13 +5,13 @@ export function EtatVide({
   phrase,
   action,
   niveauTitre = 2,
-}: {
+}: Readonly<{
   titre: string
   phrase: ReactNode
   /** Une seule action, celle qui fait sortir de l'état vide. */
   action?: ReactNode
   niveauTitre?: 1 | 2 | 3
-}) {
+}>) {
   const Titre = `h${String(niveauTitre)}` as 'h1' | 'h2' | 'h3'
   return (
     <div className="flex max-w-xl flex-col items-start gap-2">

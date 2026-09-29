@@ -6,7 +6,7 @@ import { BarreHaute } from '../partage/ui/BarreHaute'
 import { Bouton } from '../partage/ui/Bouton'
 
 /** Panne au chargement d'un écran : jamais présentée comme un état vide. */
-export function PageErreur({ error }: ErrorComponentProps) {
+export function PageErreur({ error }: Readonly<ErrorComponentProps>) {
   const { t } = useTranslation()
   const routeur = useRouter()
   return (

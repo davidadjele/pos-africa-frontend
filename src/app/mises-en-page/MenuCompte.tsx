@@ -8,7 +8,7 @@ export const CLASSES_CONTROLE_BARRE =
   'inline-flex min-h-cible-min items-center gap-2 rounded-normal border border-barre-trait bg-barre-fond px-3 text-libelle text-barre-texte hover:bg-barre-trait'
 
 /** Barre haute : entreprise courante (si le compte en a plusieurs), utilisateur, déconnexion. */
-export function MenuCompte({ surErreur }: { surErreur?: (erreur: unknown) => void }) {
+export function MenuCompte({ surErreur }: Readonly<{ surErreur?: (erreur: unknown) => void }>) {
   const { t } = useTranslation()
   const idSelecteur = useId()
   const navigate = useNavigate()

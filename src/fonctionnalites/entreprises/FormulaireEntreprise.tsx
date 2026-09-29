@@ -140,7 +140,7 @@ export function demandeDepuis(
   }
 }
 
-function Section({ titre, children }: { titre: string; children: ReactNode }) {
+function Section({ titre, children }: Readonly<{ titre: string; children: ReactNode }>) {
   return (
     <fieldset className="m-0 flex min-w-0 flex-col gap-4 rounded-moyen border border-trait bg-surface p-4 md:p-6">
       <legend className="float-left mb-1 w-full p-0 text-titre-carte text-encre">{titre}</legend>
@@ -154,13 +154,13 @@ export function FormulaireEntreprise({
   libelleEnvoyer,
   surEnvoyer,
   actionSecondaire,
-}: {
+}: Readonly<{
   mode: ModeFormulaire
   libelleEnvoyer: string
   /** Appelle l'API ; une erreur levée est affichée sous les champs ou en tête. */
   surEnvoyer: (saisie: Valide) => Promise<void>
   actionSecondaire?: ReactNode
-}) {
+}>) {
   const { t, i18n } = useTranslation()
   const [erreur, setErreur] = useState<unknown>(null)
   const {

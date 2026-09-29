@@ -11,7 +11,7 @@ const CLASSES_TONS: Record<TonStatut, string> = {
   neutre: 'bg-fond text-attenue',
 }
 
-export function BadgeStatut({ ton, children }: { ton: TonStatut; children: ReactNode }) {
+export function BadgeStatut({ ton, children }: Readonly<{ ton: TonStatut; children: ReactNode }>) {
   return (
     <span
       className={clsx(

@@ -21,8 +21,8 @@ describe('jetonAcces', () => {
   it('ne l’écrit jamais dans le stockage du navigateur', () => {
     definirJetonAcces('eyJ.jeton.court')
 
-    expect(localStorage.length).toBe(0)
-    expect(sessionStorage.length).toBe(0)
+    expect(localStorage).toHaveLength(0)
+    expect(sessionStorage).toHaveLength(0)
   })
 
   it('prévient les abonnés quand le jeton change, et plus après le désabonnement', () => {

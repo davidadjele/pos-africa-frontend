@@ -1,5 +1,5 @@
 /** Zone en cours de chargement, à la place de la liste qu'elle annonce : pas de spinner plein écran. */
-export function Chargement({ texte }: { texte: string }) {
+export function Chargement({ texte }: Readonly<{ texte: string }>) {
   return (
     <div
       aria-busy="true"

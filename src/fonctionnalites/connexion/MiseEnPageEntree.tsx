@@ -7,12 +7,12 @@ export function MiseEnPageEntree({
   phrase,
   largeur = 'etroite',
   children,
-}: {
+}: Readonly<{
   titre: string
   phrase?: string
   largeur?: 'etroite' | 'large'
   children: ReactNode
-}) {
+}>) {
   return (
     <div className="flex min-h-dvh flex-col bg-fond">
       <BarreHaute />

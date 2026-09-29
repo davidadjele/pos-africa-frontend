@@ -51,7 +51,7 @@ export function Bouton({
   className,
   children,
   ...reste
-}: ProprietesBouton) {
+}: Readonly<ProprietesBouton>) {
   const IconeAffichee = enCours ? LoaderCircle : Icone
   return (
     <button

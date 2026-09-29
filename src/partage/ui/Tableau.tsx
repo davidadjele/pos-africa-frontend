@@ -18,12 +18,12 @@ export function Tableau<T>({
   colonnes,
   lignes,
   cleLigne,
-}: {
+}: Readonly<{
   libelle: string
   colonnes: ColonneTableau<T>[]
   lignes: T[]
   cleLigne: (ligne: T) => string
-}) {
+}>) {
   const classesColonne = (colonne: ColonneTableau<T>) =>
     clsx(
       'px-4 whitespace-nowrap',
@@ -82,12 +82,12 @@ export function Pagination({
   taille,
   total,
   surChangerPage,
-}: {
+}: Readonly<{
   page: number
   taille: number
   total: number
   surChangerPage: (page: number) => void
-}) {
+}>) {
   const { t } = useTranslation()
   if (total <= taille) return null
   const debut = page * taille + 1

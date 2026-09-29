@@ -37,7 +37,7 @@ interface Changement {
   entreprise: EntreprisePlateforme
 }
 
-export function PageEntreprises({ recherche }: { recherche: RechercheEntreprises }) {
+export function PageEntreprises({ recherche }: Readonly<{ recherche: RechercheEntreprises }>) {
   const { t, i18n } = useTranslation()
   const clientRequetes = useQueryClient()
   const [page, setPage] = useState(0)

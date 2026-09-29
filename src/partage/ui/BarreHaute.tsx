@@ -9,10 +9,10 @@ export interface ContexteBarre {
 export function BarreHaute({
   contexte,
   children,
-}: {
+}: Readonly<{
   contexte?: ContexteBarre
   children?: ReactNode
-}) {
+}>) {
   return (
     <header
       data-zone="barre"

@@ -25,7 +25,7 @@ const REGLAGES: EntreeNavigation[] = [
   { vers: '/gestion/etablissements', cle: 'gestion.menu.etablissements', icone: Building2 },
 ]
 
-function Entree({ vers, cle, icone: Icone }: EntreeNavigation) {
+function Entree({ vers, cle, icone: Icone }: Readonly<EntreeNavigation>) {
   const { t } = useTranslation()
   return (
     <li>

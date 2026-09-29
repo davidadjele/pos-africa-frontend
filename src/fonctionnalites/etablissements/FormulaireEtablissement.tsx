@@ -67,14 +67,14 @@ export function FormulaireEtablissement({
   recharger,
   surEnregistre,
   surAnnuler,
-}: {
+}: Readonly<{
   etablissement?: EtablissementResume
   fuseauParDefaut: string
   /** Relit l'établissement depuis le serveur (après un conflit), ou undefined s'il n'existe plus. */
   recharger: (id: string) => Promise<EtablissementResume | undefined>
   surEnregistre: (etablissement: EtablissementResume) => void
   surAnnuler: () => void
-}) {
+}>) {
   const { t } = useTranslation()
   const idTitre = useId()
   const [version, setVersion] = useState(etablissement?.version)

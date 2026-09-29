@@ -15,7 +15,7 @@ export function Dialogue({
   surAnnuler,
   surConfirmer,
   children,
-}: {
+}: Readonly<{
   titre: string
   consequence: string
   libelleAnnuler: string
@@ -25,7 +25,7 @@ export function Dialogue({
   surAnnuler: () => void
   surConfirmer: () => void
   children?: ReactNode
-}) {
+}>) {
   const id = useId()
   const cadre = useRef<HTMLElement>(null)
   const boutonSur = useRef<HTMLButtonElement>(null)
@@ -53,7 +53,7 @@ export function Dialogue({
         ),
       )
       const premier = focalisables[0]
-      const dernier = focalisables[focalisables.length - 1]
+      const dernier = focalisables.at(-1)
       if (evenement.shiftKey && document.activeElement === premier) {
         evenement.preventDefault()
         dernier?.focus()
