@@ -140,7 +140,13 @@ describe('PageEtablissements', () => {
         const { code } = (await request.json()) as { code: string }
         return code === 'BE'
           ? HttpResponse.json(
-              { statut: 409, code: 'CODE_ETABLISSEMENT_DEJA_UTILISE', message: 'x' },
+              {
+                statut: 409,
+                code: 'CODE_ETABLISSEMENT_DEJA_UTILISE',
+                message: 'x',
+                // Le backend vise aussi le champ, avec son message non traduit : la traduction doit l'emporter.
+                champs: [{ champ: 'code', message: 'message du serveur, non traduit' }],
+              },
               { status: 409 },
             )
           : HttpResponse.json(

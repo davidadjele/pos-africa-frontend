@@ -31,6 +31,8 @@ export function placerErreursServeur<C extends string>(
   const restants: ChampInvalide[] = []
   for (const invalide of erreur.reponse.champs ?? []) {
     const nom = alias[invalide.champ] ?? invalide.champ
+    // Le champ visé par le code garde le message traduit, pas le texte du serveur (en français seulement).
+    if (nom === champDuCode) continue
     const champ = champs.find((connu) => connu === nom)
     if (champ === undefined) restants.push(invalide)
     else definirErreur(champ, { type: 'serveur', message: invalide.message })
