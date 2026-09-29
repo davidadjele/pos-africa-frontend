@@ -72,13 +72,13 @@ export interface paths {
             cookie?: never;
         };
         /** Lister les établissements, triés par code */
-        get: operations["lister_1"];
+        get: operations["lister_2"];
         put?: never;
         /**
          * Créer un établissement
          * @description Permission ETABLISSEMENT_GERER. Erreur : CODE_ETABLISSEMENT_DEJA_UTILISE (409).
          */
-        post: operations["creer_1"];
+        post: operations["creer_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -97,7 +97,7 @@ export interface paths {
          * Modifier un établissement
          * @description Permission ETABLISSEMENT_GERER. Erreurs : RESSOURCE_INTROUVABLE (404), CONFLIT_MODIFICATION (409, version dépassée), CODE_ETABLISSEMENT_DEJA_UTILISE (409).
          */
-        put: operations["modifier"];
+        put: operations["modifier_1"];
         post?: never;
         delete?: never;
         options?: never;
@@ -142,6 +142,124 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/moi/mot-de-passe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Changer son mot de passe
+         * @description Obligatoire à la première connexion avec un mot de passe temporaire (compte.motDePasseAChanger) : jusque-là, seuls /moi et ce changement sont permis. Toutes les sessions du compte sont fermées, il faut se reconnecter. Erreurs : REQUETE_INVALIDE (champs motDePasseActuel, nouveauMotDePasse), COMPTE_VERROUILLE.
+         */
+        post: operations["changerMotDePasse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/personnel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lister le personnel visible : actifs d'abord, par nom */
+        get: operations["lister_1"];
+        put?: never;
+        /**
+         * Ajouter un employé
+         * @description Renvoie une seule fois le PIN temporaire et, si un compte back-office est créé, le mot de passe temporaire. Erreurs : REQUETE_INVALIDE (affectations, telephone, email), ACCES_REFUSE (établissement hors périmètre, rôle au-delà de ses propres droits).
+         */
+        post: operations["creer_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/personnel/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Modifier un employé et remplacer ses rôles
+         * @description Erreurs : CONFLIT_MODIFICATION (version dépassée), ACCES_REFUSE (hors périmètre, soi-même, propriétaire), REQUETE_INVALIDE.
+         */
+        put: operations["modifier"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/personnel/{id}/desactivation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Désactiver un employé
+         * @description Plus de connexion ni de PIN ; ses sessions tombent.
+         */
+        post: operations["desactiver"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/personnel/{id}/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Réinitialiser le PIN
+         * @description Génère un nouveau PIN temporaire, renvoyé une seule fois.
+         */
+        post: operations["reinitialiserPin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/personnel/{id}/reactivation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Réactiver un employé */
+        post: operations["reactiver_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/plateforme/entreprises": {
         parameters: {
             query?: never;
@@ -154,7 +272,7 @@ export interface paths {
         put?: never;
         /**
          * Créer une entreprise, son premier établissement et son propriétaire
-         * @description Si le propriétaire a déjà un compte (même téléphone ou e-mail), il est rattaché et motDePasseProvisoire est ignoré ; sinon motDePasseProvisoire est obligatoire.
+         * @description Si le propriétaire a déjà un compte (même téléphone ou e-mail), il est rattaché et garde son mot de passe ; sinon un compte est créé avec un mot de passe temporaire, renvoyé une seule fois (motDePasseTemporaire), que le propriétaire remplacera à sa première connexion.
          */
         post: operations["creer"];
         delete?: never;
@@ -217,16 +335,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Rôles système et ceux que la personne connectée peut donner */
+        get: operations["roles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AffectationEmploye: {
+            /** Format: uuid */
+            etablissementId?: string;
+            role: string;
+        };
         ChampInvalide: {
             champ: string;
             message: string;
         };
         ConfigurationPublique: {
             inscriptionOuverte: boolean;
+        };
+        DemandeAffectation: {
+            /** Format: uuid */
+            etablissementId?: string;
+            /** @example SERVEUR */
+            role: string;
+        };
+        DemandeChangementMotDePasse: {
+            motDePasseActuel: string;
+            nouveauMotDePasse: string;
         };
         DemandeConnexion: {
             /** @example 90 11 22 33 */
@@ -239,6 +389,16 @@ export interface components {
             entreprise: components["schemas"]["DonneesEntreprise"];
             etablissement: components["schemas"]["DonneesPremierEtablissement"];
             proprietaire: components["schemas"]["DonneesProprietaire"];
+        };
+        DemandeEmploye: {
+            affectations: components["schemas"]["DemandeAffectation"][];
+            email?: string;
+            /** @example Agbeko */
+            nom: string;
+            /** @example Kossi */
+            prenom: string;
+            /** @example 90 11 23 45 */
+            telephone?: string;
         };
         DemandeEtablissement: {
             adresse?: string;
@@ -255,6 +415,15 @@ export interface components {
             entreprise: components["schemas"]["DonneesEntreprise"];
             etablissement: components["schemas"]["DonneesPremierEtablissement"];
             proprietaire: components["schemas"]["DonneesProprietaireInscription"];
+        };
+        DemandeModificationEmploye: {
+            affectations: components["schemas"]["DemandeAffectation"][];
+            email?: string;
+            nom: string;
+            prenom: string;
+            telephone?: string;
+            /** Format: int64 */
+            version: number;
         };
         DemandeModificationEtablissement: {
             adresse?: string;
@@ -298,7 +467,6 @@ export interface components {
         };
         DonneesProprietaire: {
             email?: string;
-            motDePasseProvisoire?: string;
             /** @example Akouvi */
             nom: string;
             /** @example Tanti */
@@ -315,6 +483,21 @@ export interface components {
             prenom: string;
             /** @example +228 90 11 22 33 */
             telephone?: string;
+        };
+        EmployeResume: {
+            actif: boolean;
+            affectations: components["schemas"]["AffectationEmploye"][];
+            backOffice: boolean;
+            email?: string;
+            gerable: boolean;
+            /** Format: uuid */
+            id: string;
+            nom: string;
+            pinAChanger: boolean;
+            prenom: string;
+            telephone?: string;
+            /** Format: int64 */
+            version: number;
         };
         EntrepriseAccessible: {
             /** Format: uuid */
@@ -335,6 +518,7 @@ export interface components {
             etablissementId: string;
             /** Format: uuid */
             id: string;
+            motDePasseTemporaire?: string;
             nom: string;
             /** Format: uuid */
             proprietaireCompteId: string;
@@ -362,6 +546,15 @@ export interface components {
             /** Format: int64 */
             version: number;
             ville?: string;
+        };
+        PageResultatsEmployeResume: {
+            elements: components["schemas"]["EmployeResume"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            taille: number;
+            /** Format: int64 */
+            total: number;
         };
         PageResultatsEntreprisePlateforme: {
             elements: components["schemas"]["EntreprisePlateforme"][];
@@ -414,11 +607,18 @@ export interface components {
             entreprises: components["schemas"]["EntrepriseAccessible"][];
             jetonAcces?: string;
         };
+        ResultatEmploye: {
+            compteExistant: boolean;
+            employe: components["schemas"]["EmployeResume"];
+            motDePasseTemporaire?: string;
+            pinTemporaire?: string;
+        };
         ResumeCompte: {
             administrateurPlateforme: boolean;
             email?: string;
             /** Format: uuid */
             id: string;
+            motDePasseAChanger: boolean;
             telephone?: string;
         };
         ResumeUtilisateur: {
@@ -426,6 +626,12 @@ export interface components {
             id: string;
             nom: string;
             prenom: string;
+        };
+        RoleAttribuable: {
+            attribuable: boolean;
+            backOffice: boolean;
+            code: string;
+            touteLEntreprise: boolean;
         };
     };
     responses: never;
@@ -533,7 +739,7 @@ export interface operations {
             };
         };
     };
-    lister_1: {
+    lister_2: {
         parameters: {
             query?: {
                 page?: number;
@@ -565,7 +771,7 @@ export interface operations {
             };
         };
     };
-    creer_1: {
+    creer_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -598,7 +804,7 @@ export interface operations {
             };
         };
     };
-    modifier: {
+    modifier_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -683,6 +889,226 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ReponseMoi"];
                 };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    changerMotDePasse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeChangementMotDePasse"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    lister_1: {
+        parameters: {
+            query?: {
+                page?: number;
+                taille?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageResultatsEmployeResume"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    creer_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeEmploye"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultatEmploye"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    modifier: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeModificationEmploye"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultatEmploye"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    desactiver: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    reinitialiserPin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultatEmploye"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    reactiver_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
             default: {
@@ -834,6 +1260,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConfigurationPublique"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    roles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleAttribuable"][];
                 };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */

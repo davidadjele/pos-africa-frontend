@@ -7,6 +7,7 @@ import {
   FLAMBOYANT,
   MAQUIS,
   MOI_ADMIN,
+  MOI_SERVEUR,
   MOI_TANTI,
   ouvrir,
   sessionAbsente,
@@ -67,20 +68,27 @@ describe('routeur', () => {
   })
 
   describe('gardes', () => {
-    it.each(['/gestion', '/gestion/etablissements', '/caisse', '/plateforme'])(
-      'renvoie %s vers la connexion sans session',
-      async (chemin) => {
-        sessionAbsente()
-        const { routeur } = ouvrir(chemin)
+    it.each([
+      '/gestion',
+      '/gestion/etablissements',
+      '/gestion/personnel',
+      '/caisse',
+      '/plateforme',
+    ])('renvoie %s vers la connexion sans session', async (chemin) => {
+      sessionAbsente()
+      const { routeur } = ouvrir(chemin)
 
-        await screen.findByRole('heading', { name: 'Se connecter' })
-        await attendreChemin(routeur, '/connexion')
-      },
-    )
+      await screen.findByRole('heading', { name: 'Se connecter' })
+      await attendreChemin(routeur, '/connexion')
+    })
 
-    it('garde l’espace plateforme hors de portée d’une session d’entreprise', async () => {
+    it.each([
+      ['/plateforme', 'hors de portée d’une session d’entreprise'],
+      ['/connexion', 'une session déjà ouverte'],
+      ['/changer-mot-de-passe', 'réservé à un mot de passe temporaire'],
+    ])('ramène une session d’entreprise de %s à la gestion (%s)', async (chemin) => {
       sessionOuverte(MOI_TANTI)
-      const { routeur } = ouvrir('/plateforme')
+      const { routeur } = ouvrir(chemin)
 
       await screen.findByRole('heading', { level: 1, name: 'Tableau de bord' })
       await attendreChemin(routeur, '/gestion')
@@ -99,12 +107,14 @@ describe('routeur', () => {
       await attendreChemin(routeur, '/plateforme')
     })
 
-    it('mène directement à son espace une session déjà ouverte qui ouvre la connexion', async () => {
-      sessionOuverte(MOI_TANTI)
-      const { routeur } = ouvrir('/connexion')
+    it('impose de remplacer un mot de passe temporaire avant tout autre écran', async () => {
+      sessionOuverte({ ...MOI_TANTI, compte: { ...MOI_TANTI.compte, motDePasseAChanger: true } })
+      const { routeur } = ouvrir('/gestion/etablissements')
 
-      await screen.findByRole('heading', { level: 1, name: 'Tableau de bord' })
-      await attendreChemin(routeur, '/gestion')
+      expect(
+        await screen.findByRole('heading', { name: 'Choisissez votre mot de passe' }),
+      ).toBeVisible()
+      await attendreChemin(routeur, '/changer-mot-de-passe')
     })
 
     it('n’ouvre le choix d’entreprise que s’il reste une entreprise à choisir', async () => {
@@ -175,6 +185,19 @@ describe('routeur', () => {
       'href',
       '/gestion/etablissements',
     )
+    expect(screen.getByRole('link', { name: 'Personnel' })).toHaveAttribute(
+      'href',
+      '/gestion/personnel',
+    )
+  })
+
+  it('masque le personnel et les établissements dans le menu sans le droit de les gérer', async () => {
+    sessionOuverte(MOI_SERVEUR)
+    ouvrir('/gestion')
+
+    await screen.findByRole('heading', { level: 1, name: 'Tableau de bord' })
+    expect(screen.queryByRole('link', { name: 'Personnel' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Établissements' })).not.toBeInTheDocument()
   })
 
   it('ouvre un reçu public sans rien demander à la session', async () => {

@@ -32,13 +32,28 @@ async function chargerMoi(clientRequetes: QueryClient): Promise<ReponseMoi> {
   }
 }
 
+/** Mot de passe temporaire : le serveur ne permet rien d'autre que le remplacer, l'interface non plus. */
+function exigerMotDePasseChoisi(moi: ReponseMoi): void {
+  if (moi.compte.motDePasseAChanger) throw redirect({ to: '/changer-mot-de-passe', replace: true })
+}
+
 /** Espace réservé à une portée : entreprise (gestion, caisse) ou plateforme. */
 export async function exigerPortee(clientRequetes: QueryClient, portee: Portee): Promise<void> {
   const etat = await demarrerSession()
   if (etat.statut === 'choixEntreprise') throw redirect({ to: '/choix-entreprise', replace: true })
   if (etat.statut !== 'connectee') throw redirect({ to: '/connexion', replace: true })
   const moi = await chargerMoi(clientRequetes)
+  exigerMotDePasseChoisi(moi)
   if (moi.portee !== portee) throw redirect({ to: accueilDe(moi.portee), replace: true })
+}
+
+/** Changement obligatoire : seulement pour une session ouverte avec un mot de passe temporaire. */
+export async function exigerMotDePasseTemporaire(clientRequetes: QueryClient): Promise<void> {
+  const etat = await demarrerSession()
+  if (etat.statut === 'choixEntreprise') throw redirect({ to: '/choix-entreprise', replace: true })
+  if (etat.statut !== 'connectee') throw redirect({ to: '/connexion', replace: true })
+  const moi = await chargerMoi(clientRequetes)
+  if (!moi.compte.motDePasseAChanger) throw redirect({ to: accueilDe(moi.portee), replace: true })
 }
 
 /** Écrans d'entrée (connexion, inscription) : une session ouverte mène directement à son espace. */
@@ -47,6 +62,7 @@ export async function redirigerSiSessionOuverte(clientRequetes: QueryClient): Pr
   if (etat.statut === 'choixEntreprise') throw redirect({ to: '/choix-entreprise', replace: true })
   if (etat.statut === 'connectee') {
     const moi = await chargerMoi(clientRequetes)
+    exigerMotDePasseChoisi(moi)
     throw redirect({ to: accueilDe(moi.portee), replace: true })
   }
 }

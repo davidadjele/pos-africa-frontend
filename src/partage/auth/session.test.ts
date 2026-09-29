@@ -16,7 +16,11 @@ import {
 
 const API = `${window.location.origin}/api`
 
-const TANTI = { id: '0d6a8f3e-1111-4c1b-9a51-5d7b9b0e0001', administrateurPlateforme: false }
+const TANTI = {
+  id: '0d6a8f3e-1111-4c1b-9a51-5d7b9b0e0001',
+  administrateurPlateforme: false,
+  motDePasseAChanger: false,
+}
 const MAQUIS = { id: '6b0e6a52-7a6a-4d57-9d3e-1c1a9b1f0a01', nom: 'Maquis Chez Tanti' }
 const FLAMBOYANT = { id: '6b0e6a52-7a6a-4d57-9d3e-1c1a9b1f0a02', nom: 'Bar Le Flamboyant' }
 

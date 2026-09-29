@@ -4,6 +4,9 @@ import { Bouton } from './Bouton'
 /**
  * Confirmation d'une action qui compte (suspendre, annuler une ligne envoyée). Jamais pour une
  * action anodine. Le focus reste dans le dialogue, Échap ferme sans agir.
+ *
+ * Sans `surAnnuler` : information à prendre en compte (un code affiché une seule fois), un seul
+ * bouton, et Échap ne ferme pas, pour que le code ne se perde pas d'un geste.
  */
 export function Dialogue({
   titre,
@@ -18,16 +21,17 @@ export function Dialogue({
 }: Readonly<{
   titre: string
   consequence: string
-  libelleAnnuler: string
+  libelleAnnuler?: string
   libelleConfirmer: string
   tonConfirmation?: 'principal' | 'danger'
   enCours?: boolean
-  surAnnuler: () => void
+  surAnnuler?: () => void
   surConfirmer: () => void
   children?: ReactNode
 }>) {
   const id = useId()
   const cadre = useRef<HTMLElement>(null)
+  // Bouton qui reçoit le focus : l'action sûre (annuler), ou l'unique bouton d'une information.
   const boutonSur = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -43,7 +47,7 @@ export function Dialogue({
     function surTouche(evenement: KeyboardEvent) {
       if (evenement.key === 'Escape') {
         evenement.preventDefault()
-        surAnnuler()
+        surAnnuler?.()
         return
       }
       if (evenement.key !== 'Tab' || cadre.current === null) return
@@ -86,10 +90,13 @@ export function Dialogue({
         </p>
         {children}
         <div className="flex flex-wrap justify-end gap-2">
-          <Bouton ref={boutonSur} onClick={surAnnuler}>
-            {libelleAnnuler}
-          </Bouton>
+          {surAnnuler !== undefined && (
+            <Bouton ref={boutonSur} onClick={surAnnuler}>
+              {libelleAnnuler}
+            </Bouton>
+          )}
           <Bouton
+            {...(surAnnuler === undefined ? { ref: boutonSur } : {})}
             variante={tonConfirmation === 'danger' ? 'confirmationDanger' : 'principal'}
             enCours={enCours}
             onClick={surConfirmer}

@@ -7,6 +7,8 @@ interface ProprietesCommunes {
   /** Message de validation : ce qu'il faut corriger. */
   erreur?: string | undefined
   obligatoire?: boolean
+  /** Libellé lu par les lecteurs d'écran mais non affiché, quand la mise en page nomme déjà le champ. */
+  libelleMasque?: boolean
 }
 
 // 16 px sur téléphone : en dessous, iOS zoome sur le champ au focus.
@@ -16,6 +18,7 @@ const CLASSES_CONTROLE =
 function Enveloppe({
   id,
   libelle,
+  libelleMasque = false,
   aide,
   erreur,
   obligatoire,
@@ -24,7 +27,7 @@ function Enveloppe({
   const message = erreur ?? aide
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-libelle text-encre">
+      <label htmlFor={id} className={libelleMasque ? 'sr-only' : 'text-libelle text-encre'}>
         {libelle}
         {obligatoire && (
           <span className="text-danger" aria-hidden="true">
@@ -58,6 +61,7 @@ function attributsAccessibilite(id: string, { aide, erreur }: ProprietesCommunes
 
 export function ChampSaisie({
   libelle,
+  libelleMasque = false,
   aide,
   erreur,
   obligatoire = false,
@@ -74,7 +78,14 @@ export function ChampSaisie({
   const idGenere = useId()
   const id = idFourni ?? idGenere
   return (
-    <Enveloppe id={id} libelle={libelle} aide={aide} erreur={erreur} obligatoire={obligatoire}>
+    <Enveloppe
+      id={id}
+      libelle={libelle}
+      libelleMasque={libelleMasque}
+      aide={aide}
+      erreur={erreur}
+      obligatoire={obligatoire}
+    >
       {/* Conteneur toujours présent : si le préfixe apparaît ou disparaît, l'input garde le focus. */}
       <div className="flex gap-2">
         {prefixe !== undefined && (
@@ -106,6 +117,7 @@ export interface OptionSelection {
 
 export function ChampSelection({
   libelle,
+  libelleMasque = false,
   aide,
   erreur,
   obligatoire = false,
@@ -121,7 +133,14 @@ export function ChampSelection({
   const idGenere = useId()
   const id = idFourni ?? idGenere
   return (
-    <Enveloppe id={id} libelle={libelle} aide={aide} erreur={erreur} obligatoire={obligatoire}>
+    <Enveloppe
+      id={id}
+      libelle={libelle}
+      libelleMasque={libelleMasque}
+      aide={aide}
+      erreur={erreur}
+      obligatoire={obligatoire}
+    >
       <select
         id={id}
         required={obligatoire}

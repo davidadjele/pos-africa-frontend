@@ -7,6 +7,7 @@ const ADMIN = {
   motDePasse: process.env.APP_ADMIN_MOT_DE_PASSE ?? 'Admin-e2e-2026',
 }
 const TANTI = { telephone: '+228 90 11 22 33', saisie: '90 11 22 33', motDePasse: 'Tanti-2026' }
+const AFI = { telephone: '90 44 55 66', motDePasse: 'Afi-Bekpota-26' }
 
 const DOSSIER_CAPTURES = process.env.DOSSIER_CAPTURES ?? 'test-results/captures-1a'
 mkdirSync(DOSSIER_CAPTURES, { recursive: true })
@@ -27,10 +28,43 @@ async function seDeconnecter(page: Page) {
   await expect(page).toHaveURL(/\/connexion$/)
 }
 
+/** Lit un code affiché une seule fois (PIN, mot de passe), puis ferme le dialogue. */
+async function noterCode(page: Page, libelle: string, bouton: string): Promise<string> {
+  const dialogue = page.getByRole('dialog')
+  // Le bloc du libellé exact : ses parents contiennent aussi les autres codes du dialogue.
+  const code = dialogue
+    .getByText(libelle, { exact: true })
+    .locator('xpath=..')
+    .locator('[data-code]')
+  const valeur = (await code.textContent()) ?? ''
+  await dialogue.getByRole('button', { name: bouton }).click()
+  return valeur
+}
+
+/** Première connexion : le mot de passe temporaire est remplacé, puis on se reconnecte. */
+async function premiereConnexion(
+  page: Page,
+  identifiant: string,
+  temporaire: string,
+  choisi: string,
+) {
+  await seConnecter(page, identifiant, temporaire)
+  await expect(page).toHaveURL(/\/changer-mot-de-passe$/)
+  await page.getByLabel(/^Mot de passe temporaire/).fill(temporaire)
+  await page.getByLabel(/^Nouveau mot de passe/).fill(choisi)
+  await page.getByLabel(/^Confirmez le nouveau mot de passe/).fill(choisi)
+  await page.getByRole('button', { name: 'Enregistrer et me reconnecter' }).click()
+  await expect(page.getByRole('status')).toContainText('Mot de passe enregistré')
+  await page.getByLabel(/Téléphone ou e-mail/).fill(identifiant)
+  await page.getByLabel(/Mot de passe/).fill(choisi)
+  await page.getByRole('button', { name: 'Se connecter' }).click()
+}
+
+/** @returns le mot de passe temporaire du propriétaire, s'il n'avait pas encore de compte */
 async function creerEntreprise(
   page: Page,
   { nom, etablissement, code }: { nom: string; etablissement: string; code: string },
-) {
+): Promise<string | undefined> {
   await page.getByRole('link', { name: 'Créer une entreprise' }).click()
   const entreprise = page.getByRole('group', { name: 'Entreprise' })
   await entreprise.getByLabel(/^Nom de l’entreprise/).fill(nom)
@@ -40,13 +74,18 @@ async function creerEntreprise(
   await proprietaire.getByLabel(/^Prénom/).fill('Tanti')
   await proprietaire.getByLabel(/^Nom/).fill('Akouvi')
   await proprietaire.getByLabel(/^Téléphone/).fill(TANTI.telephone)
-  await proprietaire.getByLabel(/^Mot de passe provisoire/).fill(TANTI.motDePasse)
   const premier = page.getByRole('group', { name: 'Premier établissement' })
   await premier.getByLabel(/^Nom de l’établissement/).fill(etablissement)
   await premier.getByLabel(/^Code/).fill(code)
   await premier.getByLabel(/^Ville/).fill('Lomé')
   await page.getByRole('button', { name: 'Créer l’entreprise' }).click()
+  const dialogue = page.getByRole('dialog')
+  await Promise.race([dialogue.waitFor(), page.waitForURL(/\/plateforme(\?.*)?$/)])
+  const temporaire = (await dialogue.isVisible())
+    ? await noterCode(page, 'Mot de passe temporaire du back-office', 'J’ai noté les codes')
+    : undefined
   await expect(page).toHaveURL(/\/plateforme(\?.*)?$/)
+  return temporaire
 }
 
 test.describe.configure({ mode: 'serial' })
@@ -63,7 +102,12 @@ test('l’admin crée Maquis Chez Tanti, puis Tanti gère ses établissements', 
   await seConnecter(page, ADMIN.identifiant, ADMIN.motDePasse)
   await expect(page).toHaveURL(/\/plateforme$/)
   await expect(page.getByRole('banner')).toContainText('Administration de la plateforme')
-  await creerEntreprise(page, { nom: 'Maquis Chez Tanti', etablissement: 'Bè Kpota', code: 'BE' })
+  const temporaire = await creerEntreprise(page, {
+    nom: 'Maquis Chez Tanti',
+    etablissement: 'Bè Kpota',
+    code: 'BE',
+  })
+  expect(temporaire).toMatch(/^[a-z2-9]{12}$/)
   await expect(page.getByRole('status')).toContainText('Maquis Chez Tanti a été créée.')
   const ligne = page.getByRole('row', { name: /Maquis Chez Tanti/ })
   await expect(ligne).toContainText('Togo')
@@ -71,8 +115,8 @@ test('l’admin crée Maquis Chez Tanti, puis Tanti gère ses établissements', 
   await capturer(page, '03-plateforme-entreprises')
   await seDeconnecter(page)
 
-  // Tanti se connecte avec son téléphone, saisi sans indicatif.
-  await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
+  // Tanti se connecte avec son téléphone, saisi sans indicatif, et remplace le mot de passe temporaire.
+  await premiereConnexion(page, TANTI.saisie, temporaire ?? '', TANTI.motDePasse)
   await expect(page).toHaveURL(/\/gestion$/)
   await expect(page.getByRole('banner')).toContainText('Maquis Chez Tanti')
   await page
@@ -135,4 +179,66 @@ test('un compte à plusieurs entreprises choisit la sienne après connexion', as
   await expect(tableau).toContainText('Tokoin')
   await expect(tableau).not.toContainText('Bè Kpota')
   await capturer(page, '06-gestion-autre-entreprise')
+})
+
+test('Tanti ajoute son personnel, et la gérante ne voit que le sien', async ({ page }) => {
+  await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
+  await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
+  await expect(page).toHaveURL(/\/gestion$/)
+  await page
+    .getByRole('navigation', { name: 'Navigation principale' })
+    .getByRole('link', { name: 'Personnel' })
+    .click()
+  await expect(page.getByRole('table', { name: 'Personnel de l’entreprise' })).toContainText(
+    'Tanti Akouvi',
+  )
+
+  // Un serveur : caisse seulement, avec un PIN temporaire.
+  await page.getByRole('button', { name: 'Ajouter un employé' }).click()
+  let formulaire = page.getByRole('form', { name: 'Ajouter un employé' })
+  await formulaire.getByLabel(/^Prénom/).fill('Kossi')
+  await formulaire.getByLabel(/^Nom/).fill('Agbeko')
+  await formulaire.getByLabel('Rôle à Bè Kpota').selectOption({ label: 'Serveur' })
+  await page.getByRole('button', { name: 'Enregistrer l’employé' }).click()
+  const pin = await noterCode(page, 'PIN de caisse temporaire', 'J’ai noté les codes')
+  expect(pin).toMatch(/^\d{6}$/)
+
+  // Une gérante à Bè Kpota, avec un accès au back-office.
+  await page.getByRole('button', { name: 'Ajouter un employé' }).click()
+  formulaire = page.getByRole('form', { name: 'Ajouter un employé' })
+  await formulaire.getByLabel(/^Prénom/).fill('Afi')
+  await formulaire.getByLabel(/^Nom/).fill('Mensah')
+  await formulaire.getByLabel('Rôle à Bè Kpota').selectOption({ label: 'Gérant' })
+  await formulaire.getByLabel('Donner un accès au back-office').check()
+  await formulaire.getByLabel(/^Téléphone/).fill(AFI.telephone)
+  await capturer(page, '07-personnel-formulaire')
+  await page.getByRole('button', { name: 'Enregistrer l’employé' }).click()
+  await expect(page.getByRole('dialog')).toContainText('Mot de passe temporaire du back-office')
+  await capturer(page, '08-personnel-codes')
+  const motDePasseAfi = await noterCode(
+    page,
+    'Mot de passe temporaire du back-office',
+    'J’ai noté les codes',
+  )
+  const tableau = page.getByRole('table', { name: 'Personnel de l’entreprise' })
+  await expect(tableau.getByRole('row', { name: /Afi Mensah/ })).toContainText('Back-office')
+  await capturer(page, '09-personnel-liste')
+  await seDeconnecter(page)
+
+  // Afi remplace son mot de passe temporaire, puis ne voit que le personnel de Bè Kpota.
+  await seConnecter(page, AFI.telephone, motDePasseAfi)
+  await expect(page).toHaveURL(/\/changer-mot-de-passe$/)
+  await capturer(page, '10-mot-de-passe-obligatoire')
+  await premiereConnexion(page, AFI.telephone, motDePasseAfi, AFI.motDePasse)
+  await expect(page).toHaveURL(/\/gestion$/)
+  await page
+    .getByRole('navigation', { name: 'Navigation principale' })
+    .getByRole('link', { name: 'Personnel' })
+    .click()
+  const vueGerante = page.getByRole('table', { name: 'Personnel de l’entreprise' })
+  await expect(vueGerante).toContainText('Kossi Agbeko')
+  await expect(vueGerante).not.toContainText('Tanti Akouvi')
+  await capturer(page, '11-personnel-vue-gerante')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await capturer(page, '11-personnel-vue-gerante-telephone')
 })

@@ -6,7 +6,11 @@ import { expect, test, type Page } from '@playwright/test'
 const MAQUIS = { id: '6b0e6a52-7a6a-4d57-9d3e-1c1a9b1f0a01', nom: 'Maquis Chez Tanti' }
 
 const MOI_TANTI = {
-  compte: { id: '0d6a8f3e-0000-4c1b-9a51-5d7b9b0e0001', administrateurPlateforme: false },
+  compte: {
+    id: '0d6a8f3e-0000-4c1b-9a51-5d7b9b0e0001',
+    administrateurPlateforme: false,
+    motDePasseAChanger: false,
+  },
   portee: 'ENTREPRISE',
   utilisateur: { id: '0d6a8f3e-0000-4c1b-9a51-5d7b9b0e0101', prenom: 'Tanti', nom: 'Akouvi' },
   entrepriseCourante: { ...MAQUIS, pays: 'TG', devise: 'XOF', fuseauHoraire: 'Africa/Lome' },

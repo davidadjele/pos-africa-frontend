@@ -172,8 +172,6 @@ describe('PageEntreprises', () => {
     entreprisesEnMemoire([MAQUIS])
     await ouvrirPlateforme('/plateforme?creee=Maquis%20Chez%20Tanti')
 
-    expect(screen.getByRole('status')).toHaveTextContent(
-      'Maquis Chez Tanti a été créée. Le propriétaire se connecte avec son téléphone ou son e-mail et le mot de passe provisoire.',
-    )
+    expect(screen.getByRole('status')).toHaveTextContent('Maquis Chez Tanti a été créée.')
   })
 })

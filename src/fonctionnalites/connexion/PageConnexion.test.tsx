@@ -174,7 +174,7 @@ describe('PageConnexion', () => {
       403,
       'AUCUNE_ENTREPRISE',
       {},
-      'Ce compte n’est rattaché à aucune entreprise active. Contactez le propriétaire de votre établissement.',
+      'Ce compte n’a accès au back-office d’aucune entreprise active. Contactez le propriétaire de votre établissement.',
     ],
   ])('explique %s en gardant la saisie', async (_cas, statut, code, entetes, message) => {
     sessionAbsente()

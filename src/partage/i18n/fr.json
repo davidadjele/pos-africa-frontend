@@ -5,7 +5,7 @@
     "IDENTIFIANTS_INVALIDES": "Identifiant ou mot de passe incorrect. Vérifiez votre saisie et réessayez.",
     "SESSION_EXPIREE": "Votre session a expiré. Reconnectez-vous pour continuer.",
     "ACCES_REFUSE": "Vous n’avez pas l’autorisation de faire cette action. Demandez à un gérant.",
-    "AUCUNE_ENTREPRISE": "Ce compte n’est rattaché à aucune entreprise active. Contactez le propriétaire de votre établissement.",
+    "AUCUNE_ENTREPRISE": "Ce compte n’a accès au back-office d’aucune entreprise active. Contactez le propriétaire de votre établissement.",
     "ENTREPRISE_SUSPENDUE": "L’accès à cette entreprise est suspendu. Contactez le support de Tonti.",
     "RESSOURCE_INTROUVABLE": "Cet élément n’existe plus ou a été supprimé.",
     "METHODE_NON_AUTORISEE": "Cette opération n’est pas prise en charge.",
@@ -31,7 +31,9 @@
     "codeSupport": "Code pour le support :",
     "reessayer": "Réessayer",
     "annuler": "Annuler",
-    "chargement": "Chargement…"
+    "chargement": "Chargement…",
+    "copier": "Copier",
+    "copie": "Copié"
   },
   "caisse": {
     "vide": {
@@ -43,7 +45,8 @@
     "menu": {
       "tableauDeBord": "Tableau de bord",
       "caisse": "Caisse",
-      "etablissements": "Établissements"
+      "etablissements": "Établissements",
+      "personnel": "Personnel"
     },
     "tableauDeBord": {
       "titre": "Tableau de bord",
@@ -167,7 +170,7 @@
         "titre": "Aucune entreprise",
         "phrase": "Créez la première entreprise cliente : son propriétaire pourra ensuite se connecter."
       },
-      "creee": "{{nom}} a été créée. Le propriétaire se connecte avec son téléphone ou son e-mail et le mot de passe provisoire.",
+      "creee": "{{nom}} a été créée.",
       "creeeCompteExistant": "{{nom}} a été créée et rattachée au compte existant du propriétaire, qui garde son mot de passe.",
       "suspension": {
         "titre": "Suspendre {{nom}} ?",
@@ -210,8 +213,6 @@
     "telephoneAide": "Numéro local ({{pays}}), espaces facultatifs. Autre pays : commencez par « + » et son indicatif.",
     "email": "E-mail",
     "contactAide": "Un téléphone ou un e-mail au moins : il sert d’identifiant de connexion.",
-    "motDePasseProvisoire": "Mot de passe provisoire",
-    "motDePasseProvisoireAide": "8 caractères au minimum. Obligatoire si le propriétaire n’a pas encore de compte Tonti.",
     "motDePasse": "Mot de passe",
     "motDePasseAide": "8 caractères au minimum.",
     "nomEtablissement": "Nom de l’établissement",
@@ -230,5 +231,128 @@
   },
   "erreurPage": {
     "titre": "Impossible d’afficher cette page"
+  },
+  "roles": {
+    "PROPRIETAIRE": "Propriétaire",
+    "ADMIN": "Administrateur",
+    "GERANT": "Gérant",
+    "CAISSIER": "Caissier",
+    "SERVEUR": "Serveur",
+    "CUISINE": "Cuisine",
+    "PERSONNALISE": "Rôle personnalisé"
+  },
+  "personnel": {
+    "titre": "Personnel",
+    "phrase": "Chaque employé a un rôle par établissement. La caisse s’ouvre avec le PIN ; le back-office, avec un compte.",
+    "ajouter": "Ajouter un employé",
+    "tableau": "Personnel de l’entreprise",
+    "colonnes": {
+      "employe": "Employé",
+      "roles": "Rôle par établissement",
+      "acces": "Accès",
+      "pin": "PIN de caisse",
+      "statut": "Statut",
+      "actions": "Actions"
+    },
+    "caisseSeulement": "Caisse seulement",
+    "touteLEntreprise": "Toute l’entreprise",
+    "roleDans": "{{lieu}} : {{role}}",
+    "acces": {
+      "backOffice": "Back-office",
+      "caisse": "Caisse"
+    },
+    "pin": {
+      "aChanger": "À changer",
+      "defini": "Défini"
+    },
+    "statut": {
+      "actif": "Actif",
+      "desactive": "Désactivé"
+    },
+    "modifier": "Modifier",
+    "modifierNomme": "Modifier {{nom}}",
+    "reinitialiserPin": "Réinitialiser le PIN",
+    "reinitialiserPinNomme": "Réinitialiser le PIN de {{nom}}",
+    "desactiver": "Désactiver",
+    "desactiverNomme": "Désactiver {{nom}}",
+    "reactiver": "Réactiver",
+    "reactiverNomme": "Réactiver {{nom}}",
+    "chargement": "Chargement du personnel…",
+    "vide": {
+      "titre": "Aucun employé",
+      "phrase": "Ajoutez vos serveurs, caissiers et gérants : chacun recevra un PIN pour ouvrir la caisse."
+    },
+    "cree": "{{nom}} a été ajouté au personnel.",
+    "modifie": "{{nom}} a été modifié.",
+    "reactive": "{{nom}} est de nouveau actif.",
+    "desactive": "{{nom}} est désactivé.",
+    "desactivation": {
+      "titre": "Désactiver {{nom}} ?",
+      "consequence": "{{nom}} ne pourra plus se connecter, ni à la caisse ni au back-office, et ses sessions en cours seront coupées. Ses ventes restent à son nom.",
+      "annuler": "Garder l’employé actif",
+      "confirmer": "Désactiver l’employé"
+    },
+    "pinConfirmation": {
+      "titre": "Réinitialiser le PIN de {{nom}} ?",
+      "consequence": "L’ancien PIN ne fonctionnera plus. Un nouveau PIN temporaire s’affichera une seule fois ; il faudra le changer à la prochaine connexion sur la caisse.",
+      "annuler": "Annuler",
+      "confirmer": "Générer un nouveau PIN"
+    },
+    "codes": {
+      "titre": "Codes d’accès de {{nom}}",
+      "titrePin": "Nouveau PIN de {{nom}}",
+      "consequence": "Donnez-les de vive voix ou par écrit. Ils ne seront plus affichés : ils seront remplacés à la première connexion.",
+      "pin": "PIN de caisse temporaire",
+      "motDePasse": "Mot de passe temporaire du back-office",
+      "identifiant": "Identifiant de connexion : {{identifiant}}",
+      "perdu": "Code perdu ? « Réinitialiser le PIN » en génère un nouveau.",
+      "noter": "J’ai noté les codes",
+      "noterPin": "J’ai noté le PIN",
+      "compteExistant": "Ce numéro ou cet e-mail avait déjà un compte Tonti : {{nom}} se connectera au back-office avec son mot de passe habituel et verra {{entreprise}} parmi ses entreprises. Vérifiez auprès de la personne qu’il s’agit bien de son numéro ou de son e-mail ; sinon, retirez-lui l’accès."
+    },
+    "formulaire": {
+      "titreCreation": "Ajouter un employé",
+      "titreModification": "Modifier {{nom}}",
+      "identite": "Identité",
+      "prenom": "Prénom",
+      "nom": "Nom",
+      "roles": "Rôle",
+      "rolesAide": "Un seul rôle par établissement. Laissez « Aucun » là où l’employé ne travaille pas.",
+      "aucun": "Aucun",
+      "roleA": "Rôle à {{lieu}}",
+      "adminAide": "Tous les droits, dans tous les établissements, y compris ceux qui seront ouverts plus tard.",
+      "acces": "Accès au back-office",
+      "donnerAcces": "Donner un accès au back-office",
+      "accesAide": "Le rôle choisi le permet. Serveurs, caissiers et cuisine n’utilisent que la caisse.",
+      "accesImpossible": "Aucun des rôles choisis n’ouvre le back-office : l’employé utilisera la caisse avec son PIN.",
+      "accesSansRole": "Choisissez d’abord un rôle : le back-office s’ouvre avec le rôle {{roles}}.",
+      "accesExistant": "Se connecte au back-office avec {{identifiant}}.",
+      "codesInfo": "À l’enregistrement, un PIN temporaire est généré, et un mot de passe temporaire si l’accès au back-office est donné. Ils s’affichent une seule fois.",
+      "creer": "Enregistrer l’employé",
+      "enregistrer": "Enregistrer les modifications",
+      "conflit": "Cet employé a été modifié entre-temps : le formulaire montre maintenant ses informations à jour. Refaites vos changements.",
+      "ou": "ou",
+      "portee": "Portée des droits",
+      "parEtablissement": "Rôle par établissement : gérant, caissier, serveur ou cuisine",
+      "touteLEntreprise": "Administrateur de toute l’entreprise"
+    },
+    "validation": {
+      "role": "Choisissez au moins un rôle."
+    },
+    "autresEtablissements_one": "+ {{count}} autre établissement",
+    "autresEtablissements_other": "+ {{count}} autres établissements"
+  },
+  "motDePasse": {
+    "titre": "Choisissez votre mot de passe",
+    "phrase": "C’est votre première connexion : remplacez le mot de passe temporaire par un mot de passe personnel.",
+    "actuel": "Mot de passe temporaire",
+    "nouveau": "Nouveau mot de passe",
+    "nouveauAide": "8 caractères au minimum.",
+    "confirmation": "Confirmez le nouveau mot de passe",
+    "envoyer": "Enregistrer et me reconnecter",
+    "enCours": "Enregistrement…",
+    "sessions": "Vos autres sessions ouvertes seront fermées.",
+    "different": "Les deux mots de passe ne correspondent pas.",
+    "change": "Mot de passe enregistré. Reconnectez-vous avec votre nouveau mot de passe."
   }
 }

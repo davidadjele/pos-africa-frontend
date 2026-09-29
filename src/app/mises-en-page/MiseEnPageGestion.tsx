@@ -1,17 +1,19 @@
 import { Link, Outlet } from '@tanstack/react-router'
-import { Building2, LayoutDashboard, Store, type LucideIcon } from 'lucide-react'
+import { Building2, LayoutDashboard, Store, Users, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useSession } from '../../partage/auth/useSession'
+import { useSession, type Permission } from '../../partage/auth/useSession'
 import { nomPays } from '../../partage/referentiel/pays'
 import { AlerteErreur } from '../../partage/ui/Alerte'
 import { BarreHaute } from '../../partage/ui/BarreHaute'
 import { MenuCompte } from './MenuCompte'
 
 interface EntreeNavigation {
-  vers: '/gestion' | '/caisse' | '/gestion/etablissements'
+  vers: '/gestion' | '/caisse' | '/gestion/etablissements' | '/gestion/personnel'
   cle: string
   icone: LucideIcon
+  /** Entrée masquée sans cette permission : l'écran ne servirait qu'à afficher un refus. */
+  permission?: Permission
 }
 
 // Les autres entrées (Ventes, Produits, Stock…) arriveront avec leurs modules : pas de lien mort.
@@ -22,10 +24,21 @@ const QUOTIDIEN: EntreeNavigation[] = [
 
 // Réglages en bas, séparés des actions quotidiennes.
 const REGLAGES: EntreeNavigation[] = [
-  { vers: '/gestion/etablissements', cle: 'gestion.menu.etablissements', icone: Building2 },
+  {
+    vers: '/gestion/etablissements',
+    cle: 'gestion.menu.etablissements',
+    icone: Building2,
+    permission: 'ETABLISSEMENT_GERER',
+  },
+  {
+    vers: '/gestion/personnel',
+    cle: 'gestion.menu.personnel',
+    icone: Users,
+    permission: 'PERSONNEL_GERER',
+  },
 ]
 
-function Entree({ vers, cle, icone: Icone }: Readonly<EntreeNavigation>) {
+function Entree({ vers, cle, icone: Icone }: Readonly<Omit<EntreeNavigation, 'permission'>>) {
   const { t } = useTranslation()
   return (
     <li>
@@ -43,7 +56,7 @@ function Entree({ vers, cle, icone: Icone }: Readonly<EntreeNavigation>) {
 
 export function MiseEnPageGestion() {
   const { t, i18n } = useTranslation()
-  const { moi } = useSession()
+  const { moi, aLaPermission } = useSession()
   const [erreurChangement, setErreurChangement] = useState<unknown>(null)
   const entreprise = moi?.entrepriseCourante
   return (
@@ -68,8 +81,10 @@ export function MiseEnPageGestion() {
               aria-hidden="true"
               className="mx-1 w-px self-stretch bg-trait md:mx-0 md:my-1 md:h-px md:w-auto"
             />
-            {REGLAGES.map((entree) => (
-              <Entree key={entree.vers} {...entree} />
+            {REGLAGES.filter(
+              (entree) => entree.permission === undefined || aLaPermission(entree.permission),
+            ).map((entree) => (
+              <Entree key={entree.vers} vers={entree.vers} cle={entree.cle} icone={entree.icone} />
             ))}
           </ul>
         </nav>
