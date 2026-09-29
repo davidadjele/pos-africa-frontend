@@ -795,6 +795,7 @@ export interface components {
             id: string;
             nom: string;
             pinAChanger: boolean;
+            pinReinitialisable: boolean;
             prenom: string;
             telephone?: string;
             /** Format: int64 */

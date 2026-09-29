@@ -47,6 +47,7 @@ const TANTI: EmployeResume = {
   backOffice: true,
   pinAChanger: false,
   gerable: false,
+  pinReinitialisable: false,
   affectations: [{ role: 'PROPRIETAIRE' }],
 }
 const KOSSI: EmployeResume = {
@@ -58,6 +59,7 @@ const KOSSI: EmployeResume = {
   backOffice: false,
   pinAChanger: true,
   gerable: true,
+  pinReinitialisable: true,
   affectations: [{ etablissementId: BE_KPOTA.id, role: 'SERVEUR' }],
 }
 
@@ -306,6 +308,39 @@ describe('PagePersonnel', () => {
 
     const codes = await screen.findByRole('dialog', { name: 'Nouveau PIN de Kossi Agbeko' })
     expect(within(codes).getByText('730')).toBeVisible()
+    expect(requetes.map((requete) => requete.chemin)).toEqual([`/personnel/${KOSSI.id}/pin`])
+  })
+
+  it('laisse réinitialiser le PIN d’un employé partagé avec un autre établissement, sans le reste', async () => {
+    const requetes = backendSimule({
+      employes: [
+        {
+          ...KOSSI,
+          gerable: false,
+          affectations: [
+            { etablissementId: BE_KPOTA.id, role: 'SERVEUR' },
+            { etablissementId: '9a1f0c2e-0000-4b8e-8f6a-0000000000ff', role: 'SERVEUR' },
+          ],
+        },
+      ],
+    })
+    await ouvrirPersonnel()
+
+    expect(
+      await screen.findByRole('button', { name: 'Plus d’actions pour Kossi Agbeko' }),
+    ).toBeVisible()
+    expect(screen.queryByRole('button', { name: 'Modifier Kossi Agbeko' })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Plus d’actions pour Kossi Agbeko' }))
+    expect(screen.queryByRole('menuitem', { name: 'Désactiver' })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Réinitialiser le PIN' }))
+    const confirmation = await screen.findByRole('dialog', {
+      name: 'Réinitialiser le PIN de Kossi Agbeko ?',
+    })
+    await userEvent.click(
+      within(confirmation).getByRole('button', { name: 'Générer un nouveau PIN' }),
+    )
+
+    expect(await screen.findByRole('dialog', { name: 'Nouveau PIN de Kossi Agbeko' })).toBeVisible()
     expect(requetes.map((requete) => requete.chemin)).toEqual([`/personnel/${KOSSI.id}/pin`])
   })
 
