@@ -1,0 +1,155 @@
+@import 'tailwindcss';
+@import './jetons.css';
+@import './polices.css';
+
+/* Les valeurs par défaut de Tailwind (palette, polices, tailles, ombres, rayons) sont retirées :
+   une classe comme bg-red-500 ou shadow-lg ne compile pas, seuls les jetons Tonti existent. */
+@theme inline reference {
+  --color-*: initial;
+  --font-*: initial;
+  --text-*: initial;
+  --shadow-*: initial;
+  --radius-*: initial;
+
+  --color-fond: var(--fond);
+  --color-surface: var(--surface);
+  --color-trait: var(--trait);
+  --color-bordure-controle: var(--bordure-controle);
+  --color-encre: var(--encre);
+  --color-attenue: var(--attenue);
+  --color-accent: var(--accent);
+  --color-accent-texte: var(--accent-texte);
+  --color-accent-vif: var(--accent-vif);
+  --color-accent-lisible: var(--accent-lisible);
+  --color-accent-doux: var(--accent-doux);
+  --color-barre-fond: var(--barre-fond);
+  --color-barre-texte: var(--barre-texte);
+  --color-barre-attenue: var(--barre-attenue);
+  --color-barre-trait: var(--barre-trait);
+  --color-rail-actif-fond: var(--rail-actif-fond);
+  --color-rail-actif-texte: var(--rail-actif-texte);
+  --color-succes: var(--succes);
+  --color-succes-vif: var(--succes-vif);
+  --color-succes-fond: var(--succes-fond);
+  --color-alerte: var(--alerte);
+  --color-alerte-fond: var(--alerte-fond);
+  --color-alerte-texte: var(--alerte-texte);
+  --color-alerte-bord: var(--alerte-bord);
+  --color-danger: var(--danger);
+  --color-danger-vif: var(--danger-vif);
+  --color-danger-fond: var(--danger-fond);
+  --color-danger-bord: var(--danger-bord);
+  --color-info: var(--info);
+  --color-info-fond: var(--info-fond);
+  --color-voile: var(--voile);
+
+  --font-texte: var(--font-texte);
+  --font-chiffres: var(--font-chiffres);
+
+  --radius-petit: var(--rayon-petit);
+  --radius-normal: var(--rayon);
+  --radius-moyen: var(--rayon-moyen);
+  --radius-grand: var(--rayon-grand);
+  --radius-rond: var(--rayon-rond);
+
+  /* Grille de 4 px : p-4 = espace-4 = 16 px. */
+  --spacing: var(--espace-1);
+  --spacing-cible-min: var(--cible-min);
+  --spacing-cible-caisse: var(--cible-caisse);
+  --spacing-bouton-encaisser: var(--bouton-encaisser);
+  --spacing-barre-hauteur: var(--barre-hauteur);
+  --spacing-rail-largeur: var(--rail-largeur);
+  --spacing-ticket-largeur: var(--ticket-largeur);
+
+  --shadow-flottante: var(--ombre-flottante);
+  --shadow-dialogue: var(--ombre-dialogue);
+
+  --text-titre-ecran: 28px;
+  --text-titre-ecran--line-height: 32px;
+  --text-titre-ecran--font-weight: 800;
+  --text-titre-ecran--letter-spacing: -0.01em;
+  --text-marque: 21px;
+  --text-marque--line-height: 24px;
+  --text-marque--font-weight: 800;
+  --text-marque--letter-spacing: 0.08em;
+  --text-titre-page: 24px;
+  --text-titre-page--line-height: 30px;
+  --text-titre-page--font-weight: 700;
+  --text-titre-page--letter-spacing: -0.01em;
+  --text-titre-section: 20px;
+  --text-titre-section--line-height: 26px;
+  --text-titre-section--font-weight: 600;
+  --text-titre-carte: 18px;
+  --text-titre-carte--line-height: 26px;
+  --text-titre-carte--font-weight: 600;
+  --text-corps: 15px;
+  --text-corps--line-height: 22px;
+  --text-corps--font-weight: 400;
+  --text-corps-fort: 15px;
+  --text-corps-fort--line-height: 22px;
+  --text-corps-fort--font-weight: 600;
+  --text-libelle: 13px;
+  --text-libelle--line-height: 18px;
+  --text-libelle--font-weight: 500;
+  --text-legende: 12px;
+  --text-legende--line-height: 16px;
+  --text-legende--font-weight: 400;
+  --text-badge: 11px;
+  --text-badge--line-height: 16px;
+  --text-badge--font-weight: 600;
+  --text-montant-total: 34px;
+  --text-montant-total--line-height: 38px;
+  --text-montant-total--font-weight: 700;
+  --text-montant-tuile: 20px;
+  --text-montant-tuile--line-height: 24px;
+  --text-montant-tuile--font-weight: 600;
+  --text-montant-ligne: 17px;
+  --text-montant-ligne--line-height: 22px;
+  --text-montant-ligne--font-weight: 600;
+  --text-touche: 28px;
+  --text-touche--line-height: 32px;
+  --text-touche--font-weight: 600;
+}
+
+@utility chiffres {
+  font-family: var(--font-chiffres);
+  font-variant-numeric: tabular-nums;
+}
+
+@layer base {
+  html,
+  body {
+    background-color: var(--fond);
+    color: var(--encre);
+    font-family: var(--font-texte);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    margin: 0;
+    font-size: 15px;
+    line-height: 22px;
+  }
+
+  #racine {
+    min-height: 100dvh;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent-vif);
+    outline-offset: 2px;
+  }
+
+  [data-zone='barre'] :focus-visible {
+    outline-color: var(--barre-texte);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
+}

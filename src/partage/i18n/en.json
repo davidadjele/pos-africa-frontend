@@ -1,0 +1,50 @@
+{
+  "erreurs": {
+    "REQUETE_INVALIDE": "Some information is invalid. Correct the highlighted fields and try again.",
+    "NON_AUTHENTIFIE": "Your session has expired. Sign in again to continue.",
+    "ACCES_REFUSE": "You are not allowed to do this. Ask a manager.",
+    "RESSOURCE_INTROUVABLE": "This item no longer exists or has been deleted.",
+    "METHODE_NON_AUTORISEE": "This operation is not supported.",
+    "CONFLIT_MODIFICATION": "This item was changed on another device. It has been reloaded: check it and try again.",
+    "STOCK_INSUFFISANT": "Not enough stock for this item. Remove it from the bill or choose another product.",
+    "ERREUR_INTERNE": "An unexpected error occurred. Try again; if it persists, give the code shown to support.",
+    "RESEAU_INDISPONIBLE": "The server cannot be reached. Check the connection and try again."
+  },
+  "commun": {
+    "navigationPrincipale": "Main navigation",
+    "gestion": "Back office"
+  },
+  "caisse": {
+    "vide": {
+      "titre": "No products to sell yet",
+      "phrase": "Order taking and checkout arrive in the next release, along with the product catalogue."
+    }
+  },
+  "gestion": {
+    "menu": {
+      "tableauDeBord": "Dashboard",
+      "caisse": "Till"
+    },
+    "tableauDeBord": {
+      "titre": "Dashboard",
+      "vide": {
+        "titre": "No sales recorded",
+        "phrase": "Today's sales, stock to watch and till sessions will show here from the first checkouts."
+      }
+    }
+  },
+  "recu": {
+    "titre": "Receipt not available yet",
+    "reference": "Reference",
+    "phrase": "Shared receipts arrive in the next release. Keep this link: it will remain valid."
+  },
+  "introuvable": {
+    "titre": "Page not found",
+    "phrase": "The address {{chemin}} does not match any screen. Check the link or go back to the till.",
+    "retour": "Back to the till"
+  },
+  "miseAJour": {
+    "message": "A new version of Tonti is available.",
+    "recharger": "Reload"
+  }
+}

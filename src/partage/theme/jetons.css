@@ -1,0 +1,98 @@
+/* Jetons du design system Tonti, générés depuis tokens.json (version 1).
+   Seul endroit où apparaissent des couleurs et des polices : le rebranding et la couleur
+   de marque par établissement ne modifient que ces variables. */
+
+:root {
+  --font-texte: 'Neulis', system-ui, sans-serif;
+  --font-chiffres: 'Barlow Semi Condensed', 'Neulis', system-ui, sans-serif;
+  --rayon-petit: 4px;
+  --rayon: 6px;
+  --rayon-moyen: 8px;
+  --rayon-grand: 12px;
+  --rayon-rond: 50%;
+  --espace-1: 4px;
+  --espace-2: 8px;
+  --espace-3: 12px;
+  --espace-4: 16px;
+  --espace-5: 20px;
+  --espace-6: 24px;
+  --espace-8: 32px;
+  --espace-12: 48px;
+  --cible-min: 44px;
+  --cible-caisse: 48px;
+  --bouton-encaisser: 64px;
+  --barre-hauteur: 56px;
+  --rail-largeur: 184px;
+  --ticket-largeur: 392px;
+
+  color-scheme: light;
+  --fond: #f5f4f0;
+  --surface: #ffffff;
+  --trait: #e8e6e2;
+  --bordure-controle: #8c8781;
+  --encre: #0f172a;
+  --attenue: #5b6576;
+  --accent: #00102b;
+  --accent-texte: #ffffff;
+  --accent-vif: #ed4f28;
+  --accent-lisible: #00102b;
+  --accent-doux: #eef0f4;
+  --barre-fond: #00102b;
+  --barre-texte: #ffffff;
+  --barre-attenue: #a3aec2;
+  --barre-trait: #1c2c47;
+  --rail-actif-fond: var(--barre-fond);
+  --rail-actif-texte: #ffffff;
+  --succes: #2f7344;
+  --succes-vif: #5cad6d;
+  --succes-fond: #ecf7ef;
+  --alerte: #faa524;
+  --alerte-fond: #fff6e6;
+  --alerte-texte: #8a5a00;
+  --alerte-bord: #f3c784;
+  --danger: #bb1e1e;
+  --danger-vif: #dc2626;
+  --danger-fond: #fceaea;
+  --danger-bord: #f0a99b;
+  --info: #145fa6;
+  --info-fond: #e7f1fb;
+  --voile: rgba(0, 16, 43, 0.48);
+  --ombre-flottante: 0 1px 2px rgba(0, 16, 43, 0.06);
+  --ombre-dialogue: 0 4px 12px rgba(0, 16, 43, 0.1);
+}
+
+[data-theme='sombre'] {
+  color-scheme: dark;
+  --fond: #242424;
+  --surface: #2e2e2e;
+  --trait: #3d3d3d;
+  --bordure-controle: #808080;
+  --encre: #ebebeb;
+  --attenue: #a3a3a3;
+  --accent: #e8edf5;
+  --accent-texte: #00102b;
+  --accent-vif: #ff6a42;
+  --accent-lisible: #e8edf5;
+  --accent-doux: #1c2c47;
+  --barre-fond: #00102b;
+  --barre-texte: #ffffff;
+  --barre-attenue: #a3aec2;
+  --barre-trait: #1c2c47;
+  --rail-actif-texte: #ffffff;
+  --succes: #69db7c;
+  --succes-vif: #69db7c;
+  --succes-fond: #233a28;
+  --alerte: #fab03a;
+  --alerte-fond: #3d3222;
+  --alerte-texte: #fab03a;
+  --alerte-bord: #6b4a12;
+  --danger: #ff6b6b;
+  --danger-vif: #ff6b6b;
+  --danger-fond: #402424;
+  --danger-bord: #7a2a2a;
+  --info: #4dabf7;
+  --info-fond: #1f3347;
+  --voile: rgba(0, 0, 0, 0.6);
+  --ombre-flottante: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --ombre-dialogue: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
