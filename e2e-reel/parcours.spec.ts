@@ -368,3 +368,59 @@ test('Tanti enregistre une tablette avec un code, Kossi y prend la caisse, puis 
   await expect(tablette).toHaveURL(/\/enregistrement-tablette$/)
   await contexteTablette.close()
 })
+
+test('Tanti compose sa carte : taxe, catégories, produits et changement de prix', async ({
+  page,
+}) => {
+  await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
+  await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
+  const navigation = page.getByRole('navigation', { name: 'Navigation principale' })
+
+  // La TVA saisie à la création de l'entreprise est là.
+  await navigation.getByRole('link', { name: 'Taxes' }).click()
+  const taxes = page.getByRole('table', { name: 'Taxes de l’entreprise' })
+  await expect(taxes.getByRole('row', { name: /TVA/ })).toContainText('18 %')
+  await capturer(page, '16-taxes')
+
+  // Deux catégories, la seconde remontée en tête.
+  await navigation.getByRole('link', { name: 'Produits' }).click()
+  await expect(page.getByRole('heading', { level: 2, name: 'La carte est vide' })).toBeVisible()
+  await page.getByRole('button', { name: 'Gérer les catégories' }).click()
+  const dialogue = page.getByRole('dialog', { name: 'Catégories de la carte' })
+  for (const [nom, couleur] of [
+    ['Grillades', 'Ocre'],
+    ['Bières', 'Feuille'],
+  ] as const) {
+    const formulaire = dialogue.getByRole('form', { name: 'Nouvelle catégorie' })
+    await formulaire.getByLabel(/^Nom/).fill(nom)
+    await formulaire.getByText(couleur, { exact: true }).click()
+    await formulaire.getByRole('button', { name: 'Ajouter la catégorie' }).click()
+    await expect(dialogue.getByRole('list', { name: 'Catégories' })).toContainText(nom)
+  }
+  await dialogue.getByRole('button', { name: 'Monter Bières' }).click()
+  await expect(dialogue.getByRole('listitem').first()).toContainText('Bières')
+  await capturer(page, '17-categories')
+  await dialogue.getByRole('button', { name: 'Fermer' }).click()
+
+  // Une boisson, suivie en stock d'office, avec la TVA comprise calculée.
+  await page.getByRole('link', { name: 'Ajouter un produit' }).click()
+  await page.getByLabel(/^Nom/).fill('Flag 65 cl')
+  await page.getByLabel(/^Catégorie/).selectOption({ label: 'Bières' })
+  await page.getByRole('radio', { name: 'Boisson' }).check({ force: true })
+  await page.getByLabel(/^Prix TTC/).fill('1000')
+  await expect(page.getByText('Dont TVA : 153 F par unité.')).toBeVisible()
+  await expect(page.getByRole('checkbox', { name: /Suivre le stock/ })).toBeChecked()
+  await capturer(page, '18-fiche-produit')
+  await page.getByRole('button', { name: 'Enregistrer le produit' }).click()
+  await expect(page.getByText('« Flag 65 cl » est enregistré.')).toBeVisible()
+
+  // Changement de prix, tracé côté serveur (visible dans l'activité en 2d).
+  await page.getByRole('link', { name: 'Modifier Flag 65 cl' }).click()
+  await page.getByLabel(/^Prix TTC/).fill('1100')
+  await page.getByRole('button', { name: 'Enregistrer les modifications' }).click()
+  const produits = page.getByRole('table', { name: 'Produits de la carte' })
+  await expect(produits.getByRole('row', { name: /Flag 65 cl/ })).toContainText('1 100 F')
+  await capturer(page, '19-produits')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await capturer(page, '19-produits-telephone')
+})

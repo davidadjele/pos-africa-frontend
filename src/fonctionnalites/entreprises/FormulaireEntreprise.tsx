@@ -18,6 +18,10 @@ import {
 import { AlerteErreur } from '../../partage/ui/Alerte'
 import { Bouton } from '../../partage/ui/Bouton'
 import { ChampSaisie, ChampSelection } from '../../partage/ui/ChampSaisie'
+import { lireTaux } from '../../partage/montants/taxes'
+
+/** Pré-rempli à la création : le taux le plus courant de la zone UEMOA, que l'administrateur corrige au besoin. */
+const TVA_PAR_DEFAUT = 1800
 
 /**
  * Plateforme : l'équipe Tonti crée l'entreprise ; le serveur génère un mot de passe temporaire pour un
@@ -38,6 +42,7 @@ function creerSchema(mode: ModeFormulaire) {
         devise: z.string().min(1, 'validation.obligatoire'),
         fuseauHoraire: z.string().min(1, 'validation.obligatoire'),
         langue: z.enum(['fr', 'en']),
+        tva: z.string(),
       }),
       proprietaire: z.object({
         prenom: obligatoire(100),
@@ -60,7 +65,14 @@ function creerSchema(mode: ModeFormulaire) {
         adresse: facultatif(255),
       }),
     })
-    .superRefine(({ proprietaire }, contexte) => {
+    .superRefine(({ entreprise, proprietaire }, contexte) => {
+      if (mode === 'plateforme' && lireTaux(entreprise.tva) === null) {
+        contexte.addIssue({
+          code: 'custom',
+          path: ['entreprise', 'tva'],
+          message: 'taxes.formulaire.tauxInvalide',
+        })
+      }
       if (proprietaire.telephone === '' && proprietaire.email === '') {
         contexte.addIssue({
           code: 'custom',
@@ -88,6 +100,7 @@ const CHAMPS = [
   'entreprise.devise',
   'entreprise.fuseauHoraire',
   'entreprise.langue',
+  'entreprise.tva',
   'proprietaire.prenom',
   'proprietaire.nom',
   'proprietaire.telephone',
@@ -111,7 +124,7 @@ function sansVides<T extends Record<string, string>>(valeurs: T): Partial<T> {
 export function demandeDepuis(saisie: Valide, mode: 'plateforme'): DemandeCreationEntreprise
 export function demandeDepuis(saisie: Valide, mode: 'inscription'): DemandeInscription
 export function demandeDepuis(
-  { entreprise, proprietaire, etablissement }: Valide,
+  { entreprise: { tva, ...entreprise }, proprietaire, etablissement }: Valide,
   mode: ModeFormulaire,
 ): DemandeCreationEntreprise | DemandeInscription {
   const { motDePasse, prenom, nom, ...contact } = proprietaire
@@ -128,7 +141,8 @@ export function demandeDepuis(
     }
   }
   return {
-    entreprise,
+    // Validé par le schéma en mode plateforme : lireTaux ne peut pas y renvoyer null.
+    entreprise: { ...entreprise, tauxTvaPointsDeBase: lireTaux(tva) ?? TVA_PAR_DEFAUT },
     proprietaire: { prenom, nom, ...sansVides(contact) },
     etablissement: etablissementComplet,
   }
@@ -167,7 +181,7 @@ export function FormulaireEntreprise({
   } = useForm<Saisie, unknown, Valide>({
     resolver: zodResolver(creerSchema(mode)),
     defaultValues: {
-      entreprise: { nom: '', ...PAYS_PAR_DEFAUT },
+      entreprise: { nom: '', ...PAYS_PAR_DEFAUT, tva: '18' },
       proprietaire: { prenom: '', nom: '', telephone: '', email: '', motDePasse: '' },
       etablissement: { nom: '', code: '', ville: '', adresse: '' },
     },
@@ -246,6 +260,18 @@ export function FormulaireEntreprise({
           erreur={message(errors.entreprise?.langue?.message)}
           {...register('entreprise.langue')}
         />
+        {mode === 'plateforme' && (
+          <ChampSaisie
+            libelle={t('formulaireEntreprise.tva')}
+            aide={t('formulaireEntreprise.tvaAide')}
+            obligatoire
+            inputMode="decimal"
+            suffixe="%"
+            className="chiffres"
+            erreur={message(errors.entreprise?.tva?.message)}
+            {...register('entreprise.tva')}
+          />
+        )}
       </Section>
 
       <Section titre={t('formulaireEntreprise.sections.proprietaire')}>

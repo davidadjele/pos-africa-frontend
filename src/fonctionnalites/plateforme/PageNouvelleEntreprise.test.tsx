@@ -105,6 +105,8 @@ describe('PageNouvelleEntreprise', () => {
     const { routeur } = await ouvrirCreation()
 
     await remplir()
+    // TVA pré-remplie, modifiable ; envoyée en points de base.
+    expect(screen.getByLabelText(/^TVA/)).toHaveValue('18')
     await userEvent.click(screen.getByRole('button', { name: 'Créer l’entreprise' }))
 
     const codes = await screen.findByRole('dialog', { name: 'Codes d’accès de Tanti Akouvi' })
@@ -121,6 +123,7 @@ describe('PageNouvelleEntreprise', () => {
         devise: 'XOF',
         fuseauHoraire: 'Africa/Lome',
         langue: 'fr',
+        tauxTvaPointsDeBase: 1800,
       },
       proprietaire: {
         prenom: 'Tanti',

@@ -97,7 +97,10 @@
       "caisse": "Till",
       "etablissements": "Venues",
       "personnel": "Staff",
-      "tablettes": "Tablets"
+      "tablettes": "Tablets",
+      "carte": "Menu",
+      "produits": "Products",
+      "taxes": "Taxes"
     },
     "tableauDeBord": {
       "titre": "Dashboard",
@@ -283,7 +286,9 @@
     "codeAide": "2 to 10 capital letters or digits, for example BE.",
     "ville": "City",
     "adresse": "Address",
-    "creer": "Create the business"
+    "creer": "Create the business",
+    "tva": "VAT",
+    "tvaAide": "Rate that applies in the country. The owner can change it in the taxes."
   },
   "inscription": {
     "titre": "Create my business",
@@ -488,5 +493,161 @@
       "consequence": "The new name shows on the tablet and in this list.",
       "fait": "The tablet is now called “{{nom}}”."
     }
+  },
+  "couleurs": {
+    "OCRE": "Ochre",
+    "BRIQUE": "Brick",
+    "FEUILLE": "Leaf",
+    "LAGUNE": "Lagoon",
+    "PRUNE": "Plum",
+    "SABLE": "Sand",
+    "MENTHE": "Mint",
+    "ARDOISE": "Slate"
+  },
+  "typesProduit": {
+    "PLAT": "Dish",
+    "BOISSON": "Drink",
+    "ARTICLE": "Item"
+  },
+  "taxes": {
+    "titre": "Taxes",
+    "phrase": "The rates applied to your products. Menu prices include tax: the tax is taken out on the receipt.",
+    "tableau": "Business taxes",
+    "colonnes": {
+      "nom": "Name",
+      "taux": "Rate",
+      "produits": "Products",
+      "statut": "Status",
+      "actions": "Actions"
+    },
+    "nbProduits_one": "{{count}} product",
+    "nbProduits_other": "{{count}} products",
+    "statut": {
+      "active": "Active",
+      "desactivee": "Disabled"
+    },
+    "ajouter": "Add a tax",
+    "modifier": "Edit",
+    "modifierNomme": "Edit {{nom}}",
+    "plusDActions": "More actions for {{nom}}",
+    "desactiver": "Disable",
+    "reactiver": "Enable",
+    "chargement": "Loading taxes…",
+    "vide": {
+      "titre": "No tax",
+      "phrase": "Add the VAT that applies in your country: each product can then be subject to it."
+    },
+    "formulaire": {
+      "titreCreation": "Add a tax",
+      "titreModification": "Edit the “{{nom}}” tax",
+      "consequence": "The rate applies to the tax-inclusive prices of the products subject to this tax.",
+      "nom": "Name",
+      "taux": "Rate",
+      "tauxAide": "For example 18, or 19.25.",
+      "tauxInvalide": "Enter a rate between 0 and 100, with at most two decimals.",
+      "changement": "{{avant}} → {{apres}} on {{produits}}",
+      "changementPhrase": "The new rate applies to sales recorded from now on. Past sales keep their rate. The change will be visible in the activity, under your name.",
+      "creer": "Add the tax",
+      "enregistrer": "Save"
+    },
+    "creee": "The “{{nom}}” tax is added.",
+    "modifiee": "The “{{nom}}” tax is saved.",
+    "desactivee": "The “{{nom}}” tax is disabled.",
+    "reactivee": "The “{{nom}}” tax is enabled again."
+  },
+  "produits": {
+    "titre": "Products",
+    "phrase": "The menu shared by your venues. Prices include tax: the tax is worked out backwards and shown on the receipt.",
+    "tableau": "Menu products",
+    "categories": "Categories",
+    "touteLaCarte": "Whole menu",
+    "recherche": "Search for a product",
+    "actifs": "Active",
+    "desactives": "Disabled",
+    "colonnes": {
+      "produit": "Product",
+      "categorie": "Category",
+      "prix": "Price incl. tax",
+      "taxe": "Tax",
+      "stock": "Stock",
+      "statut": "Status",
+      "actions": "Actions"
+    },
+    "aucuneTaxe": "None",
+    "stock": {
+      "suivi": "Tracked",
+      "nonSuivi": "Not tracked"
+    },
+    "statut": {
+      "actif": "Active",
+      "desactive": "Disabled"
+    },
+    "ajouter": "Add a product",
+    "gererCategories": "Manage categories",
+    "modifier": "Edit",
+    "modifierNomme": "Edit {{nom}}",
+    "plusDActions": "More actions for {{nom}}",
+    "desactiver": "Disable",
+    "reactiver": "Enable",
+    "chargement": "Loading the menu…",
+    "vide": {
+      "titre": "The menu is empty",
+      "phrase": "First create your categories (Grills, Beers…), then add your products with their price.",
+      "phraseSansDroit": "The owner or an administrator builds the menu."
+    },
+    "aucunResultat": "No product matches.",
+    "desactive": "“{{nom}}” is disabled: it no longer shows on the till.",
+    "reactive": "“{{nom}}” is back on the menu.",
+    "note": "A product that was sold is never deleted: disable it. Venue-specific prices and “sold out today” will come in each venue’s menu.",
+    "fiche": {
+      "retour": "Products",
+      "titreCreation": "Add a product",
+      "titreModification": "Edit “{{nom}}”",
+      "nom": "Name",
+      "categorie": "Category",
+      "categorieAide": "Add a category from “Manage categories”.",
+      "type": "Type",
+      "typeAide": "Item: a product resold as is (tissues, cigarettes…).",
+      "prix": "Price incl. tax",
+      "prixAide": "The price the customer pays, tax included.",
+      "prixInvalide": "Enter a price, for example 1,000.",
+      "taxe": "Tax",
+      "dontTaxe": "Including {{taxe}}: {{montant}} per unit.",
+      "suiviStock": "Track stock for this product",
+      "suiviStockAide": "Ticked by default for drinks and items. Deliveries and losses will be entered in the Stock module.",
+      "apercu": "Preview on the till",
+      "traceNote": "A price or tax change is recorded in the activity (who, when, before and after) and does not affect sales already made.",
+      "enregistrerCreation": "Save the product",
+      "enregistrerModification": "Save changes",
+      "prixSansDroit": "Only an owner or an administrator changes prices.",
+      "cree": "“{{nom}}” is added to the menu.",
+      "modifie": "“{{nom}}” is saved.",
+      "chargement": "Loading the product…"
+    }
+  },
+  "categories": {
+    "titre": "Menu categories",
+    "phrase": "Their order is the order of the tabs on the till. The colour marks the products on the tiles.",
+    "liste": "Categories",
+    "fermer": "Close",
+    "monter": "Move {{nom}} up",
+    "descendre": "Move {{nom}} down",
+    "nbProduits_one": "{{count}} product",
+    "nbProduits_other": "{{count}} products",
+    "modifierNomme": "Edit {{nom}}",
+    "modifier": "Edit",
+    "desactiverNomme": "Disable {{nom}}",
+    "desactiver": "Disable",
+    "reactiverNomme": "Enable {{nom}}",
+    "reactiver": "Enable",
+    "desactivee": "Disabled",
+    "nouvelle": "New category",
+    "modification": "Edit “{{nom}}”",
+    "nom": "Name",
+    "couleur": "Colour",
+    "ajouter": "Add the category",
+    "enregistrer": "Save",
+    "annuler": "Cancel",
+    "regle": "A category that contains active products cannot be disabled: move or disable its products first."
   }
 }

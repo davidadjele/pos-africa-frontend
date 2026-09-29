@@ -7,6 +7,9 @@ import {
   redirect,
   type RouterHistory,
 } from '@tanstack/react-router'
+import { PageFicheProduit } from '../fonctionnalites/catalogue/PageFicheProduit'
+import { PageProduits, type RechercheProduits } from '../fonctionnalites/catalogue/PageProduits'
+import { PageTaxes } from '../fonctionnalites/catalogue/PageTaxes'
 import { EcranCaisse } from '../fonctionnalites/caisse/EcranCaisse'
 import { PageChangerMotDePasse } from '../fonctionnalites/connexion/PageChangerMotDePasse'
 import { PageChoixEntreprise } from '../fonctionnalites/connexion/PageChoixEntreprise'
@@ -143,6 +146,41 @@ const tablettes = createRoute({
   component: PageTablettes,
 })
 
+const produits = createRoute({
+  getParentRoute: () => gestion,
+  path: '/produits',
+  validateSearch: (recherche: Record<string, unknown>): RechercheProduits =>
+    typeof recherche.enregistre === 'string' ? { enregistre: recherche.enregistre } : {},
+  component: function RouteProduits() {
+    const recherche = produits.useSearch()
+    // La clé remonte la page à chaque enregistrement : la confirmation part de l'état initial.
+    return <PageProduits key={recherche.enregistre ?? ''} recherche={recherche} />
+  },
+})
+
+const nouveauProduit = createRoute({
+  getParentRoute: () => gestion,
+  path: '/produits/nouveau',
+  component: function RouteNouveauProduit() {
+    return <PageFicheProduit />
+  },
+})
+
+const ficheProduit = createRoute({
+  getParentRoute: () => gestion,
+  path: '/produits/$produitId',
+  component: function RouteFicheProduit() {
+    const { produitId } = ficheProduit.useParams()
+    return <PageFicheProduit key={produitId} produitId={produitId} />
+  },
+})
+
+const taxes = createRoute({
+  getParentRoute: () => gestion,
+  path: '/taxes',
+  component: PageTaxes,
+})
+
 const plateforme = createRoute({
   getParentRoute: () => racine,
   path: '/plateforme',
@@ -192,7 +230,16 @@ const arbre = racine.addChildren([
   inscription,
   caisse.addChildren([caisseAccueil]),
   enregistrementTablette,
-  gestion.addChildren([gestionAccueil, etablissements, personnel, tablettes]),
+  gestion.addChildren([
+    gestionAccueil,
+    etablissements,
+    personnel,
+    tablettes,
+    produits,
+    nouveauProduit,
+    ficheProduit,
+    taxes,
+  ]),
   plateforme.addChildren([plateformeAccueil, nouvelleEntreprise]),
   recu,
 ])

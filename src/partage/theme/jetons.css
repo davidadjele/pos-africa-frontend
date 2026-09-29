@@ -59,6 +59,23 @@
   --voile: rgba(0, 16, 43, 0.48);
   --ombre-flottante: 0 1px 2px rgba(0, 16, 43, 0.06);
   --ombre-dialogue: 0 4px 12px rgba(0, 16, 43, 0.1);
+  /* Palette fixe des catégories de la carte : repérage seulement, jamais une action. */
+  --categorie-ocre-fond: #f4e4c1;
+  --categorie-ocre-texte: #6b4a0f;
+  --categorie-brique-fond: #f6d8ce;
+  --categorie-brique-texte: #7a2e17;
+  --categorie-feuille-fond: #dcebd5;
+  --categorie-feuille-texte: #2b5220;
+  --categorie-lagune-fond: #d3e6ee;
+  --categorie-lagune-texte: #16475a;
+  --categorie-prune-fond: #ebd9e3;
+  --categorie-prune-texte: #5e2a47;
+  --categorie-sable-fond: #ede7dc;
+  --categorie-sable-texte: #4f4636;
+  --categorie-menthe-fond: #d2ece4;
+  --categorie-menthe-texte: #185445;
+  --categorie-ardoise-fond: #dfe3ea;
+  --categorie-ardoise-texte: #2e3a4b;
 }
 
 [data-theme='sombre'] {
@@ -95,4 +112,21 @@
   --voile: rgba(0, 0, 0, 0.6);
   --ombre-flottante: 0 1px 2px rgba(0, 0, 0, 0.4);
   --ombre-dialogue: 0 4px 12px rgba(0, 0, 0, 0.5);
+  /* Palette fixe des catégories de la carte : repérage seulement, jamais une action. */
+  --categorie-ocre-fond: #4a3a17;
+  --categorie-ocre-texte: #f2d9a2;
+  --categorie-brique-fond: #4d2a20;
+  --categorie-brique-texte: #f4bfae;
+  --categorie-feuille-fond: #27391f;
+  --categorie-feuille-texte: #bfe0b0;
+  --categorie-lagune-fond: #1d3a46;
+  --categorie-lagune-texte: #b1d7e6;
+  --categorie-prune-fond: #40243a;
+  --categorie-prune-texte: #e2bcd2;
+  --categorie-sable-fond: #3d372d;
+  --categorie-sable-texte: #e0d6c4;
+  --categorie-menthe-fond: #1b3d35;
+  --categorie-menthe-texte: #aee1d2;
+  --categorie-ardoise-fond: #2c333f;
+  --categorie-ardoise-texte: #c9d1de;
 }

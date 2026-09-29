@@ -97,7 +97,10 @@
       "caisse": "Caisse",
       "etablissements": "Établissements",
       "personnel": "Personnel",
-      "tablettes": "Tablettes"
+      "tablettes": "Tablettes",
+      "carte": "Carte",
+      "produits": "Produits",
+      "taxes": "Taxes"
     },
     "tableauDeBord": {
       "titre": "Tableau de bord",
@@ -283,7 +286,9 @@
     "codeAide": "2 à 10 lettres majuscules ou chiffres, par exemple BE.",
     "ville": "Ville",
     "adresse": "Adresse",
-    "creer": "Créer l’entreprise"
+    "creer": "Créer l’entreprise",
+    "tva": "TVA",
+    "tvaAide": "Taux applicable dans le pays. Le propriétaire pourra le modifier dans les taxes."
   },
   "inscription": {
     "titre": "Créer mon entreprise",
@@ -488,5 +493,161 @@
       "consequence": "Le nouveau nom s’affiche sur la tablette et dans cette liste.",
       "fait": "La tablette s’appelle maintenant « {{nom}} »."
     }
+  },
+  "couleurs": {
+    "OCRE": "Ocre",
+    "BRIQUE": "Brique",
+    "FEUILLE": "Feuille",
+    "LAGUNE": "Lagune",
+    "PRUNE": "Prune",
+    "SABLE": "Sable",
+    "MENTHE": "Menthe",
+    "ARDOISE": "Ardoise"
+  },
+  "typesProduit": {
+    "PLAT": "Plat",
+    "BOISSON": "Boisson",
+    "ARTICLE": "Article"
+  },
+  "taxes": {
+    "titre": "Taxes",
+    "phrase": "Les taux appliqués à vos produits. Les prix de la carte sont TTC : la taxe en est déduite sur le reçu.",
+    "tableau": "Taxes de l’entreprise",
+    "colonnes": {
+      "nom": "Nom",
+      "taux": "Taux",
+      "produits": "Produits",
+      "statut": "Statut",
+      "actions": "Actions"
+    },
+    "nbProduits_one": "{{count}} produit",
+    "nbProduits_other": "{{count}} produits",
+    "statut": {
+      "active": "Active",
+      "desactivee": "Désactivée"
+    },
+    "ajouter": "Ajouter une taxe",
+    "modifier": "Modifier",
+    "modifierNomme": "Modifier {{nom}}",
+    "plusDActions": "Plus d’actions pour {{nom}}",
+    "desactiver": "Désactiver",
+    "reactiver": "Réactiver",
+    "chargement": "Chargement des taxes…",
+    "vide": {
+      "titre": "Aucune taxe",
+      "phrase": "Ajoutez la TVA applicable dans votre pays : chaque produit pourra y être soumis."
+    },
+    "formulaire": {
+      "titreCreation": "Ajouter une taxe",
+      "titreModification": "Modifier la taxe « {{nom}} »",
+      "consequence": "Le taux s’applique aux prix TTC des produits soumis à cette taxe.",
+      "nom": "Nom",
+      "taux": "Taux",
+      "tauxAide": "Par exemple 18, ou 19,25.",
+      "tauxInvalide": "Saisissez un taux entre 0 et 100, avec deux décimales au plus.",
+      "changement": "{{avant}} → {{apres}} sur {{produits}}",
+      "changementPhrase": "Le nouveau taux s’applique aux ventes enregistrées à partir de maintenant. Les ventes passées gardent leur taux. Le changement sera visible dans l’activité, à votre nom.",
+      "creer": "Ajouter la taxe",
+      "enregistrer": "Enregistrer"
+    },
+    "creee": "La taxe « {{nom}} » est ajoutée.",
+    "modifiee": "La taxe « {{nom}} » est enregistrée.",
+    "desactivee": "La taxe « {{nom}} » est désactivée.",
+    "reactivee": "La taxe « {{nom}} » est réactivée."
+  },
+  "produits": {
+    "titre": "Produits",
+    "phrase": "La carte commune à vos établissements. Les prix sont TTC : la taxe est calculée à rebours et figure sur le reçu.",
+    "tableau": "Produits de la carte",
+    "categories": "Catégories",
+    "touteLaCarte": "Toute la carte",
+    "recherche": "Rechercher un produit",
+    "actifs": "Actifs",
+    "desactives": "Désactivés",
+    "colonnes": {
+      "produit": "Produit",
+      "categorie": "Catégorie",
+      "prix": "Prix TTC",
+      "taxe": "Taxe",
+      "stock": "Stock",
+      "statut": "Statut",
+      "actions": "Actions"
+    },
+    "aucuneTaxe": "Aucune",
+    "stock": {
+      "suivi": "Suivi",
+      "nonSuivi": "Non suivi"
+    },
+    "statut": {
+      "actif": "Actif",
+      "desactive": "Désactivé"
+    },
+    "ajouter": "Ajouter un produit",
+    "gererCategories": "Gérer les catégories",
+    "modifier": "Modifier",
+    "modifierNomme": "Modifier {{nom}}",
+    "plusDActions": "Plus d’actions pour {{nom}}",
+    "desactiver": "Désactiver",
+    "reactiver": "Réactiver",
+    "chargement": "Chargement de la carte…",
+    "vide": {
+      "titre": "La carte est vide",
+      "phrase": "Créez d’abord vos catégories (Grillades, Bières…), puis ajoutez vos produits avec leur prix.",
+      "phraseSansDroit": "Le propriétaire ou un administrateur compose la carte."
+    },
+    "aucunResultat": "Aucun produit ne correspond.",
+    "desactive": "« {{nom}} » est désactivé : il n’apparaît plus sur la caisse.",
+    "reactive": "« {{nom}} » est de nouveau à la carte.",
+    "note": "Un produit vendu n’est jamais supprimé : désactivez-le. Le prix propre à un établissement et la rupture du jour viendront dans la carte de chaque établissement.",
+    "fiche": {
+      "retour": "Produits",
+      "titreCreation": "Ajouter un produit",
+      "titreModification": "Modifier « {{nom}} »",
+      "nom": "Nom",
+      "categorie": "Catégorie",
+      "categorieAide": "Ajoutez une catégorie depuis « Gérer les catégories ».",
+      "type": "Type",
+      "typeAide": "Article : un produit revendu tel quel (mouchoirs, cigarettes…).",
+      "prix": "Prix TTC",
+      "prixAide": "Le prix payé par le client, taxes comprises.",
+      "prixInvalide": "Saisissez un prix, par exemple 1 000.",
+      "taxe": "Taxe",
+      "dontTaxe": "Dont {{taxe}} : {{montant}} par unité.",
+      "suiviStock": "Suivre le stock de ce produit",
+      "suiviStockAide": "Coché d’office pour les boissons et les articles. Les réceptions et les pertes se saisiront dans le module Stock.",
+      "apercu": "Aperçu sur la caisse",
+      "traceNote": "Un changement de prix ou de taxe est enregistré dans l’activité (qui, quand, avant et après) et ne touche pas les ventes déjà faites.",
+      "enregistrerCreation": "Enregistrer le produit",
+      "enregistrerModification": "Enregistrer les modifications",
+      "prixSansDroit": "Seul un propriétaire ou un administrateur change les prix.",
+      "cree": "« {{nom}} » est ajouté à la carte.",
+      "modifie": "« {{nom}} » est enregistré.",
+      "chargement": "Chargement du produit…"
+    }
+  },
+  "categories": {
+    "titre": "Catégories de la carte",
+    "phrase": "Leur ordre est celui des onglets sur la caisse. La couleur repère les produits sur les tuiles.",
+    "liste": "Catégories",
+    "fermer": "Fermer",
+    "monter": "Monter {{nom}}",
+    "descendre": "Descendre {{nom}}",
+    "nbProduits_one": "{{count}} produit",
+    "nbProduits_other": "{{count}} produits",
+    "modifierNomme": "Modifier {{nom}}",
+    "modifier": "Modifier",
+    "desactiverNomme": "Désactiver {{nom}}",
+    "desactiver": "Désactiver",
+    "reactiverNomme": "Réactiver {{nom}}",
+    "reactiver": "Réactiver",
+    "desactivee": "Désactivée",
+    "nouvelle": "Nouvelle catégorie",
+    "modification": "Modifier « {{nom}} »",
+    "nom": "Nom",
+    "couleur": "Couleur",
+    "ajouter": "Ajouter la catégorie",
+    "enregistrer": "Enregistrer",
+    "annuler": "Annuler",
+    "regle": "Une catégorie qui contient des produits actifs ne se désactive pas : déplacez ou désactivez d’abord ses produits."
   }
 }

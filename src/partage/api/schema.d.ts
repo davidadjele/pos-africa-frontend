@@ -112,7 +112,7 @@ export interface paths {
             cookie?: never;
         };
         /** Lister les tablettes visibles, actives d'abord */
-        get: operations["lister_3"];
+        get: operations["lister_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -336,6 +336,104 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lister les catégories, dans l'ordre de la caisse */
+        get: operations["lister_5"];
+        put?: never;
+        /**
+         * Créer une catégorie, placée en dernier
+         * @description Permission CATALOGUE_GERER.
+         */
+        post: operations["creer_5"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/categories/ordre": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Réordonner les catégories
+         * @description Toutes les catégories, chacune une fois.
+         */
+        put: operations["ordonner"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/categories/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Modifier une catégorie
+         * @description Erreurs : RESSOURCE_INTROUVABLE, CONFLIT_MODIFICATION, REQUETE_INVALIDE.
+         */
+        put: operations["modifier_4"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/categories/{id}/desactivation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Désactiver une catégorie
+         * @description Refusé (REQUETE_INVALIDE) tant qu'elle a des produits actifs.
+         */
+        post: operations["desactiver_3"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/categories/{id}/reactivation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Réactiver une catégorie */
+        post: operations["reactiver_4"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/etablissements": {
         parameters: {
             query?: never;
@@ -344,13 +442,13 @@ export interface paths {
             cookie?: never;
         };
         /** Lister les établissements, triés par code */
-        get: operations["lister_2"];
+        get: operations["lister_4"];
         put?: never;
         /**
          * Créer un établissement
          * @description Permission ETABLISSEMENT_GERER. Erreur : CODE_ETABLISSEMENT_DEJA_UTILISE (409).
          */
-        post: operations["creer_2"];
+        post: operations["creer_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -369,7 +467,7 @@ export interface paths {
          * Modifier un établissement
          * @description Permission ETABLISSEMENT_GERER. Erreurs : RESSOURCE_INTROUVABLE (404), CONFLIT_MODIFICATION (409, version dépassée), CODE_ETABLISSEMENT_DEJA_UTILISE (409).
          */
-        put: operations["modifier_1"];
+        put: operations["modifier_3"];
         post?: never;
         delete?: never;
         options?: never;
@@ -442,13 +540,13 @@ export interface paths {
             cookie?: never;
         };
         /** Lister le personnel visible : actifs d'abord, par nom */
-        get: operations["lister_1"];
+        get: operations["lister_3"];
         put?: never;
         /**
          * Ajouter un employé
          * @description Renvoie une seule fois le PIN temporaire et, si un compte back-office est créé, le mot de passe temporaire. Erreurs : REQUETE_INVALIDE (affectations, telephone, email), ACCES_REFUSE (établissement hors périmètre, rôle au-delà de ses propres droits).
          */
-        post: operations["creer_1"];
+        post: operations["creer_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -467,7 +565,7 @@ export interface paths {
          * Modifier un employé et remplacer ses rôles
          * @description Erreurs : CONFLIT_MODIFICATION (version dépassée), ACCES_REFUSE (hors périmètre, soi-même, propriétaire), REQUETE_INVALIDE.
          */
-        put: operations["modifier"];
+        put: operations["modifier_2"];
         post?: never;
         delete?: never;
         options?: never;
@@ -488,7 +586,7 @@ export interface paths {
          * Désactiver un employé
          * @description Plus de connexion ni de PIN ; ses sessions tombent.
          */
-        post: operations["desactiver"];
+        post: operations["desactiver_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -525,7 +623,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Réactiver un employé */
-        post: operations["reactiver_1"];
+        post: operations["reactiver_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -540,13 +638,13 @@ export interface paths {
             cookie?: never;
         };
         /** Lister les entreprises, les plus récentes d'abord */
-        get: operations["lister"];
+        get: operations["lister_2"];
         put?: never;
         /**
          * Créer une entreprise, son premier établissement et son propriétaire
          * @description Si le propriétaire a déjà un compte (même téléphone ou e-mail), il est rattaché et garde son mot de passe ; sinon un compte est créé avec un mot de passe temporaire, renvoyé une seule fois (motDePasseTemporaire), que le propriétaire remplacera à sa première connexion.
          */
-        post: operations["creer"];
+        post: operations["creer_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -563,7 +661,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Réactiver une entreprise suspendue */
-        post: operations["reactiver"];
+        post: operations["reactiver_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -584,6 +682,91 @@ export interface paths {
          * @description Plus aucune connexion ; les jetons en cours tombent.
          */
         post: operations["suspendre"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/produits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lister les produits, triés par nom
+         * @description Filtres facultatifs : catégorie, actifs (vrai par défaut) ou désactivés, recherche dans le nom.
+         */
+        get: operations["lister_1"];
+        put?: never;
+        /**
+         * Créer un produit
+         * @description Permission CATALOGUE_GERER. Erreur : REQUETE_INVALIDE (nom déjà pris, catégorie ou taxe inconnue).
+         */
+        post: operations["creer_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/produits/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lire un produit
+         * @description Erreur : RESSOURCE_INTROUVABLE (404).
+         */
+        get: operations["lire"];
+        /**
+         * Modifier un produit
+         * @description Permission CATALOGUE_GERER, et PRIX_MODIFIER pour changer le prix. Prix et taxe modifiés sont tracés dans l'activité. Erreurs : RESSOURCE_INTROUVABLE, CONFLIT_MODIFICATION, REQUETE_INVALIDE, ACCES_REFUSE.
+         */
+        put: operations["modifier_1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/produits/{id}/desactivation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Désactiver un produit
+         * @description Il disparaît de la caisse ; ses ventes passées restent.
+         */
+        post: operations["desactiver_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/produits/{id}/reactivation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Réactiver un produit */
+        post: operations["reactiver_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -624,6 +807,84 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/taxes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lister les taxes, actives d'abord */
+        get: operations["lister"];
+        put?: never;
+        /**
+         * Créer une taxe
+         * @description Permission CATALOGUE_GERER. Erreur : REQUETE_INVALIDE (nom déjà pris).
+         */
+        post: operations["creer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/taxes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Modifier une taxe
+         * @description Permission CATALOGUE_GERER. Le nouveau taux vaut pour les ventes suivantes ; le changement est tracé dans l'activité. Erreurs : RESSOURCE_INTROUVABLE, CONFLIT_MODIFICATION, REQUETE_INVALIDE.
+         */
+        put: operations["modifier"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/taxes/{id}/desactivation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Désactiver une taxe
+         * @description Refusé (REQUETE_INVALIDE) tant que des produits actifs y sont soumis.
+         */
+        post: operations["desactiver"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/taxes/{id}/reactivation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Réactiver une taxe */
+        post: operations["reactiver"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -654,6 +915,27 @@ export interface components {
             /** Format: int64 */
             version: number;
         };
+        CategorieProduit: {
+            /** @enum {string} */
+            couleur: "OCRE" | "BRIQUE" | "FEUILLE" | "LAGUNE" | "PRUNE" | "SABLE" | "MENTHE" | "ARDOISE";
+            /** Format: uuid */
+            id: string;
+            nom: string;
+        };
+        CategorieResume: {
+            active: boolean;
+            /** @enum {string} */
+            couleur: "OCRE" | "BRIQUE" | "FEUILLE" | "LAGUNE" | "PRUNE" | "SABLE" | "MENTHE" | "ARDOISE";
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            nbProduits: number;
+            nom: string;
+            /** Format: int32 */
+            ordre: number;
+            /** Format: int64 */
+            version: number;
+        };
         ChampInvalide: {
             champ: string;
             message: string;
@@ -677,6 +959,14 @@ export interface components {
         DemandeAppairage: {
             /** @example 482915 */
             code: string;
+        };
+        DemandeCategorie: {
+            /** @enum {string} */
+            couleur: "OCRE" | "BRIQUE" | "FEUILLE" | "LAGUNE" | "PRUNE" | "SABLE" | "MENTHE" | "ARDOISE";
+            /** @example Bières */
+            nom: string;
+            /** Format: int64 */
+            version?: number;
         };
         DemandeChangementMotDePasse: {
             motDePasseActuel: string;
@@ -767,11 +1057,32 @@ export interface components {
             version: number;
             ville?: string;
         };
+        DemandeOrdreCategories: {
+            ids: string[];
+        };
         DemandePriseDeCaisse: {
             /** @example 4827 */
             pin: string;
             /** Format: uuid */
             utilisateurId: string;
+        };
+        DemandeProduit: {
+            /** Format: uuid */
+            categorieId: string;
+            /** @example Flag 65 cl */
+            nom: string;
+            /**
+             * Format: int64
+             * @example 1000
+             */
+            prix: number;
+            suiviStock?: boolean;
+            /** Format: uuid */
+            taxeId?: string;
+            /** @enum {string} */
+            type: "PLAT" | "BOISSON" | "ARTICLE";
+            /** Format: int64 */
+            version?: number;
         };
         DemandeRafraichissement: {
             /** Format: uuid */
@@ -781,6 +1092,17 @@ export interface components {
             nom: string;
             /** Format: int64 */
             version: number;
+        };
+        DemandeTaxe: {
+            /** @example TVA */
+            nom: string;
+            /**
+             * Format: int32
+             * @example 1800
+             */
+            tauxPointsDeBase: number;
+            /** Format: int64 */
+            version?: number;
         };
         DemandeValidation: {
             /** Format: uuid */
@@ -809,6 +1131,12 @@ export interface components {
             nom: string;
             /** @example TG */
             pays: string;
+            /**
+             * Format: int32
+             * @description Taux de TVA en points de base (1 800 = 18 %), réglable ensuite dans les taxes. Vide : 18 %.
+             * @example 1800
+             */
+            tauxTvaPointsDeBase?: number;
         };
         DonneesPremierEtablissement: {
             adresse?: string;
@@ -951,6 +1279,30 @@ export interface components {
             /** Format: int64 */
             total: number;
         };
+        PageResultatsProduitResume: {
+            elements: components["schemas"]["ProduitResume"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            taille: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ProduitResume: {
+            actif: boolean;
+            categorie: components["schemas"]["CategorieProduit"];
+            /** Format: uuid */
+            id: string;
+            nom: string;
+            /** Format: int64 */
+            prix: number;
+            suiviStock: boolean;
+            taxe?: components["schemas"]["TaxeProduit"];
+            /** @enum {string} */
+            type: "PLAT" | "BOISSON" | "ARTICLE";
+            /** Format: int64 */
+            version: number;
+        };
         ProfilCaisse: {
             bloque: boolean;
             nomCourt: string;
@@ -1040,6 +1392,25 @@ export interface components {
             expireLe: string;
             /** @enum {string} */
             statut: "EN_ATTENTE" | "UTILISE" | "EXPIRE";
+        };
+        TaxeProduit: {
+            /** Format: uuid */
+            id: string;
+            nom: string;
+            /** Format: int32 */
+            tauxPointsDeBase: number;
+        };
+        TaxeResume: {
+            active: boolean;
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            nbProduits: number;
+            nom: string;
+            /** Format: int32 */
+            tauxPointsDeBase: number;
+            /** Format: int64 */
+            version: number;
         };
         ValidationAccordee: {
             /** Format: date-time */
@@ -1219,7 +1590,7 @@ export interface operations {
             };
         };
     };
-    lister_3: {
+    lister_6: {
         parameters: {
             query?: {
                 page?: number;
@@ -1627,7 +1998,193 @@ export interface operations {
             };
         };
     };
-    lister_2: {
+    lister_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategorieResume"][];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    creer_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeCategorie"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategorieResume"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    ordonner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeOrdreCategories"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    modifier_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeCategorie"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategorieResume"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    desactiver_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    reactiver_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    lister_4: {
         parameters: {
             query?: {
                 page?: number;
@@ -1659,7 +2216,7 @@ export interface operations {
             };
         };
     };
-    creer_2: {
+    creer_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -1692,7 +2249,7 @@ export interface operations {
             };
         };
     };
-    modifier_1: {
+    modifier_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -1820,7 +2377,7 @@ export interface operations {
             };
         };
     };
-    lister_1: {
+    lister_3: {
         parameters: {
             query?: {
                 page?: number;
@@ -1852,7 +2409,7 @@ export interface operations {
             };
         };
     };
-    creer_1: {
+    creer_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -1885,7 +2442,7 @@ export interface operations {
             };
         };
     };
-    modifier: {
+    modifier_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -1920,7 +2477,7 @@ export interface operations {
             };
         };
     };
-    desactiver: {
+    desactiver_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -1980,7 +2537,7 @@ export interface operations {
             };
         };
     };
-    reactiver_1: {
+    reactiver_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -2009,7 +2566,7 @@ export interface operations {
             };
         };
     };
-    lister: {
+    lister_2: {
         parameters: {
             query?: {
                 page?: number;
@@ -2041,7 +2598,7 @@ export interface operations {
             };
         };
     };
-    creer: {
+    creer_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -2074,7 +2631,7 @@ export interface operations {
             };
         };
     };
-    reactiver: {
+    reactiver_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -2104,6 +2661,198 @@ export interface operations {
         };
     };
     suspendre: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    lister_1: {
+        parameters: {
+            query?: {
+                categorieId?: string;
+                actifs?: boolean;
+                recherche?: string;
+                page?: number;
+                taille?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageResultatsProduitResume"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    creer_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeProduit"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProduitResume"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    lire: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProduitResume"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    modifier_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeProduit"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProduitResume"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    desactiver_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    reactiver_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -2178,6 +2927,161 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["RoleAttribuable"][];
                 };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    lister: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxeResume"][];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    creer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeTaxe"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxeResume"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    modifier: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeTaxe"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxeResume"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    desactiver: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    reactiver: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
             default: {

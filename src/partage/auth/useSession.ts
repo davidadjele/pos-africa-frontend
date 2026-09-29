@@ -13,7 +13,12 @@ import {
 
 /** Permissions que l'interface reflète (le backend les applique dans tous les cas). */
 export type Permission =
-  'APPAREIL_GERER' | 'BACK_OFFICE' | 'ETABLISSEMENT_GERER' | 'PERSONNEL_GERER'
+  | 'APPAREIL_GERER'
+  | 'BACK_OFFICE'
+  | 'CATALOGUE_GERER'
+  | 'ETABLISSEMENT_GERER'
+  | 'PERSONNEL_GERER'
+  | 'PRIX_MODIFIER'
 
 export const requeteMoi = queryOptions({
   queryKey: ['session', 'moi'],

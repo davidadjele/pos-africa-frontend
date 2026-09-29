@@ -2,9 +2,11 @@ import { Link, Outlet } from '@tanstack/react-router'
 import {
   Building2,
   LayoutDashboard,
+  Percent,
   Store,
   TabletSmartphone,
   Users,
+  UtensilsCrossed,
   type LucideIcon,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -17,7 +19,13 @@ import { MenuCompte } from './MenuCompte'
 
 interface EntreeNavigation {
   vers:
-    '/gestion' | '/caisse' | '/gestion/etablissements' | '/gestion/personnel' | '/gestion/tablettes'
+    | '/gestion'
+    | '/caisse'
+    | '/gestion/produits'
+    | '/gestion/taxes'
+    | '/gestion/etablissements'
+    | '/gestion/personnel'
+    | '/gestion/tablettes'
   cle: string
   icone: LucideIcon
   /** Entrée masquée sans cette permission : l'écran ne servirait qu'à afficher un refus. */
@@ -28,6 +36,17 @@ interface EntreeNavigation {
 const QUOTIDIEN: EntreeNavigation[] = [
   { vers: '/gestion', cle: 'gestion.menu.tableauDeBord', icone: LayoutDashboard },
   { vers: '/caisse', cle: 'gestion.menu.caisse', icone: Store },
+]
+
+// La carte : consultable par tout le back-office, les taxes seulement par qui les règle.
+const CARTE: EntreeNavigation[] = [
+  { vers: '/gestion/produits', cle: 'gestion.menu.produits', icone: UtensilsCrossed },
+  {
+    vers: '/gestion/taxes',
+    cle: 'gestion.menu.taxes',
+    icone: Percent,
+    permission: 'CATALOGUE_GERER',
+  },
 ]
 
 // Réglages en bas, séparés des actions quotidiennes.
@@ -51,6 +70,15 @@ const REGLAGES: EntreeNavigation[] = [
     permission: 'APPAREIL_GERER',
   },
 ]
+
+function Separateur() {
+  return (
+    <li
+      aria-hidden="true"
+      className="mx-1 w-px self-stretch bg-trait md:mx-0 md:my-1 md:h-px md:w-auto"
+    />
+  )
+}
 
 function Entree({ vers, cle, icone: Icone }: Readonly<Omit<EntreeNavigation, 'permission'>>) {
   const { t } = useTranslation()
@@ -91,10 +119,19 @@ export function MiseEnPageGestion() {
             {QUOTIDIEN.map((entree) => (
               <Entree key={entree.vers} {...entree} />
             ))}
+            <Separateur />
             <li
               aria-hidden="true"
-              className="mx-1 w-px self-stretch bg-trait md:mx-0 md:my-1 md:h-px md:w-auto"
-            />
+              className="hidden px-3 pt-1 text-badge uppercase tracking-wide text-attenue md:block"
+            >
+              {t('gestion.menu.carte')}
+            </li>
+            {CARTE.filter(
+              (entree) => entree.permission === undefined || aLaPermission(entree.permission),
+            ).map((entree) => (
+              <Entree key={entree.vers} vers={entree.vers} cle={entree.cle} icone={entree.icone} />
+            ))}
+            <Separateur />
             {REGLAGES.filter(
               (entree) => entree.permission === undefined || aLaPermission(entree.permission),
             ).map((entree) => (
