@@ -8,6 +8,15 @@ export function formaterDate(instant: string, fuseauHoraire: string): string {
   }).format(new Date(instant))
 }
 
+/** Heure seule (« 19:42 ») : une action du jour, comme une rupture. */
+export function formaterHeure(instant: string, fuseauHoraire: string): string {
+  return new Intl.DateTimeFormat('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: fuseauHoraire,
+  }).format(new Date(instant))
+}
+
 /** Date et heure (« 28/09/2026, 20:41 ») : dernière activité, événements. Virgule plutôt que « · ». */
 export function formaterDateHeure(instant: string, fuseauHoraire: string): string {
   const heure = new Intl.DateTimeFormat('fr-FR', {

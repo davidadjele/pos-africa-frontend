@@ -102,7 +102,8 @@
       "tablettes": "Tablettes",
       "carte": "Carte",
       "produits": "Produits",
-      "taxes": "Taxes"
+      "taxes": "Taxes",
+      "parEtablissement": "Par établissement"
     },
     "tableauDeBord": {
       "titre": "Tableau de bord",
@@ -655,5 +656,65 @@
     "regle": "Une catégorie qui contient des produits actifs ne se désactive pas : déplacez ou désactivez d’abord ses produits.",
     "enUsage_one": "« {{nom}} » contient encore {{count}} produit actif : déplacez-le vers une autre catégorie ou désactivez-le d’abord.",
     "enUsage_other": "« {{nom}} » contient encore {{count}} produits actifs : déplacez-les vers une autre catégorie ou désactivez-les d’abord."
+  },
+  "carteEtablissement": {
+    "titre": "Carte de {{etablissement}}",
+    "titreSansEtablissement": "Carte par établissement",
+    "phrase": "Ce que la caisse de cet établissement propose, et à quel prix. Les ruptures s’annulent seules le lendemain à 4 h.",
+    "etablissement": "Établissement",
+    "tableau": "Carte de l’établissement",
+    "recherche": "Rechercher un produit",
+    "compteurs": {
+      "epuises_one": "{{count}} épuisé ce jour",
+      "epuises_other": "{{count}} épuisés ce jour",
+      "prixPropres_one": "{{count}} prix propre",
+      "prixPropres_other": "{{count}} prix propres",
+      "nonProposes_one": "{{count}} pas proposé ici",
+      "nonProposes_other": "{{count}} pas proposés ici"
+    },
+    "colonnes": {
+      "produit": "Produit",
+      "prixBase": "Prix de base",
+      "prixIci": "Prix ici",
+      "disponibilite": "Disponibilité",
+      "actions": "Actions"
+    },
+    "prixDeBase": "Prix de base",
+    "prixPropre": "Prix propre",
+    "disponible": "Disponible",
+    "epuise": "Épuisé ce jour",
+    "nonPropose": "Pas proposé ici",
+    "epuiseDetail": "{{auteur}}, {{heure}}, jusqu’au lendemain 4 h",
+    "epuiser": "Épuisé ce jour",
+    "epuiserNomme": "Déclarer {{nom}} épuisé ce jour",
+    "remettre": "Remettre en vente",
+    "remettreNomme": "Remettre {{nom}} en vente",
+    "proposer": "Proposer ici",
+    "proposerNomme": "Proposer {{nom}} ici",
+    "retirer": "Ne plus proposer ici",
+    "fixerPrix": "Prix dans cet établissement",
+    "plusDActions": "Plus d’actions pour {{nom}}",
+    "chargement": "Chargement de la carte…",
+    "aucunEtablissement": "Aucun établissement à afficher.",
+    "vide": {
+      "titre": "La carte est vide",
+      "phrase": "Les produits de la carte commune apparaîtront ici dès qu’ils seront créés."
+    },
+    "aucunResultat": "Aucun produit ne correspond.",
+    "fait": {
+      "epuise": "« {{nom}} » est épuisé jusqu’au lendemain 4 h.",
+      "remis": "« {{nom}} » est de nouveau en vente.",
+      "propose": "« {{nom}} » est de nouveau proposé ici.",
+      "retire": "« {{nom}} » n’est plus proposé ici.",
+      "prix": "Prix de « {{nom}} » enregistré."
+    },
+    "dialoguePrix": {
+      "titre": "Prix de « {{nom}} » à {{etablissement}}",
+      "consequence": "Prix de base de la carte : {{prix}}. Ce prix ne vaut que sur les caisses de {{etablissement}}.",
+      "prix": "Prix TTC à {{etablissement}}",
+      "note": "Si le prix de base change ensuite, {{etablissement}} garde ce prix. « Revenir au prix de base » le supprime. Le changement est tracé dans l’activité, à votre nom.",
+      "revenir": "Revenir au prix de base",
+      "enregistrer": "Enregistrer le prix"
+    }
   }
 }

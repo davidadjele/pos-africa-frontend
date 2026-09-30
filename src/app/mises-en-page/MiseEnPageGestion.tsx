@@ -22,6 +22,7 @@ interface EntreeNavigation {
     | '/gestion'
     | '/caisse'
     | '/gestion/produits'
+    | '/gestion/carte-etablissement'
     | '/gestion/taxes'
     | '/gestion/etablissements'
     | '/gestion/personnel'
@@ -41,6 +42,7 @@ const QUOTIDIEN: EntreeNavigation[] = [
 // La carte : consultable par tout le back-office, les taxes seulement par qui les règle.
 const CARTE: EntreeNavigation[] = [
   { vers: '/gestion/produits', cle: 'gestion.menu.produits', icone: UtensilsCrossed },
+  { vers: '/gestion/carte-etablissement', cle: 'gestion.menu.parEtablissement', icone: Store },
   {
     vers: '/gestion/taxes',
     cle: 'gestion.menu.taxes',

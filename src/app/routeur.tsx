@@ -7,6 +7,7 @@ import {
   redirect,
   type RouterHistory,
 } from '@tanstack/react-router'
+import { PageCarteEtablissement } from '../fonctionnalites/catalogue/PageCarteEtablissement'
 import { PageFicheProduit } from '../fonctionnalites/catalogue/PageFicheProduit'
 import { PageProduits, type RechercheProduits } from '../fonctionnalites/catalogue/PageProduits'
 import { PageTaxes } from '../fonctionnalites/catalogue/PageTaxes'
@@ -175,6 +176,12 @@ const ficheProduit = createRoute({
   },
 })
 
+const carteEtablissement = createRoute({
+  getParentRoute: () => gestion,
+  path: '/carte-etablissement',
+  component: PageCarteEtablissement,
+})
+
 const taxes = createRoute({
   getParentRoute: () => gestion,
   path: '/taxes',
@@ -238,6 +245,7 @@ const arbre = racine.addChildren([
     produits,
     nouveauProduit,
     ficheProduit,
+    carteEtablissement,
     taxes,
   ]),
   plateforme.addChildren([plateformeAccueil, nouvelleEntreprise]),

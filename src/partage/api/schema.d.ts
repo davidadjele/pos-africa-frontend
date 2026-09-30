@@ -455,6 +455,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/etablissements/{etablissementId}/carte": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Carte de l'établissement
+         * @description Produits actifs dans l'ordre de la caisse. Erreurs : RESSOURCE_INTROUVABLE (404), ACCES_REFUSE (hors du périmètre d'un gérant).
+         */
+        get: operations["carte"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/etablissements/{etablissementId}/carte/{produitId}/prix": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Fixer le prix dans cet établissement
+         * @description Permission PRIX_MODIFIER. Prix vide : retour au prix de base. Tracé.
+         */
+        put: operations["fixerPrix"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/etablissements/{etablissementId}/carte/{produitId}/proposition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Proposer de nouveau ce produit ici
+         * @description Permission CATALOGUE_GERER. Tracé.
+         */
+        post: operations["proposer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/etablissements/{etablissementId}/carte/{produitId}/retrait": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ne plus proposer ce produit ici
+         * @description Permission CATALOGUE_GERER. Tracé.
+         */
+        post: operations["retirer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/etablissements/{etablissementId}/carte/{produitId}/rupture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Déclarer une rupture du jour
+         * @description Permission DISPONIBILITE_GERER. Le produit est grisé sur les caisses jusqu'au prochain 4 h, heure de l'établissement. Tracé avec son auteur.
+         */
+        post: operations["epuiser"];
+        /**
+         * Lever une rupture avant son terme
+         * @description Permission DISPONIBILITE_GERER. Tracé.
+         */
+        delete: operations["remettreEnVente"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/etablissements/{id}": {
         parameters: {
             query?: never;
@@ -915,6 +1019,15 @@ export interface components {
             /** Format: int64 */
             version: number;
         };
+        CategorieCarte: {
+            /** @enum {string} */
+            couleur: "OCRE" | "BRIQUE" | "FEUILLE" | "LAGUNE" | "PRUNE" | "SABLE" | "MENTHE" | "ARDOISE";
+            /** Format: uuid */
+            id: string;
+            nom: string;
+            /** Format: int32 */
+            ordre: number;
+        };
         CategorieProduit: {
             /** @enum {string} */
             couleur: "OCRE" | "BRIQUE" | "FEUILLE" | "LAGUNE" | "PRUNE" | "SABLE" | "MENTHE" | "ARDOISE";
@@ -1066,6 +1179,13 @@ export interface components {
             /** Format: uuid */
             utilisateurId: string;
         };
+        DemandePrixEtablissement: {
+            /**
+             * Format: int64
+             * @example 1200
+             */
+            prix?: number;
+        };
         DemandeProduit: {
             /** Format: uuid */
             categorieId: string;
@@ -1111,7 +1231,7 @@ export interface components {
              * @example LIGNE_ANNULER_APRES_ENVOI
              * @enum {string}
              */
-            permission: "COMMANDE_CREER" | "LIGNE_ANNULER_APRES_ENVOI" | "TABLE_TRANSFERER" | "REMISE_APPLIQUER" | "REMISE_AU_DELA_PLAFOND" | "ARTICLE_OFFRIR" | "PAIEMENT_ENCAISSER" | "PAIEMENT_REMBOURSER" | "CAISSE_OUVRIR" | "CAISSE_FERMER" | "CAISSE_MOUVEMENT" | "STOCK_RECEPTIONNER" | "STOCK_AJUSTER" | "CATALOGUE_GERER" | "PRIX_MODIFIER" | "RAPPORT_VENTES" | "RAPPORT_FINANCIER" | "CLIENT_CREDIT" | "PERSONNEL_GERER" | "ETABLISSEMENT_GERER" | "BACK_OFFICE" | "APPAREIL_GERER";
+            permission: "COMMANDE_CREER" | "LIGNE_ANNULER_APRES_ENVOI" | "TABLE_TRANSFERER" | "REMISE_APPLIQUER" | "REMISE_AU_DELA_PLAFOND" | "ARTICLE_OFFRIR" | "PAIEMENT_ENCAISSER" | "PAIEMENT_REMBOURSER" | "CAISSE_OUVRIR" | "CAISSE_FERMER" | "CAISSE_MOUVEMENT" | "STOCK_RECEPTIONNER" | "STOCK_AJUSTER" | "CATALOGUE_GERER" | "PRIX_MODIFIER" | "RAPPORT_VENTES" | "RAPPORT_FINANCIER" | "CLIENT_CREDIT" | "PERSONNEL_GERER" | "ETABLISSEMENT_GERER" | "BACK_OFFICE" | "APPAREIL_GERER" | "DISPONIBILITE_GERER";
             /** @example 5937 */
             pin: string;
             /** Format: uuid */
@@ -1242,6 +1362,29 @@ export interface components {
             /** Format: int64 */
             version: number;
             ville?: string;
+        };
+        LigneCarteEtablissement: {
+            categorie: components["schemas"]["CategorieCarte"];
+            epuise: boolean;
+            /** Format: date-time */
+            epuiseJusquA?: string;
+            /** Format: date-time */
+            epuiseLe?: string;
+            epuisePar?: string;
+            nom: string;
+            nomTaxe?: string;
+            /** Format: int64 */
+            prix: number;
+            /** Format: int64 */
+            prixBase: number;
+            prixPropre: boolean;
+            /** Format: uuid */
+            produitId: string;
+            propose: boolean;
+            /** Format: int32 */
+            tauxTaxePointsDeBase: number;
+            /** @enum {string} */
+            type: "PLAT" | "BOISSON" | "ARTICLE";
         };
         PageResultatsAppareilResume: {
             elements: components["schemas"]["AppareilResume"][];
@@ -1937,7 +2080,7 @@ export interface operations {
     validateurs: {
         parameters: {
             query: {
-                permission: "COMMANDE_CREER" | "LIGNE_ANNULER_APRES_ENVOI" | "TABLE_TRANSFERER" | "REMISE_APPLIQUER" | "REMISE_AU_DELA_PLAFOND" | "ARTICLE_OFFRIR" | "PAIEMENT_ENCAISSER" | "PAIEMENT_REMBOURSER" | "CAISSE_OUVRIR" | "CAISSE_FERMER" | "CAISSE_MOUVEMENT" | "STOCK_RECEPTIONNER" | "STOCK_AJUSTER" | "CATALOGUE_GERER" | "PRIX_MODIFIER" | "RAPPORT_VENTES" | "RAPPORT_FINANCIER" | "CLIENT_CREDIT" | "PERSONNEL_GERER" | "ETABLISSEMENT_GERER" | "BACK_OFFICE" | "APPAREIL_GERER";
+                permission: "COMMANDE_CREER" | "LIGNE_ANNULER_APRES_ENVOI" | "TABLE_TRANSFERER" | "REMISE_APPLIQUER" | "REMISE_AU_DELA_PLAFOND" | "ARTICLE_OFFRIR" | "PAIEMENT_ENCAISSER" | "PAIEMENT_REMBOURSER" | "CAISSE_OUVRIR" | "CAISSE_FERMER" | "CAISSE_MOUVEMENT" | "STOCK_RECEPTIONNER" | "STOCK_AJUSTER" | "CATALOGUE_GERER" | "PRIX_MODIFIER" | "RAPPORT_VENTES" | "RAPPORT_FINANCIER" | "CLIENT_CREDIT" | "PERSONNEL_GERER" | "ETABLISSEMENT_GERER" | "BACK_OFFICE" | "APPAREIL_GERER" | "DISPONIBILITE_GERER";
             };
             header?: never;
             path?: never;
@@ -2237,6 +2380,191 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["EtablissementResume"];
                 };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    carte: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                etablissementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LigneCarteEtablissement"][];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    fixerPrix: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                etablissementId: string;
+                produitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandePrixEtablissement"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    proposer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                etablissementId: string;
+                produitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    retirer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                etablissementId: string;
+                produitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    epuiser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                etablissementId: string;
+                produitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    remettreEnVente: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                etablissementId: string;
+                produitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
             default: {

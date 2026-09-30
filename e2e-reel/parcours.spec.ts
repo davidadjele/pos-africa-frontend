@@ -424,3 +424,45 @@ test('Tanti compose sa carte : taxe, catégories, produits et changement de prix
   await page.setViewportSize({ width: 390, height: 844 })
   await capturer(page, '19-produits-telephone')
 })
+
+test('Tanti fixe un prix à Bè Kpota, puis la gérante déclare une rupture depuis son téléphone', async ({
+  page,
+}) => {
+  await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
+  await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
+  await page
+    .getByRole('navigation', { name: 'Navigation principale' })
+    .getByRole('link', { name: 'Par établissement' })
+    .click()
+  await page.getByLabel(/^Établissement/).selectOption({ label: 'Bè Kpota' })
+  await expect(page.getByRole('heading', { level: 1, name: 'Carte de Bè Kpota' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Plus d’actions pour Flag 65 cl' }).click()
+  await page.getByRole('menuitem', { name: 'Prix dans cet établissement' }).click()
+  const dialogue = page.getByRole('dialog', { name: 'Prix de « Flag 65 cl » à Bè Kpota' })
+  await dialogue.getByLabel(/^Prix TTC à Bè Kpota/).fill('1200')
+  await capturer(page, '20-prix-etablissement')
+  await dialogue.getByRole('button', { name: 'Enregistrer le prix' }).click()
+  const carte = page.getByRole('table', { name: 'Carte de l’établissement' })
+  await expect(carte.getByRole('row', { name: /Flag 65 cl/ })).toContainText('Prix propre')
+  await capturer(page, '21-carte-etablissement')
+  await seDeconnecter(page)
+
+  // La gérante, sur son téléphone : seule la rupture lui est proposée.
+  await page.setViewportSize({ width: 390, height: 844 })
+  await seConnecter(page, AFI.telephone, AFI.motDePasse)
+  await page
+    .getByRole('navigation', { name: 'Navigation principale' })
+    .getByRole('link', { name: 'Par établissement' })
+    .click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Carte de Bè Kpota' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Plus d’actions pour Flag 65 cl' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Déclarer Flag 65 cl épuisé ce jour' }).click()
+  await expect(page.getByText('« Flag 65 cl » est épuisé jusqu’au lendemain 4 h.')).toBeVisible()
+  await expect(
+    page
+      .getByRole('table', { name: 'Carte de l’établissement' })
+      .getByRole('row', { name: /Flag 65 cl/ }),
+  ).toContainText('Afi M.')
+  await capturer(page, '22-rupture-telephone')
+})

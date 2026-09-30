@@ -102,7 +102,8 @@
       "tablettes": "Tablets",
       "carte": "Menu",
       "produits": "Products",
-      "taxes": "Taxes"
+      "taxes": "Taxes",
+      "parEtablissement": "By venue"
     },
     "tableauDeBord": {
       "titre": "Dashboard",
@@ -655,5 +656,65 @@
     "regle": "A category that contains active products cannot be disabled: move or disable its products first.",
     "enUsage_one": "“{{nom}}” still contains {{count}} active product: move it to another category or disable it first.",
     "enUsage_other": "“{{nom}}” still contains {{count}} active products: move them to another category or disable them first."
+  },
+  "carteEtablissement": {
+    "titre": "{{etablissement}} menu",
+    "titreSansEtablissement": "Menu by venue",
+    "phrase": "What this venue’s till offers, and at what price. “Sold out today” clears itself the next morning at 4 am.",
+    "etablissement": "Venue",
+    "tableau": "Venue menu",
+    "recherche": "Search for a product",
+    "compteurs": {
+      "epuises_one": "{{count}} sold out today",
+      "epuises_other": "{{count}} sold out today",
+      "prixPropres_one": "{{count}} venue price",
+      "prixPropres_other": "{{count}} venue prices",
+      "nonProposes_one": "{{count}} not offered here",
+      "nonProposes_other": "{{count}} not offered here"
+    },
+    "colonnes": {
+      "produit": "Product",
+      "prixBase": "Base price",
+      "prixIci": "Price here",
+      "disponibilite": "Availability",
+      "actions": "Actions"
+    },
+    "prixDeBase": "Base price",
+    "prixPropre": "Venue price",
+    "disponible": "Available",
+    "epuise": "Sold out today",
+    "nonPropose": "Not offered here",
+    "epuiseDetail": "{{auteur}}, {{heure}}, until 4 am the next morning",
+    "epuiser": "Sold out today",
+    "epuiserNomme": "Mark {{nom}} sold out today",
+    "remettre": "Back on sale",
+    "remettreNomme": "Put {{nom}} back on sale",
+    "proposer": "Offer here",
+    "proposerNomme": "Offer {{nom}} here",
+    "retirer": "Stop offering here",
+    "fixerPrix": "Price at this venue",
+    "plusDActions": "More actions for {{nom}}",
+    "chargement": "Loading the menu…",
+    "aucunEtablissement": "No venue to show.",
+    "vide": {
+      "titre": "The menu is empty",
+      "phrase": "Products from the shared menu will show here once they are created."
+    },
+    "aucunResultat": "No product matches.",
+    "fait": {
+      "epuise": "“{{nom}}” is sold out until 4 am tomorrow.",
+      "remis": "“{{nom}}” is back on sale.",
+      "propose": "“{{nom}}” is offered here again.",
+      "retire": "“{{nom}}” is no longer offered here.",
+      "prix": "Price of “{{nom}}” saved."
+    },
+    "dialoguePrix": {
+      "titre": "Price of “{{nom}}” at {{etablissement}}",
+      "consequence": "Menu base price: {{prix}}. This price only applies to the {{etablissement}} tills.",
+      "prix": "Price incl. tax at {{etablissement}}",
+      "note": "If the base price changes later, {{etablissement}} keeps this price. “Back to base price” removes it. The change is recorded in the activity, under your name.",
+      "revenir": "Back to base price",
+      "enregistrer": "Save the price"
+    }
   }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formaterDate, formaterDateHeure } from './formaterDate'
+import { formaterDate, formaterDateHeure, formaterHeure } from './formaterDate'
 
 describe('formaterDate', () => {
   it('écrit une date de tableau en jour, mois, année', () => {
@@ -15,5 +15,12 @@ describe('formaterDateHeure', () => {
   it('ajoute l’heure après une virgule, dans le fuseau de l’entreprise', () => {
     expect(formaterDateHeure('2026-09-28T20:41:00Z', 'Africa/Lome')).toBe('28/09/2026, 20:41')
     expect(formaterDateHeure('2026-09-28T20:41:00Z', 'Africa/Douala')).toBe('28/09/2026, 21:41')
+  })
+})
+
+describe('formaterHeure', () => {
+  it('donne l’heure dans le fuseau de l’établissement', () => {
+    expect(formaterHeure('2026-09-29T19:42:00Z', 'Africa/Lome')).toBe('19:42')
+    expect(formaterHeure('2026-09-29T19:42:00Z', 'Africa/Douala')).toBe('20:42')
   })
 })
