@@ -92,6 +92,20 @@ export function detailActivite(
     }
     case 'LIGNE_ANNULEE':
       return annulation(evenement, t, montant)
+    case 'NOTE_ANNULEE':
+      return annulationNote(evenement, t, montant)
+    case 'TABLE_TRANSFEREE':
+      return t('activite.transfert', {
+        de: texte(evenement.details.de),
+        vers: texte(evenement.details.vers),
+        numero: numero(evenement, t),
+      })
+    case 'SERVEUR_CHANGE':
+      return t('activite.serveurChange', {
+        avant: texte(evenement.details.avant),
+        apres: texte(evenement.details.apres),
+        numero: numero(evenement, t),
+      })
     case 'ROLES_MODIFIES':
       return t('activite.roles', {
         avant: roles(avant, t, etablissements),
@@ -126,6 +140,36 @@ function annulation(
   return validateur === undefined
     ? t('activite.annulation', valeurs)
     : t('activite.annulationValidee', { ...valeurs, validateur })
+}
+
+/** « 12 600 F, T4, n°42. Motif : Le client est parti. Validé par Afi M. » */
+function annulationNote(
+  evenement: EvenementActivite,
+  t: TFunction,
+  montant: (valeur: unknown) => string,
+): string {
+  const { motif, detail, table } = evenement.details
+  const valeurs = {
+    montant: montant(evenement.details.montant),
+    ou: [...(typeof table === 'string' ? [table] : []), numero(evenement, t)].join(', '),
+    motif:
+      motif === 'AUTRE' && typeof detail === 'string'
+        ? detail
+        : t(`caisse.motifs.${typeof motif === 'string' ? motif : 'AUTRE'}`),
+  }
+  const validateur = evenement.detailsNoms.validateurId
+  return validateur === undefined
+    ? t('activite.annulationNote', valeurs)
+    : t('activite.annulationNoteValidee', { ...valeurs, validateur })
+}
+
+function numero(evenement: EvenementActivite, t: TFunction): string {
+  const valeur = evenement.details.numero
+  return typeof valeur === 'number' ? t('caisse.note.numero', { numero: valeur }) : ''
+}
+
+function texte(valeur: unknown): string {
+  return typeof valeur === 'string' ? valeur : ''
 }
 
 /** « SERVEUR@<établissement> » enregistrés par le serveur, rendus « Serveur à Bè Kpota ». */

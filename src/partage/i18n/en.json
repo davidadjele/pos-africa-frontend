@@ -168,6 +168,47 @@
         "confirmer_other": "Cancel {{count}} items",
         "validationTitre": "Cancel {{count}} {{produit}}?",
         "validationContexte": "{{ou}}. Item already sent to preparation, requested by {{demandeur}} for the reason: {{motif}}."
+      },
+      "actions": {
+        "titre": "Tab actions",
+        "transferer": "Move to another table",
+        "serveur": "Change server",
+        "couverts": "Guests",
+        "addition": "Bill requested",
+        "annuler": "Cancel the tab"
+      },
+      "addition": {
+        "bandeau": "Bill requested at {{heure}} by {{nom}}",
+        "retirer": "Remove the bill request"
+      },
+      "transfert": {
+        "titre": "Move the tab of {{table}}",
+        "phrase": "{{numero}}, {{montant}}. Every item follows the tab, sent or not: nothing is remade in the kitchen.",
+        "tables": "Free tables",
+        "aucune": "No free table in this area.",
+        "confirmer": "Move to {{table}}",
+        "choisir": "Choose a table"
+      },
+      "serveur": {
+        "titre": "Hand the tab to",
+        "phrase": "The tab goes to the chosen colleague: it becomes their table. Recorded in the activity.",
+        "moi": "Me ({{nom}})",
+        "aucun": "No other employee takes orders here."
+      },
+      "couverts": {
+        "titre": "Guests at {{table}}",
+        "phrase": "The number of guests is used in reports."
+      },
+      "annulationNote": {
+        "titre": "Cancel the tab of {{ou}}?",
+        "phrase": "The table becomes free. {{numero}}, opened at {{heure}} by {{serveur}}",
+        "envoyes_one": "{{count}} item sent to preparation, cancelled",
+        "envoyes_other": "{{count}} items sent to preparation, cancelled",
+        "aEnvoyer_one": "{{count}} item to send, removed",
+        "aEnvoyer_other": "{{count}} items to send, removed",
+        "garder": "Keep the tab",
+        "confirmer": "Cancel the tab",
+        "validationContexte": "{{numero}}. Items already sent to preparation ({{montant}}), cancellation requested by {{demandeur}} for the reason: {{motif}}."
       }
     },
     "canaux": {
@@ -204,7 +245,11 @@
       },
       "tablesOccupees_one": "{{count}} of {{total}} tables occupied",
       "tablesOccupees_other": "{{count}} of {{total}} tables occupied",
-      "aEnvoyer": "{{count}} to send"
+      "aEnvoyer": "{{count}} to send",
+      "aTraiter": "To handle",
+      "additionDemandee": "Bill requested",
+      "depuis": "{{serveur}}, since {{heure}}",
+      "prisA": "{{serveur}}, taken at {{heure}}"
     },
     "ouverture": {
       "titreTable": "Open a tab on {{table}}",
@@ -225,7 +270,8 @@
       "NON_SERVIE": "Not served (too long a wait)",
       "PLAT_REFUSE": "Dish refused (quality)",
       "EPUISE_CUISINE": "Sold out in the kitchen",
-      "AUTRE": "Other"
+      "AUTRE": "Other",
+      "CLIENT_PARTI": "The customer left"
     }
   },
   "gestion": {
@@ -921,10 +967,13 @@
       "EMPLOYE_REACTIVE": "<b>{{auteur}}</b> enabled <b>{{objet}}</b> again",
       "TABLETTE_REVOQUEE": "<b>{{auteur}}</b> revoked the <b>{{objet}}</b> tablet",
       "VALIDATION_GERANT_UTILISEE": "<b>{{auteur}}</b> got <b>{{validateur}}</b>’s approval to {{action}}",
-      "LIGNE_ANNULEE": "<b>{{auteur}}</b> cancelled <b>{{objet}}</b> at {{etablissement}}"
+      "LIGNE_ANNULEE": "<b>{{auteur}}</b> cancelled <b>{{objet}}</b> at {{etablissement}}",
+      "NOTE_ANNULEE": "<b>{{auteur}}</b> cancelled the tab <b>{{objet}}</b> at {{etablissement}}",
+      "TABLE_TRANSFEREE": "<b>{{auteur}}</b> moved a tab to <b>{{objet}}</b> at {{etablissement}}",
+      "SERVEUR_CHANGE": "<b>{{auteur}}</b> handed the tab <b>{{objet}}</b> to another server at {{etablissement}}"
     },
     "actions": {
-      "LIGNE_ANNULER_APRES_ENVOI": "cancel a sent line",
+      "LIGNE_ANNULER_APRES_ENVOI": "cancel items already sent",
       "TABLE_TRANSFERER": "transfer a table",
       "REMISE_APPLIQUER": "apply a discount",
       "REMISE_AU_DELA_PLAFOND": "go over the discount cap",
@@ -934,7 +983,11 @@
       "autre": "a protected action"
     },
     "annulation": "{{quantite}} × {{montant}}, {{ou}}. Reason: {{motif}}.",
-    "annulationValidee": "{{quantite}} × {{montant}}, {{ou}}. Reason: {{motif}}. Approved by {{validateur}}"
+    "annulationValidee": "{{quantite}} × {{montant}}, {{ou}}. Reason: {{motif}}. Approved by {{validateur}}",
+    "annulationNote": "{{montant}}, {{ou}}. Reason: {{motif}}.",
+    "annulationNoteValidee": "{{montant}}, {{ou}}. Reason: {{motif}}. Approved by {{validateur}}",
+    "transfert": "{{de}} → {{vers}}, {{numero}}",
+    "serveurChange": "{{avant}} → {{apres}}, {{numero}}"
   },
   "salles": {
     "titre": "{{etablissement}} areas and tables",

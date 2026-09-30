@@ -60,6 +60,30 @@ describe('EcranPlan', () => {
     )
   })
 
+  it('liste à traiter les additions demandées puis les articles à envoyer', async () => {
+    const plan = structuredClone(PLAN)
+    const [, t4, t7] = plan.salles[0]?.tables ?? []
+    if (t4?.note !== undefined) t4.note.aEnvoyerDepuis = '2026-09-29T20:58:00Z'
+    if (t7?.note !== undefined) t7.note.additionDemandeeLe = '2026-09-29T21:10:00Z'
+    planServi(plan)
+    caisseOuverte('/caisse')
+
+    const aTraiter = await screen.findByRole('list', { name: 'À traiter' })
+    expect(
+      within(aTraiter)
+        .getAllByRole('link')
+        .map((lien) => lien.textContent),
+    ).toEqual([expect.stringContaining('T7'), expect.stringContaining('T4')])
+    expect(within(aTraiter).getByRole('link', { name: /T7/ })).toHaveTextContent(
+      'Addition demandée',
+    )
+    expect(within(aTraiter).getByRole('link', { name: /T4/ })).toHaveTextContent('2 à envoyer')
+    const tables = screen.getByRole('list', { name: 'Tables' })
+    expect(within(tables).getByRole('button', { name: /T7/ })).toHaveTextContent(
+      'Addition demandée',
+    )
+  })
+
   it('filtre sur mes tables', async () => {
     planServi()
     caisseOuverte('/caisse')

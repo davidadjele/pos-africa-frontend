@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { clsx } from 'clsx'
@@ -183,6 +184,7 @@ export function EcranPlan() {
       </div>
 
       <ResumeNotes
+        aTraiter={aTraiter(salles, sansTable, t)}
         notes={[...occupees.flatMap((table) => (table.note ? [table.note] : [])), ...sansTable]}
         sansTable={sansTable}
         occupees={occupees.length}
@@ -263,10 +265,15 @@ function TuileTable({
   const { t } = useTranslation()
   const { note } = table
   const aEnvoyer = note?.aEnvoyer ?? 0
+  const addition = note?.additionDemandeeLe !== undefined
   // Articles pris mais pas partis en préparation : couleur d'alerte, l'accent reste à l'action principale.
   const classes = clsx(
     'flex min-h-36 w-full flex-col justify-between gap-2 rounded-moyen p-3.5 text-left text-encre',
-    aEnvoyer > 0 ? 'border-2 border-alerte-bord' : 'border border-trait',
+    aEnvoyer > 0
+      ? 'border-2 border-alerte-bord'
+      : addition
+        ? 'border-2 border-info'
+        : 'border border-trait',
     note === undefined ? 'bg-fond' : 'bg-surface',
   )
   const contenu =
@@ -295,6 +302,7 @@ function TuileTable({
           </span>
         </span>
         <span className="flex flex-col items-start gap-1">
+          {addition && <BadgeStatut ton="info">{t('caisse.plan.additionDemandee')}</BadgeStatut>}
           {aEnvoyer > 0 && (
             <BadgeStatut ton="alerte">{t('caisse.plan.aEnvoyer', { count: aEnvoyer })}</BadgeStatut>
           )}
@@ -322,14 +330,50 @@ function TuileTable({
             })
       }
       onClick={surToucher}
-      className={clsx(classes, aEnvoyer === 0 && 'hover:border-bordure-controle')}
+      className={clsx(classes, aEnvoyer === 0 && !addition && 'hover:border-bordure-controle')}
     >
       {contenu}
     </button>
   )
 }
 
+interface NoteATraiter {
+  note: NoteOuverte
+  /** « T3, Terrasse » ou « n°43, Comptoir » */
+  libelle: string
+}
+
+/**
+ * Ce qui attend un geste : les additions demandées d'abord (le client attend pour payer), puis les
+ * articles pris mais pas envoyés, les plus anciens en premier.
+ */
+function aTraiter(salles: SallePlan[], sansTable: NoteOuverte[], t: TFunction): NoteATraiter[] {
+  const toutes: NoteATraiter[] = [
+    ...salles.flatMap((salle) =>
+      salle.tables.flatMap((table) =>
+        table.note === undefined
+          ? []
+          : [{ note: table.note, libelle: `${table.nom}, ${salle.nom}` }],
+      ),
+    ),
+    ...sansTable.map((note) => ({
+      note,
+      libelle: `${t('caisse.note.numero', { numero: note.numero })}, ${t(`caisse.canaux.${note.canal}`)}`,
+    })),
+  ]
+  const additions = toutes
+    .filter(({ note }) => note.additionDemandeeLe !== undefined)
+    .sort((a, b) =>
+      (a.note.additionDemandeeLe ?? '').localeCompare(b.note.additionDemandeeLe ?? ''),
+    )
+  const aEnvoyer = toutes
+    .filter(({ note }) => note.additionDemandeeLe === undefined && note.aEnvoyer > 0)
+    .sort((a, b) => (a.note.aEnvoyerDepuis ?? '').localeCompare(b.note.aEnvoyerDepuis ?? ''))
+  return [...additions, ...aEnvoyer]
+}
+
 function ResumeNotes({
+  aTraiter,
   notes,
   sansTable,
   occupees,
@@ -337,6 +381,7 @@ function ResumeNotes({
   devise,
   fuseauHoraire,
 }: Readonly<{
+  aTraiter: NoteATraiter[]
   notes: NoteOuverte[]
   sansTable: NoteOuverte[]
   occupees: number
@@ -352,6 +397,50 @@ function ResumeNotes({
       aria-label={t('caisse.plan.totalOuvertes')}
       className="flex shrink-0 flex-col gap-1 rounded-moyen border border-trait bg-surface p-5 lg:w-ticket-largeur"
     >
+      {aTraiter.length > 0 && (
+        <div className="mb-5 flex flex-col">
+          <h2 className="m-0 text-libelle font-bold text-encre">
+            {t('caisse.plan.aTraiter')}{' '}
+            <span className="chiffres font-medium text-attenue">{aTraiter.length}</span>
+          </h2>
+          <ul aria-label={t('caisse.plan.aTraiter')} className="m-0 list-none p-0">
+            {aTraiter.map(({ note, libelle }) => (
+              <li key={note.id} className="border-b border-trait last:border-b-0">
+                <Link
+                  to="/caisse/notes/$commandeId"
+                  params={{ commandeId: note.id }}
+                  className="flex min-h-cible-caisse items-center gap-2.5 py-2 text-encre no-underline"
+                >
+                  <span className="flex flex-1 flex-col">
+                    <span className="text-libelle font-bold">{libelle}</span>
+                    <span className="text-legende text-attenue">
+                      {note.additionDemandeeLe === undefined
+                        ? t('caisse.plan.prisA', {
+                            serveur: note.serveur,
+                            heure: formaterHeure(
+                              note.aEnvoyerDepuis ?? note.ouverteLe,
+                              fuseauHoraire,
+                            ),
+                          })
+                        : t('caisse.plan.depuis', {
+                            serveur: note.serveur,
+                            heure: formaterHeure(note.additionDemandeeLe, fuseauHoraire),
+                          })}
+                    </span>
+                  </span>
+                  {note.additionDemandeeLe === undefined ? (
+                    <BadgeStatut ton="alerte">
+                      {t('caisse.plan.aEnvoyer', { count: note.aEnvoyer })}
+                    </BadgeStatut>
+                  ) : (
+                    <BadgeStatut ton="info">{t('caisse.plan.additionDemandee')}</BadgeStatut>
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <span className="text-legende text-attenue">{t('caisse.plan.totalOuvertes')}</span>
       <span className="chiffres text-montant-total text-encre">
         {formaterMontant({ unitesMineures: total, devise })}

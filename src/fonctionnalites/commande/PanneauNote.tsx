@@ -1,6 +1,7 @@
 import type { TFunction } from 'i18next'
 import { clsx } from 'clsx'
 import { ArrowLeft } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { CommandeDetail, DemandeLigne, LigneNote } from '../../partage/api/contrat'
 import { formaterHeure } from '../../partage/dates/formaterDate'
@@ -27,6 +28,8 @@ export function PanneauNote({
   modifiable,
   ruptures,
   envoiEnCours,
+  actions,
+  surRetirerAddition,
   surRevenir,
   surEnvoyer,
   surModifier,
@@ -38,6 +41,9 @@ export function PanneauNote({
   modifiable: boolean
   ruptures: ReadonlyMap<string, Rupture>
   envoiEnCours: boolean
+  /** Menu des actions sur la note entière, s'il y en a pour cet employé. */
+  actions: ReactNode
+  surRetirerAddition: () => void
   surRevenir: () => void
   surEnvoyer: (nombre: number) => void
   surModifier: (ligne: LigneNote, demande: DemandeLigne) => void
@@ -86,7 +92,23 @@ export function PanneauNote({
             {detail}
           </span>
         </div>
+        <span className="ml-auto shrink-0">{actions}</span>
       </div>
+      {note.additionDemandeeLe !== undefined && (
+        <div className="flex items-center gap-2 border-b border-trait bg-info-fond px-4 py-2.5 text-libelle text-encre">
+          <span className="flex-1">
+            {t('caisse.note.addition.bandeau', {
+              heure: formaterHeure(note.additionDemandeeLe, fuseauHoraire),
+              nom: note.additionDemandeePar ?? '',
+            })}
+          </span>
+          {modifiable && (
+            <Bouton className="shrink-0" onClick={surRetirerAddition}>
+              {t('caisse.note.addition.retirer')}
+            </Bouton>
+          )}
+        </div>
+      )}
 
       {note.lignes.length === 0 ? (
         <div className="flex-1 p-5">

@@ -168,6 +168,47 @@
         "confirmer_other": "Annuler {{count}} articles",
         "validationTitre": "Annuler {{count}} {{produit}} ?",
         "validationContexte": "{{ou}}. Article déjà envoyé en préparation, demandé par {{demandeur}} pour le motif : {{motif}}."
+      },
+      "actions": {
+        "titre": "Actions sur la note",
+        "transferer": "Transférer vers une autre table",
+        "serveur": "Changer de serveur",
+        "couverts": "Couverts",
+        "addition": "Addition demandée",
+        "annuler": "Annuler la note"
+      },
+      "addition": {
+        "bandeau": "Addition demandée à {{heure}} par {{nom}}",
+        "retirer": "Retirer l’addition demandée"
+      },
+      "transfert": {
+        "titre": "Transférer la note de {{table}}",
+        "phrase": "{{numero}}, {{montant}}. Tous les articles suivent la note, envoyés ou non : rien n’est refait en cuisine.",
+        "tables": "Tables libres",
+        "aucune": "Aucune table libre dans cette salle.",
+        "confirmer": "Transférer vers {{table}}",
+        "choisir": "Choisissez une table"
+      },
+      "serveur": {
+        "titre": "Confier la note à",
+        "phrase": "La note passe au collègue choisi : elle devient « sa table ». Noté dans l’activité.",
+        "moi": "Moi ({{nom}})",
+        "aucun": "Aucun autre employé ne prend de commande ici."
+      },
+      "couverts": {
+        "titre": "Couverts de {{table}}",
+        "phrase": "Le nombre de couverts sert aux rapports."
+      },
+      "annulationNote": {
+        "titre": "Annuler la note de {{ou}} ?",
+        "phrase": "La table redevient libre. {{numero}}, ouverte à {{heure}} par {{serveur}}",
+        "envoyes_one": "{{count}} article envoyé en préparation, annulé",
+        "envoyes_other": "{{count}} articles envoyés en préparation, annulés",
+        "aEnvoyer_one": "{{count}} article à envoyer, retiré",
+        "aEnvoyer_other": "{{count}} articles à envoyer, retirés",
+        "garder": "Garder la note",
+        "confirmer": "Annuler la note",
+        "validationContexte": "{{numero}}. Articles déjà envoyés en préparation ({{montant}}), annulation demandée par {{demandeur}} pour le motif : {{motif}}."
       }
     },
     "canaux": {
@@ -204,7 +245,11 @@
       },
       "tablesOccupees_one": "{{count}} table occupée sur {{total}}",
       "tablesOccupees_other": "{{count}} tables occupées sur {{total}}",
-      "aEnvoyer": "{{count}} à envoyer"
+      "aEnvoyer": "{{count}} à envoyer",
+      "aTraiter": "À traiter",
+      "additionDemandee": "Addition demandée",
+      "depuis": "{{serveur}}, depuis {{heure}}",
+      "prisA": "{{serveur}}, pris à {{heure}}"
     },
     "ouverture": {
       "titreTable": "Ouvrir une note sur {{table}}",
@@ -225,7 +270,8 @@
       "NON_SERVIE": "Non servie (trop d’attente)",
       "PLAT_REFUSE": "Plat refusé (qualité)",
       "EPUISE_CUISINE": "Épuisé en cuisine",
-      "AUTRE": "Autre"
+      "AUTRE": "Autre",
+      "CLIENT_PARTI": "Le client est parti"
     }
   },
   "gestion": {
@@ -921,10 +967,13 @@
       "EMPLOYE_REACTIVE": "<b>{{auteur}}</b> a réactivé <b>{{objet}}</b>",
       "TABLETTE_REVOQUEE": "<b>{{auteur}}</b> a révoqué la tablette <b>{{objet}}</b>",
       "VALIDATION_GERANT_UTILISEE": "<b>{{auteur}}</b> a obtenu la validation de <b>{{validateur}}</b> pour {{action}}",
-      "LIGNE_ANNULEE": "<b>{{auteur}}</b> a annulé <b>{{objet}}</b> à {{etablissement}}"
+      "LIGNE_ANNULEE": "<b>{{auteur}}</b> a annulé <b>{{objet}}</b> à {{etablissement}}",
+      "NOTE_ANNULEE": "<b>{{auteur}}</b> a annulé la note <b>{{objet}}</b> à {{etablissement}}",
+      "TABLE_TRANSFEREE": "<b>{{auteur}}</b> a transféré une note vers <b>{{objet}}</b> à {{etablissement}}",
+      "SERVEUR_CHANGE": "<b>{{auteur}}</b> a confié la note <b>{{objet}}</b> à un autre serveur à {{etablissement}}"
     },
     "actions": {
-      "LIGNE_ANNULER_APRES_ENVOI": "annuler une ligne envoyée",
+      "LIGNE_ANNULER_APRES_ENVOI": "annuler des articles envoyés",
       "TABLE_TRANSFERER": "transférer une table",
       "REMISE_APPLIQUER": "appliquer une remise",
       "REMISE_AU_DELA_PLAFOND": "une remise au-delà du plafond",
@@ -934,7 +983,11 @@
       "autre": "une action protégée"
     },
     "annulation": "{{quantite}} × {{montant}}, {{ou}}. Motif : {{motif}}.",
-    "annulationValidee": "{{quantite}} × {{montant}}, {{ou}}. Motif : {{motif}}. Validé par {{validateur}}"
+    "annulationValidee": "{{quantite}} × {{montant}}, {{ou}}. Motif : {{motif}}. Validé par {{validateur}}",
+    "annulationNote": "{{montant}}, {{ou}}. Motif : {{motif}}.",
+    "annulationNoteValidee": "{{montant}}, {{ou}}. Motif : {{motif}}. Validé par {{validateur}}",
+    "transfert": "{{de}} → {{vers}}, {{numero}}",
+    "serveurChange": "{{avant}} → {{apres}}, {{numero}}"
   },
   "salles": {
     "titre": "Salles et tables de {{etablissement}}",

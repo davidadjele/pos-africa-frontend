@@ -360,6 +360,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/caisse/commandes/{id}/addition": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Signaler que le client demande l'addition */
+        post: operations["demanderAddition"];
+        /** Retirer le signal d'addition demandée */
+        delete: operations["retirerAddition"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/commandes/{id}/annulation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Annuler la note entière
+         * @description Motif obligatoire. Avec des articles envoyés : permission LIGNE_ANNULER_APRES_ENVOI ou validation d'un gérant (VALIDATION_REQUISE, 403), et trace critique dans l'activité.
+         */
+        post: operations["annuler_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/commandes/{id}/couverts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Corriger le nombre de couverts */
+        put: operations["fixerCouverts"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/caisse/commandes/{id}/envoi": {
         parameters: {
             query?: never;
@@ -434,6 +489,43 @@ export interface paths {
          * @description Motif obligatoire, tracé dans l'activité. Sans la permission LIGNE_ANNULER_APRES_ENVOI : VALIDATION_REQUISE (403), puis validation d'un gérant (POST /caisse/validations) à joindre.
          */
         post: operations["annuler"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/commandes/{id}/serveur": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confier la note à un autre employé de l'établissement */
+        post: operations["confier"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/commandes/{id}/transfert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Transférer la note vers une table libre
+         * @description Erreur : TABLE_OCCUPEE (409).
+         */
+        post: operations["transferer"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1451,6 +1543,9 @@ export interface components {
             id: string;
         };
         CommandeDetail: {
+            /** Format: date-time */
+            additionDemandeeLe?: string;
+            additionDemandeePar?: string;
             /** Format: int32 */
             articles: number;
             /** @enum {string} */
@@ -1495,9 +1590,17 @@ export interface components {
             /** @example Renversé au service */
             detail?: string;
             /** @enum {string} */
-            motif: "ERREUR_SAISIE" | "CLIENT_CHANGE_AVIS" | "NON_SERVIE" | "PLAT_REFUSE" | "EPUISE_CUISINE" | "AUTRE";
+            motif: "ERREUR_SAISIE" | "CLIENT_PARTI" | "CLIENT_CHANGE_AVIS" | "NON_SERVIE" | "PLAT_REFUSE" | "EPUISE_CUISINE" | "AUTRE";
             /** Format: int32 */
             quantite: number;
+            /** Format: uuid */
+            validationId?: string;
+        };
+        DemandeAnnulationNote: {
+            /** @example Client parti sans payer */
+            detail?: string;
+            /** @enum {string} */
+            motif: "ERREUR_SAISIE" | "CLIENT_PARTI" | "CLIENT_CHANGE_AVIS" | "NON_SERVIE" | "PLAT_REFUSE" | "EPUISE_CUISINE" | "AUTRE";
             /** Format: uuid */
             validationId?: string;
         };
@@ -1537,6 +1640,10 @@ export interface components {
             motDePasse: string;
             /** @example TG */
             pays?: string;
+        };
+        DemandeCouverts: {
+            /** Format: int32 */
+            couverts: number;
         };
         DemandeCreationEntreprise: {
             entreprise: components["schemas"]["DonneesEntreprise"];
@@ -1672,6 +1779,10 @@ export interface components {
             /** Format: int64 */
             version?: number;
         };
+        DemandeServeur: {
+            /** Format: uuid */
+            serveurId: string;
+        };
         DemandeTable: {
             /** @example T4 */
             nom: string;
@@ -1709,6 +1820,10 @@ export interface components {
             tauxPointsDeBase: number;
             /** Format: int64 */
             version?: number;
+        };
+        DemandeTransfert: {
+            /** Format: uuid */
+            tableId: string;
         };
         DemandeValidation: {
             /** Format: uuid */
@@ -1874,7 +1989,7 @@ export interface components {
             /** Format: date-time */
             survenuLe: string;
             /** @enum {string} */
-            type: "TAXE_CREEE" | "TAUX_TAXE_MODIFIE" | "TAXE_DESACTIVEE" | "TAXE_REACTIVEE" | "PRIX_MODIFIE" | "TAXE_PRODUIT_MODIFIEE" | "PRODUIT_DESACTIVE" | "PRODUIT_REACTIVE" | "PRIX_ETABLISSEMENT_MODIFIE" | "PRODUIT_RETIRE_ETABLISSEMENT" | "PRODUIT_PROPOSE_ETABLISSEMENT" | "RUPTURE_DECLAREE" | "RUPTURE_LEVEE" | "ROLES_MODIFIES" | "PIN_REINITIALISE" | "EMPLOYE_DESACTIVE" | "EMPLOYE_REACTIVE" | "TABLETTE_REVOQUEE" | "VALIDATION_GERANT_UTILISEE" | "LIGNE_ANNULEE";
+            type: "TAXE_CREEE" | "TAUX_TAXE_MODIFIE" | "TAXE_DESACTIVEE" | "TAXE_REACTIVEE" | "PRIX_MODIFIE" | "TAXE_PRODUIT_MODIFIEE" | "PRODUIT_DESACTIVE" | "PRODUIT_REACTIVE" | "PRIX_ETABLISSEMENT_MODIFIE" | "PRODUIT_RETIRE_ETABLISSEMENT" | "PRODUIT_PROPOSE_ETABLISSEMENT" | "RUPTURE_DECLAREE" | "RUPTURE_LEVEE" | "ROLES_MODIFIES" | "PIN_REINITIALISE" | "EMPLOYE_DESACTIVE" | "EMPLOYE_REACTIVE" | "TABLETTE_REVOQUEE" | "VALIDATION_GERANT_UTILISEE" | "LIGNE_ANNULEE" | "NOTE_ANNULEE" | "TABLE_TRANSFEREE" | "SERVEUR_CHANGE";
         };
         LigneCarteEtablissement: {
             categorie: components["schemas"]["CategorieCarte"];
@@ -1912,7 +2027,7 @@ export interface components {
             /** Format: int64 */
             montant: number;
             /** @enum {string} */
-            motifAnnulation?: "ERREUR_SAISIE" | "CLIENT_CHANGE_AVIS" | "NON_SERVIE" | "PLAT_REFUSE" | "EPUISE_CUISINE" | "AUTRE";
+            motifAnnulation?: "ERREUR_SAISIE" | "CLIENT_PARTI" | "CLIENT_CHANGE_AVIS" | "NON_SERVIE" | "PLAT_REFUSE" | "EPUISE_CUISINE" | "AUTRE";
             nomProduit: string;
             note?: string;
             /** Format: int64 */
@@ -1927,6 +2042,10 @@ export interface components {
         NoteOuverte: {
             /** Format: int32 */
             aEnvoyer: number;
+            /** Format: date-time */
+            aEnvoyerDepuis?: string;
+            /** Format: date-time */
+            additionDemandeeLe?: string;
             /** @enum {string} */
             canal: "SUR_PLACE" | "COMPTOIR" | "EMPORTER";
             clientNom?: string;
@@ -2829,6 +2948,136 @@ export interface operations {
             };
         };
     };
+    demanderAddition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommandeDetail"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    retirerAddition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommandeDetail"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    annuler_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeAnnulationNote"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    fixerCouverts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeCouverts"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommandeDetail"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
     envoyer: {
         parameters: {
             query?: never;
@@ -2944,6 +3193,76 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["DemandeAnnulation"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommandeDetail"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    confier: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeServeur"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommandeDetail"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    transferer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeTransfert"];
             };
         };
         responses: {

@@ -1,5 +1,4 @@
-import { clsx } from 'clsx'
-import { useId, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type {
   DemandeAnnulation,
@@ -11,6 +10,7 @@ import { formaterHeure } from '../../partage/dates/formaterDate'
 import { Bouton } from '../../partage/ui/Bouton'
 import { ChampSaisie } from '../../partage/ui/ChampSaisie'
 import { Dialogue } from '../../partage/ui/Dialogue'
+import { ChoixMotif, useChoixMotif } from './ChoixMotif'
 
 const MOTIFS: MotifAnnulation[] = [
   'ERREUR_SAISIE',
@@ -86,12 +86,8 @@ export function DialogueAnnulation({
   surAnnuler: (demande: DemandeAnnulation) => void
 }>) {
   const { t } = useTranslation()
-  const idMotif = useId()
   const [quantite, setQuantite] = useState(1)
-  const [motif, setMotif] = useState<MotifAnnulation | null>(null)
-  const [detail, setDetail] = useState('')
-  const [tente, setTente] = useState(false)
-  const detailManquant = motif === 'AUTRE' && detail.trim() === ''
+  const choix = useChoixMotif()
 
   return (
     <Dialogue
@@ -106,13 +102,8 @@ export function DialogueAnnulation({
       enCours={enCours}
       surAnnuler={surFermer}
       surConfirmer={() => {
-        setTente(true)
-        if (motif === null || detailManquant) return
-        surAnnuler({
-          quantite,
-          motif,
-          ...(motif === 'AUTRE' ? { detail: detail.trim() } : {}),
-        })
+        const motif = choix.valider()
+        if (motif !== null) surAnnuler({ quantite, ...motif })
       }}
     >
       {ligne.quantite > 1 && (
@@ -146,53 +137,7 @@ export function DialogueAnnulation({
           </span>
         </div>
       )}
-      <fieldset
-        className="m-0 flex flex-col gap-2 border-0 p-0"
-        aria-describedby={tente && motif === null ? `${idMotif}-erreur` : undefined}
-      >
-        <legend className="mb-2 p-0 text-libelle text-encre">
-          {t('caisse.note.annulation.motif')}
-        </legend>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {MOTIFS.map((candidat) => (
-            <label
-              key={candidat}
-              className={clsx(
-                'flex min-h-cible-caisse cursor-pointer items-center gap-2.5 rounded-normal border bg-surface px-3 text-corps text-encre',
-                motif === candidat ? 'border-2 border-accent font-bold' : 'border-trait',
-              )}
-            >
-              <input
-                type="radio"
-                name={idMotif}
-                value={candidat}
-                checked={motif === candidat}
-                onChange={() => {
-                  setMotif(candidat)
-                }}
-              />
-              {t(`caisse.motifs.${candidat}`)}
-            </label>
-          ))}
-        </div>
-        {tente && motif === null && (
-          <p id={`${idMotif}-erreur`} className="m-0 text-legende text-danger">
-            {t('caisse.note.annulation.choisirMotif')}
-          </p>
-        )}
-      </fieldset>
-      {motif === 'AUTRE' && (
-        <ChampSaisie
-          libelle={t('caisse.note.annulation.detail')}
-          obligatoire
-          maxLength={120}
-          value={detail}
-          erreur={tente && detailManquant ? t('caisse.note.annulation.detailRequis') : undefined}
-          onChange={(evenement) => {
-            setDetail(evenement.target.value)
-          }}
-        />
-      )}
+      <ChoixMotif motifs={MOTIFS} choix={choix} />
     </Dialogue>
   )
 }

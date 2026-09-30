@@ -21,6 +21,7 @@ import { Chargement } from '../../partage/ui/Chargement'
 import { useSessionCaisse } from '../caisse/requetes'
 import { requeteAppareil } from '../tablette/requetes'
 import { DialogueValidationGerant } from '../validation/DialogueValidationGerant'
+import { ActionsNote } from './ActionsNote'
 import { CarteCaisse } from './CarteCaisse'
 import { DialogueAnnulation, DialogueLigne } from './DialoguesLigne'
 import { ouEstLaNote, PanneauNote, type Rupture } from './PanneauNote'
@@ -232,6 +233,29 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
         modifiable={peutCommander}
         ruptures={rupturesDe(carte.data, note.data.lignes)}
         envoiEnCours={enCours && aAnnuler === null && aValider === null}
+        actions={
+          peutCommander ? (
+            <ActionsNote
+              note={note.data}
+              devise={devise}
+              fuseauHoraire={fuseauHoraire}
+              peutTransferer={session?.permissions.includes('TABLE_TRANSFERER') ?? false}
+              moi={{ id: session?.utilisateurId ?? '', nom: session?.nomCourt ?? '' }}
+              surNote={retenir}
+              surErreur={(echec) => {
+                effacerMessages()
+                setErreur(echec)
+              }}
+            />
+          ) : null
+        }
+        surRetirerAddition={() =>
+          void agir(() =>
+            appelerCaisse<CommandeDetail>(`/caisse/commandes/${commandeId}/addition`, {
+              methode: 'DELETE',
+            }),
+          )
+        }
         surRevenir={() => void revenirAuPlan()}
         surEnvoyer={(nombre) => void envoyer(nombre)}
         surModifier={(ligne, demande) => void modifier(ligne, demande)}
