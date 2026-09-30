@@ -495,6 +495,100 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/caisse/commandes/{id}/lignes/{ligneId}/offert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Offrir tout ou partie d'une ligne
+         * @description Sans la permission ARTICLE_OFFRIR : VALIDATION_REQUISE (403), puis validation d'un gérant à joindre.
+         */
+        post: operations["offrir"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/commandes/{id}/lignes/{ligneId}/remise": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Remise sur une ligne, en % ou en montant
+         * @description Au-delà du plafond du rôle, ou sans le droit de remiser : VALIDATION_REQUISE (403), puis validation d'un gérant (REMISE_AU_DELA_PLAFOND) à joindre. Trace critique dans l'activité.
+         */
+        put: operations["remiserLigne"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/commandes/{id}/lignes/{ligneId}/remise/retrait": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retirer la remise ou l'offert d'une ligne */
+        post: operations["retirerRemiseLigne"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/commandes/{id}/remise": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Remise sur la note entière, répartie sur les lignes
+         * @description Au-delà du plafond du rôle, ou sans le droit de remiser : VALIDATION_REQUISE (403), puis validation d'un gérant (REMISE_AU_DELA_PLAFOND) à joindre. Trace critique dans l'activité.
+         */
+        put: operations["remiserNote"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/commandes/{id}/remise/retrait": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Retirer la remise sur la note */
+        post: operations["retirerRemiseNote"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/caisse/commandes/{id}/serveur": {
         parameters: {
             query?: never;
@@ -1561,7 +1655,12 @@ export interface components {
             numero: number;
             /** Format: date-time */
             ouverteLe: string;
+            remiseNote?: components["schemas"]["RemiseNote"];
+            /** Format: int64 */
+            remises: number;
             serveur: string;
+            /** Format: int64 */
+            sousTotal: number;
             /** @enum {string} */
             statut: "OUVERTE" | "PAYEE" | "ANNULEE";
             table?: components["schemas"]["TableNote"];
@@ -1714,6 +1813,15 @@ export interface components {
             version: number;
             ville?: string;
         };
+        DemandeOffert: {
+            detail?: string;
+            /** @enum {string} */
+            motif: "CLIENT_FIDELE" | "GESTE_COMMERCIAL" | "RECLAMATION" | "REPAS_PERSONNEL" | "AUTRE";
+            /** Format: int32 */
+            quantite: number;
+            /** Format: uuid */
+            validationId?: string;
+        };
         DemandeOrdre: {
             ids: string[];
         };
@@ -1768,10 +1876,29 @@ export interface components {
             /** Format: uuid */
             entrepriseId?: string;
         };
+        DemandeRemise: {
+            /** @example Client du quartier */
+            detail?: string;
+            /** Format: int64 */
+            montant?: number;
+            /** @enum {string} */
+            motif: "CLIENT_FIDELE" | "GESTE_COMMERCIAL" | "RECLAMATION" | "REPAS_PERSONNEL" | "AUTRE";
+            /**
+             * Format: int32
+             * @example 1000
+             */
+            taux?: number;
+            /** Format: uuid */
+            validationId?: string;
+        };
         DemandeRenommageAppareil: {
             nom: string;
             /** Format: int64 */
             version: number;
+        };
+        DemandeRetraitRemise: {
+            /** Format: uuid */
+            validationId?: string;
         };
         DemandeSalle: {
             /** @example Terrasse */
@@ -1989,7 +2116,7 @@ export interface components {
             /** Format: date-time */
             survenuLe: string;
             /** @enum {string} */
-            type: "TAXE_CREEE" | "TAUX_TAXE_MODIFIE" | "TAXE_DESACTIVEE" | "TAXE_REACTIVEE" | "PRIX_MODIFIE" | "TAXE_PRODUIT_MODIFIEE" | "PRODUIT_DESACTIVE" | "PRODUIT_REACTIVE" | "PRIX_ETABLISSEMENT_MODIFIE" | "PRODUIT_RETIRE_ETABLISSEMENT" | "PRODUIT_PROPOSE_ETABLISSEMENT" | "RUPTURE_DECLAREE" | "RUPTURE_LEVEE" | "ROLES_MODIFIES" | "PIN_REINITIALISE" | "EMPLOYE_DESACTIVE" | "EMPLOYE_REACTIVE" | "TABLETTE_REVOQUEE" | "VALIDATION_GERANT_UTILISEE" | "LIGNE_ANNULEE" | "NOTE_ANNULEE" | "TABLE_TRANSFEREE" | "SERVEUR_CHANGE";
+            type: "TAXE_CREEE" | "TAUX_TAXE_MODIFIE" | "TAXE_DESACTIVEE" | "TAXE_REACTIVEE" | "PRIX_MODIFIE" | "TAXE_PRODUIT_MODIFIEE" | "PRODUIT_DESACTIVE" | "PRODUIT_REACTIVE" | "PRIX_ETABLISSEMENT_MODIFIE" | "PRODUIT_RETIRE_ETABLISSEMENT" | "PRODUIT_PROPOSE_ETABLISSEMENT" | "RUPTURE_DECLAREE" | "RUPTURE_LEVEE" | "ROLES_MODIFIES" | "PIN_REINITIALISE" | "EMPLOYE_DESACTIVE" | "EMPLOYE_REACTIVE" | "TABLETTE_REVOQUEE" | "VALIDATION_GERANT_UTILISEE" | "LIGNE_ANNULEE" | "NOTE_ANNULEE" | "TABLE_TRANSFEREE" | "SERVEUR_CHANGE" | "REMISE_APPLIQUEE" | "ARTICLE_OFFERT" | "REMISE_RETIREE";
         };
         LigneCarteEtablissement: {
             categorie: components["schemas"]["CategorieCarte"];
@@ -2020,24 +2147,35 @@ export interface components {
             /** Format: date-time */
             annuleeLe?: string;
             detailAnnulation?: string;
+            detailRemise?: string;
             /** Format: date-time */
             envoyeeLe?: string;
             /** Format: uuid */
             id: string;
             /** Format: int64 */
             montant: number;
+            /** Format: int64 */
+            montantBrut: number;
             /** @enum {string} */
             motifAnnulation?: "ERREUR_SAISIE" | "CLIENT_PARTI" | "CLIENT_CHANGE_AVIS" | "NON_SERVIE" | "PLAT_REFUSE" | "EPUISE_CUISINE" | "AUTRE";
+            /** @enum {string} */
+            motifRemise?: "CLIENT_FIDELE" | "GESTE_COMMERCIAL" | "RECLAMATION" | "REPAS_PERSONNEL" | "AUTRE";
             nomProduit: string;
             note?: string;
+            offert: boolean;
             /** Format: int64 */
             prixUnitaire: number;
             /** Format: uuid */
             produitId: string;
             /** Format: int32 */
             quantite: number;
+            /** Format: int64 */
+            remise: number;
+            remiseValideePar?: string;
             /** @enum {string} */
             statut: "BROUILLON" | "ENVOYEE" | "ANNULEE";
+            /** Format: int32 */
+            tauxRemise?: number;
         };
         NoteOuverte: {
             /** Format: int32 */
@@ -2144,6 +2282,16 @@ export interface components {
             /** Format: uuid */
             utilisateurId: string;
         };
+        RemiseNote: {
+            detail?: string;
+            /** Format: int64 */
+            montant: number;
+            /** @enum {string} */
+            motif: "CLIENT_FIDELE" | "GESTE_COMMERCIAL" | "RECLAMATION" | "REPAS_PERSONNEL" | "AUTRE";
+            /** Format: int32 */
+            taux?: number;
+            valideePar?: string;
+        };
         ReponseConnexion: {
             compte: components["schemas"]["ResumeCompte"];
             /** Format: uuid */
@@ -2231,6 +2379,8 @@ export interface components {
         SessionCaisseCourante: {
             nomCourt: string;
             permissions: string[];
+            /** Format: int32 */
+            plafondRemise: number;
             prenom: string;
             role: string;
             /** Format: uuid */
@@ -3193,6 +3343,184 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["DemandeAnnulation"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommandeDetail"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    offrir: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                ligneId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeOffert"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommandeDetail"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    remiserLigne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                ligneId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeRemise"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommandeDetail"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    retirerRemiseLigne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                ligneId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeRetraitRemise"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommandeDetail"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    remiserNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeRemise"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommandeDetail"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    retirerRemiseNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeRetraitRemise"];
             };
         };
         responses: {

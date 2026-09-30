@@ -10,6 +10,8 @@ import type {
   CommandeDetail,
   DemandeAnnulation,
   DemandeLigne,
+  DemandeOffert,
+  DemandeRemise,
   LigneCarteEtablissement,
   LigneNote,
 } from '../../partage/api/contrat'
@@ -22,6 +24,16 @@ import { useSessionCaisse } from '../caisse/requetes'
 import { requeteAppareil } from '../tablette/requetes'
 import { DialogueValidationGerant } from '../validation/DialogueValidationGerant'
 import { ActionsNote } from './ActionsNote'
+import { libelleMotif } from './ChoixMotif'
+import {
+  type ActionLigne,
+  DialogueActionsLigne,
+  DialogueOffrir,
+  DialogueRemise,
+  droitsDe,
+  libelleRemise,
+} from './DialoguesRemise'
+import { useValidation } from './useValidation'
 import { CarteCaisse } from './CarteCaisse'
 import { DialogueAnnulation, DialogueLigne } from './DialoguesLigne'
 import { ouEstLaNote, PanneauNote, type Rupture } from './PanneauNote'
@@ -51,6 +63,10 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
   const [aValider, setAValider] = useState<{ ligne: LigneNote; demande: DemandeAnnulation } | null>(
     null,
   )
+  const [ligneActions, setLigneActions] = useState<LigneNote | null>(null)
+  const [aRemiser, setARemiser] = useState<LigneNote | null>(null)
+  const [aOffrir, setAOffrir] = useState<LigneNote | null>(null)
+  const validation = useValidation()
 
   function retenir(reponse: CommandeDetail) {
     // Deux gestes rapides : la réponse la plus ancienne ne doit pas écraser la plus récente.
@@ -181,6 +197,87 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
     }
   }
 
+  /** Action sensible sur la note : le PIN d'un gérant est demandé si le serveur l'exige. */
+  async function avecValidation(
+    appel: (validationId?: string) => Promise<CommandeDetail>,
+    demande: Parameters<typeof validation.executer>[1],
+  ) {
+    effacerMessages()
+    setEnCours(true)
+    try {
+      const reponse = await validation.executer(appel, demande)
+      if (reponse !== undefined) retenir(reponse)
+    } catch (echec) {
+      setErreur(echec)
+    } finally {
+      setEnCours(false)
+    }
+  }
+
+  function appeler(chemin: string, methode: 'POST' | 'PUT', corps: object) {
+    return (validationId?: string) =>
+      appelerCaisse<CommandeDetail>(`/caisse/commandes/${commandeId}/${chemin}`, {
+        methode,
+        corps: validationId === undefined ? corps : { ...corps, validationId },
+      })
+  }
+
+  function contexteRemise(motif: string, detail: string | undefined) {
+    return t('caisse.remise.validationContexte', {
+      ou: note.data === undefined ? '' : ouEstLaNote(note.data, t),
+      demandeur: session?.nomCourt ?? '',
+      motif: libelleMotif(motif, detail, t, 'caisse.motifsRemise'),
+    })
+  }
+
+  function remiserLigne(ligne: LigneNote, demande: DemandeRemise) {
+    setARemiser(null)
+    void avecValidation(appeler(`lignes/${ligne.id}/remise`, 'PUT', demande), {
+      permission: 'REMISE_AU_DELA_PLAFOND',
+      objetId: ligne.id,
+      titre: t('caisse.remise.validationTitre', {
+        remise: libelleRemise(demande, devise),
+        objet: ligne.nomProduit,
+      }),
+      contexte: contexteRemise(demande.motif, demande.detail),
+    })
+  }
+
+  function offrir(ligne: LigneNote, demande: DemandeOffert) {
+    setAOffrir(null)
+    void avecValidation(appeler(`lignes/${ligne.id}/offert`, 'POST', demande), {
+      permission: 'ARTICLE_OFFRIR',
+      objetId: ligne.id,
+      titre: t('caisse.offert.validationTitre', {
+        count: demande.quantite,
+        produit: ligne.nomProduit,
+      }),
+      contexte: contexteRemise(demande.motif, demande.detail),
+    })
+  }
+
+  function retirerRemise(objetId: string, chemin: string, objet: string) {
+    void avecValidation(appeler(chemin, 'POST', {}), {
+      permission: 'REMISE_AU_DELA_PLAFOND',
+      objetId,
+      titre: t('caisse.remise.retraitTitre', { objet }),
+      contexte: t('caisse.remise.retraitContexte', {
+        ou: note.data === undefined ? '' : ouEstLaNote(note.data, t),
+        demandeur: session?.nomCourt ?? '',
+      }),
+    })
+  }
+
+  function choisirPourLaLigne(ligne: LigneNote, action: ActionLigne) {
+    setLigneActions(null)
+    if (action === 'consigne') setLigneOuverte(ligne)
+    else if (action === 'remise') setARemiser(ligne)
+    else if (action === 'offrir') setAOffrir(ligne)
+    else if (action === 'annuler') setAAnnuler(ligne)
+    else if (action === 'retirer') void modifier(ligne, { quantite: 0 })
+    else retirerRemise(ligne.id, `lignes/${ligne.id}/remise/retrait`, ligne.nomProduit)
+  }
+
   async function revenirAuPlan() {
     // Une note ouverte par erreur ne reste pas sur le plan : vide, elle est fermée en partant.
     if (note.data?.lignes.length === 0 && peutCommander) {
@@ -240,6 +337,7 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
               devise={devise}
               fuseauHoraire={fuseauHoraire}
               peutTransferer={session?.permissions.includes('TABLE_TRANSFERER') ?? false}
+              plafond={droitsDe(session).plafond}
               moi={{ id: session?.utilisateurId ?? '', nom: session?.nomCourt ?? '' }}
               surNote={retenir}
               surErreur={(echec) => {
@@ -256,14 +354,58 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
             }),
           )
         }
+        surRetirerRemiseNote={() => {
+          retirerRemise(commandeId, 'remise/retrait', t('caisse.remise.laNote'))
+        }}
         surRevenir={() => void revenirAuPlan()}
         surEnvoyer={(nombre) => void envoyer(nombre)}
         surModifier={(ligne, demande) => void modifier(ligne, demande)}
-        surOuvrirLigne={(ligne) => {
-          if (ligne.statut === 'BROUILLON') setLigneOuverte(ligne)
-          else setAAnnuler(ligne)
-        }}
+        surOuvrirLigne={setLigneActions}
       />
+      {ligneActions !== null && (
+        <DialogueActionsLigne
+          ligne={ligneActions}
+          devise={devise}
+          fuseauHoraire={fuseauHoraire}
+          session={session}
+          surFermer={() => {
+            setLigneActions(null)
+          }}
+          surChoisir={(action) => {
+            choisirPourLaLigne(ligneActions, action)
+          }}
+        />
+      )}
+      {aRemiser !== null && (
+        <DialogueRemise
+          titre={t('caisse.remise.titreLigne', { produit: aRemiser.nomProduit })}
+          phrase={t('caisse.remise.phrase', { ou: ouEstLaNote(note.data, t) })}
+          base={aRemiser.montantBrut}
+          devise={devise}
+          plafond={droitsDe(session).plafond}
+          enCours={enCours}
+          surFermer={() => {
+            setARemiser(null)
+          }}
+          surAppliquer={(demande) => {
+            remiserLigne(aRemiser, demande)
+          }}
+        />
+      )}
+      {aOffrir !== null && (
+        <DialogueOffrir
+          ligne={aOffrir}
+          ou={ouEstLaNote(note.data, t)}
+          enCours={enCours}
+          surFermer={() => {
+            setAOffrir(null)
+          }}
+          surOffrir={(demande) => {
+            offrir(aOffrir, demande)
+          }}
+        />
+      )}
+      {validation.dialogue}
       {ligneOuverte !== null && (
         <DialogueLigne
           ligne={ligneOuverte}

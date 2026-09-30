@@ -175,7 +175,8 @@
         "serveur": "Change server",
         "couverts": "Guests",
         "addition": "Bill requested",
-        "annuler": "Cancel the tab"
+        "annuler": "Cancel the tab",
+        "remise": "Discount on the tab"
       },
       "addition": {
         "bandeau": "Bill requested at {{heure}} by {{nom}}",
@@ -209,7 +210,13 @@
         "garder": "Keep the tab",
         "confirmer": "Cancel the tab",
         "validationContexte": "{{numero}}. Items already sent to preparation ({{montant}}), cancellation requested by {{demandeur}} for the reason: {{motif}}."
-      }
+      },
+      "remiseLigne": "−{{remise}}, {{motif}}",
+      "offertLigne": "Free, {{motif}}",
+      "sousTotal": "Subtotal, {{articles}}",
+      "remisesLignes": "Discounts and free items",
+      "remiseNote": "Tab discount −{{remise}}, {{motif}}",
+      "retirerRemiseNote": "Remove the tab discount"
     },
     "canaux": {
       "SUR_PLACE": "Dine-in",
@@ -272,6 +279,62 @@
       "EPUISE_CUISINE": "Sold out in the kitchen",
       "AUTRE": "Other",
       "CLIENT_PARTI": "The customer left"
+    },
+    "motifsRemise": {
+      "CLIENT_FIDELE": "Loyal customer",
+      "GESTE_COMMERCIAL": "Goodwill gesture",
+      "RECLAMATION": "Complaint",
+      "REPAS_PERSONNEL": "Staff meal",
+      "AUTRE": "Other"
+    },
+    "ligne": {
+      "actions": "Actions on {{produit}}",
+      "aEnvoyer": "{{count}} to send, {{montant}}.",
+      "consigne": "Preparation instruction",
+      "remise": "Give a discount",
+      "retirerRemise": "Remove the discount",
+      "retirerOffert": "Remove the free item",
+      "offrir": "Offer",
+      "retirer": "Remove from tab",
+      "annuler": "Cancel",
+      "jusqua": "up to {{taux}} for you",
+      "validation": "manager approval",
+      "fermer": "Close",
+      "envoyes_one": "{{count}} sent to preparation at {{heure}}, {{montant}}.",
+      "envoyes_other": "{{count}} sent to preparation at {{heure}}, {{montant}}."
+    },
+    "remise": {
+      "titreLigne": "Discount on {{produit}}",
+      "titreNote": "Discount on the tab",
+      "phrase": "{{ou}}. The discount lowers the price paid; the kitchen is not affected.",
+      "enTaux": "In %",
+      "enMontant": "As an amount",
+      "mode": "Discount type",
+      "autreTaux": "Other",
+      "taux": "Discount rate",
+      "montant": "Discount amount",
+      "apercu": "Discounted price",
+      "plafond": "Your limit: {{taux}}. Above it, a manager approves with their PIN. Every discount appears in the activity, with its reason.",
+      "sansPlafond": "A manager approves this discount with their PIN. Every discount appears in the activity, with its reason.",
+      "appliquer": "Apply",
+      "appliquerMoins": "Apply −{{remise}}",
+      "choisir": "Choose a rate or an amount.",
+      "tropGrande": "At most {{montant}}.",
+      "validationTitre": "Discount of {{remise}} on {{objet}}?",
+      "validationContexte": "{{ou}}. Requested by {{demandeur}} for the reason: {{motif}}.",
+      "laNote": "the tab",
+      "retraitTitre": "Remove the discount on {{objet}}?",
+      "retraitContexte": "{{ou}}. Removal requested by {{demandeur}}."
+    },
+    "offert": {
+      "titre": "Offer {{produit}}?",
+      "phrase": "{{ou}}. The free item stays on the tab at 0; the kitchen prepares it as usual.",
+      "combien": "How many to offer?",
+      "moins": "One less to offer",
+      "plus": "One more to offer",
+      "confirmer_one": "Offer {{count}} item",
+      "confirmer_other": "Offer {{count}} items",
+      "validationTitre": "Offer {{count}} {{produit}}?"
     }
   },
   "gestion": {
@@ -970,13 +1033,16 @@
       "LIGNE_ANNULEE": "<b>{{auteur}}</b> cancelled <b>{{objet}}</b> at {{etablissement}}",
       "NOTE_ANNULEE": "<b>{{auteur}}</b> cancelled the tab <b>{{objet}}</b> at {{etablissement}}",
       "TABLE_TRANSFEREE": "<b>{{auteur}}</b> moved a tab to <b>{{objet}}</b> at {{etablissement}}",
-      "SERVEUR_CHANGE": "<b>{{auteur}}</b> handed the tab <b>{{objet}}</b> to another server at {{etablissement}}"
+      "SERVEUR_CHANGE": "<b>{{auteur}}</b> handed the tab <b>{{objet}}</b> to another server at {{etablissement}}",
+      "REMISE_APPLIQUEE": "<b>{{auteur}}</b> gave a discount on <b>{{objet}}</b> at {{etablissement}}",
+      "ARTICLE_OFFERT": "<b>{{auteur}}</b> offered <b>{{objet}}</b> at {{etablissement}}",
+      "REMISE_RETIREE": "<b>{{auteur}}</b> removed the discount on <b>{{objet}}</b> at {{etablissement}}"
     },
     "actions": {
       "LIGNE_ANNULER_APRES_ENVOI": "cancel items already sent",
       "TABLE_TRANSFERER": "transfer a table",
       "REMISE_APPLIQUER": "apply a discount",
-      "REMISE_AU_DELA_PLAFOND": "go over the discount cap",
+      "REMISE_AU_DELA_PLAFOND": "a discount above the limit",
       "ARTICLE_OFFRIR": "give an item for free",
       "PAIEMENT_REMBOURSER": "refund a payment",
       "CAISSE_MOUVEMENT": "make a till movement",
@@ -987,7 +1053,12 @@
     "annulationNote": "{{montant}}, {{ou}}. Reason: {{motif}}.",
     "annulationNoteValidee": "{{montant}}, {{ou}}. Reason: {{motif}}. Approved by {{validateur}}",
     "transfert": "{{de}} → {{vers}}, {{numero}}",
-    "serveurChange": "{{avant}} → {{apres}}, {{numero}}"
+    "serveurChange": "{{avant}} → {{apres}}, {{numero}}",
+    "remise": "−{{montant}}, {{ou}}. Reason: {{motif}}.",
+    "remiseValidee": "−{{montant}}, {{ou}}. Reason: {{motif}}. Approved by {{validateur}}",
+    "offert": "{{quantite}} × free ({{montant}}), {{ou}}. Reason: {{motif}}.",
+    "offertValide": "{{quantite}} × free ({{montant}}), {{ou}}. Reason: {{motif}}. Approved by {{validateur}}",
+    "remiseRetiree": "−{{montant}} removed, {{ou}}"
   },
   "salles": {
     "titre": "{{etablissement}} areas and tables",

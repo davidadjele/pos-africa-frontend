@@ -87,7 +87,7 @@ export function DialogueAnnulation({
 }>) {
   const { t } = useTranslation()
   const [quantite, setQuantite] = useState(1)
-  const choix = useChoixMotif()
+  const choix = useChoixMotif<MotifAnnulation>()
 
   return (
     <Dialogue

@@ -617,7 +617,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await produits.getByRole('button', { name: /Poulet braisé/ }).click()
   await expect(note).toContainText('9 000 FCFA')
 
-  await note.getByRole('button', { name: 'Modifier Poulet braisé' }).click()
+  await note.getByRole('button', { name: 'Actions sur Poulet braisé' }).click()
+  await tablette
+    .getByRole('dialog', { name: 'Poulet braisé' })
+    .getByRole('button', { name: /^Consigne pour la préparation/ })
+    .click()
   const ligne = tablette.getByRole('dialog', { name: 'Poulet braisé' })
   await ligne.getByLabel(/^Note pour la préparation/).fill('sans piment')
   await ligne.getByRole('button', { name: 'Enregistrer' }).click()
@@ -628,7 +632,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   // Tout part en préparation ; un poulet non servi est annulé, validé par le PIN de la gérante.
   await note.getByRole('button', { name: 'Envoyer 2 articles en préparation' }).click()
   await expect(tablette.getByText(/2 articles envoyés en préparation à/)).toBeVisible()
-  await note.getByRole('button', { name: 'Annuler Poulet braisé' }).click()
+  await note.getByRole('button', { name: 'Actions sur Poulet braisé' }).click()
+  await tablette
+    .getByRole('dialog', { name: 'Poulet braisé' })
+    .getByRole('button', { name: /^Annuler/ })
+    .click()
   const annulation = tablette.getByRole('dialog', { name: 'Annuler Poulet braisé ?' })
   await annulation.getByRole('radio', { name: 'Non servie (trop d’attente)' }).check()
   await capturer(tablette, '30-annuler-un-article')
@@ -678,13 +686,37 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   )
   await capturer(tablette, '36-plan-a-traiter')
 
+  // Réclamation sur le poulet : Kossi (serveur) accorde 500 F, validés par la gérante.
+  await tables.getByRole('button', { name: /T5, note de/ }).click()
+  await note.getByRole('button', { name: 'Actions sur Poulet braisé' }).click()
+  await tablette
+    .getByRole('dialog', { name: 'Poulet braisé' })
+    .getByRole('button', { name: /^Faire une remise/ })
+    .click()
+  const remise = tablette.getByRole('dialog', { name: 'Remise sur Poulet braisé' })
+  await remise.getByRole('tab', { name: 'En montant' }).click()
+  await remise.getByLabel(/^Montant de la remise/).fill('500')
+  await remise.getByRole('radio', { name: 'Réclamation' }).check()
+  await capturer(tablette, '37-remise')
+  await remise.getByRole('button', { name: /^Appliquer/ }).click()
+  const validationRemise = tablette.getByRole('dialog', {
+    name: /^Remise de 500\sF sur Poulet braisé/,
+  })
+  await validationRemise.getByRole('button', { name: /Afi M\./ }).click()
+  await taperCode(tablette, '6194')
+  await validationRemise.getByRole('button', { name: 'Valider' }).click()
+  await expect(note).toContainText('Réclamation. Validé par Afi M')
+  await expect(note).toContainText('4 000 FCFA')
+  await capturer(tablette, '38-note-remisee')
+  await note.getByRole('button', { name: 'Plan de salle' }).click()
+
   // Le client part sans consommer : la note entière est annulée, validée par la gérante.
   await tables.getByRole('button', { name: /T5, note de/ }).click()
   await note.getByRole('button', { name: 'Actions sur la note' }).click()
   await tablette.getByRole('menuitem', { name: 'Annuler la note' }).click()
   const annulationNote = tablette.getByRole('dialog', { name: 'Annuler la note de T5 ?' })
   await annulationNote.getByRole('radio', { name: 'Le client est parti' }).check()
-  await capturer(tablette, '37-annuler-la-note')
+  await capturer(tablette, '39-annuler-la-note')
   await annulationNote.getByRole('button', { name: 'Annuler la note' }).click()
   const validationNote = tablette.getByRole('dialog', { name: 'Annuler la note de T5 ?' })
   await validationNote.getByRole('button', { name: /Afi M\./ }).click()
@@ -704,5 +736,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await expect(activite).toContainText('Motif : Non servie (trop d’attente). Validé par Afi M.')
   await expect(activite).toContainText('Kossi A. a annulé la note T5 à Bè Kpota')
   await expect(activite).toContainText('Motif : Le client est parti. Validé par Afi M.')
-  await capturer(page, '38-activite-annulations')
+  await expect(activite).toContainText('Kossi A. a accordé une remise sur Poulet braisé à Bè Kpota')
+  await expect(activite).toContainText('Motif : Réclamation. Validé par Afi M.')
+  await capturer(page, '40-activite-caisse')
 })

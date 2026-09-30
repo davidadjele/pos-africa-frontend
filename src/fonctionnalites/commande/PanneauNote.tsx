@@ -10,6 +10,7 @@ import { formaterTaux } from '../../partage/montants/taxes'
 import { BadgeStatut } from '../../partage/ui/BadgeStatut'
 import { Bouton } from '../../partage/ui/Bouton'
 import { EtatVide } from '../../partage/ui/EtatVide'
+import { libelleMotif } from './ChoixMotif'
 
 /** Un article à envoyer qui ne se vend plus : il bloquerait l'envoi. */
 export type Rupture = 'EPUISE' | 'RETIRE'
@@ -30,6 +31,7 @@ export function PanneauNote({
   envoiEnCours,
   actions,
   surRetirerAddition,
+  surRetirerRemiseNote,
   surRevenir,
   surEnvoyer,
   surModifier,
@@ -44,6 +46,7 @@ export function PanneauNote({
   /** Menu des actions sur la note entière, s'il y en a pour cet employé. */
   actions: ReactNode
   surRetirerAddition: () => void
+  surRetirerRemiseNote: () => void
   surRevenir: () => void
   surEnvoyer: (nombre: number) => void
   surModifier: (ligne: LigneNote, demande: DemandeLigne) => void
@@ -65,6 +68,8 @@ export function PanneauNote({
     .filter((ligne) => ligne.statut === 'BROUILLON')
     .reduce((somme, ligne) => somme + ligne.quantite, 0)
   const total = formaterMontant({ unitesMineures: note.total, devise })
+  const courte = (montant: number) =>
+    formaterMontant({ unitesMineures: montant, devise }, { forme: 'courte' })
 
   return (
     <section
@@ -140,8 +145,59 @@ export function PanneauNote({
       )}
 
       <div className="flex flex-col gap-1.5 border-t border-trait px-4 py-3">
+        {note.remises > 0 && (
+          <>
+            <span className="flex justify-between gap-3 text-libelle text-attenue">
+              <span>
+                {t('caisse.note.sousTotal', {
+                  articles: t('caisse.note.articles', { count: note.articles }),
+                })}
+              </span>
+              <span className="chiffres">{courte(note.sousTotal)}</span>
+            </span>
+            {note.remises - (note.remiseNote?.montant ?? 0) > 0 && (
+              <span className="flex justify-between gap-3 text-libelle font-semibold text-info">
+                <span>{t('caisse.note.remisesLignes')}</span>
+                <span className="chiffres">
+                  −{courte(note.remises - (note.remiseNote?.montant ?? 0))}
+                </span>
+              </span>
+            )}
+            {note.remiseNote !== undefined && (
+              <span className="flex items-center justify-between gap-3 text-libelle font-semibold text-info">
+                <span>
+                  {[
+                    t('caisse.note.remiseNote', {
+                      remise:
+                        note.remiseNote.taux === undefined
+                          ? courte(note.remiseNote.montant)
+                          : formaterTaux(note.remiseNote.taux),
+                      motif: libelleMotif(
+                        note.remiseNote.motif,
+                        note.remiseNote.detail,
+                        t,
+                        'caisse.motifsRemise',
+                      ),
+                    }),
+                    ...(note.remiseNote.valideePar === undefined
+                      ? []
+                      : [t('caisse.note.valideePar', { nom: note.remiseNote.valideePar })]),
+                  ].join('. ')}
+                </span>
+                <span className="flex shrink-0 items-center gap-2">
+                  {modifiable && (
+                    <Bouton onClick={surRetirerRemiseNote}>
+                      {t('caisse.note.retirerRemiseNote')}
+                    </Bouton>
+                  )}
+                  <span className="chiffres">−{courte(note.remiseNote.montant)}</span>
+                </span>
+              </span>
+            )}
+          </>
+        )}
         <span className="flex flex-wrap justify-between gap-x-3 text-libelle text-attenue">
-          <span>{t('caisse.note.articles', { count: note.articles })}</span>
+          <span>{note.remises > 0 ? '' : t('caisse.note.articles', { count: note.articles })}</span>
           {note.taxes.map((taxe) => (
             <span key={taxe.nom}>
               {t('caisse.note.dont', {
@@ -235,6 +291,26 @@ function LigneDeNote({
       ? `${t('caisse.note.aEnvoyer')}${auteur}`
       : `${t('caisse.note.envoyeA', { heure: heure(ligne.envoyeeLe) })}${auteur}`
   const barre = annulee && 'text-attenue line-through'
+  const motifRemise = libelleMotif(
+    ligne.motifRemise ?? 'AUTRE',
+    ligne.detailRemise,
+    t,
+    'caisse.motifsRemise',
+  )
+  const remise = [
+    ligne.offert
+      ? t('caisse.note.offertLigne', { motif: motifRemise })
+      : t('caisse.note.remiseLigne', {
+          remise:
+            ligne.tauxRemise === undefined
+              ? formaterMontant({ unitesMineures: ligne.remise, devise }, { forme: 'courte' })
+              : formaterTaux(ligne.tauxRemise),
+          motif: motifRemise,
+        }),
+    ...(ligne.remiseValideePar === undefined
+      ? []
+      : [t('caisse.note.valideePar', { nom: ligne.remiseValideePar })]),
+  ].join('. ')
   const description = (
     <>
       <span className="flex items-center gap-1.5">
@@ -255,6 +331,9 @@ function LigneDeNote({
       >
         {statut}
       </span>
+      {!annulee && (ligne.offert || ligne.remise > 0) && (
+        <span className="text-legende font-semibold text-info">{remise}</span>
+      )}
     </>
   )
   return (
@@ -265,7 +344,7 @@ function LigneDeNote({
       {modifiable && !annulee ? (
         <button
           type="button"
-          aria-label={t(brouillon ? 'caisse.note.modifier' : 'caisse.note.annuler', { produit })}
+          aria-label={t('caisse.ligne.actions', { produit })}
           onClick={surOuvrir}
           className="flex min-h-cible-min flex-col items-start gap-0.5 text-left"
         >
@@ -274,8 +353,15 @@ function LigneDeNote({
       ) : (
         <span className="flex flex-col gap-0.5">{description}</span>
       )}
-      <span className={clsx('chiffres text-montant-ligne text-encre', barre)}>
-        {formaterMontant({ unitesMineures: ligne.montant, devise }, { forme: 'nombre' })}
+      <span className="flex flex-col items-end">
+        {!annulee && ligne.remise > 0 && (
+          <span className="chiffres text-legende text-attenue line-through">
+            {formaterMontant({ unitesMineures: ligne.montantBrut, devise }, { forme: 'nombre' })}
+          </span>
+        )}
+        <span className={clsx('chiffres text-montant-ligne text-encre', barre)}>
+          {formaterMontant({ unitesMineures: ligne.montant, devise }, { forme: 'nombre' })}
+        </span>
       </span>
       <span className="flex justify-end gap-1">
         {modifiable && brouillon && (

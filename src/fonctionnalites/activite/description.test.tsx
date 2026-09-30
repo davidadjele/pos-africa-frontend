@@ -157,4 +157,28 @@ describe('description de l’activité', () => {
       'Kossi A. → Essi D., n°42',
     )
   })
+
+  it('détaille une remise, un article offert et le retrait d’une remise', () => {
+    const detail = (
+      type: EvenementActivite['type'],
+      details: Record<string, unknown>,
+      detailsNoms = {},
+    ) => detailActivite(evenement({ type, domaine: 'CAISSE', details, detailsNoms }), t, CONTEXTE)
+
+    expect(
+      detail('REMISE_APPLIQUEE', { montant: 360, taux: 1000, motif: 'CLIENT_FIDELE', numero: 42 }),
+    ).toBe(`−360${INSEC}F, n°42. Motif : Client fidèle.`)
+    expect(
+      detail(
+        'ARTICLE_OFFERT',
+        { montant: 1200, quantite: 1, motif: 'GESTE_COMMERCIAL', numero: 42, table: 'T4' },
+        { validateurId: 'Afi M.' },
+      ),
+    ).toBe(
+      `1 × offert (1${FINE}200${INSEC}F), T4, n°42. Motif : Geste commercial. Validé par Afi M.`,
+    )
+    expect(detail('REMISE_RETIREE', { montant: 360, numero: 42 })).toBe(
+      `−360${INSEC}F retiré, n°42`,
+    )
+  })
 })

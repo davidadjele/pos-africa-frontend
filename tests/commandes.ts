@@ -114,6 +114,9 @@ export const FLAG_ENVOYE: LigneNote = {
   ajouteePar: 'Kossi A.',
   envoyeeLe: '2026-09-29T19:02:00Z',
   montant: 1200,
+  montantBrut: 1200,
+  remise: 0,
+  offert: false,
 }
 
 export const POULET_A_ENVOYER: LigneNote = {
@@ -125,6 +128,9 @@ export const POULET_A_ENVOYER: LigneNote = {
   statut: 'BROUILLON',
   ajouteePar: 'Kossi A.',
   montant: 9000,
+  montantBrut: 9000,
+  remise: 0,
+  offert: false,
 }
 
 /** T4 : un Flag envoyé en cuisine plus tôt, deux poulets pas encore envoyés. */
@@ -140,6 +146,8 @@ export const NOTE_T4: CommandeDetail = {
   ouverteLe: '2026-09-29T18:55:00Z',
   lignes: [FLAG_ENVOYE, POULET_A_ENVOYER],
   total: 10200,
+  sousTotal: 10200,
+  remises: 0,
   articles: 3,
   taxes: [{ nom: 'TVA', tauxPointsDeBase: 1800, montant: 1556 }],
   version: 3,
@@ -155,6 +163,8 @@ export const NOTE_VIDE: CommandeDetail = {
   ouverteLe: '2026-09-29T20:39:00Z',
   lignes: [],
   total: 0,
+  sousTotal: 0,
+  remises: 0,
   articles: 0,
   taxes: [],
   version: 0,

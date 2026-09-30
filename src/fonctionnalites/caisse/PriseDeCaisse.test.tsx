@@ -36,6 +36,7 @@ const SESSION_KOSSI: SessionCaisseCourante = {
   nomCourt: 'Kossi A.',
   role: 'SERVEUR',
   permissions: ['COMMANDE_CREER'],
+  plafondRemise: 0,
 }
 
 function erreur(statut: number, code: string) {

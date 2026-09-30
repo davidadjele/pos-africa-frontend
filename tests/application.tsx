@@ -113,7 +113,10 @@ export function ouvrir(chemin: string) {
 }
 
 /** Kossi tient la caisse du bar : tablette enregistrée, session de caisse ouverte sur cet écran. */
-export function caisseOuverte(chemin: string, { permissions = ['COMMANDE_CREER'] } = {}) {
+export function caisseOuverte(
+  chemin: string,
+  { permissions = ['COMMANDE_CREER'], plafondRemise = 0 } = {},
+) {
   tablette(CAISSE_BAR)
   serveurMsw.use(
     http.get(`${API}/caisse/moi`, () =>
@@ -123,6 +126,7 @@ export function caisseOuverte(chemin: string, { permissions = ['COMMANDE_CREER']
         nomCourt: 'Kossi A.',
         role: permissions.includes('COMMANDE_CREER') ? 'SERVEUR' : 'CUISINE',
         permissions,
+        plafondRemise,
       }),
     ),
   )

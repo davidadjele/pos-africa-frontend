@@ -175,7 +175,8 @@
         "serveur": "Changer de serveur",
         "couverts": "Couverts",
         "addition": "Addition demandée",
-        "annuler": "Annuler la note"
+        "annuler": "Annuler la note",
+        "remise": "Remise sur la note"
       },
       "addition": {
         "bandeau": "Addition demandée à {{heure}} par {{nom}}",
@@ -209,7 +210,13 @@
         "garder": "Garder la note",
         "confirmer": "Annuler la note",
         "validationContexte": "{{numero}}. Articles déjà envoyés en préparation ({{montant}}), annulation demandée par {{demandeur}} pour le motif : {{motif}}."
-      }
+      },
+      "remiseLigne": "−{{remise}}, {{motif}}",
+      "offertLigne": "Offert, {{motif}}",
+      "sousTotal": "Sous-total, {{articles}}",
+      "remisesLignes": "Remises et offerts",
+      "remiseNote": "Remise sur la note −{{remise}}, {{motif}}",
+      "retirerRemiseNote": "Retirer la remise sur la note"
     },
     "canaux": {
       "SUR_PLACE": "Sur place",
@@ -272,6 +279,62 @@
       "EPUISE_CUISINE": "Épuisé en cuisine",
       "AUTRE": "Autre",
       "CLIENT_PARTI": "Le client est parti"
+    },
+    "motifsRemise": {
+      "CLIENT_FIDELE": "Client fidèle",
+      "GESTE_COMMERCIAL": "Geste commercial",
+      "RECLAMATION": "Réclamation",
+      "REPAS_PERSONNEL": "Repas du personnel",
+      "AUTRE": "Autre"
+    },
+    "ligne": {
+      "actions": "Actions sur {{produit}}",
+      "aEnvoyer": "{{count}} à envoyer, {{montant}}.",
+      "consigne": "Consigne pour la préparation",
+      "remise": "Faire une remise",
+      "retirerRemise": "Retirer la remise",
+      "retirerOffert": "Retirer l’offert",
+      "offrir": "Offrir",
+      "retirer": "Retirer de la note",
+      "annuler": "Annuler",
+      "jusqua": "jusqu’à {{taux}} pour vous",
+      "validation": "validation d’un gérant",
+      "fermer": "Fermer",
+      "envoyes_one": "{{count}} envoyé en préparation à {{heure}}, {{montant}}.",
+      "envoyes_other": "{{count}} envoyés en préparation à {{heure}}, {{montant}}."
+    },
+    "remise": {
+      "titreLigne": "Remise sur {{produit}}",
+      "titreNote": "Remise sur la note",
+      "phrase": "{{ou}}. La remise baisse le prix payé ; la cuisine n’est pas concernée.",
+      "enTaux": "En %",
+      "enMontant": "En montant",
+      "mode": "Type de remise",
+      "autreTaux": "Autre",
+      "taux": "Taux de la remise",
+      "montant": "Montant de la remise",
+      "apercu": "Prix remisé",
+      "plafond": "Votre plafond : {{taux}}. Au-delà, un gérant valide par son PIN. Chaque remise est visible dans l’activité, avec son motif.",
+      "sansPlafond": "Un gérant valide cette remise par son PIN. Chaque remise est visible dans l’activité, avec son motif.",
+      "appliquer": "Appliquer",
+      "appliquerMoins": "Appliquer −{{remise}}",
+      "choisir": "Choisissez un taux ou un montant.",
+      "tropGrande": "Au plus {{montant}}.",
+      "validationTitre": "Remise de {{remise}} sur {{objet}} ?",
+      "validationContexte": "{{ou}}. Demandée par {{demandeur}} pour le motif : {{motif}}.",
+      "laNote": "la note",
+      "retraitTitre": "Retirer la remise sur {{objet}} ?",
+      "retraitContexte": "{{ou}}. Retrait demandé par {{demandeur}}."
+    },
+    "offert": {
+      "titre": "Offrir {{produit}} ?",
+      "phrase": "{{ou}}. L’article offert reste sur la note à 0 F ; la cuisine le prépare normalement.",
+      "combien": "Combien en offrir ?",
+      "moins": "Un de moins à offrir",
+      "plus": "Un de plus à offrir",
+      "confirmer_one": "Offrir {{count}} article",
+      "confirmer_other": "Offrir {{count}} articles",
+      "validationTitre": "Offrir {{count}} {{produit}} ?"
     }
   },
   "gestion": {
@@ -970,7 +1033,10 @@
       "LIGNE_ANNULEE": "<b>{{auteur}}</b> a annulé <b>{{objet}}</b> à {{etablissement}}",
       "NOTE_ANNULEE": "<b>{{auteur}}</b> a annulé la note <b>{{objet}}</b> à {{etablissement}}",
       "TABLE_TRANSFEREE": "<b>{{auteur}}</b> a transféré une note vers <b>{{objet}}</b> à {{etablissement}}",
-      "SERVEUR_CHANGE": "<b>{{auteur}}</b> a confié la note <b>{{objet}}</b> à un autre serveur à {{etablissement}}"
+      "SERVEUR_CHANGE": "<b>{{auteur}}</b> a confié la note <b>{{objet}}</b> à un autre serveur à {{etablissement}}",
+      "REMISE_APPLIQUEE": "<b>{{auteur}}</b> a accordé une remise sur <b>{{objet}}</b> à {{etablissement}}",
+      "ARTICLE_OFFERT": "<b>{{auteur}}</b> a offert <b>{{objet}}</b> à {{etablissement}}",
+      "REMISE_RETIREE": "<b>{{auteur}}</b> a retiré la remise sur <b>{{objet}}</b> à {{etablissement}}"
     },
     "actions": {
       "LIGNE_ANNULER_APRES_ENVOI": "annuler des articles envoyés",
@@ -987,7 +1053,12 @@
     "annulationNote": "{{montant}}, {{ou}}. Motif : {{motif}}.",
     "annulationNoteValidee": "{{montant}}, {{ou}}. Motif : {{motif}}. Validé par {{validateur}}",
     "transfert": "{{de}} → {{vers}}, {{numero}}",
-    "serveurChange": "{{avant}} → {{apres}}, {{numero}}"
+    "serveurChange": "{{avant}} → {{apres}}, {{numero}}",
+    "remise": "−{{montant}}, {{ou}}. Motif : {{motif}}.",
+    "remiseValidee": "−{{montant}}, {{ou}}. Motif : {{motif}}. Validé par {{validateur}}",
+    "offert": "{{quantite}} × offert ({{montant}}), {{ou}}. Motif : {{motif}}.",
+    "offertValide": "{{quantite}} × offert ({{montant}}), {{ou}}. Motif : {{motif}}. Validé par {{validateur}}",
+    "remiseRetiree": "−{{montant}} retiré, {{ou}}"
   },
   "salles": {
     "titre": "Salles et tables de {{etablissement}}",

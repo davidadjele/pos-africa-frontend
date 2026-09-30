@@ -92,6 +92,14 @@ export function detailActivite(
     }
     case 'LIGNE_ANNULEE':
       return annulation(evenement, t, montant)
+    case 'REMISE_APPLIQUEE':
+    case 'ARTICLE_OFFERT':
+      return remise(evenement, t, montant)
+    case 'REMISE_RETIREE':
+      return t('activite.remiseRetiree', {
+        montant: montant(evenement.details.montant),
+        ou: ou(evenement, t),
+      })
     case 'NOTE_ANNULEE':
       return annulationNote(evenement, t, montant)
     case 'TABLE_TRANSFEREE':
@@ -161,6 +169,36 @@ function annulationNote(
   return validateur === undefined
     ? t('activite.annulationNote', valeurs)
     : t('activite.annulationNoteValidee', { ...valeurs, validateur })
+}
+
+/** « −360 F, T4, n°42. Motif : Client fidèle. » ou « 1 × offert (1 200 F), … » */
+function remise(
+  evenement: EvenementActivite,
+  t: TFunction,
+  montant: (valeur: unknown) => string,
+): string {
+  const { motif, detail, quantite } = evenement.details
+  const valeurs = {
+    montant: montant(evenement.details.montant),
+    quantite: typeof quantite === 'number' ? quantite : 1,
+    ou: ou(evenement, t),
+    motif:
+      motif === 'AUTRE' && typeof detail === 'string'
+        ? detail
+        : t(`caisse.motifsRemise.${typeof motif === 'string' ? motif : 'AUTRE'}`),
+  }
+  const offert = evenement.type === 'ARTICLE_OFFERT'
+  const validateur = evenement.detailsNoms.validateurId
+  if (validateur === undefined) {
+    return t(offert ? 'activite.offert' : 'activite.remise', valeurs)
+  }
+  return t(offert ? 'activite.offertValide' : 'activite.remiseValidee', { ...valeurs, validateur })
+}
+
+/** « T4, n°42 » ou « n°43 ». */
+function ou(evenement: EvenementActivite, t: TFunction): string {
+  const table = evenement.details.table
+  return [...(typeof table === 'string' ? [table] : []), numero(evenement, t)].join(', ')
 }
 
 function numero(evenement: EvenementActivite, t: TFunction): string {

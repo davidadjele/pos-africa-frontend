@@ -1,12 +1,11 @@
 import { clsx } from 'clsx'
 import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { MotifAnnulation } from '../../partage/api/contrat'
 import { ChampSaisie } from '../../partage/ui/ChampSaisie'
 
 /** Motif choisi, et précisé en toutes lettres pour « Autre ». */
-export interface Motif {
-  motif: MotifAnnulation
+export interface Motif<M extends string> {
+  motif: M
   detail?: string
 }
 
@@ -14,8 +13,8 @@ export interface Motif {
  * État du choix d'un motif d'annulation : `valider()` montre ce qui manque et rend le motif complet,
  * ou null tant qu'il ne l'est pas.
  */
-export function useChoixMotif() {
-  const [motif, setMotif] = useState<MotifAnnulation | null>(null)
+export function useChoixMotif<M extends string>() {
+  const [motif, setMotif] = useState<M | null>(null)
   const [detail, setDetail] = useState('')
   const [tente, setTente] = useState(false)
   const detailManquant = motif === 'AUTRE' && detail.trim() === ''
@@ -26,7 +25,7 @@ export function useChoixMotif() {
     detailManquant,
     setMotif,
     setDetail,
-    valider(): Motif | null {
+    valider(): Motif<M> | null {
       setTente(true)
       if (motif === null || detailManquant) return null
       return motif === 'AUTRE' ? { motif, detail: detail.trim() } : { motif }
@@ -34,10 +33,16 @@ export function useChoixMotif() {
   }
 }
 
-export function ChoixMotif({
+/** @param prefixe clés de traduction des motifs : d'annulation, ou de remise */
+export function ChoixMotif<M extends string>({
   motifs,
   choix,
-}: Readonly<{ motifs: MotifAnnulation[]; choix: ReturnType<typeof useChoixMotif> }>) {
+  prefixe = 'caisse.motifs',
+}: Readonly<{
+  motifs: readonly M[]
+  choix: ReturnType<typeof useChoixMotif<M>>
+  prefixe?: string
+}>) {
   const { t } = useTranslation()
   const id = useId()
   const manquant = choix.tente && choix.motif === null
@@ -68,7 +73,7 @@ export function ChoixMotif({
                   choix.setMotif(candidat)
                 }}
               />
-              {t(`caisse.motifs.${candidat}`)}
+              {t(`${prefixe}.${candidat}`)}
             </label>
           ))}
         </div>
@@ -100,9 +105,10 @@ export function ChoixMotif({
 
 /** Libellé d'un motif enregistré : le texte libre pour « Autre ». */
 export function libelleMotif(
-  motif: MotifAnnulation,
+  motif: string,
   detail: string | undefined,
   t: (cle: string) => string,
+  prefixe = 'caisse.motifs',
 ): string {
-  return motif === 'AUTRE' && detail !== undefined ? detail : t(`caisse.motifs.${motif}`)
+  return motif === 'AUTRE' && detail !== undefined ? detail : t(`${prefixe}.${motif}`)
 }

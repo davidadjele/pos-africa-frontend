@@ -35,6 +35,13 @@ function noteServie(
 
 const AFI_ID = '0d6a8f3e-0000-4c1b-9a51-5d7b9b0e0301'
 
+/** Toucher une ligne ouvre ses actions ; en choisir une. */
+async function choisirPourLaLigne(produit: string, action: string) {
+  await userEvent.click(await screen.findByRole('button', { name: `Actions sur ${produit}` }))
+  const actions = screen.getByRole('dialog', { name: produit })
+  await userEvent.click(within(actions).getByRole('button', { name: new RegExp(`^${action}`) }))
+}
+
 async function noteEnCours() {
   return screen.findByRole('region', { name: 'Note en cours' })
 }
@@ -111,7 +118,7 @@ describe('EcranNote', () => {
     )
     noteServie()
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Modifier Poulet braisé' }))
+    await choisirPourLaLigne('Poulet braisé', 'Consigne pour la préparation')
     const dialogue = screen.getByRole('dialog', { name: 'Poulet braisé' })
     await userEvent.type(
       within(dialogue).getByRole('textbox', { name: 'Note pour la préparation' }),
@@ -283,7 +290,7 @@ describe('EcranNote', () => {
     )
     noteServie()
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Annuler Flag 65 cl' }))
+    await choisirPourLaLigne('Flag 65 cl', 'Annuler')
     const annulation = screen.getByRole('dialog', { name: 'Annuler Flag 65 cl ?' })
     expect(annulation).toHaveTextContent('T4, Terrasse, envoyé en préparation à 19:02.')
     await userEvent.click(
@@ -316,7 +323,7 @@ describe('EcranNote', () => {
   it('demande de préciser le motif « Autre »', async () => {
     noteServie()
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Annuler Flag 65 cl' }))
+    await choisirPourLaLigne('Flag 65 cl', 'Annuler')
     const annulation = screen.getByRole('dialog', { name: 'Annuler Flag 65 cl ?' })
     await userEvent.click(within(annulation).getByRole('button', { name: 'Annuler 1 article' }))
     expect(annulation).toHaveTextContent('Choisissez un motif.')

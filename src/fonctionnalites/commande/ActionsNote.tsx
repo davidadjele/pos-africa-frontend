@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { clsx } from 'clsx'
-import { ArrowRightLeft, Ban, Receipt, UserRoundPen, Users } from 'lucide-react'
+import { ArrowRightLeft, Ban, Percent, Receipt, UserRoundPen, Users } from 'lucide-react'
 import { useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appelerCaisse } from '../../partage/api/appelerCaisse'
@@ -9,6 +9,7 @@ import { ErreurApi } from '../../partage/api/ErreurApi'
 import type {
   CommandeDetail,
   DemandeAnnulationNote,
+  DemandeRemise,
   MotifAnnulation,
   ProfilCaisse,
 } from '../../partage/api/contrat'
@@ -21,7 +22,9 @@ import { MenuActions, type ActionMenu } from '../../partage/ui/MenuActions'
 import { usePiegeFocus } from '../../partage/ui/usePiegeFocus'
 import { DialogueValidationGerant } from '../validation/DialogueValidationGerant'
 import { ChoixMotif, libelleMotif, useChoixMotif } from './ChoixMotif'
+import { DialogueRemise, libelleRemise } from './DialoguesRemise'
 import { requetePlan } from './requetes'
+import { useValidation } from './useValidation'
 
 const MOTIFS_NOTE: MotifAnnulation[] = [
   'ERREUR_SAISIE',
@@ -30,7 +33,7 @@ const MOTIFS_NOTE: MotifAnnulation[] = [
   'AUTRE',
 ]
 
-type Dialogues = 'transfert' | 'serveur' | 'couverts' | 'annulation'
+type Dialogues = 'transfert' | 'serveur' | 'couverts' | 'annulation' | 'remise'
 
 /**
  * Actions sur la note entière, rares, derrière un menu pour ne pas se toucher par erreur : table,
@@ -41,6 +44,7 @@ export function ActionsNote({
   devise,
   fuseauHoraire,
   peutTransferer,
+  plafond,
   moi,
   surNote,
   surErreur,
@@ -49,6 +53,8 @@ export function ActionsNote({
   devise: Devise
   fuseauHoraire: string
   peutTransferer: boolean
+  /** Remise que l'employé accorde seul, en points de base. */
+  plafond: number
   /** L'employé qui tient la caisse. */
   moi: { id: string; nom: string }
   surNote: (note: CommandeDetail) => void
@@ -61,6 +67,7 @@ export function ActionsNote({
   const [aValider, setAValider] = useState<DemandeAnnulationNote | null>(null)
   const [enCours, setEnCours] = useState(false)
   const chemin = `/caisse/commandes/${note.id}`
+  const validation = useValidation()
   const nom = note.table?.nom ?? t('caisse.note.numero', { numero: note.numero })
 
   async function agir(suffixe: string, methode: 'POST' | 'PUT' | 'DELETE', corps?: unknown) {
@@ -81,6 +88,39 @@ export function ActionsNote({
     } finally {
       setEnCours(false)
       setDialogue(null)
+    }
+  }
+
+  async function remiser(demande: DemandeRemise) {
+    setDialogue(null)
+    surErreur(null)
+    setEnCours(true)
+    try {
+      const reponse = await validation.executer(
+        (validationId) =>
+          appelerCaisse<CommandeDetail>(`${chemin}/remise`, {
+            methode: 'PUT',
+            corps: validationId === undefined ? demande : { ...demande, validationId },
+          }),
+        {
+          permission: 'REMISE_AU_DELA_PLAFOND',
+          objetId: note.id,
+          titre: t('caisse.remise.validationTitre', {
+            remise: libelleRemise(demande, devise),
+            objet: t('caisse.remise.laNote'),
+          }),
+          contexte: t('caisse.remise.validationContexte', {
+            ou: nom,
+            demandeur: moi.nom,
+            motif: libelleMotif(demande.motif, demande.detail, t, 'caisse.motifsRemise'),
+          }),
+        },
+      )
+      if (reponse !== undefined) surNote(reponse)
+    } catch (echec) {
+      surErreur(echec)
+    } finally {
+      setEnCours(false)
     }
   }
 
@@ -152,6 +192,17 @@ export function ActionsNote({
           },
         ]
       : []),
+    ...(note.remiseNote === undefined
+      ? [
+          {
+            libelle: t('caisse.note.actions.remise'),
+            icone: Percent,
+            surChoisir: () => {
+              setDialogue('remise')
+            },
+          },
+        ]
+      : []),
     {
       libelle: t('caisse.note.actions.annuler'),
       icone: Ban,
@@ -200,6 +251,21 @@ export function ActionsNote({
           surEnregistrer={(couverts) => void agir('couverts', 'PUT', { couverts })}
         />
       )}
+      {dialogue === 'remise' && (
+        <DialogueRemise
+          titre={t('caisse.remise.titreNote')}
+          phrase={t('caisse.remise.phrase', { ou: nom })}
+          base={note.total}
+          devise={devise}
+          plafond={plafond}
+          enCours={enCours}
+          surFermer={() => {
+            setDialogue(null)
+          }}
+          surAppliquer={(demande) => void remiser(demande)}
+        />
+      )}
+      {validation.dialogue}
       {dialogue === 'annulation' && (
         <DialogueAnnulationNote
           note={note}
@@ -505,7 +571,7 @@ function DialogueAnnulationNote({
   surAnnuler: (demande: DemandeAnnulationNote) => void
 }>) {
   const { t } = useTranslation()
-  const choix = useChoixMotif()
+  const choix = useChoixMotif<MotifAnnulation>()
   const somme = (statut: 'ENVOYEE' | 'BROUILLON') => {
     const lignes = note.lignes.filter((ligne) => ligne.statut === statut)
     return {
