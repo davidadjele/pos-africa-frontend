@@ -23,7 +23,11 @@
     "VALIDATION_INVALIDE": "Validation expirée ou déjà utilisée. Redemandez-la au gérant.",
     "TAXE_EN_USAGE": "Des produits actifs sont soumis à cette taxe : changez d’abord leur taxe.",
     "CATEGORIE_EN_USAGE": "Cette catégorie contient des produits actifs : déplacez-les ou désactivez-les d’abord.",
-    "SALLE_EN_USAGE": "Cette salle a encore des tables actives : déplacez-les ou désactivez-les d’abord."
+    "SALLE_EN_USAGE": "Cette salle a encore des tables actives : déplacez-les ou désactivez-les d’abord.",
+    "TABLE_OCCUPEE": "Cette table a déjà une note ouverte : un collègue vient sans doute de l’ouvrir. Le plan de salle est à jour.",
+    "PRODUIT_EPUISE": "Ce produit est épuisé pour aujourd’hui. Il n’a pas été ajouté.",
+    "PRODUIT_INDISPONIBLE": "Ce produit n’est plus à la carte de cet établissement. Il n’a pas été ajouté.",
+    "NOTE_NON_VIDE": "Cette note contient des articles : elle ne peut pas être fermée ainsi."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Trop d’essais infructueux : le compte est verrouillé. Réessayez dans {{duree}}.",
@@ -104,7 +108,87 @@
     },
     "note": {
       "titre": "Note en cours",
-      "phrase": "La prise de commande et l’encaissement arrivent avec le module commande."
+      "chargement": "Chargement de la note…",
+      "retourPlan": "Plan de salle",
+      "numero": "n°{{numero}}",
+      "ouverte": "ouverte à {{heure}} par {{serveur}}",
+      "pour": "pour {{nom}}",
+      "vide": {
+        "titre": "Note vide",
+        "phrase": "Touchez un produit de la carte pour l’ajouter."
+      },
+      "lignes": "Articles de la note",
+      "aEnvoyer": "À envoyer",
+      "envoyeA": "Envoyé à {{heure}}",
+      "annulee": "Annulé",
+      "uneDeMoins": "Un de moins : {{produit}}",
+      "uneDePlus": "Un de plus : {{produit}}",
+      "modifier": "Modifier {{produit}}",
+      "articles_one": "{{count}} article",
+      "articles_other": "{{count}} articles",
+      "dont": "dont {{taxe}}",
+      "total": "Total",
+      "envoyer_one": "Envoyer {{count}} article en préparation",
+      "envoyer_other": "Envoyer {{count}} articles en préparation",
+      "encaisser": "Encaisser",
+      "epuise": "{{produit}} vient d’être déclaré épuisé ({{qui}}, {{heure}}). Il n’a pas été ajouté.",
+      "epuiseSansDetail": "{{produit}} est épuisé pour aujourd’hui. Il n’a pas été ajouté.",
+      "indisponible": "{{produit}} n’est plus à la carte. Il n’a pas été ajouté.",
+      "ligne": {
+        "phrase": "Consigne pour la préparation, valable pour toutes les unités de cette ligne.",
+        "note": "Note pour la préparation",
+        "aide": "Par exemple : sans piment, bien cuit.",
+        "retirer": "Retirer de la note",
+        "enregistrer": "Enregistrer"
+      }
+    },
+    "canaux": {
+      "SUR_PLACE": "Sur place",
+      "COMPTOIR": "Comptoir",
+      "EMPORTER": "À emporter"
+    },
+    "plan": {
+      "chargement": "Chargement du plan de salle…",
+      "salles": "Salles",
+      "tables": "Tables",
+      "mesTables": "Mes tables",
+      "emporter": "À emporter",
+      "comptoir": "Vente au comptoir",
+      "places_one": "{{count}} place",
+      "places_other": "{{count}} places",
+      "ouvrirNote": "Ouvrir une note",
+      "maTable": "Ma table",
+      "couverts_one": "{{count}} couvert",
+      "couverts_other": "{{count}} couverts",
+      "libre": "{{table}}, libre",
+      "occupee": "{{table}}, note de {{montant}}",
+      "totalOuvertes": "Notes ouvertes, toutes salles",
+      "notes_one": "{{count}} note ouverte",
+      "notes_other": "{{count}} notes ouvertes",
+      "sansTable": "Comptoir et à emporter",
+      "aucuneSansTable": "Aucune note au comptoir ni à emporter.",
+      "ouverteA": "{{serveur}}, ouverte à {{heure}}",
+      "mesTablesVide": "Aucune de vos notes n’est ouverte dans cette salle.",
+      "lectureSeule": "Consultation seulement : votre rôle ne prend pas de commande.",
+      "vide": {
+        "titre": "Aucune table dans cet établissement",
+        "phrase": "Un gérant crée les salles et les tables dans la gestion, Salles et tables. La vente au comptoir et à emporter reste possible."
+      },
+      "tablesOccupees_one": "{{count}} table occupée sur {{total}}",
+      "tablesOccupees_other": "{{count}} tables occupées sur {{total}}"
+    },
+    "ouverture": {
+      "titreTable": "Ouvrir une note sur {{table}}",
+      "phraseTable_one": "{{salle}}, {{count}} place. Le nombre de couverts sert aux rapports.",
+      "phraseTable_other": "{{salle}}, {{count}} places. Le nombre de couverts sert aux rapports.",
+      "couverts": "Couverts",
+      "moins": "Un couvert de moins",
+      "plus": "Un couvert de plus",
+      "ouvrir": "Ouvrir la note",
+      "titreEmporter": "Vente à emporter",
+      "phraseEmporter": "Le nom sert à appeler le client quand sa commande est prête.",
+      "client": "Nom du client",
+      "facultatif": "Facultatif."
     }
   },
   "gestion": {

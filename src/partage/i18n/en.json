@@ -23,7 +23,11 @@
     "VALIDATION_INVALIDE": "Approval expired or already used. Ask the manager again.",
     "TAXE_EN_USAGE": "Active products are subject to this tax: change their tax first.",
     "CATEGORIE_EN_USAGE": "This category contains active products: move or disable them first.",
-    "SALLE_EN_USAGE": "This area still has active tables: move or disable them first."
+    "SALLE_EN_USAGE": "This area still has active tables: move or disable them first.",
+    "TABLE_OCCUPEE": "This table already has an open tab: a colleague has probably just opened it. The floor plan is up to date.",
+    "PRODUIT_EPUISE": "This product is sold out for today. It was not added.",
+    "PRODUIT_INDISPONIBLE": "This product is no longer on this location’s menu. It was not added.",
+    "NOTE_NON_VIDE": "This tab has items: it cannot be closed this way."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Too many failed attempts: the account is locked. Try again in {{duree}}.",
@@ -103,8 +107,88 @@
       "chargement": "Loading the menu…"
     },
     "note": {
-      "titre": "Current bill",
-      "phrase": "Order taking and payment arrive with the orders module."
+      "titre": "Current tab",
+      "chargement": "Loading the tab…",
+      "retourPlan": "Floor plan",
+      "numero": "#{{numero}}",
+      "ouverte": "opened at {{heure}} by {{serveur}}",
+      "pour": "for {{nom}}",
+      "vide": {
+        "titre": "Empty tab",
+        "phrase": "Tap a product on the menu to add it."
+      },
+      "lignes": "Tab items",
+      "aEnvoyer": "To send",
+      "envoyeA": "Sent at {{heure}}",
+      "annulee": "Cancelled",
+      "uneDeMoins": "One less: {{produit}}",
+      "uneDePlus": "One more: {{produit}}",
+      "modifier": "Edit {{produit}}",
+      "articles_one": "{{count}} item",
+      "articles_other": "{{count}} items",
+      "dont": "incl. {{taxe}}",
+      "total": "Total",
+      "envoyer_one": "Send {{count}} item to preparation",
+      "envoyer_other": "Send {{count}} items to preparation",
+      "encaisser": "Take payment",
+      "epuise": "{{produit}} has just been marked sold out ({{qui}}, {{heure}}). It was not added.",
+      "epuiseSansDetail": "{{produit}} is sold out for today. It was not added.",
+      "indisponible": "{{produit}} is no longer on the menu. It was not added.",
+      "ligne": {
+        "phrase": "Instruction for preparation, applies to every unit on this line.",
+        "note": "Preparation note",
+        "aide": "For example: no chili, well done.",
+        "retirer": "Remove from tab",
+        "enregistrer": "Save"
+      }
+    },
+    "canaux": {
+      "SUR_PLACE": "Dine-in",
+      "COMPTOIR": "Counter",
+      "EMPORTER": "Takeaway"
+    },
+    "plan": {
+      "chargement": "Loading the floor plan…",
+      "salles": "Areas",
+      "tables": "Tables",
+      "mesTables": "My tables",
+      "emporter": "Takeaway",
+      "comptoir": "Counter sale",
+      "places_one": "{{count}} seat",
+      "places_other": "{{count}} seats",
+      "ouvrirNote": "Open a tab",
+      "maTable": "My table",
+      "couverts_one": "{{count}} guest",
+      "couverts_other": "{{count}} guests",
+      "libre": "{{table}}, free",
+      "occupee": "{{table}}, tab of {{montant}}",
+      "totalOuvertes": "Open tabs, all areas",
+      "notes_one": "{{count}} open tab",
+      "notes_other": "{{count}} open tabs",
+      "sansTable": "Counter and takeaway",
+      "aucuneSansTable": "No counter or takeaway tab.",
+      "ouverteA": "{{serveur}}, opened at {{heure}}",
+      "mesTablesVide": "None of your tabs is open in this area.",
+      "lectureSeule": "View only: your role does not take orders.",
+      "vide": {
+        "titre": "No tables at this location",
+        "phrase": "A manager creates areas and tables in management, Areas and tables. Counter and takeaway sales remain available."
+      },
+      "tablesOccupees_one": "{{count}} of {{total}} tables occupied",
+      "tablesOccupees_other": "{{count}} of {{total}} tables occupied"
+    },
+    "ouverture": {
+      "titreTable": "Open a tab on {{table}}",
+      "phraseTable_one": "{{salle}}, {{count}} seat. The number of guests is used in reports.",
+      "phraseTable_other": "{{salle}}, {{count}} seats. The number of guests is used in reports.",
+      "couverts": "Guests",
+      "moins": "One guest less",
+      "plus": "One guest more",
+      "ouvrir": "Open the tab",
+      "titreEmporter": "Takeaway sale",
+      "phraseEmporter": "The name is used to call the customer when the order is ready.",
+      "client": "Customer name",
+      "facultatif": "Optional."
     }
   },
   "gestion": {
