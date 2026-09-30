@@ -1,63 +1,37 @@
-import { useQuery } from '@tanstack/react-query'
 import { clsx } from 'clsx'
-import { RotateCw, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { appelerCaisse } from '../../partage/api/appelerCaisse'
 import type { LigneCarteEtablissement } from '../../partage/api/contrat'
 import { formaterMontant, type Devise } from '../../partage/montants/formaterMontant'
-import { AlerteErreur } from '../../partage/ui/Alerte'
 import { BadgeStatut } from '../../partage/ui/BadgeStatut'
-import { Bouton } from '../../partage/ui/Bouton'
-import { Chargement } from '../../partage/ui/Chargement'
 import { EtatVide } from '../../partage/ui/EtatVide'
 import { COULEURS_CATEGORIE } from '../catalogue/couleurs'
-import { requeteAppareil } from '../tablette/requetes'
 
-/** Relue chaque minute : une rupture déclarée par le gérant grise la tuile sans recharger la caisse. */
-const requeteCarteCaisse = {
-  queryKey: ['caisse', 'carte'],
-  queryFn: ({ signal }: { signal: AbortSignal }) =>
-    appelerCaisse<LigneCarteEtablissement[]>('/caisse/carte', { signal }),
-  refetchInterval: 60_000,
-}
-
-/**
- * Écran de caisse : la carte de l'établissement, par onglet de catégorie, au prix d'ici. Les tuiles
- * deviendront des actions avec la prise de commande ; la note en cours occupera le panneau de droite.
- */
-export function EcranCaisse() {
+/** La carte de l'établissement, par catégorie, au prix d'ici : toucher une tuile ajoute le produit. */
+export function CarteCaisse({
+  carte,
+  devise,
+  surChoisir,
+}: Readonly<{
+  carte: LigneCarteEtablissement[]
+  devise: Devise
+  surChoisir: (ligne: LigneCarteEtablissement) => void
+}>) {
   const { t } = useTranslation()
-  const { data: appareil } = useQuery(requeteAppareil)
-  // La garde de la route a déjà chargé l'appareil ; la devise ne manque qu'un instant au premier rendu.
-  const devise = (appareil?.entreprise.devise ?? 'XOF') as Devise
-  const carte = useQuery(requeteCarteCaisse)
   const [categorieId, setCategorieId] = useState<string | null>(null)
   const [recherche, setRecherche] = useState('')
 
-  if (carte.isPending) return <Chargement texte={t('caisse.carte.chargement')} />
-  if (carte.isError) {
+  if (carte.length === 0) {
     return (
-      <AlerteErreur
-        erreur={carte.error}
-        action={
-          <Bouton icone={RotateCw} onClick={() => void carte.refetch()}>
-            {t('commun.reessayer')}
-          </Bouton>
-        }
-      />
-    )
-  }
-  if (carte.data.length === 0) {
-    return (
-      <section className="rounded-moyen border border-trait bg-surface p-6">
-        <EtatVide niveauTitre={1} titre={t('caisse.vide.titre')} phrase={t('caisse.vide.phrase')} />
+      <section className="flex-1 rounded-moyen border border-trait bg-surface p-6">
+        <EtatVide niveauTitre={2} titre={t('caisse.vide.titre')} phrase={t('caisse.vide.phrase')} />
       </section>
     )
   }
 
   const categories = new Map<string, { nom: string; nombre: number }>()
-  for (const ligne of carte.data) {
+  for (const ligne of carte) {
     const actuelle = categories.get(ligne.categorie.id)
     categories.set(ligne.categorie.id, {
       nom: ligne.categorie.nom,
@@ -65,14 +39,14 @@ export function EcranCaisse() {
     })
   }
   const motif = recherche.trim().toLowerCase()
-  const visibles = carte.data.filter(
+  const visibles = carte.filter(
     (ligne) =>
       (categorieId === null || ligne.categorie.id === categorieId) &&
       (motif === '' || ligne.nom.toLowerCase().includes(motif)),
   )
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4 md:flex-row">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 md:flex-row">
       <nav
         aria-label={t('caisse.carte.categories')}
         className="flex shrink-0 gap-1 overflow-x-auto rounded-moyen border border-trait bg-surface p-2 md:w-rail-largeur md:flex-col md:overflow-y-auto"
@@ -80,7 +54,7 @@ export function EcranCaisse() {
         <OngletCategorie
           actif={categorieId === null}
           libelle={t('caisse.carte.tout')}
-          nombre={carte.data.length}
+          nombre={carte.length}
           surChoisir={() => {
             setCategorieId(null)
           }}
@@ -116,17 +90,16 @@ export function EcranCaisse() {
         ) : (
           <ul
             aria-label={t('caisse.carte.produits')}
-            className="m-0 grid list-none grid-cols-2 content-start gap-2.5 overflow-y-auto p-0 sm:grid-cols-3 lg:grid-cols-4"
+            className="m-0 grid list-none grid-cols-2 content-start gap-2.5 overflow-y-auto p-0 sm:grid-cols-3 xl:grid-cols-4"
           >
             {visibles.map((ligne) => (
-              <Tuile key={ligne.produitId} ligne={ligne} devise={devise} />
+              <li key={ligne.produitId}>
+                <Tuile ligne={ligne} devise={devise} surChoisir={surChoisir} />
+              </li>
             ))}
           </ul>
         )}
       </div>
-      <aside className="hidden w-ticket-largeur shrink-0 flex-col rounded-moyen border border-trait bg-surface p-5 lg:flex">
-        <EtatVide titre={t('caisse.note.titre')} phrase={t('caisse.note.phrase')} />
-      </aside>
     </div>
   )
 }
@@ -155,16 +128,28 @@ function OngletCategorie({
   )
 }
 
-/** Tuile de produit ; la couleur de la catégorie n'est qu'un repère, le texte reste noir sur blanc. */
-function Tuile({ ligne, devise }: Readonly<{ ligne: LigneCarteEtablissement; devise: Devise }>) {
+/** La couleur de la catégorie n'est qu'un repère, le texte reste noir sur blanc. */
+function Tuile({
+  ligne,
+  devise,
+  surChoisir,
+}: Readonly<{
+  ligne: LigneCarteEtablissement
+  devise: Devise
+  surChoisir: (ligne: LigneCarteEtablissement) => void
+}>) {
   const { t } = useTranslation()
   return (
-    <li
-      aria-label={ligne.nom}
+    <button
+      type="button"
+      disabled={ligne.epuise}
+      onClick={() => {
+        surChoisir(ligne)
+      }}
       className={clsx(
-        'flex h-25 flex-col justify-between gap-2 rounded-normal border border-trait border-l-[5px] p-3 pl-3.5',
+        'flex h-25 w-full flex-col justify-between gap-2 rounded-normal border border-trait border-l-[5px] p-3 pl-3.5 text-left',
         COULEURS_CATEGORIE[ligne.categorie.couleur].bord,
-        ligne.epuise ? 'bg-fond opacity-60' : 'bg-surface',
+        ligne.epuise ? 'bg-fond opacity-60' : 'bg-surface hover:bg-fond',
       )}
     >
       <span className="text-corps leading-tight text-encre">{ligne.nom}</span>
@@ -174,6 +159,6 @@ function Tuile({ ligne, devise }: Readonly<{ ligne: LigneCarteEtablissement; dev
         </span>
         {ligne.epuise && <BadgeStatut ton="neutre">{t('caisse.carte.epuise')}</BadgeStatut>}
       </span>
-    </li>
+    </button>
   )
 }

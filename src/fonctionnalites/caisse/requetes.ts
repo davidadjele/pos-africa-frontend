@@ -1,7 +1,8 @@
-import { queryOptions } from '@tanstack/react-query'
+import { queryOptions, useQuery } from '@tanstack/react-query'
 import { appelerApi } from '../../partage/api/appelerApi'
 import { appelerCaisse } from '../../partage/api/appelerCaisse'
 import type { ProfilCaisse, SessionCaisseCourante } from '../../partage/api/contrat'
+import { useJetonCaisse } from '../../partage/api/jetonCaisse'
 
 /** Qui peut prendre la caisse : relu à chaque retour à l'écran (profil bloqué ou PIN réinitialisé entre-temps). */
 export const requetePersonnelCaisse = queryOptions({
@@ -26,4 +27,10 @@ export function initiales(nomCourt: string): string {
     .join('')
     .slice(0, 2)
     .toUpperCase()
+}
+
+/** L'employé qui tient la caisse : ses permissions masquent ce que son rôle ne peut pas faire. */
+export function useSessionCaisse(): SessionCaisseCourante | undefined {
+  const jeton = useJetonCaisse()
+  return useQuery({ ...requeteSessionCaisse(jeton ?? ''), enabled: jeton !== null }).data
 }

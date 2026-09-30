@@ -5,6 +5,7 @@ import { creerClientRequetes } from '../src/app/clientRequetes'
 import { Fournisseurs } from '../src/app/Fournisseurs'
 import { creerRouteur } from '../src/app/routeur'
 import type { AppareilCourant, ReponseMoi } from '../src/partage/api/contrat'
+import { definirJetonCaisse } from '../src/partage/api/jetonCaisse'
 import { serveurMsw } from './serveurMsw'
 
 export const API = `${window.location.origin}/api`
@@ -53,7 +54,12 @@ export const CAISSE_BAR: AppareilCourant = {
   id: '7c2a0000-0000-4000-8000-000000000001',
   nom: 'Caisse 1, bar',
   entreprise: { ...MAQUIS, devise: 'XOF' },
-  etablissement: { id: '9a1f0c2e-0000-4b8e-8f6a-000000000001', nom: 'Bè Kpota', ville: 'Lomé' },
+  etablissement: {
+    id: '9a1f0c2e-0000-4b8e-8f6a-000000000001',
+    nom: 'Bè Kpota',
+    ville: 'Lomé',
+    fuseauHoraire: 'Africa/Lome',
+  },
   delaiVerrouillageMinutes: 3,
 }
 
@@ -104,4 +110,26 @@ export function ouvrir(chemin: string) {
   })
   render(<Fournisseurs routeur={routeur} clientRequetes={clientRequetes} />)
   return { routeur, clientRequetes }
+}
+
+/** Kossi tient la caisse du bar : tablette enregistrée, session de caisse ouverte sur cet écran. */
+export function caisseOuverte(
+  chemin: string,
+  { permissions = ['COMMANDE_CREER'], plafondRemise = 0 } = {},
+) {
+  tablette(CAISSE_BAR)
+  serveurMsw.use(
+    http.get(`${API}/caisse/moi`, () =>
+      HttpResponse.json({
+        utilisateurId: '0d6a8f3e-0000-4c1b-9a51-5d7b9b0e0201',
+        prenom: 'Kossi',
+        nomCourt: 'Kossi A.',
+        role: permissions.includes('COMMANDE_CREER') ? 'SERVEUR' : 'CUISINE',
+        permissions,
+        plafondRemise,
+      }),
+    ),
+  )
+  definirJetonCaisse('eyJ.caisse')
+  return ouvrir(chemin)
 }

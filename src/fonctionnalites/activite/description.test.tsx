@@ -112,7 +112,73 @@ describe('description de l’activité', () => {
       />,
     )
     expect(container).toHaveTextContent(
-      'Kossi A. a obtenu la validation de Afi M. pour annuler une ligne envoyée',
+      'Kossi A. a obtenu la validation de Afi M. pour annuler des articles envoyés',
+    )
+  })
+
+  it('détaille une annulation d’article envoyé : quantité, montant, où, motif, validation', () => {
+    const annulation = (details: Record<string, unknown>, detailsNoms = {}) =>
+      detailActivite(
+        evenement({
+          type: 'LIGNE_ANNULEE',
+          domaine: 'CAISSE',
+          objetLibelle: 'Attiéké poisson',
+          details: { quantite: 1, montant: 3500, motif: 'NON_SERVIE', numero: 42, ...details },
+          detailsNoms,
+        }),
+        t,
+        CONTEXTE,
+      )
+
+    expect(annulation({ table: 'T4' }, { validateurId: 'Afi M.' })).toBe(
+      `1 × 3${FINE}500${INSEC}F, T4, n°42. Motif : Non servie (trop d’attente). Validé par Afi M.`,
+    )
+    expect(annulation({ motif: 'AUTRE', detail: 'Renversé au service' })).toBe(
+      `1 × 3${FINE}500${INSEC}F, n°42. Motif : Renversé au service.`,
+    )
+  })
+
+  it('détaille l’annulation d’une note, un transfert et un changement de serveur', () => {
+    const detail = (
+      type: EvenementActivite['type'],
+      details: Record<string, unknown>,
+      detailsNoms = {},
+    ) => detailActivite(evenement({ type, domaine: 'CAISSE', details, detailsNoms }), t, CONTEXTE)
+
+    expect(
+      detail(
+        'NOTE_ANNULEE',
+        { montant: 12600, motif: 'CLIENT_PARTI', numero: 42, table: 'T4' },
+        { validateurId: 'Afi M.' },
+      ),
+    ).toBe(`12${FINE}600${INSEC}F, T4, n°42. Motif : Le client est parti. Validé par Afi M.`)
+    expect(detail('TABLE_TRANSFEREE', { de: 'T4', vers: 'T5', numero: 42 })).toBe('T4 → T5, n°42')
+    expect(detail('SERVEUR_CHANGE', { avant: 'Kossi A.', apres: 'Essi D.', numero: 42 })).toBe(
+      'Kossi A. → Essi D., n°42',
+    )
+  })
+
+  it('détaille une remise, un article offert et le retrait d’une remise', () => {
+    const detail = (
+      type: EvenementActivite['type'],
+      details: Record<string, unknown>,
+      detailsNoms = {},
+    ) => detailActivite(evenement({ type, domaine: 'CAISSE', details, detailsNoms }), t, CONTEXTE)
+
+    expect(
+      detail('REMISE_APPLIQUEE', { montant: 360, taux: 1000, motif: 'CLIENT_FIDELE', numero: 42 }),
+    ).toBe(`−360${INSEC}F, n°42. Motif : Client fidèle.`)
+    expect(
+      detail(
+        'ARTICLE_OFFERT',
+        { montant: 1200, quantite: 1, motif: 'GESTE_COMMERCIAL', numero: 42, table: 'T4' },
+        { validateurId: 'Afi M.' },
+      ),
+    ).toBe(
+      `1 × offert (1${FINE}200${INSEC}F), T4, n°42. Motif : Geste commercial. Validé par Afi M.`,
+    )
+    expect(detail('REMISE_RETIREE', { montant: 360, numero: 42 })).toBe(
+      `−360${INSEC}F retiré, n°42`,
     )
   })
 })

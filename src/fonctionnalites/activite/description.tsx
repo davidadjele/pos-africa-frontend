@@ -90,6 +90,30 @@ export function detailActivite(
         ? t('activite.jusqua', { date: formaterDateHeure(jusqua, fuseauHoraire) })
         : null
     }
+    case 'LIGNE_ANNULEE':
+      return annulation(evenement, t, montant)
+    case 'REMISE_APPLIQUEE':
+    case 'ARTICLE_OFFERT':
+      return remise(evenement, t, montant)
+    case 'REMISE_RETIREE':
+      return t('activite.remiseRetiree', {
+        montant: montant(evenement.details.montant),
+        ou: ou(evenement, t),
+      })
+    case 'NOTE_ANNULEE':
+      return annulationNote(evenement, t, montant)
+    case 'TABLE_TRANSFEREE':
+      return t('activite.transfert', {
+        de: texte(evenement.details.de),
+        vers: texte(evenement.details.vers),
+        numero: numero(evenement, t),
+      })
+    case 'SERVEUR_CHANGE':
+      return t('activite.serveurChange', {
+        avant: texte(evenement.details.avant),
+        apres: texte(evenement.details.apres),
+        numero: numero(evenement, t),
+      })
     case 'ROLES_MODIFIES':
       return t('activite.roles', {
         avant: roles(avant, t, etablissements),
@@ -98,6 +122,92 @@ export function detailActivite(
     default:
       return null
   }
+}
+
+/** « 1 × 3 500 F, T4, n°42. Motif : Non servie. Validé par Afi M. » */
+function annulation(
+  evenement: EvenementActivite,
+  t: TFunction,
+  montant: (valeur: unknown) => string,
+): string {
+  const { quantite, motif, detail, table, numero } = evenement.details
+  const ou = [
+    ...(typeof table === 'string' ? [table] : []),
+    ...(typeof numero === 'number' ? [t('caisse.note.numero', { numero })] : []),
+  ].join(', ')
+  const valeurs = {
+    quantite: typeof quantite === 'number' ? quantite : 0,
+    montant: montant(evenement.details.montant),
+    ou,
+    motif:
+      motif === 'AUTRE' && typeof detail === 'string'
+        ? detail
+        : t(`caisse.motifs.${typeof motif === 'string' ? motif : 'AUTRE'}`),
+  }
+  const validateur = evenement.detailsNoms.validateurId
+  return validateur === undefined
+    ? t('activite.annulation', valeurs)
+    : t('activite.annulationValidee', { ...valeurs, validateur })
+}
+
+/** « 12 600 F, T4, n°42. Motif : Le client est parti. Validé par Afi M. » */
+function annulationNote(
+  evenement: EvenementActivite,
+  t: TFunction,
+  montant: (valeur: unknown) => string,
+): string {
+  const { motif, detail, table } = evenement.details
+  const valeurs = {
+    montant: montant(evenement.details.montant),
+    ou: [...(typeof table === 'string' ? [table] : []), numero(evenement, t)].join(', '),
+    motif:
+      motif === 'AUTRE' && typeof detail === 'string'
+        ? detail
+        : t(`caisse.motifs.${typeof motif === 'string' ? motif : 'AUTRE'}`),
+  }
+  const validateur = evenement.detailsNoms.validateurId
+  return validateur === undefined
+    ? t('activite.annulationNote', valeurs)
+    : t('activite.annulationNoteValidee', { ...valeurs, validateur })
+}
+
+/** « −360 F, T4, n°42. Motif : Client fidèle. » ou « 1 × offert (1 200 F), … » */
+function remise(
+  evenement: EvenementActivite,
+  t: TFunction,
+  montant: (valeur: unknown) => string,
+): string {
+  const { motif, detail, quantite } = evenement.details
+  const valeurs = {
+    montant: montant(evenement.details.montant),
+    quantite: typeof quantite === 'number' ? quantite : 1,
+    ou: ou(evenement, t),
+    motif:
+      motif === 'AUTRE' && typeof detail === 'string'
+        ? detail
+        : t(`caisse.motifsRemise.${typeof motif === 'string' ? motif : 'AUTRE'}`),
+  }
+  const offert = evenement.type === 'ARTICLE_OFFERT'
+  const validateur = evenement.detailsNoms.validateurId
+  if (validateur === undefined) {
+    return t(offert ? 'activite.offert' : 'activite.remise', valeurs)
+  }
+  return t(offert ? 'activite.offertValide' : 'activite.remiseValidee', { ...valeurs, validateur })
+}
+
+/** « T4, n°42 » ou « n°43 ». */
+function ou(evenement: EvenementActivite, t: TFunction): string {
+  const table = evenement.details.table
+  return [...(typeof table === 'string' ? [table] : []), numero(evenement, t)].join(', ')
+}
+
+function numero(evenement: EvenementActivite, t: TFunction): string {
+  const valeur = evenement.details.numero
+  return typeof valeur === 'number' ? t('caisse.note.numero', { numero: valeur }) : ''
+}
+
+function texte(valeur: unknown): string {
+  return typeof valeur === 'string' ? valeur : ''
 }
 
 /** « SERVEUR@<établissement> » enregistrés par le serveur, rendus « Serveur à Bè Kpota ». */

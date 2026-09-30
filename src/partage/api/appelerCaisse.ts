@@ -11,7 +11,13 @@ export async function appelerCaisse<T>(chemin: string, options: OptionsAppel = {
   try {
     return await envoyer<T>(chemin, options, jeton)
   } catch (erreur) {
-    if (erreur instanceof ErreurApi && erreur.statut === 401 && lireJetonCaisse() === jeton) {
+    // PIN_INCORRECT : le code d'un gérant qui valide est faux, la session de l'employé tient toujours.
+    if (
+      erreur instanceof ErreurApi &&
+      erreur.statut === 401 &&
+      erreur.code !== 'PIN_INCORRECT' &&
+      lireJetonCaisse() === jeton
+    ) {
       effacerJetonCaisse()
     }
     throw erreur

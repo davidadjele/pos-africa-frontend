@@ -49,15 +49,21 @@ export function MiseEnPageCaisse() {
                 {t(`roles.${session.data.role}`)}
               </span>
             </span>
-            <button type="button" className={CLASSES_CONTROLE_BARRE} onClick={effacerJetonCaisse}>
+            <button
+              type="button"
+              aria-label={t('caisse.session.changer')}
+              className={CLASSES_CONTROLE_BARRE}
+              onClick={effacerJetonCaisse}
+            >
               <UserRoundCog aria-hidden="true" size={18} />
-              {t('caisse.session.changer')}
+              {/* Sur téléphone, l'icône seule : la barre garde la place de la marque. */}
+              <span className="hidden sm:inline">{t('caisse.session.changer')}</span>
             </button>
           </>
         )}
-        <Link to="/gestion" className={CLASSES_CONTROLE_BARRE}>
+        <Link to="/gestion" aria-label={t('commun.gestion')} className={CLASSES_CONTROLE_BARRE}>
           <LayoutDashboard aria-hidden="true" size={18} />
-          {t('commun.gestion')}
+          <span className="hidden sm:inline">{t('commun.gestion')}</span>
         </Link>
       </BarreHaute>
       {appareil &&

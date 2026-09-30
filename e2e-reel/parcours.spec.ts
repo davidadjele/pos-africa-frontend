@@ -28,16 +28,21 @@ async function seDeconnecter(page: Page) {
   await expect(page).toHaveURL(/\/connexion$/)
 }
 
-/** Lit un code affiché une seule fois (PIN, mot de passe), puis ferme le dialogue. */
-async function noterCode(page: Page, libelle: string, bouton: string): Promise<string> {
-  const dialogue = page.getByRole('dialog')
+/** Lit un code affiché une seule fois (PIN, mot de passe), sans fermer le dialogue. */
+async function lireCode(page: Page, libelle: string): Promise<string> {
   // Le bloc du libellé exact : ses parents contiennent aussi les autres codes du dialogue.
-  const code = dialogue
+  const code = page
+    .getByRole('dialog')
     .getByText(libelle, { exact: true })
     .locator('xpath=..')
     .locator('[data-code]')
-  const valeur = (await code.textContent()) ?? ''
-  await dialogue.getByRole('button', { name: bouton }).click()
+  return (await code.textContent()) ?? ''
+}
+
+/** Lit un code affiché une seule fois, puis ferme le dialogue. */
+async function noterCode(page: Page, libelle: string, bouton: string): Promise<string> {
+  const valeur = await lireCode(page, libelle)
+  await page.getByRole('dialog').getByRole('button', { name: bouton }).click()
   return valeur
 }
 
@@ -102,6 +107,8 @@ test.describe.configure({ mode: 'serial' })
 
 /** PIN temporaire de Kossi, donné par Tanti, que Kossi remplace à sa première prise de caisse. */
 let pinTemporaireKossi = ''
+/** PIN temporaire de la gérante : elle choisit le sien sur la tablette avant de valider une annulation. */
+let pinTemporaireAfi = ''
 
 test('l’admin crée Maquis Chez Tanti, puis Tanti gère ses établissements', async ({ page }) => {
   await page.goto('/')
@@ -238,6 +245,7 @@ test('Tanti ajoute son personnel, et la gérante ne voit que le sien', async ({ 
   await page.getByRole('button', { name: 'Enregistrer l’employé' }).click()
   await expect(page.getByRole('dialog')).toContainText('Mot de passe temporaire du back-office')
   await capturer(page, '08-personnel-codes')
+  pinTemporaireAfi = await lireCode(page, 'PIN de caisse temporaire')
   const motDePasseAfi = await noterCode(
     page,
     'Mot de passe temporaire du back-office',
@@ -467,46 +475,6 @@ test('Tanti fixe un prix à Bè Kpota, puis la gérante déclare une rupture dep
   await capturer(page, '22-rupture-telephone')
 })
 
-test('Kossi prend la caisse d’une nouvelle tablette et voit la carte de Bè Kpota', async ({
-  page,
-  browser,
-}) => {
-  await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
-  await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
-  await page
-    .getByRole('navigation', { name: 'Navigation principale' })
-    .getByRole('link', { name: 'Tablettes' })
-    .click()
-  await page.getByRole('button', { name: 'Enregistrer une tablette' }).click()
-  const formulaire = page.getByRole('form', { name: 'Enregistrer une tablette' })
-  await formulaire.getByLabel(/^Établissement/).selectOption({ label: 'Bè Kpota' })
-  await formulaire.getByLabel(/^Nom de la caisse/).fill('Caisse 2, terrasse')
-  await formulaire.getByRole('button', { name: 'Générer le code' }).click()
-  const code = (
-    (await page
-      .getByRole('region', { name: 'Code d’enregistrement' })
-      .locator('[data-code]')
-      .textContent()) ?? ''
-  ).replace(/\D/g, '')
-
-  const contexteTablette = await browser.newContext({ viewport: { width: 1280, height: 800 } })
-  const tablette = await contexteTablette.newPage()
-  await tablette.goto('/caisse')
-  await taperCode(tablette, code)
-  await tablette.getByRole('button', { name: /Kossi A\./ }).click()
-  await taperCode(tablette, '4827')
-  await tablette.getByRole('button', { name: 'Ouvrir la caisse' }).click()
-
-  const produits = tablette.getByRole('list', { name: 'Produits' })
-  await expect(produits.getByRole('listitem', { name: 'Flag 65 cl' })).toContainText('1 200')
-  await expect(produits.getByRole('listitem', { name: 'Flag 65 cl' })).toContainText(
-    'Épuisé ce jour',
-  )
-  await expect(tablette.getByRole('navigation', { name: 'Catégories' })).toContainText('Bières')
-  await capturer(tablette, '23-caisse-carte')
-  await contexteTablette.close()
-})
-
 test('Tanti retrouve dans l’activité les changements de la journée et l’historique des prix', async ({
   page,
 }) => {
@@ -578,4 +546,201 @@ test('La gérante crée les salles de Bè Kpota et leurs tables', async ({ page 
   await capturer(page, '27-salles-et-tables')
   await page.setViewportSize({ width: 390, height: 844 })
   await capturer(page, '27-salles-et-tables-telephone')
+})
+
+test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la remplit', async ({
+  page,
+  browser,
+}) => {
+  await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
+  await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
+  const navigation = page.getByRole('navigation', { name: 'Navigation principale' })
+
+  // Un plat à vendre, à côté de la bière déclarée épuisée par la gérante.
+  await navigation.getByRole('link', { name: 'Produits' }).click()
+  await page.getByRole('link', { name: 'Ajouter un produit' }).click()
+  await page.getByLabel(/^Nom/).fill('Poulet braisé')
+  await page.getByLabel(/^Catégorie/).selectOption({ label: 'Grillades' })
+  await page.getByRole('radio', { name: 'Plat' }).check({ force: true })
+  await page.getByLabel(/^Prix TTC/).fill('4500')
+  await page.getByRole('button', { name: 'Enregistrer le produit' }).click()
+  await expect(page.getByText('« Poulet braisé » est enregistré.')).toBeVisible()
+
+  await navigation.getByRole('link', { name: 'Tablettes' }).click()
+  await page.getByRole('button', { name: 'Enregistrer une tablette' }).click()
+  const formulaire = page.getByRole('form', { name: 'Enregistrer une tablette' })
+  await formulaire.getByLabel(/^Établissement/).selectOption({ label: 'Bè Kpota' })
+  await formulaire.getByLabel(/^Nom de la caisse/).fill('Caisse 2, terrasse')
+  await formulaire.getByRole('button', { name: 'Générer le code' }).click()
+  const code = (
+    (await page
+      .getByRole('region', { name: 'Code d’enregistrement' })
+      .locator('[data-code]')
+      .textContent()) ?? ''
+  ).replace(/\D/g, '')
+
+  const contexteTablette = await browser.newContext({ viewport: { width: 1280, height: 800 } })
+  const tablette = await contexteTablette.newPage()
+  await tablette.goto('/caisse')
+  await taperCode(tablette, code)
+
+  // La gérante choisit son code sur cette tablette : il lui servira à valider une annulation.
+  await tablette.getByRole('button', { name: /Afi M\./ }).click()
+  await taperCode(tablette, pinTemporaireAfi)
+  await tablette.getByRole('button', { name: 'Ouvrir la caisse' }).click()
+  await taperCode(tablette, '6194')
+  await tablette.getByRole('button', { name: 'Continuer' }).click()
+  await taperCode(tablette, '6194')
+  await tablette.getByRole('button', { name: 'Enregistrer mon code' }).click()
+  await tablette.getByRole('banner').getByRole('button', { name: 'Changer d’utilisateur' }).click()
+
+  await tablette.getByRole('button', { name: /Kossi A\./ }).click()
+  await taperCode(tablette, '4827')
+  await tablette.getByRole('button', { name: 'Ouvrir la caisse' }).click()
+
+  // Le plan de salle : la terrasse d'abord, toutes ses tables libres.
+  const tables = tablette.getByRole('list', { name: 'Tables' })
+  await expect(tables.getByRole('button', { name: /libre/ })).toHaveCount(8)
+  await tables.getByRole('button', { name: 'T4, libre' }).click()
+  const ouverture = tablette.getByRole('dialog', { name: 'Ouvrir une note sur T4' })
+  await ouverture.getByRole('button', { name: 'Un couvert de plus' }).click()
+  await capturer(tablette, '28-ouvrir-une-note')
+  await ouverture.getByRole('button', { name: 'Ouvrir la note' }).click()
+
+  const note = tablette.getByRole('region', { name: 'Note en cours' })
+  await expect(note.getByRole('heading', { name: /T4/ })).toContainText('Terrasse')
+  await expect(note).toContainText('n°1, 3 couverts')
+  const produits = tablette.getByRole('list', { name: 'Produits' })
+  await expect(produits.getByRole('button', { name: /Flag 65 cl/ })).toBeDisabled()
+  await produits.getByRole('button', { name: /Poulet braisé/ }).click()
+  await expect(note).toContainText('4 500')
+  await produits.getByRole('button', { name: /Poulet braisé/ }).click()
+  await expect(note).toContainText('9 000 FCFA')
+
+  await note.getByRole('button', { name: 'Actions sur Poulet braisé' }).click()
+  await tablette
+    .getByRole('dialog', { name: 'Poulet braisé' })
+    .getByRole('button', { name: /^Consigne pour la préparation/ })
+    .click()
+  const ligne = tablette.getByRole('dialog', { name: 'Poulet braisé' })
+  await ligne.getByLabel(/^Note pour la préparation/).fill('sans piment')
+  await ligne.getByRole('button', { name: 'Enregistrer' }).click()
+  await expect(note).toContainText('« sans piment »')
+  await expect(note).toContainText('2 articles')
+  await capturer(tablette, '29-note-en-cours')
+
+  // Tout part en préparation ; un poulet non servi est annulé, validé par le PIN de la gérante.
+  await note.getByRole('button', { name: 'Envoyer 2 articles en préparation' }).click()
+  await expect(tablette.getByText(/2 articles envoyés en préparation à/)).toBeVisible()
+  await note.getByRole('button', { name: 'Actions sur Poulet braisé' }).click()
+  await tablette
+    .getByRole('dialog', { name: 'Poulet braisé' })
+    .getByRole('button', { name: /^Annuler/ })
+    .click()
+  const annulation = tablette.getByRole('dialog', { name: 'Annuler Poulet braisé ?' })
+  await annulation.getByRole('radio', { name: 'Non servie (trop d’attente)' }).check()
+  await capturer(tablette, '30-annuler-un-article')
+  await annulation.getByRole('button', { name: 'Annuler 1 article' }).click()
+  const validation = tablette.getByRole('dialog', { name: 'Annuler 1 Poulet braisé ?' })
+  await validation.getByRole('button', { name: /Afi M\./ }).click()
+  // Un code erroné est refusé dans le dialogue : la caisse de Kossi reste ouverte.
+  await taperCode(tablette, '1357')
+  await validation.getByRole('button', { name: 'Valider' }).click()
+  await expect(validation).toContainText('Code incorrect')
+  await expect(tablette.getByRole('banner')).toContainText('Kossi A.')
+  await taperCode(tablette, '6194')
+  await capturer(tablette, '31-validation-gerante')
+  await validation.getByRole('button', { name: 'Valider' }).click()
+  await expect(note).toContainText('Validé par Afi M.')
+  await expect(note).toContainText('4 500 FCFA')
+  await capturer(tablette, '32-note-apres-annulation')
+
+  // De retour au plan, T4 porte sa note ; une vente au comptoir vide ne laisse pas de trace.
+  await note.getByRole('button', { name: 'Plan de salle' }).click()
+  await expect(tables.getByRole('button', { name: /T4, note de 4\s500/ })).toContainText('Ma table')
+  await tablette.getByRole('button', { name: 'Vente au comptoir' }).click()
+  await expect(note.getByRole('heading', { name: /n°2/ })).toContainText('Comptoir')
+  await note.getByRole('button', { name: 'Plan de salle' }).click()
+  const resume = tablette.getByRole('region', { name: 'Notes ouvertes, toutes salles' })
+  await expect(resume).toContainText('Aucune note au comptoir ni à emporter.')
+  await expect(resume).toContainText('1 note ouverte')
+  await capturer(tablette, '33-plan-de-salle')
+
+  // Le client de T4 demande l'addition, puis la table déménage en T5 : la salle le voit dans « À traiter ».
+  await tables.getByRole('button', { name: /T4, note de/ }).click()
+  await note.getByRole('button', { name: 'Actions sur la note' }).click()
+  await tablette.getByRole('menuitem', { name: 'Addition demandée' }).click()
+  await expect(note).toContainText('Addition demandée à')
+  await capturer(tablette, '34-addition-demandee')
+  await note.getByRole('button', { name: 'Actions sur la note' }).click()
+  await tablette.getByRole('menuitem', { name: 'Transférer vers une autre table' }).click()
+  const transfert = tablette.getByRole('dialog', { name: 'Transférer la note de T4' })
+  await transfert.getByRole('button', { name: /^T5/ }).click()
+  await capturer(tablette, '35-transfert')
+  await transfert.getByRole('button', { name: 'Transférer vers T5' }).click()
+  await expect(note.getByRole('heading', { name: /T5/ })).toBeVisible()
+  await note.getByRole('button', { name: 'Plan de salle' }).click()
+  const aTraiter = tablette.getByRole('list', { name: 'À traiter' })
+  await expect(aTraiter.getByRole('link', { name: /T5, Terrasse/ })).toContainText(
+    'Addition demandée',
+  )
+  await capturer(tablette, '36-plan-a-traiter')
+
+  // Réclamation sur le poulet : Kossi (serveur) accorde 500 F, validés par la gérante.
+  await tables.getByRole('button', { name: /T5, note de/ }).click()
+  await note.getByRole('button', { name: 'Actions sur Poulet braisé' }).click()
+  await tablette
+    .getByRole('dialog', { name: 'Poulet braisé' })
+    .getByRole('button', { name: /^Faire une remise/ })
+    .click()
+  const remise = tablette.getByRole('dialog', { name: 'Remise sur Poulet braisé' })
+  await remise.getByRole('tab', { name: 'En montant' }).click()
+  await remise.getByLabel(/^Montant de la remise/).fill('500')
+  await remise.getByRole('radio', { name: 'Réclamation' }).check()
+  await capturer(tablette, '37-remise')
+  await remise.getByRole('button', { name: /^Appliquer/ }).click()
+  const validationRemise = tablette.getByRole('dialog', {
+    name: /^Remise de 500\sF sur Poulet braisé/,
+  })
+  await validationRemise.getByRole('button', { name: /Afi M\./ }).click()
+  await taperCode(tablette, '6194')
+  await validationRemise.getByRole('button', { name: 'Valider' }).click()
+  await expect(note).toContainText('Réclamation, validé par Afi M.')
+  await expect(note).toContainText('4 000 FCFA')
+  await capturer(tablette, '38-note-remisee')
+  await tablette.setViewportSize({ width: 390, height: 844 })
+  await note.scrollIntoViewIfNeeded()
+  await capturer(tablette, '38-note-remisee-telephone')
+  await tablette.setViewportSize({ width: 1280, height: 800 })
+  await note.getByRole('button', { name: 'Plan de salle' }).click()
+
+  // Le client part sans consommer : la note entière est annulée, validée par la gérante.
+  await tables.getByRole('button', { name: /T5, note de/ }).click()
+  await note.getByRole('button', { name: 'Actions sur la note' }).click()
+  await tablette.getByRole('menuitem', { name: 'Annuler la note' }).click()
+  const annulationNote = tablette.getByRole('dialog', { name: 'Annuler la note de T5 ?' })
+  await annulationNote.getByRole('radio', { name: 'Le client est parti' }).check()
+  await capturer(tablette, '39-annuler-la-note')
+  await annulationNote.getByRole('button', { name: 'Annuler la note' }).click()
+  const validationNote = tablette.getByRole('dialog', { name: 'Annuler la note de T5 ?' })
+  await validationNote.getByRole('button', { name: /Afi M\./ }).click()
+  await taperCode(tablette, '6194')
+  await validationNote.getByRole('button', { name: 'Valider' }).click()
+  await expect(tables.getByRole('button', { name: 'T5, libre' })).toBeVisible()
+  await expect(resume).toContainText('0 note ouverte')
+
+  await tablette.setViewportSize({ width: 390, height: 844 })
+  await capturer(tablette, '33-plan-de-salle-telephone')
+  await contexteTablette.close()
+
+  // Le propriétaire retrouve l'annulation, son motif et qui l'a validée.
+  await navigation.getByRole('link', { name: 'Activité' }).click()
+  const activite = page.getByRole('region', { name: 'Activité' })
+  await expect(activite).toContainText('Kossi A. a annulé Poulet braisé à Bè Kpota')
+  await expect(activite).toContainText('Motif : Non servie (trop d’attente). Validé par Afi M.')
+  await expect(activite).toContainText('Kossi A. a annulé la note T5 à Bè Kpota')
+  await expect(activite).toContainText('Motif : Le client est parti. Validé par Afi M.')
+  await expect(activite).toContainText('Kossi A. a accordé une remise sur Poulet braisé à Bè Kpota')
+  await expect(activite).toContainText('Motif : Réclamation. Validé par Afi M.')
+  await capturer(page, '40-activite-caisse')
 })

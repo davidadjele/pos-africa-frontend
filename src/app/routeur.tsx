@@ -13,7 +13,8 @@ import { PageFicheProduit } from '../fonctionnalites/catalogue/PageFicheProduit'
 import { PageProduits, type RechercheProduits } from '../fonctionnalites/catalogue/PageProduits'
 import { PageTaxes } from '../fonctionnalites/catalogue/PageTaxes'
 import { PageSalles } from '../fonctionnalites/salles/PageSalles'
-import { EcranCaisse } from '../fonctionnalites/caisse/EcranCaisse'
+import { EcranNote } from '../fonctionnalites/commande/EcranNote'
+import { EcranPlan } from '../fonctionnalites/commande/EcranPlan'
 import { PageChangerMotDePasse } from '../fonctionnalites/connexion/PageChangerMotDePasse'
 import { PageChoixEntreprise } from '../fonctionnalites/connexion/PageChoixEntreprise'
 import { PageConnexion } from '../fonctionnalites/connexion/PageConnexion'
@@ -115,7 +116,17 @@ const enregistrementTablette = createRoute({
 const caisseAccueil = createRoute({
   getParentRoute: () => caisse,
   path: '/',
-  component: EcranCaisse,
+  component: EcranPlan,
+})
+
+const caisseNote = createRoute({
+  getParentRoute: () => caisse,
+  path: '/notes/$commandeId',
+  component: function RouteNote() {
+    const { commandeId } = caisseNote.useParams()
+    // Une note par clé : passer d'une note à l'autre repart d'un écran propre (alerte, dialogue).
+    return <EcranNote key={commandeId} commandeId={commandeId} />
+  },
 })
 
 const gestion = createRoute({
@@ -249,7 +260,7 @@ const arbre = racine.addChildren([
   changerMotDePasse,
   choixEntreprise,
   inscription,
-  caisse.addChildren([caisseAccueil]),
+  caisse.addChildren([caisseAccueil, caisseNote]),
   enregistrementTablette,
   gestion.addChildren([
     gestionAccueil,

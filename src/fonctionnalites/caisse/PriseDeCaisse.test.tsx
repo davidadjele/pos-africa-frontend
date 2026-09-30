@@ -36,6 +36,7 @@ const SESSION_KOSSI: SessionCaisseCourante = {
   nomCourt: 'Kossi A.',
   role: 'SERVEUR',
   permissions: ['COMMANDE_CREER'],
+  plafondRemise: 0,
 }
 
 function erreur(statut: number, code: string) {
@@ -48,7 +49,7 @@ function tabletteAvecPersonnel(reponseConnexion: () => Response) {
   tablette(CAISSE_BAR)
   serveurMsw.use(
     http.get(`${API}/appareil/personnel`, () => HttpResponse.json([KOSSI, YAWA, ESSI])),
-    http.get(`${API}/caisse/carte`, () => HttpResponse.json([])),
+    http.get(`${API}/caisse/plan`, () => HttpResponse.json({ salles: [], sansTable: [] })),
     http.post(`${API}/appareil/connexion`, async ({ request }) => {
       envois.push({ chemin: '/appareil/connexion', corps: await request.json() })
       return reponseConnexion()
@@ -111,7 +112,7 @@ describe('Prise de caisse', () => {
     expect(envois).toEqual([
       { chemin: '/appareil/connexion', corps: { utilisateurId: KOSSI.utilisateurId, pin: '4827' } },
     ])
-    expect(await screen.findByRole('heading', { level: 1, name: /Aucun produit/ })).toBeVisible()
+    expect(await screen.findByRole('heading', { level: 1, name: /Aucune table/ })).toBeVisible()
 
     await userEvent.click(within(barre).getByRole('button', { name: 'Changer d’utilisateur' }))
     expect(
