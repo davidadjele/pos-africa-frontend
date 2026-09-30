@@ -39,7 +39,9 @@ function backendSimule() {
   return { requetes, envois }
 }
 
-async function ouvrirProduits(permissions = [...MOI_TANTI.permissions, 'CATALOGUE_GERER']) {
+async function ouvrirProduits(
+  permissions: string[] = [...MOI_TANTI.permissions, 'CATALOGUE_GERER'],
+) {
   sessionOuverte({ ...MOI_TANTI, permissions })
   ouvrir('/gestion/produits')
   return screen.findByRole('table', { name: 'Produits de la carte' })
@@ -141,6 +143,57 @@ describe('PageProduits', () => {
     expect(await within(dialogue).findByRole('alert')).toHaveTextContent(
       '« Bières » contient encore 1 produit actif : déplacez-le vers une autre catégorie ou désactivez-le d’abord.',
     )
+  })
+
+  it('retrace l’historique des prix d’un produit', async () => {
+    backendSimule()
+    serveurMsw.use(
+      http.get(`${API}/activite/produits/:id/prix`, () =>
+        HttpResponse.json([
+          {
+            id: 'a1',
+            type: 'PRIX_ETABLISSEMENT_MODIFIE',
+            domaine: 'CARTE',
+            critique: true,
+            objetType: 'PRODUIT',
+            objetId: FLAG.id,
+            objetLibelle: 'Flag 65 cl',
+            etablissementId: '9a1f0c2e-0000-4b8e-8f6a-000000000001',
+            etablissementNom: 'Bè Kpota',
+            auteurNom: 'Tanti A.',
+            survenuLe: '2026-09-29T18:10:00Z',
+            details: { avant: null, apres: 1200 },
+            detailsNoms: {},
+          },
+          {
+            id: 'a2',
+            type: 'PRIX_MODIFIE',
+            domaine: 'CARTE',
+            critique: true,
+            objetType: 'PRODUIT',
+            objetId: FLAG.id,
+            objetLibelle: 'Flag 65 cl',
+            auteurNom: 'Tanti A.',
+            survenuLe: '2026-09-27T10:12:00Z',
+            details: { avant: 900, apres: 1000 },
+            detailsNoms: {},
+          },
+        ]),
+      ),
+    )
+    await ouvrirProduits([...MOI_TANTI.permissions, 'CATALOGUE_GERER', 'ACTIVITE_CONSULTER'])
+
+    await userEvent.click(screen.getByRole('button', { name: 'Plus d’actions pour Flag 65 cl' }))
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Historique des prix' }))
+
+    const dialogue = await screen.findByRole('dialog', {
+      name: 'Historique des prix de « Flag 65 cl »',
+    })
+    const lignes = await within(dialogue).findAllByRole('listitem')
+    expect(lignes[0]).toHaveTextContent('Bè Kpota')
+    expect(lignes[0]).toHaveTextContent('Prix de base → 1 200 F')
+    expect(lignes[1]).toHaveTextContent('Toute la carte')
+    expect(lignes[1]).toHaveTextContent('27/09/2026, 10:12')
   })
 
   it('laisse consulter la carte sans permettre de la modifier', async () => {

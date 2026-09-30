@@ -13,6 +13,7 @@ import {
 
 /** Permissions que l'interface reflète (le backend les applique dans tous les cas). */
 export type Permission =
+  | 'ACTIVITE_CONSULTER'
   | 'APPAREIL_GERER'
   | 'BACK_OFFICE'
   | 'CATALOGUE_GERER'

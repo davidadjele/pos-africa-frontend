@@ -4,6 +4,46 @@
  */
 
 export interface paths {
+    "/activite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lister l'activité, de la plus récente
+         * @description Permission ACTIVITE_CONSULTER. Un gérant ne voit que ses établissements, la carte commune et le personnel de ses établissements. Par défaut, seulement les actions critiques.
+         */
+        get: operations["lister_7"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/activite/produits/{produitId}/prix": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Historique des prix d'un produit
+         * @description Prix de base et prix propres aux établissements du périmètre, du plus récent.
+         */
+        get: operations["historiquePrix"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/appareil": {
         parameters: {
             query?: never;
@@ -1251,7 +1291,7 @@ export interface components {
              * @example LIGNE_ANNULER_APRES_ENVOI
              * @enum {string}
              */
-            permission: "COMMANDE_CREER" | "LIGNE_ANNULER_APRES_ENVOI" | "TABLE_TRANSFERER" | "REMISE_APPLIQUER" | "REMISE_AU_DELA_PLAFOND" | "ARTICLE_OFFRIR" | "PAIEMENT_ENCAISSER" | "PAIEMENT_REMBOURSER" | "CAISSE_OUVRIR" | "CAISSE_FERMER" | "CAISSE_MOUVEMENT" | "STOCK_RECEPTIONNER" | "STOCK_AJUSTER" | "CATALOGUE_GERER" | "PRIX_MODIFIER" | "RAPPORT_VENTES" | "RAPPORT_FINANCIER" | "CLIENT_CREDIT" | "PERSONNEL_GERER" | "ETABLISSEMENT_GERER" | "BACK_OFFICE" | "APPAREIL_GERER" | "DISPONIBILITE_GERER";
+            permission: "COMMANDE_CREER" | "LIGNE_ANNULER_APRES_ENVOI" | "TABLE_TRANSFERER" | "REMISE_APPLIQUER" | "REMISE_AU_DELA_PLAFOND" | "ARTICLE_OFFRIR" | "PAIEMENT_ENCAISSER" | "PAIEMENT_REMBOURSER" | "CAISSE_OUVRIR" | "CAISSE_FERMER" | "CAISSE_MOUVEMENT" | "STOCK_RECEPTIONNER" | "STOCK_AJUSTER" | "CATALOGUE_GERER" | "PRIX_MODIFIER" | "RAPPORT_VENTES" | "RAPPORT_FINANCIER" | "CLIENT_CREDIT" | "PERSONNEL_GERER" | "ETABLISSEMENT_GERER" | "BACK_OFFICE" | "APPAREIL_GERER" | "DISPONIBILITE_GERER" | "ACTIVITE_CONSULTER";
             /** @example 5937 */
             pin: string;
             /** Format: uuid */
@@ -1384,6 +1424,31 @@ export interface components {
             version: number;
             ville?: string;
         };
+        EvenementActivite: {
+            auteurNom?: string;
+            critique: boolean;
+            details: {
+                [key: string]: unknown;
+            };
+            detailsNoms: {
+                [key: string]: string;
+            };
+            /** @enum {string} */
+            domaine: "CARTE" | "PERSONNEL" | "TABLETTES" | "CAISSE";
+            /** Format: uuid */
+            etablissementId?: string;
+            etablissementNom?: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            objetId: string;
+            objetLibelle: string;
+            objetType: string;
+            /** Format: date-time */
+            survenuLe: string;
+            /** @enum {string} */
+            type: "TAXE_CREEE" | "TAUX_TAXE_MODIFIE" | "TAXE_DESACTIVEE" | "TAXE_REACTIVEE" | "PRIX_MODIFIE" | "TAXE_PRODUIT_MODIFIEE" | "PRODUIT_DESACTIVE" | "PRODUIT_REACTIVE" | "PRIX_ETABLISSEMENT_MODIFIE" | "PRODUIT_RETIRE_ETABLISSEMENT" | "PRODUIT_PROPOSE_ETABLISSEMENT" | "RUPTURE_DECLAREE" | "RUPTURE_LEVEE" | "ROLES_MODIFIES" | "PIN_REINITIALISE" | "EMPLOYE_DESACTIVE" | "EMPLOYE_REACTIVE" | "TABLETTE_REVOQUEE" | "VALIDATION_GERANT_UTILISEE";
+        };
         LigneCarteEtablissement: {
             categorie: components["schemas"]["CategorieCarte"];
             epuise: boolean;
@@ -1436,6 +1501,15 @@ export interface components {
         };
         PageResultatsEtablissementResume: {
             elements: components["schemas"]["EtablissementResume"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            taille: number;
+            /** Format: int64 */
+            total: number;
+        };
+        PageResultatsEvenementActivite: {
+            elements: components["schemas"]["EvenementActivite"][];
             /** Format: int32 */
             page: number;
             /** Format: int32 */
@@ -1591,6 +1665,74 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    lister_7: {
+        parameters: {
+            query?: {
+                depuis?: string;
+                jusqua?: string;
+                etablissementId?: string;
+                domaine?: "CARTE" | "PERSONNEL" | "TABLETTES" | "CAISSE";
+                critiques?: boolean;
+                page?: number;
+                taille?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageResultatsEvenementActivite"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    historiquePrix: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                produitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EvenementActivite"][];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
     courant: {
         parameters: {
             query?: never;
@@ -2130,7 +2272,7 @@ export interface operations {
     validateurs: {
         parameters: {
             query: {
-                permission: "COMMANDE_CREER" | "LIGNE_ANNULER_APRES_ENVOI" | "TABLE_TRANSFERER" | "REMISE_APPLIQUER" | "REMISE_AU_DELA_PLAFOND" | "ARTICLE_OFFRIR" | "PAIEMENT_ENCAISSER" | "PAIEMENT_REMBOURSER" | "CAISSE_OUVRIR" | "CAISSE_FERMER" | "CAISSE_MOUVEMENT" | "STOCK_RECEPTIONNER" | "STOCK_AJUSTER" | "CATALOGUE_GERER" | "PRIX_MODIFIER" | "RAPPORT_VENTES" | "RAPPORT_FINANCIER" | "CLIENT_CREDIT" | "PERSONNEL_GERER" | "ETABLISSEMENT_GERER" | "BACK_OFFICE" | "APPAREIL_GERER" | "DISPONIBILITE_GERER";
+                permission: "COMMANDE_CREER" | "LIGNE_ANNULER_APRES_ENVOI" | "TABLE_TRANSFERER" | "REMISE_APPLIQUER" | "REMISE_AU_DELA_PLAFOND" | "ARTICLE_OFFRIR" | "PAIEMENT_ENCAISSER" | "PAIEMENT_REMBOURSER" | "CAISSE_OUVRIR" | "CAISSE_FERMER" | "CAISSE_MOUVEMENT" | "STOCK_RECEPTIONNER" | "STOCK_AJUSTER" | "CATALOGUE_GERER" | "PRIX_MODIFIER" | "RAPPORT_VENTES" | "RAPPORT_FINANCIER" | "CLIENT_CREDIT" | "PERSONNEL_GERER" | "ETABLISSEMENT_GERER" | "BACK_OFFICE" | "APPAREIL_GERER" | "DISPONIBILITE_GERER" | "ACTIVITE_CONSULTER";
             };
             header?: never;
             path?: never;

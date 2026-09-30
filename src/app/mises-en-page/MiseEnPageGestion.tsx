@@ -1,5 +1,6 @@
 import { Link, Outlet } from '@tanstack/react-router'
 import {
+  Activity,
   Building2,
   LayoutDashboard,
   Percent,
@@ -21,6 +22,7 @@ interface EntreeNavigation {
   vers:
     | '/gestion'
     | '/caisse'
+    | '/gestion/activite'
     | '/gestion/produits'
     | '/gestion/carte-etablissement'
     | '/gestion/taxes'
@@ -37,6 +39,12 @@ interface EntreeNavigation {
 const QUOTIDIEN: EntreeNavigation[] = [
   { vers: '/gestion', cle: 'gestion.menu.tableauDeBord', icone: LayoutDashboard },
   { vers: '/caisse', cle: 'gestion.menu.caisse', icone: Store },
+  {
+    vers: '/gestion/activite',
+    cle: 'gestion.menu.activite',
+    icone: Activity,
+    permission: 'ACTIVITE_CONSULTER',
+  },
 ]
 
 // La carte : consultable par tout le back-office, les taxes seulement par qui les règle.
@@ -118,8 +126,10 @@ export function MiseEnPageGestion() {
           className="shrink-0 border-b border-trait bg-surface md:w-58 md:border-r md:border-b-0"
         >
           <ul className="m-0 flex list-none gap-1 overflow-x-auto p-2 md:flex-col">
-            {QUOTIDIEN.map((entree) => (
-              <Entree key={entree.vers} {...entree} />
+            {QUOTIDIEN.filter(
+              (entree) => entree.permission === undefined || aLaPermission(entree.permission),
+            ).map((entree) => (
+              <Entree key={entree.vers} vers={entree.vers} cle={entree.cle} icone={entree.icone} />
             ))}
             <Separateur />
             <li

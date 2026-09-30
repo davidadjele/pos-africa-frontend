@@ -116,7 +116,8 @@
       "carte": "Carte",
       "produits": "Produits",
       "taxes": "Taxes",
-      "parEtablissement": "Par établissement"
+      "parEtablissement": "Par établissement",
+      "activite": "Activité"
     },
     "tableauDeBord": {
       "titre": "Tableau de bord",
@@ -641,6 +642,14 @@
       "cree": "« {{nom}} » est ajouté à la carte.",
       "modifie": "« {{nom}} » est enregistré.",
       "chargement": "Chargement du produit…"
+    },
+    "historiquePrix": "Historique des prix",
+    "historique": {
+      "titre": "Historique des prix de « {{nom}} »",
+      "phrase": "Prix de base et prix propres aux établissements. Les ventes gardent le prix du moment où elles ont été faites.",
+      "fermer": "Fermer",
+      "vide": "Aucun changement de prix enregistré.",
+      "liste": "Changements de prix"
     }
   },
   "categories": {
@@ -728,6 +737,77 @@
       "note": "Si le prix de base change ensuite, {{etablissement}} garde ce prix. « Revenir au prix de base » le supprime. Le changement est tracé dans l’activité, à votre nom.",
       "revenir": "Revenir au prix de base",
       "enregistrer": "Enregistrer le prix"
+    }
+  },
+  "activite": {
+    "titre": "Activité",
+    "phrase": "Les actions qui comptent : prix, taxes, carte, personnel, tablettes, validations. Qui, quand, et ce qui a changé.",
+    "liste": "Activité",
+    "periode": "Période",
+    "periodes": {
+      "jour": "Aujourd’hui",
+      "semaine": "7 derniers jours",
+      "mois": "30 derniers jours"
+    },
+    "etablissement": "Établissement",
+    "tous": "Tous",
+    "domaine": "Domaine",
+    "domaines": {
+      "CARTE": "Carte",
+      "PERSONNEL": "Personnel",
+      "TABLETTES": "Tablettes",
+      "CAISSE": "Caisse"
+    },
+    "critiquesSeulement": "Critiques seulement",
+    "tout": "Tout",
+    "critique": "Critique",
+    "information": "Information",
+    "chargement": "Chargement de l’activité…",
+    "vide": {
+      "titre": "Rien sur cette période",
+      "phrase": "Aucune action ne correspond à ces filtres. Élargissez la période ou affichez tout."
+    },
+    "equipeTonti": "Équipe Tonti",
+    "touteLaCarte": "Toute la carte",
+    "touteLEntreprise": "Toute l’entreprise",
+    "aucune": "Aucune",
+    "prixDeBase": "Prix de base",
+    "jusqua": "Jusqu’au {{date}}",
+    "tauxInitial": "Taux : {{taux}}",
+    "roles": "Avant : {{avant}}. Après : {{apres}}.",
+    "roleA": "{{role}} à {{etablissement}}",
+    "autreEtablissement": "un autre établissement",
+    "aucunRole": "aucun rôle",
+    "types": {
+      "TAXE_CREEE": "<b>{{auteur}}</b> a créé la taxe <b>{{objet}}</b>",
+      "TAUX_TAXE_MODIFIE": "<b>{{auteur}}</b> a changé le taux de <b>{{objet}}</b>",
+      "TAXE_DESACTIVEE": "<b>{{auteur}}</b> a désactivé la taxe <b>{{objet}}</b>",
+      "TAXE_REACTIVEE": "<b>{{auteur}}</b> a réactivé la taxe <b>{{objet}}</b>",
+      "PRIX_MODIFIE": "<b>{{auteur}}</b> a changé le prix de base de <b>{{objet}}</b>",
+      "TAXE_PRODUIT_MODIFIEE": "<b>{{auteur}}</b> a changé la taxe de <b>{{objet}}</b>",
+      "PRODUIT_DESACTIVE": "<b>{{auteur}}</b> a désactivé <b>{{objet}}</b>",
+      "PRODUIT_REACTIVE": "<b>{{auteur}}</b> a remis <b>{{objet}}</b> à la carte",
+      "PRIX_ETABLISSEMENT_MODIFIE": "<b>{{auteur}}</b> a changé le prix de <b>{{objet}}</b> à {{etablissement}}",
+      "PRODUIT_RETIRE_ETABLISSEMENT": "<b>{{auteur}}</b> a retiré <b>{{objet}}</b> de la carte de {{etablissement}}",
+      "PRODUIT_PROPOSE_ETABLISSEMENT": "<b>{{auteur}}</b> a remis <b>{{objet}}</b> à la carte de {{etablissement}}",
+      "RUPTURE_DECLAREE": "<b>{{auteur}}</b> a déclaré <b>{{objet}}</b> épuisé à {{etablissement}}",
+      "RUPTURE_LEVEE": "<b>{{auteur}}</b> a remis <b>{{objet}}</b> en vente à {{etablissement}}",
+      "ROLES_MODIFIES": "<b>{{auteur}}</b> a modifié les rôles de <b>{{objet}}</b>",
+      "PIN_REINITIALISE": "<b>{{auteur}}</b> a réinitialisé le PIN de <b>{{objet}}</b>",
+      "EMPLOYE_DESACTIVE": "<b>{{auteur}}</b> a désactivé <b>{{objet}}</b>",
+      "EMPLOYE_REACTIVE": "<b>{{auteur}}</b> a réactivé <b>{{objet}}</b>",
+      "TABLETTE_REVOQUEE": "<b>{{auteur}}</b> a révoqué la tablette <b>{{objet}}</b>",
+      "VALIDATION_GERANT_UTILISEE": "<b>{{auteur}}</b> a obtenu la validation de <b>{{validateur}}</b> pour {{action}}"
+    },
+    "actions": {
+      "LIGNE_ANNULER_APRES_ENVOI": "annuler une ligne envoyée",
+      "TABLE_TRANSFERER": "transférer une table",
+      "REMISE_APPLIQUER": "appliquer une remise",
+      "REMISE_AU_DELA_PLAFOND": "une remise au-delà du plafond",
+      "ARTICLE_OFFRIR": "offrir un article",
+      "PAIEMENT_REMBOURSER": "rembourser un paiement",
+      "CAISSE_MOUVEMENT": "un mouvement de caisse",
+      "autre": "une action protégée"
     }
   }
 }

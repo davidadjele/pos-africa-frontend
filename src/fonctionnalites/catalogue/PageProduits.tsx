@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { clsx } from 'clsx'
-import { Pencil, Plus, Power, RotateCw, Search } from 'lucide-react'
+import { History, Pencil, Plus, Power, RotateCw, Search } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appelerApi } from '../../partage/api/appelerApi'
@@ -14,9 +14,10 @@ import { BadgeStatut } from '../../partage/ui/BadgeStatut'
 import { Bouton, classesBouton } from '../../partage/ui/Bouton'
 import { Chargement } from '../../partage/ui/Chargement'
 import { EtatVide } from '../../partage/ui/EtatVide'
-import { MenuActions } from '../../partage/ui/MenuActions'
+import { MenuActions, type ActionMenu } from '../../partage/ui/MenuActions'
 import { Pagination, Tableau, type ColonneTableau } from '../../partage/ui/Tableau'
 import { CarreCategorie, DialogueCategories } from './DialogueCategories'
+import { DialogueHistoriquePrix } from './DialogueHistoriquePrix'
 import {
   requeteCategories,
   requeteProduits,
@@ -45,6 +46,7 @@ export function PageProduits({ recherche }: Readonly<{ recherche: RechercheProdu
   const categories = useQuery(requeteCategories)
   const produits = useQuery({ ...requeteProduits(filtres), placeholderData: keepPreviousData })
   const [categoriesOuvertes, setCategoriesOuvertes] = useState(false)
+  const [historique, setHistorique] = useState<ProduitResume | null>(null)
   const [confirmation, setConfirmation] = useState<string | null>(
     recherche.enregistre === undefined
       ? null
@@ -135,34 +137,51 @@ export function PageProduits({ recherche }: Readonly<{ recherche: RechercheProdu
       ),
     },
   ]
-  if (peutGerer) {
+  const voitHistorique = aLaPermission('ACTIVITE_CONSULTER')
+  // Un gérant ne modifie pas la carte, mais consulte l'historique des prix.
+  if (peutGerer || voitHistorique) {
     colonnes.push({
       cle: 'actions',
       entete: t('produits.colonnes.actions'),
-      rendu: (produit) => (
-        <div className="flex justify-end gap-2">
-          <Link
-            to="/gestion/produits/$produitId"
-            params={{ produitId: produit.id }}
-            aria-label={t('produits.modifierNomme', { nom: produit.nom })}
-            className={classesBouton('secondaire')}
-          >
-            <Pencil aria-hidden="true" size={18} />
-            <span className="hidden md:inline">{t('produits.modifier')}</span>
-          </Link>
-          <MenuActions
-            libelle={t('produits.plusDActions', { nom: produit.nom })}
-            actions={[
-              {
-                libelle: produit.actif ? t('produits.desactiver') : t('produits.reactiver'),
-                icone: Power,
-                ...(produit.actif ? { ton: 'danger' as const } : {}),
-                surChoisir: () => void basculer(produit),
-              },
-            ]}
-          />
-        </div>
-      ),
+      rendu: (produit) => {
+        const actions: ActionMenu[] = []
+        if (voitHistorique) {
+          actions.push({
+            libelle: t('produits.historiquePrix'),
+            icone: History,
+            surChoisir: () => {
+              setHistorique(produit)
+            },
+          })
+        }
+        if (peutGerer) {
+          actions.push({
+            libelle: produit.actif ? t('produits.desactiver') : t('produits.reactiver'),
+            icone: Power,
+            ...(produit.actif ? { ton: 'danger' as const } : {}),
+            surChoisir: () => void basculer(produit),
+          })
+        }
+        return (
+          <div className="flex justify-end gap-2">
+            {peutGerer && (
+              <Link
+                to="/gestion/produits/$produitId"
+                params={{ produitId: produit.id }}
+                aria-label={t('produits.modifierNomme', { nom: produit.nom })}
+                className={classesBouton('secondaire')}
+              >
+                <Pencil aria-hidden="true" size={18} />
+                <span className="hidden md:inline">{t('produits.modifier')}</span>
+              </Link>
+            )}
+            <MenuActions
+              libelle={t('produits.plusDActions', { nom: produit.nom })}
+              actions={actions}
+            />
+          </div>
+        )
+      },
     })
   }
 
@@ -319,6 +338,21 @@ export function PageProduits({ recherche }: Readonly<{ recherche: RechercheProdu
             <p className="m-0 text-legende text-attenue">{t('produits.note')}</p>
           </div>
         </div>
+      )}
+
+      {historique !== null && (
+        <DialogueHistoriquePrix
+          produitId={historique.id}
+          nom={historique.nom}
+          contexte={{
+            devise,
+            fuseauHoraire: moi?.entrepriseCourante?.fuseauHoraire ?? 'Africa/Lome',
+            etablissements: new Map(),
+          }}
+          surFermer={() => {
+            setHistorique(null)
+          }}
+        />
       )}
 
       {categoriesOuvertes && (

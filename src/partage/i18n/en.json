@@ -116,7 +116,8 @@
       "carte": "Menu",
       "produits": "Products",
       "taxes": "Taxes",
-      "parEtablissement": "By venue"
+      "parEtablissement": "By venue",
+      "activite": "Activity"
     },
     "tableauDeBord": {
       "titre": "Dashboard",
@@ -641,6 +642,14 @@
       "cree": "“{{nom}}” is added to the menu.",
       "modifie": "“{{nom}}” is saved.",
       "chargement": "Loading the product…"
+    },
+    "historiquePrix": "Price history",
+    "historique": {
+      "titre": "Price history of “{{nom}}”",
+      "phrase": "Base price and venue prices. Sales keep the price they were made at.",
+      "fermer": "Close",
+      "vide": "No price change recorded.",
+      "liste": "Price changes"
     }
   },
   "categories": {
@@ -728,6 +737,77 @@
       "note": "If the base price changes later, {{etablissement}} keeps this price. “Back to base price” removes it. The change is recorded in the activity, under your name.",
       "revenir": "Back to base price",
       "enregistrer": "Save the price"
+    }
+  },
+  "activite": {
+    "titre": "Activity",
+    "phrase": "The actions that matter: prices, taxes, menu, staff, tablets, approvals. Who, when, and what changed.",
+    "liste": "Activity",
+    "periode": "Period",
+    "periodes": {
+      "jour": "Today",
+      "semaine": "Last 7 days",
+      "mois": "Last 30 days"
+    },
+    "etablissement": "Venue",
+    "tous": "All",
+    "domaine": "Area",
+    "domaines": {
+      "CARTE": "Menu",
+      "PERSONNEL": "Staff",
+      "TABLETTES": "Tablets",
+      "CAISSE": "Till"
+    },
+    "critiquesSeulement": "Critical only",
+    "tout": "All",
+    "critique": "Critical",
+    "information": "Information",
+    "chargement": "Loading activity…",
+    "vide": {
+      "titre": "Nothing in this period",
+      "phrase": "No action matches these filters. Widen the period or show everything."
+    },
+    "equipeTonti": "Tonti team",
+    "touteLaCarte": "Whole menu",
+    "touteLEntreprise": "Whole business",
+    "aucune": "None",
+    "prixDeBase": "Base price",
+    "jusqua": "Until {{date}}",
+    "tauxInitial": "Rate: {{taux}}",
+    "roles": "Before: {{avant}}. After: {{apres}}.",
+    "roleA": "{{role}} at {{etablissement}}",
+    "autreEtablissement": "another venue",
+    "aucunRole": "no role",
+    "types": {
+      "TAXE_CREEE": "<b>{{auteur}}</b> created the <b>{{objet}}</b> tax",
+      "TAUX_TAXE_MODIFIE": "<b>{{auteur}}</b> changed the rate of <b>{{objet}}</b>",
+      "TAXE_DESACTIVEE": "<b>{{auteur}}</b> disabled the <b>{{objet}}</b> tax",
+      "TAXE_REACTIVEE": "<b>{{auteur}}</b> enabled the <b>{{objet}}</b> tax again",
+      "PRIX_MODIFIE": "<b>{{auteur}}</b> changed the base price of <b>{{objet}}</b>",
+      "TAXE_PRODUIT_MODIFIEE": "<b>{{auteur}}</b> changed the tax of <b>{{objet}}</b>",
+      "PRODUIT_DESACTIVE": "<b>{{auteur}}</b> disabled <b>{{objet}}</b>",
+      "PRODUIT_REACTIVE": "<b>{{auteur}}</b> put <b>{{objet}}</b> back on the menu",
+      "PRIX_ETABLISSEMENT_MODIFIE": "<b>{{auteur}}</b> changed the price of <b>{{objet}}</b> at {{etablissement}}",
+      "PRODUIT_RETIRE_ETABLISSEMENT": "<b>{{auteur}}</b> removed <b>{{objet}}</b> from the {{etablissement}} menu",
+      "PRODUIT_PROPOSE_ETABLISSEMENT": "<b>{{auteur}}</b> put <b>{{objet}}</b> back on the {{etablissement}} menu",
+      "RUPTURE_DECLAREE": "<b>{{auteur}}</b> marked <b>{{objet}}</b> sold out at {{etablissement}}",
+      "RUPTURE_LEVEE": "<b>{{auteur}}</b> put <b>{{objet}}</b> back on sale at {{etablissement}}",
+      "ROLES_MODIFIES": "<b>{{auteur}}</b> changed the roles of <b>{{objet}}</b>",
+      "PIN_REINITIALISE": "<b>{{auteur}}</b> reset the PIN of <b>{{objet}}</b>",
+      "EMPLOYE_DESACTIVE": "<b>{{auteur}}</b> disabled <b>{{objet}}</b>",
+      "EMPLOYE_REACTIVE": "<b>{{auteur}}</b> enabled <b>{{objet}}</b> again",
+      "TABLETTE_REVOQUEE": "<b>{{auteur}}</b> revoked the <b>{{objet}}</b> tablet",
+      "VALIDATION_GERANT_UTILISEE": "<b>{{auteur}}</b> got <b>{{validateur}}</b>’s approval to {{action}}"
+    },
+    "actions": {
+      "LIGNE_ANNULER_APRES_ENVOI": "cancel a sent line",
+      "TABLE_TRANSFERER": "transfer a table",
+      "REMISE_APPLIQUER": "apply a discount",
+      "REMISE_AU_DELA_PLAFOND": "go over the discount cap",
+      "ARTICLE_OFFRIR": "give an item for free",
+      "PAIEMENT_REMBOURSER": "refund a payment",
+      "CAISSE_MOUVEMENT": "make a till movement",
+      "autre": "a protected action"
     }
   }
 }

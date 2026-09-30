@@ -506,3 +506,35 @@ test('Kossi prend la caisse d’une nouvelle tablette et voit la carte de Bè Kp
   await capturer(tablette, '23-caisse-carte')
   await contexteTablette.close()
 })
+
+test('Tanti retrouve dans l’activité les changements de la journée et l’historique des prix', async ({
+  page,
+}) => {
+  await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
+  await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
+  const navigation = page.getByRole('navigation', { name: 'Navigation principale' })
+  await navigation.getByRole('link', { name: 'Activité' }).click()
+
+  const activite = page.getByRole('region', { name: 'Activité' })
+  await expect(activite).toContainText('a changé le prix de Flag 65 cl à Bè Kpota')
+  await expect(activite).toContainText('a changé le prix de base de Flag 65 cl')
+  await expect(activite).toContainText('a réinitialisé le PIN de Sena Gbeasor')
+  await expect(activite).not.toContainText('épuisé')
+  await page.getByRole('button', { name: 'Tout', exact: true }).click()
+  await expect(activite).toContainText('Afi M. a déclaré Flag 65 cl épuisé à Bè Kpota')
+  await expect(activite).toContainText('Équipe Tonti a créé la taxe TVA')
+  await capturer(page, '24-activite')
+
+  await navigation.getByRole('link', { name: 'Produits' }).click()
+  await page.getByRole('button', { name: 'Plus d’actions pour Flag 65 cl' }).click()
+  await page.getByRole('menuitem', { name: 'Historique des prix' }).click()
+  const historique = page.getByRole('dialog', { name: 'Historique des prix de « Flag 65 cl »' })
+  await expect(historique.getByRole('listitem')).toHaveCount(2)
+  await expect(historique).toContainText('Bè Kpota')
+  await capturer(page, '25-historique-prix')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await historique.getByRole('button', { name: 'Fermer' }).click()
+  await navigation.getByRole('link', { name: 'Activité' }).click()
+  await expect(activite).toContainText('Flag 65 cl')
+  await capturer(page, '24-activite-telephone')
+})
