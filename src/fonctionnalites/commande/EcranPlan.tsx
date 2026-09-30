@@ -2,7 +2,7 @@ import type { TFunction } from 'i18next'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { clsx } from 'clsx'
-import { Plus, RotateCw } from 'lucide-react'
+import { Plus, RotateCw, Wallet } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appelerCaisse } from '../../partage/api/appelerCaisse'
@@ -38,7 +38,10 @@ export function EcranPlan() {
   const { data: appareil } = useQuery(requeteAppareil)
   const devise = (appareil?.entreprise.devise ?? 'XOF') as Devise
   const fuseauHoraire = appareil?.etablissement.fuseauHoraire ?? 'Africa/Lome'
-  const peutCommander = useSessionCaisse()?.permissions.includes('COMMANDE_CREER') ?? false
+  const permissions = useSessionCaisse()?.permissions ?? []
+  const peutCommander = permissions.includes('COMMANDE_CREER')
+  const tientLaCaisse =
+    permissions.includes('PAIEMENT_ENCAISSER') || permissions.includes('CAISSE_FERMER')
   const plan = useQuery(requetePlan)
   const [salleId, setSalleId] = useState<string | null>(null)
   const [mesTables, setMesTables] = useState(false)
@@ -126,6 +129,15 @@ export function EcranPlan() {
             </button>
           )}
           <span className="flex-1" />
+          {tientLaCaisse && (
+            <Bouton
+              className="min-h-cible-caisse"
+              icone={Wallet}
+              onClick={() => void naviguer({ to: '/caisse/tiroir' })}
+            >
+              {t('tiroir.bouton')}
+            </Bouton>
+          )}
           {peutCommander && (
             <>
               <Bouton

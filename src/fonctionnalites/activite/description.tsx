@@ -97,6 +97,21 @@ export function detailActivite(
       return remise(evenement, t, montant)
     case 'CAISSE_OUVERTE':
       return t('activite.fond', { montant: montant(evenement.details.fond) })
+    case 'RETRAIT_CAISSE':
+    case 'DEPENSE_CAISSE':
+    case 'APPORT_CAISSE': {
+      const valeurs = {
+        montant: montant(evenement.details.montant),
+        motif: texte(evenement.details.motif),
+      }
+      const validateur = evenement.detailsNoms.validateurId
+      return validateur === undefined
+        ? t('activite.mouvement', valeurs)
+        : t('activite.mouvementValide', { ...valeurs, validateur })
+    }
+    case 'CLOTURE_CAISSE':
+    case 'ECART_CAISSE':
+      return cloture(evenement, t, montant)
     case 'REMISE_RETIREE':
       return t('activite.remiseRetiree', {
         montant: montant(evenement.details.montant),
@@ -195,6 +210,22 @@ function remise(
     return t(offert ? 'activite.offert' : 'activite.remise', valeurs)
   }
   return t(offert ? 'activite.offertValide' : 'activite.remiseValidee', { ...valeurs, validateur })
+}
+
+/** « Attendu 15 700 F, compté 15 000 F, écart −700 F : Monnaie rendue en trop » */
+function cloture(
+  evenement: EvenementActivite,
+  t: TFunction,
+  montant: (valeur: unknown) => string,
+): string {
+  const { attendu, compte, ecart, explication } = evenement.details
+  const valeurs = { attendu: montant(attendu), compte: montant(compte) }
+  if (typeof ecart !== 'number' || ecart === 0) return t('activite.cloture', valeurs)
+  return t('activite.clotureEcart', {
+    ...valeurs,
+    ecart: `${ecart > 0 ? '+' : '−'}${montant(Math.abs(ecart))}`,
+    explication: texte(explication),
+  })
 }
 
 /** « T4, n°42 » ou « n°43 ». */

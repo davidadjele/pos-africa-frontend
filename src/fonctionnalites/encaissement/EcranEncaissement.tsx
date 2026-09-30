@@ -106,8 +106,12 @@ export function EcranEncaissement({ commandeId }: Readonly<{ commandeId: string 
         />
         {caisse.data.ouverture === undefined ? (
           <OuvertureCaisse
+            key={caisse.data.dernierFond ?? 'sans-fond'}
             devise={devise}
             peutOuvrir={session?.permissions.includes('CAISSE_OUVRIR') ?? false}
+            {...(caisse.data.dernierFond === undefined
+              ? {}
+              : { dernierFond: caisse.data.dernierFond })}
             surOuverte={(ouverte) => {
               clientRequetes.setQueryData(requeteOuvertureCaisse.queryKey, ouverte)
             }}
@@ -552,17 +556,19 @@ function ClavierMontant({ surToucher }: Readonly<{ surToucher: (touche: string) 
   )
 }
 
-function OuvertureCaisse({
+export function OuvertureCaisse({
   devise,
   peutOuvrir,
+  dernierFond,
   surOuverte,
 }: Readonly<{
   devise: Devise
   peutOuvrir: boolean
+  dernierFond?: number
   surOuverte: (etat: EtatCaisse) => void
 }>) {
   const { t } = useTranslation()
-  const [fond, setFond] = useState('')
+  const [fond, setFond] = useState(dernierFond === undefined ? '' : String(dernierFond))
   const [enCours, setEnCours] = useState(false)
   const [erreur, setErreur] = useState<unknown>(null)
   const fondLu = lireMontant(fond, devise)
@@ -603,6 +609,11 @@ function OuvertureCaisse({
               setFond(evenement.target.value)
             }}
           />
+          {dernierFond !== undefined && (
+            <p className="m-0 text-legende text-attenue">
+              {t('encaissement.ouverture.dernierFond', { montant: courte(dernierFond) })}
+            </p>
+          )}
           <Bouton
             variante="principal"
             disabled={fondLu === null}

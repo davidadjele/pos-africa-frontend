@@ -1066,7 +1066,12 @@
       "REMISE_APPLIQUEE": "<b>{{auteur}}</b> gave a discount on <b>{{objet}}</b> at {{etablissement}}",
       "ARTICLE_OFFERT": "<b>{{auteur}}</b> offered <b>{{objet}}</b> at {{etablissement}}",
       "REMISE_RETIREE": "<b>{{auteur}}</b> removed the discount on <b>{{objet}}</b> at {{etablissement}}",
-      "CAISSE_OUVERTE": "<b>{{auteur}}</b> opened the till at {{etablissement}}"
+      "CAISSE_OUVERTE": "<b>{{auteur}}</b> opened the till at {{etablissement}}",
+      "RETRAIT_CAISSE": "<b>{{auteur}}</b> withdrew cash from the till at {{etablissement}}",
+      "DEPENSE_CAISSE": "<b>{{auteur}}</b> paid an expense in cash at {{etablissement}}",
+      "APPORT_CAISSE": "<b>{{auteur}}</b> added cash to the till at {{etablissement}}",
+      "CLOTURE_CAISSE": "<b>{{auteur}}</b> closed the till at {{etablissement}} (<b>{{objet}}</b>)",
+      "ECART_CAISSE": "<b>{{auteur}}</b> closed the till with a difference at {{etablissement}} (<b>{{objet}}</b>)"
     },
     "actions": {
       "LIGNE_ANNULER_APRES_ENVOI": "cancel items already sent",
@@ -1089,7 +1094,11 @@
     "offert": "{{quantite}} × free ({{montant}}), {{ou}}. Reason: {{motif}}.",
     "offertValide": "{{quantite}} × free ({{montant}}), {{ou}}. Reason: {{motif}}. Approved by {{validateur}}",
     "remiseRetiree": "−{{montant}} removed, {{ou}}",
-    "fond": "Float: {{montant}}"
+    "fond": "Float: {{montant}}",
+    "mouvement": "{{montant}}, reason: {{motif}}",
+    "mouvementValide": "{{montant}}, reason: {{motif}}. Approved by {{validateur}}",
+    "cloture": "Expected {{attendu}}, counted {{compte}}",
+    "clotureEcart": "Expected {{attendu}}, counted {{compte}}, difference {{ecart}}: {{explication}}"
   },
   "salles": {
     "titre": "{{etablissement}} areas and tables",
@@ -1208,7 +1217,8 @@
       "phrase": "Count the float before the first payment: it is used to check the till at closing.",
       "fond": "Float",
       "ouvrir": "Open the till with {{montant}}",
-      "sansDroit": "A cashier or a manager opens the till with their code."
+      "sansDroit": "A cashier or a manager opens the till with their code.",
+      "dernierFond": "At the last closing, {{montant}} was left as float."
     },
     "referenceCourte": "ref. {{reference}}",
     "modesEn": {
@@ -1220,6 +1230,103 @@
       "pourValider": "To confirm: {{liste}}.",
       "operateur": "choose the operator",
       "reference": "copy the reference"
+    }
+  },
+  "tiroir": {
+    "bouton": "Till",
+    "titre": "Till “{{caisse}}”",
+    "ouverte": "Opened at {{heure}} by {{nom}}, float {{fond}}",
+    "chargement": "Loading the till…",
+    "retourPlan": "Floor plan",
+    "mouvement": "Cash movement",
+    "cloturer": "Close the till",
+    "ventes": {
+      "titre": "Till sales",
+      "notes_one": "{{count}} tab paid",
+      "notes_other": "{{count}} tabs paid",
+      "total": "Total taken"
+    },
+    "mouvements": {
+      "titre": "Cash movements",
+      "aucun": "No movement since opening.",
+      "par": "{{heure}}, {{nom}}",
+      "valide": "{{heure}}, {{nom}}, approved by {{validateur}}"
+    },
+    "types": {
+      "RETRAIT": "Withdrawal",
+      "DEPENSE": "Expense",
+      "APPORT": "Top-up"
+    },
+    "aides": {
+      "RETRAIT": "To the safe, the owner",
+      "DEPENSE": "Purchase paid in cash",
+      "APPORT": "Change added to the drawer"
+    },
+    "especes": {
+      "titre": "Cash in the drawer",
+      "fond": "Float",
+      "recues": "Cash received",
+      "rendues": "Change given",
+      "apports": "Top-ups",
+      "retraits": "Withdrawals",
+      "depenses": "Expenses",
+      "attendu": "Expected",
+      "reserve": "The expected cash is shown to managers only: at closing, the drawer is counted before seeing what is expected."
+    },
+    "notesOuvertes_one": "{{count}} tab still open at this location.",
+    "notesOuvertes_other": "{{count}} tabs still open at this location.",
+    "dialogue": {
+      "titre": "Cash movement",
+      "phrase": "Cash goes in or out of the drawer without a sale. It counts in the expected cash at closing.",
+      "type": "Movement type",
+      "montant": "Amount",
+      "motif": "Reason",
+      "sortir": "Take {{montant}} out of the drawer",
+      "ajouter": "Add {{montant}} to the drawer",
+      "valider": "Confirm",
+      "validationTitre": "{{type}} of {{montant}}?",
+      "validationContexte": "Till “{{caisse}}”, requested by {{demandeur}}. Reason: {{motif}}."
+    }
+  },
+  "cloture": {
+    "titre": "Close the till “{{caisse}}”",
+    "etapes": "1. Count the cash, 2. See the difference, 3. Close",
+    "billets": "Notes",
+    "pieces": "Coins",
+    "nombre": "Number of {{nature}} of {{valeur}}",
+    "billet": "notes",
+    "piece": "coins",
+    "moins": "One less: {{valeur}}",
+    "plus": "One more: {{valeur}}",
+    "total": "Total counted",
+    "compte": "Cash counted",
+    "aveugle": "Count the whole drawer, float included. The expected cash appears once the count is confirmed: count what you have, not what you should have.",
+    "valider": "Confirm the count",
+    "attendu": "Expected",
+    "juste": "Till balanced",
+    "manque": "Short",
+    "surplus": "Over",
+    "explication": "Explanation of the difference",
+    "explicationRequise": "Explain the difference before closing.",
+    "fondLaisse": "Float left for the next opening",
+    "recompter": "Count again",
+    "cloturer": "Close the till",
+    "z": {
+      "badge": "Till closed",
+      "titre": "Z report #{{numero}}",
+      "periode": "From {{ouverture}} to {{cloture}}, closed by {{nom}}",
+      "dontMode": "of which {{mode}}",
+      "remises": "Discounts and free items",
+      "annulations": "Items cancelled ({{nombre}})",
+      "tva": "VAT collected",
+      "attendu": "Expected cash",
+      "compte": "Cash counted",
+      "ecart": "Difference",
+      "fondLaisse": "Float left",
+      "fige": "Frozen: it will not change. History comes with reports, printing with receipts.",
+      "terminer": "Done",
+      "ventes_one": "Sales collected ({{count}} bill)",
+      "ventes_other": "Sales collected ({{count}} bills)"
     }
   }
 }

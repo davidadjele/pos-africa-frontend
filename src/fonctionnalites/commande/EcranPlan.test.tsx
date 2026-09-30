@@ -314,6 +314,31 @@ describe('EcranPlan', () => {
     expect(screen.queryByRole('button', { name: /T1, libre/ })).not.toBeInTheDocument()
   })
 
+  it('mène à la caisse de la tablette qui encaisse ou clôture, pas le serveur', async () => {
+    planServi()
+    serveurMsw.use(
+      http.get(`${API}/caisse/situation`, () =>
+        HttpResponse.json({ statut: 409, code: 'CAISSE_FERMEE', message: 'x' }, { status: 409 }),
+      ),
+      http.get(`${API}/caisse/ouverture`, () => HttpResponse.json({ operateurs: [] })),
+    )
+    caisseOuverte('/caisse', { permissions: ['COMMANDE_CREER', 'PAIEMENT_ENCAISSER'] })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Caisse' }))
+
+    expect(
+      await screen.findByRole('heading', { name: 'La caisse de cette tablette n’est pas ouverte' }),
+    ).toBeVisible()
+  })
+
+  it('ne montre pas la caisse au serveur', async () => {
+    planServi()
+    caisseOuverte('/caisse', { permissions: ['COMMANDE_CREER'] })
+
+    await screen.findByRole('list', { name: 'Tables' })
+    expect(screen.queryByRole('button', { name: 'Caisse' })).not.toBeInTheDocument()
+  })
+
   it('garde la vente au comptoir quand l’établissement n’a pas de table', async () => {
     planServi({ salles: [], sansTable: [], enService: [] })
     caisseOuverte('/caisse')

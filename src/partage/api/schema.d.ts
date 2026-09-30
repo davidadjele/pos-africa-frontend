@@ -319,6 +319,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/caisse/cloture": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Clôturer la caisse de la tablette
+         * @description Un écart doit être expliqué. Le rapport Z est figé ; la tablette devra rouvrir une caisse.
+         */
+        post: operations["cloturer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/cloture/comptage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Comptage des espèces : révèle l'attendu et l'écart, sans clôturer */
+        post: operations["comptage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/caisse/commandes": {
         parameters: {
             query?: never;
@@ -721,6 +758,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/caisse/mouvements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retrait, dépense ou apport d'espèces
+         * @description Sans CAISSE_MOUVEMENT : VALIDATION_REQUISE (403), puis validation d'un gérant (objet : la caisse ouverte).
+         */
+        post: operations["mouvement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/caisse/ouverture": {
         parameters: {
             query?: never;
@@ -770,6 +827,26 @@ export interface paths {
          * @description Appelé tant que la caisse sert, avant l'expiration du jeton (15 minutes). NON_AUTHENTIFIE (401) si la tablette a été révoquée, le PIN réinitialisé ou l'employé désactivé : retour à « Qui prend la caisse ? ».
          */
         post: operations["renouveler"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/situation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Situation de la caisse (rapport X)
+         * @description Espèces attendues seulement avec RAPPORT_FINANCIER. Erreur : CAISSE_FERMEE (409).
+         */
+        get: operations["situation"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1825,11 +1902,22 @@ export interface components {
             /** Format: uuid */
             utilisateurId: string;
         };
+        DemandeCloture: {
+            /** Format: int64 */
+            especesComptees: number;
+            explication?: string;
+            /** Format: int64 */
+            fondLaisse: number;
+        };
         DemandeCodeAppairage: {
             /** Format: uuid */
             etablissementId: string;
             /** @example Caisse 1, bar */
             nom: string;
+        };
+        DemandeComptage: {
+            /** Format: int64 */
+            especesComptees: number;
         };
         DemandeConnexion: {
             /** @example 90 11 22 33 */
@@ -1917,6 +2005,16 @@ export interface components {
             /** Format: int64 */
             version: number;
             ville?: string;
+        };
+        DemandeMouvement: {
+            /** Format: int64 */
+            montant: number;
+            /** @example Glace, 2 sacs */
+            motif: string;
+            /** @enum {string} */
+            type: "RETRAIT" | "DEPENSE" | "APPORT";
+            /** Format: uuid */
+            validationId?: string;
         };
         DemandeOffert: {
             detail?: string;
@@ -2191,6 +2289,22 @@ export interface components {
             /** @enum {string} */
             statut: "ACTIVE" | "SUSPENDUE";
         };
+        EspecesCaisse: {
+            /** Format: int64 */
+            apports: number;
+            /** Format: int64 */
+            attendu: number;
+            /** Format: int64 */
+            depenses: number;
+            /** Format: int64 */
+            fond: number;
+            /** Format: int64 */
+            recues: number;
+            /** Format: int64 */
+            rendues: number;
+            /** Format: int64 */
+            retraits: number;
+        };
         Etablissement: {
             fuseauHoraire: string;
             /** Format: uuid */
@@ -2213,6 +2327,8 @@ export interface components {
             ville?: string;
         };
         EtatCaisse: {
+            /** Format: int64 */
+            dernierFond?: number;
             operateurs: components["schemas"]["OperateurMobileMoney"][];
             ouverture?: components["schemas"]["OuvertureResume"];
         };
@@ -2253,7 +2369,7 @@ export interface components {
             /** Format: date-time */
             survenuLe: string;
             /** @enum {string} */
-            type: "TAXE_CREEE" | "TAUX_TAXE_MODIFIE" | "TAXE_DESACTIVEE" | "TAXE_REACTIVEE" | "PRIX_MODIFIE" | "TAXE_PRODUIT_MODIFIEE" | "PRODUIT_DESACTIVE" | "PRODUIT_REACTIVE" | "PRIX_ETABLISSEMENT_MODIFIE" | "PRODUIT_RETIRE_ETABLISSEMENT" | "PRODUIT_PROPOSE_ETABLISSEMENT" | "RUPTURE_DECLAREE" | "RUPTURE_LEVEE" | "ROLES_MODIFIES" | "PIN_REINITIALISE" | "EMPLOYE_DESACTIVE" | "EMPLOYE_REACTIVE" | "TABLETTE_REVOQUEE" | "VALIDATION_GERANT_UTILISEE" | "LIGNE_ANNULEE" | "NOTE_ANNULEE" | "TABLE_TRANSFEREE" | "SERVEUR_CHANGE" | "REMISE_APPLIQUEE" | "ARTICLE_OFFERT" | "REMISE_RETIREE" | "CAISSE_OUVERTE";
+            type: "TAXE_CREEE" | "TAUX_TAXE_MODIFIE" | "TAXE_DESACTIVEE" | "TAXE_REACTIVEE" | "PRIX_MODIFIE" | "TAXE_PRODUIT_MODIFIEE" | "PRODUIT_DESACTIVE" | "PRODUIT_REACTIVE" | "PRIX_ETABLISSEMENT_MODIFIE" | "PRODUIT_RETIRE_ETABLISSEMENT" | "PRODUIT_PROPOSE_ETABLISSEMENT" | "RUPTURE_DECLAREE" | "RUPTURE_LEVEE" | "ROLES_MODIFIES" | "PIN_REINITIALISE" | "EMPLOYE_DESACTIVE" | "EMPLOYE_REACTIVE" | "TABLETTE_REVOQUEE" | "VALIDATION_GERANT_UTILISEE" | "LIGNE_ANNULEE" | "NOTE_ANNULEE" | "TABLE_TRANSFEREE" | "SERVEUR_CHANGE" | "REMISE_APPLIQUEE" | "ARTICLE_OFFERT" | "REMISE_RETIREE" | "CAISSE_OUVERTE" | "RETRAIT_CAISSE" | "DEPENSE_CAISSE" | "APPORT_CAISSE" | "CLOTURE_CAISSE" | "ECART_CAISSE";
         };
         LigneCarteEtablissement: {
             categorie: components["schemas"]["CategorieCarte"];
@@ -2315,6 +2431,19 @@ export interface components {
             statut: "BROUILLON" | "ENVOYEE" | "ANNULEE";
             /** Format: int32 */
             tauxRemise?: number;
+        };
+        MouvementResume: {
+            approuvePar?: string;
+            /** Format: date-time */
+            effectueLe: string;
+            effectuePar: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: int64 */
+            montant: number;
+            motif: string;
+            /** @enum {string} */
+            type: "RETRAIT" | "DEPENSE" | "APPORT";
         };
         NoteEnService: {
             /** Format: int32 */
@@ -2472,6 +2601,33 @@ export interface components {
             /** Format: uuid */
             utilisateurId: string;
         };
+        RapportZ: {
+            /** Format: int64 */
+            annulations: number;
+            /** Format: int32 */
+            articlesAnnules: number;
+            /** Format: int64 */
+            attendu: number;
+            /** Format: date-time */
+            clotureeLe: string;
+            clotureePar: string;
+            /** Format: int64 */
+            compte: number;
+            /** Format: int64 */
+            ecart: number;
+            explication?: string;
+            /** Format: int64 */
+            fondLaisse: number;
+            /** Format: int32 */
+            numero: number;
+            /** Format: date-time */
+            ouverteLe: string;
+            /** Format: int64 */
+            remises: number;
+            /** Format: int64 */
+            tva: number;
+            ventes: components["schemas"]["VentesCaisse"];
+        };
         RemiseNote: {
             detail?: string;
             /** Format: int64 */
@@ -2517,6 +2673,16 @@ export interface components {
             entrepriseCourante?: string;
             entreprises: components["schemas"]["EntrepriseAccessible"][];
             jetonAcces?: string;
+        };
+        ResultatComptage: {
+            /** Format: int64 */
+            attendu: number;
+            /** Format: int64 */
+            compte: number;
+            /** Format: int64 */
+            ecart: number;
+            /** Format: int32 */
+            notesOuvertes: number;
         };
         ResultatEmploye: {
             compteExistant: boolean;
@@ -2575,6 +2741,14 @@ export interface components {
             role: string;
             /** Format: uuid */
             utilisateurId: string;
+        };
+        SituationCaisse: {
+            especes?: components["schemas"]["EspecesCaisse"];
+            mouvements: components["schemas"]["MouvementResume"][];
+            /** Format: int32 */
+            notesOuvertes: number;
+            ouverture: components["schemas"]["OuvertureResume"];
+            ventes: components["schemas"]["VentesCaisse"];
         };
         StatutCode: {
             /** Format: date-time */
@@ -2639,6 +2813,18 @@ export interface components {
             expireLe: string;
             /** Format: uuid */
             id: string;
+        };
+        VentesCaisse: {
+            /** Format: int64 */
+            carte: number;
+            /** Format: int64 */
+            especes: number;
+            /** Format: int64 */
+            mobileMoney: number;
+            /** Format: int32 */
+            notes: number;
+            /** Format: int64 */
+            total: number;
         };
     };
     responses: never;
@@ -3182,6 +3368,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LigneCarteEtablissement"][];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    cloturer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeCloture"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RapportZ"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    comptage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeComptage"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResultatComptage"];
                 };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
@@ -3962,6 +4214,39 @@ export interface operations {
             };
         };
     };
+    mouvement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeMouvement"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SituationCaisse"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
     etat: {
         parameters: {
             query?: never;
@@ -4069,6 +4354,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReponseJetonCaisse"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    situation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SituationCaisse"];
                 };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */

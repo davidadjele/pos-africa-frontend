@@ -191,4 +191,32 @@ describe('description de l’activité', () => {
       ),
     ).toBe(`Fond : 20${FINE}000${INSEC}F`)
   })
+
+  it('détaille les mouvements d’espèces et les clôtures, avec leur écart', () => {
+    const detail = (
+      type: EvenementActivite['type'],
+      details: Record<string, unknown>,
+      detailsNoms = {},
+    ) => detailActivite(evenement({ type, domaine: 'CAISSE', details, detailsNoms }), t, CONTEXTE)
+
+    expect(detail('RETRAIT_CAISSE', { montant: 10_000, motif: 'Vers le coffre' })).toBe(
+      `10${FINE}000${INSEC}F, motif : Vers le coffre`,
+    )
+    expect(
+      detail('DEPENSE_CAISSE', { montant: 2500, motif: 'Glace' }, { validateurId: 'Afi M.' }),
+    ).toBe(`2${FINE}500${INSEC}F, motif : Glace. Validé par Afi M.`)
+    expect(detail('CLOTURE_CAISSE', { attendu: 15_700, compte: 15_700, ecart: 0 })).toBe(
+      `Attendu 15${FINE}700${INSEC}F, compté 15${FINE}700${INSEC}F`,
+    )
+    expect(
+      detail('ECART_CAISSE', {
+        attendu: 15_700,
+        compte: 15_000,
+        ecart: -700,
+        explication: 'Monnaie rendue en trop',
+      }),
+    ).toBe(
+      `Attendu 15${FINE}700${INSEC}F, compté 15${FINE}000${INSEC}F, écart −700${INSEC}F : Monnaie rendue en trop`,
+    )
+  })
 })

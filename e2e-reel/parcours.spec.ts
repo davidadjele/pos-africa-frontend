@@ -13,7 +13,12 @@ const DOSSIER_CAPTURES = process.env.DOSSIER_CAPTURES ?? 'test-results/captures-
 mkdirSync(DOSSIER_CAPTURES, { recursive: true })
 
 async function capturer(page: Page, nom: string) {
-  await page.screenshot({ path: `${DOSSIER_CAPTURES}/${nom}.png`, fullPage: true })
+  // Transitions terminées : un bouton qui vient de s'activer apparaît avec sa couleur finale.
+  await page.screenshot({
+    path: `${DOSSIER_CAPTURES}/${nom}.png`,
+    fullPage: true,
+    animations: 'disabled',
+  })
 }
 
 async function seConnecter(page: Page, identifiant: string, motDePasse: string) {
@@ -812,6 +817,63 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await capturer(tablette, '46-plan-service-charge-portrait')
   await tablette.setViewportSize({ width: 1280, height: 800 })
 
+  // Fin de service : la gérante sort 10 000 F vers le coffre, puis clôture en comptant à l'aveugle.
+  await tablette.getByRole('button', { name: 'Caisse', exact: true }).click()
+  const ventes = tablette.getByRole('region', { name: 'Ventes de la caisse' })
+  await expect(ventes).toContainText('1 note encaissée')
+  await expect(ventes).toContainText('Total encaissé4 500 F')
+  const especes = tablette.getByRole('region', { name: 'Espèces dans le tiroir' })
+  await expect(especes).toContainText('Attendu22 500 F')
+  await tablette.getByRole('button', { name: /Mouvement de caisse/ }).click()
+  const mouvement = tablette.getByRole('dialog', { name: 'Mouvement de caisse' })
+  await mouvement.getByRole('radio', { name: /Retrait/ }).click()
+  await mouvement.getByRole('textbox', { name: /^Montant/ }).fill('10000')
+  await mouvement.getByRole('textbox', { name: /^Motif/ }).fill('Vers le coffre')
+  await capturer(tablette, '47-mouvement-de-caisse')
+  await mouvement.getByRole('button', { name: /^Sortir 10\s000\sF du tiroir/ }).click()
+  await expect(ventes).toContainText('RetraitVers le coffre')
+  await expect(especes).toContainText('Attendu12 500 F')
+  await capturer(tablette, '48-caisse-de-la-tablette')
+  await tablette.setViewportSize({ width: 390, height: 844 })
+  await capturer(tablette, '48-caisse-de-la-tablette-telephone')
+  await tablette.setViewportSize({ width: 1280, height: 800 })
+
+  await tablette.getByRole('button', { name: 'Clôturer la caisse' }).click()
+  await expect(tablette.getByText(/Attendu/)).toHaveCount(0)
+  await tablette.getByRole('textbox', { name: /^Nombre de billets de 10\s000\sF$/ }).fill('1')
+  await tablette.getByRole('button', { name: /^Un de plus : 2\s000\sF$/ }).click()
+  await expect(tablette.getByRole('status', { name: 'Espèces comptées' })).toContainText('12 000 F')
+  await capturer(tablette, '49-cloture-comptage')
+  await tablette.setViewportSize({ width: 390, height: 844 })
+  await capturer(tablette, '49-cloture-comptage-telephone')
+  await tablette.setViewportSize({ width: 1280, height: 800 })
+  await tablette.getByRole('button', { name: 'Valider le comptage' }).click()
+  const ecart = tablette.getByRole('region', { name: 'Écart' })
+  await expect(ecart).toContainText('Manque−500 F')
+  await expect(tablette.getByRole('button', { name: 'Clôturer la caisse' })).toBeDisabled()
+  await tablette
+    .getByRole('textbox', { name: /^Explication de l’écart/ })
+    .fill('Monnaie rendue en trop')
+  await expect(tablette.getByRole('button', { name: 'Clôturer la caisse' })).toBeEnabled()
+  await capturer(tablette, '50-cloture-ecart')
+  await tablette.getByRole('button', { name: 'Clôturer la caisse' }).click()
+  const z = tablette.getByRole('region', { name: 'Rapport Z n°1' })
+  await expect(z).toContainText('Écart−500')
+  await capturer(tablette, '51-rapport-z')
+  await tablette.setViewportSize({ width: 390, height: 844 })
+  await capturer(tablette, '51-rapport-z-telephone')
+  await tablette.setViewportSize({ width: 1280, height: 800 })
+  await z.getByRole('button', { name: 'Terminer' }).click()
+
+  // Caisse fermée : la réouverture propose le fond laissé à la clôture.
+  await tablette.getByRole('button', { name: 'Caisse', exact: true }).click()
+  await expect(tablette.getByLabel(/^Fond de caisse/)).toHaveValue('20000')
+  await expect(
+    tablette.getByText(/À la dernière clôture, 20\s000\sF ont été laissés en fond/),
+  ).toBeVisible()
+  await capturer(tablette, '52-caisse-a-rouvrir')
+  await tablette.getByRole('button', { name: 'Plan de salle' }).click()
+
   await tablette.setViewportSize({ width: 390, height: 844 })
   await capturer(tablette, '33-plan-de-salle-telephone')
   await contexteTablette.close()
@@ -825,5 +887,10 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await expect(activite).toContainText('Motif : Le client est parti. Validé par Afi M.')
   await expect(activite).toContainText('Kossi A. a accordé une remise sur Poulet braisé à Bè Kpota')
   await expect(activite).toContainText('Motif : Réclamation. Validé par Afi M.')
+  await expect(activite).toContainText('Afi M. a retiré des espèces de la caisse à Bè Kpota')
+  await expect(activite).toContainText(
+    'Afi M. a clôturé la caisse avec un écart à Bè Kpota (Z n°1)',
+  )
+  await expect(activite).toContainText(': Monnaie rendue en trop')
   await capturer(page, '40-activite-caisse')
 })
