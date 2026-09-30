@@ -60,7 +60,15 @@ const Z: RapportZ = {
   annulations: 0,
   articlesAnnules: 0,
   tva: 1235,
-  attendu: 15_700,
+  especes: {
+    fond: 20_000,
+    recues: 10_000,
+    rendues: 4300,
+    apports: 0,
+    retraits: 10_000,
+    depenses: 0,
+    attendu: 15_700,
+  },
   compte: 15_000,
   ecart: -700,
   explication: 'Monnaie rendue en trop',
@@ -207,6 +215,12 @@ describe('Caisse de la tablette', () => {
 
     const z = await screen.findByRole('region', { name: 'Rapport Z n°12' })
     expect(z).toHaveTextContent('Écart−700')
+    // L'attendu s'explique sur le Z lui-même : fond, espèces reçues et rendues, mouvements.
+    expect(z).toHaveTextContent('Fond de caisse20 000')
+    expect(z).toHaveTextContent('Monnaie rendue−4 300')
+    expect(z).toHaveTextContent('Retraits−10 000')
+    expect(z).toHaveTextContent('Dépenses0')
+    expect(z).toHaveTextContent('Espèces attendues15 700')
     expect(clotures).toEqual([
       { especesComptees: 15_000, fondLaisse: 20_000, explication: 'Monnaie rendue en trop' },
     ])

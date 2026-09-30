@@ -9,6 +9,7 @@ import { ErreurApi } from '../../partage/api/ErreurApi'
 import type {
   DemandeCloture,
   DemandeMouvement,
+  EspecesCaisse,
   MouvementResume,
   RapportZ,
   ResultatComptage,
@@ -218,27 +219,7 @@ export function EcranTiroir() {
             className="flex shrink-0 flex-col gap-1 rounded-moyen border border-trait bg-surface p-5 lg:w-ticket-largeur"
           >
             <h2 className="m-0 text-titre-carte text-encre">{t('tiroir.especes.titre')}</h2>
-            <Montant libelle={t('tiroir.especes.fond')} valeur={nombre(especes.fond)} />
-            <Montant
-              libelle={t('tiroir.especes.recues')}
-              valeur={signe('+', especes.recues, nombre)}
-            />
-            <Montant
-              libelle={t('tiroir.especes.rendues')}
-              valeur={signe('−', especes.rendues, nombre)}
-            />
-            <Montant
-              libelle={t('tiroir.especes.apports')}
-              valeur={signe('+', especes.apports, nombre)}
-            />
-            <Montant
-              libelle={t('tiroir.especes.retraits')}
-              valeur={signe('−', especes.retraits, nombre)}
-            />
-            <Montant
-              libelle={t('tiroir.especes.depenses')}
-              valeur={signe('−', especes.depenses, nombre)}
-            />
+            <DetailEspeces especes={especes} nombre={nombre} />
             <span className="mt-1 flex items-baseline justify-between border-t border-encre pt-2">
               <span className="text-corps-fort text-encre">{t('tiroir.especes.attendu')}</span>
               <span className="chiffres text-montant-total text-encre">
@@ -270,6 +251,30 @@ export function EcranTiroir() {
 /** « +5 000 », « −2 500 », mais « 0 » tout court. */
 function signe(prefixe: '+' | '−', valeur: number, nombre: (valeur: number) => string): string {
   return valeur === 0 ? nombre(0) : `${prefixe}${nombre(valeur)}`
+}
+
+/** D'où vient l'attendu : le même détail sur l'écran de la caisse et sur le rapport Z. */
+function DetailEspeces({
+  especes,
+  nombre,
+}: Readonly<{ especes: EspecesCaisse; nombre: (valeur: number) => string }>) {
+  const { t } = useTranslation()
+  return (
+    <>
+      <Montant libelle={t('tiroir.especes.fond')} valeur={nombre(especes.fond)} />
+      <Montant libelle={t('tiroir.especes.recues')} valeur={signe('+', especes.recues, nombre)} />
+      <Montant libelle={t('tiroir.especes.rendues')} valeur={signe('−', especes.rendues, nombre)} />
+      <Montant libelle={t('tiroir.especes.apports')} valeur={signe('+', especes.apports, nombre)} />
+      <Montant
+        libelle={t('tiroir.especes.retraits')}
+        valeur={signe('−', especes.retraits, nombre)}
+      />
+      <Montant
+        libelle={t('tiroir.especes.depenses')}
+        valeur={signe('−', especes.depenses, nombre)}
+      />
+    </>
+  )
 }
 
 function Montant({ libelle, valeur }: Readonly<{ libelle: string; valeur: string }>) {
@@ -810,7 +815,10 @@ function RapportDeCloture({
         <Montant libelle={t('cloture.z.tva')} valeur={nombre(rapport.tva)} />
       </div>
       <div className="border-t border-trait pt-2">
-        <Montant libelle={t('cloture.z.attendu')} valeur={nombre(rapport.attendu)} />
+        <DetailEspeces especes={rapport.especes} nombre={nombre} />
+      </div>
+      <div className="border-t border-encre pt-2">
+        <Montant libelle={t('cloture.z.attendu')} valeur={nombre(rapport.especes.attendu)} />
         <Montant libelle={t('cloture.z.compte')} valeur={nombre(rapport.compte)} />
         <Montant
           libelle={t('cloture.z.ecart')}

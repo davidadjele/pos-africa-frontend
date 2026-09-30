@@ -2606,8 +2606,6 @@ export interface components {
             annulations: number;
             /** Format: int32 */
             articlesAnnules: number;
-            /** Format: int64 */
-            attendu: number;
             /** Format: date-time */
             clotureeLe: string;
             clotureePar: string;
@@ -2615,6 +2613,7 @@ export interface components {
             compte: number;
             /** Format: int64 */
             ecart: number;
+            especes: components["schemas"]["EspecesCaisse"];
             explication?: string;
             /** Format: int64 */
             fondLaisse: number;

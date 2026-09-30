@@ -859,6 +859,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await tablette.getByRole('button', { name: 'Clôturer la caisse' }).click()
   const z = tablette.getByRole('region', { name: 'Rapport Z n°1' })
   await expect(z).toContainText('Écart−500')
+  await expect(z).toContainText('Retraits−10 000')
   await capturer(tablette, '51-rapport-z')
   await tablette.setViewportSize({ width: 390, height: 844 })
   await capturer(tablette, '51-rapport-z-telephone')
