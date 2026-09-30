@@ -133,6 +133,57 @@ describe('PageSalles', () => {
     })
   })
 
+  it('signale avant l’envoi les noms de tables déjà pris et propose un nom libre', async () => {
+    const envois = backendSimule()
+    await ouvrirSalles()
+
+    await userEvent.click(screen.getByRole('tab', { name: /Bar/ }))
+    await userEvent.click(screen.getByRole('button', { name: 'Ajouter des tables' }))
+    const dialogue = await screen.findByRole('dialog', { name: 'Ajouter des tables à « Bar »' })
+    const premier = within(dialogue).getByLabelText(/^Premier nom/)
+    await userEvent.clear(premier)
+    await userEvent.type(premier, 'T1')
+    await userEvent.click(within(dialogue).getByRole('button', { name: 'Ajouter 4 tables' }))
+
+    expect(premier).toHaveAccessibleDescription(
+      'T1, T2, T3 existent déjà dans Bè Kpota. Essayez T4.',
+    )
+    expect(within(dialogue).queryByRole('alert')).not.toBeInTheDocument()
+    expect(envois).toEqual([])
+  })
+
+  it('place sous le champ le refus du serveur pour un nom pris entre-temps', async () => {
+    backendSimule()
+    serveurMsw.use(
+      http.post(`${API}/salles/:id/tables/lot`, () =>
+        HttpResponse.json(
+          {
+            statut: 400,
+            code: 'REQUETE_INVALIDE',
+            message: 'x',
+            champs: [
+              { champ: 'premierNom', message: 'Déjà utilisés dans cet établissement : T4.' },
+            ],
+          },
+          { status: 400 },
+        ),
+      ),
+    )
+    await ouvrirSalles()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Ajouter des tables' }))
+    const dialogue = await screen.findByRole('dialog', {
+      name: 'Ajouter des tables à « Terrasse »',
+    })
+    await userEvent.click(within(dialogue).getByRole('button', { name: 'Ajouter 4 tables' }))
+
+    const premier = within(dialogue).getByLabelText(/^Premier nom/)
+    await waitFor(() => {
+      expect(premier).toHaveAccessibleDescription('Déjà utilisés dans cet établissement : T4.')
+    })
+    expect(within(dialogue).queryByRole('alert')).not.toBeInTheDocument()
+  })
+
   it('modifie une table, puis réordonne les salles', async () => {
     const envois = backendSimule()
     await ouvrirSalles()

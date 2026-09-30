@@ -13,6 +13,7 @@ import type {
 } from '../../partage/api/contrat'
 import { ErreurApi } from '../../partage/api/ErreurApi'
 import { useSession } from '../../partage/auth/useSession'
+import { messageDuChamp, toutSousLesChamps } from '../../partage/formulaires/erreursServeur'
 import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
 import { BadgeStatut } from '../../partage/ui/BadgeStatut'
 import { Bouton } from '../../partage/ui/Bouton'
@@ -395,6 +396,7 @@ export function PageSalles() {
         <DialogueTablesEnLot
           salle={dialogue.salle}
           nomsExistants={liste.flatMap((candidate) => candidate.tables.map((table) => table.nom))}
+          etablissement={etablissement?.nom ?? ''}
           surFermer={() => {
             setDialogue(null)
           }}
@@ -493,12 +495,12 @@ function DialogueSalle({
         obligatoire
         maxLength={40}
         value={nom}
-        erreur={erreurNom}
+        erreur={erreurNom ?? messageDuChamp(erreur, 'nom')}
         onChange={(evenement) => {
           setNom(evenement.target.value)
         }}
       />
-      {erreur !== null && <AlerteErreur erreur={erreur} />}
+      {erreur !== null && !toutSousLesChamps(erreur, ['nom']) && <AlerteErreur erreur={erreur} />}
     </Dialogue>
   )
 }
@@ -506,11 +508,13 @@ function DialogueSalle({
 function DialogueTablesEnLot({
   salle,
   nomsExistants,
+  etablissement,
   surFermer,
   surEnregistre,
 }: Readonly<{
   salle: SalleResume
   nomsExistants: string[]
+  etablissement: string
   surFermer: () => void
   surEnregistre: (message: string) => void
 }>) {
@@ -519,6 +523,7 @@ function DialogueTablesEnLot({
   const [premierNom, setPremierNom] = useState(suivantDe(nomsExistants))
   const [places, setPlaces] = useState('4')
   const [invalide, setInvalide] = useState(false)
+  const [doublons, setDoublons] = useState<string | undefined>(undefined)
   const { enCours, erreur, envoyer } = useEnvoi(surEnregistre)
   const nombreLu = Number(nombre)
   const placesLues = Number(places)
@@ -536,6 +541,23 @@ function DialogueTablesEnLot({
       setInvalide(true)
       return
     }
+    // Les noms de l'établissement sont connus : le doublon se dit avant l'envoi, avec un nom libre à essayer.
+    const existants = new Set(nomsExistants.map((nom) => nom.toLowerCase()))
+    const pris = nomsDeTables(premierNom.trim(), nombreLu).filter((nom) =>
+      existants.has(nom.toLowerCase()),
+    )
+    if (pris.length > 0) {
+      setDoublons(
+        t('salles.lot.dejaPris', {
+          count: pris.length,
+          noms: pris.join(', '),
+          etablissement,
+          suggestion: suivantDe(nomsExistants),
+        }),
+      )
+      return
+    }
+    setDoublons(undefined)
     const corps: DemandeTablesEnLot = {
       nombre: nombreLu,
       premierNom: premierNom.trim(),
@@ -576,8 +598,10 @@ function DialogueTablesEnLot({
           obligatoire
           maxLength={16}
           value={premierNom}
+          erreur={doublons ?? messageDuChamp(erreur, 'premierNom')}
           onChange={(evenement) => {
             setPremierNom(evenement.target.value)
+            setDoublons(undefined)
           }}
         />
         <ChampSaisie
@@ -607,7 +631,9 @@ function DialogueTablesEnLot({
           })}
         </p>
       )}
-      {erreur !== null && <AlerteErreur erreur={erreur} />}
+      {erreur !== null && !toutSousLesChamps(erreur, ['premierNom']) && (
+        <AlerteErreur erreur={erreur} />
+      )}
     </Dialogue>
   )
 }
@@ -666,7 +692,11 @@ function DialogueTable({
           obligatoire
           maxLength={20}
           value={nom}
-          erreur={invalide && nom.trim() === '' ? t('validation.obligatoire') : undefined}
+          erreur={
+            invalide && nom.trim() === ''
+              ? t('validation.obligatoire')
+              : messageDuChamp(erreur, 'nom')
+          }
           onChange={(evenement) => {
             setNom(evenement.target.value)
           }}
@@ -695,7 +725,9 @@ function DialogueTable({
           setSalleId(evenement.target.value)
         }}
       />
-      {erreur !== null && <AlerteErreur erreur={erreur} />}
+      {erreur !== null && !toutSousLesChamps(erreur, ['nom', 'places']) && (
+        <AlerteErreur erreur={erreur} />
+      )}
     </Dialogue>
   )
 }

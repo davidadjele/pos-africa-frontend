@@ -858,7 +858,9 @@
       "apercu": "Seront créées : {{noms}}, de {{places}}.",
       "ajouter_one": "Ajouter {{count}} table",
       "ajouter_other": "Ajouter {{count}} tables",
-      "invalide": "Entre 1 et 50."
+      "invalide": "Entre 1 et 50.",
+      "dejaPris_one": "{{noms}} existe déjà dans {{etablissement}}. Essayez {{suggestion}}.",
+      "dejaPris_other": "{{noms}} existent déjà dans {{etablissement}}. Essayez {{suggestion}}."
     },
     "table": {
       "titre": "Modifier {{nom}}",

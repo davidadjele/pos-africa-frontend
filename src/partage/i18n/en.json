@@ -858,7 +858,9 @@
       "apercu": "Will be created: {{noms}}, with {{places}}.",
       "ajouter_one": "Add {{count}} table",
       "ajouter_other": "Add {{count}} tables",
-      "invalide": "Between 1 and 50."
+      "invalide": "Between 1 and 50.",
+      "dejaPris_one": "{{noms}} already exists in {{etablissement}}. Try {{suggestion}}.",
+      "dejaPris_other": "{{noms}} already exist in {{etablissement}}. Try {{suggestion}}."
     },
     "table": {
       "titre": "Edit {{nom}}",
