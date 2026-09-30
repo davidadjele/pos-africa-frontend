@@ -109,7 +109,9 @@ describe('Remises et articles offerts', () => {
     await userEvent.click(within(dialogue).getByRole('button', { name: /^Appliquer −10\s%$/ }))
 
     const note = screen.getByRole('region', { name: 'Note en cours' })
-    expect(await within(note).findByText(/−10 %, Client fidèle/)).toBeVisible()
+    const lignes = within(note).getByRole('list', { name: 'Articles de la note' })
+    expect(await within(lignes).findByText('Client fidèle')).toBeVisible()
+    expect(lignes).toHaveTextContent('−10 %Client fidèle')
     expect(note).toHaveTextContent('Remises et offerts')
     expect(recues).toEqual([{ taux: 1000, motif: 'CLIENT_FIDELE' }])
   })
@@ -142,7 +144,7 @@ describe('Remises et articles offerts', () => {
     await userEvent.click(within(dialogue).getByRole('button', { name: /^Appliquer/ }))
     await validerParAfi()
 
-    expect(await screen.findByText(/Réclamation. Validé par Afi M/)).toBeVisible()
+    expect(await screen.findByText('Réclamation, validé par Afi M.')).toBeVisible()
     expect(recues).toEqual([
       { montant: 500, motif: 'RECLAMATION' },
       { montant: 500, motif: 'RECLAMATION', validationId: VALIDATION_ID },
@@ -181,7 +183,8 @@ describe('Remises et articles offerts', () => {
     await userEvent.click(within(dialogue).getByRole('button', { name: 'Offrir 1 article' }))
     await validerParAfi()
 
-    expect(await screen.findByText(/Offert, Geste commercial. Validé par Afi M/)).toBeVisible()
+    const offerte = (await screen.findByText('Geste commercial, validé par Afi M.')).closest('li')
+    expect(offerte).toHaveTextContent('OffertGeste commercial')
     expect(recues).toEqual([
       { quantite: 1, motif: 'GESTE_COMMERCIAL' },
       { quantite: 1, motif: 'GESTE_COMMERCIAL', validationId: VALIDATION_ID },
@@ -209,9 +212,8 @@ describe('Remises et articles offerts', () => {
     expect(
       await within(note).findByText(/Remise sur la note −10 %, Geste commercial/),
     ).toBeVisible()
-    await userEvent.click(
-      within(note).getByRole('button', { name: 'Retirer la remise sur la note' }),
-    )
+    await userEvent.click(within(note).getByRole('button', { name: 'Actions sur la note' }))
+    await userEvent.click(screen.getByRole('menuitem', { name: 'Retirer la remise sur la note' }))
     expect(await screen.findByText('10 200 FCFA')).toBeVisible()
     expect(recues).toEqual([{ taux: 1000, motif: 'GESTE_COMMERCIAL' }])
     expect(retraits).toEqual([{}])

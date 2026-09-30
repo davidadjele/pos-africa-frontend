@@ -705,9 +705,13 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await validationRemise.getByRole('button', { name: /Afi M\./ }).click()
   await taperCode(tablette, '6194')
   await validationRemise.getByRole('button', { name: 'Valider' }).click()
-  await expect(note).toContainText('Réclamation. Validé par Afi M')
+  await expect(note).toContainText('Réclamation, validé par Afi M.')
   await expect(note).toContainText('4 000 FCFA')
   await capturer(tablette, '38-note-remisee')
+  await tablette.setViewportSize({ width: 390, height: 844 })
+  await note.scrollIntoViewIfNeeded()
+  await capturer(tablette, '38-note-remisee-telephone')
+  await tablette.setViewportSize({ width: 1280, height: 800 })
   await note.getByRole('button', { name: 'Plan de salle' }).click()
 
   // Le client part sans consommer : la note entière est annulée, validée par la gérante.

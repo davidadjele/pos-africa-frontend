@@ -124,6 +124,31 @@ export function ActionsNote({
     }
   }
 
+  async function retirerRemise() {
+    surErreur(null)
+    setEnCours(true)
+    try {
+      const reponse = await validation.executer(
+        (validationId) =>
+          appelerCaisse<CommandeDetail>(`${chemin}/remise/retrait`, {
+            methode: 'POST',
+            corps: validationId === undefined ? {} : { validationId },
+          }),
+        {
+          permission: 'REMISE_AU_DELA_PLAFOND',
+          objetId: note.id,
+          titre: t('caisse.remise.retraitTitre', { objet: t('caisse.remise.laNote') }),
+          contexte: t('caisse.remise.retraitContexte', { ou: nom, demandeur: moi.nom }),
+        },
+      )
+      if (reponse !== undefined) surNote(reponse)
+    } catch (echec) {
+      surErreur(echec)
+    } finally {
+      setEnCours(false)
+    }
+  }
+
   async function annuler(demande: DemandeAnnulationNote) {
     setEnCours(true)
     surErreur(null)
@@ -192,17 +217,19 @@ export function ActionsNote({
           },
         ]
       : []),
-    ...(note.remiseNote === undefined
-      ? [
-          {
-            libelle: t('caisse.note.actions.remise'),
-            icone: Percent,
-            surChoisir: () => {
-              setDialogue('remise')
-            },
+    note.remiseNote === undefined
+      ? {
+          libelle: t('caisse.note.actions.remise'),
+          icone: Percent,
+          surChoisir: () => {
+            setDialogue('remise')
           },
-        ]
-      : []),
+        }
+      : {
+          libelle: t('caisse.note.retirerRemiseNote'),
+          icone: Percent,
+          surChoisir: () => void retirerRemise(),
+        },
     {
       libelle: t('caisse.note.actions.annuler'),
       icone: Ban,

@@ -180,7 +180,8 @@
       },
       "addition": {
         "bandeau": "Bill requested at {{heure}} by {{nom}}",
-        "retirer": "Remove the bill request"
+        "retirer": "Remove the bill request",
+        "retirerCourt": "Remove"
       },
       "transfert": {
         "titre": "Move the tab of {{table}}",
@@ -211,12 +212,12 @@
         "confirmer": "Cancel the tab",
         "validationContexte": "{{numero}}. Items already sent to preparation ({{montant}}), cancellation requested by {{demandeur}} for the reason: {{motif}}."
       },
-      "remiseLigne": "−{{remise}}, {{motif}}",
-      "offertLigne": "Free, {{motif}}",
       "sousTotal": "Subtotal, {{articles}}",
       "remisesLignes": "Discounts and free items",
       "remiseNote": "Tab discount −{{remise}}, {{motif}}",
-      "retirerRemiseNote": "Remove the tab discount"
+      "retirerRemiseNote": "Remove the tab discount",
+      "offert": "Free",
+      "motifValide": "{{motif}}, approved by {{nom}}"
     },
     "canaux": {
       "SUR_PLACE": "Dine-in",

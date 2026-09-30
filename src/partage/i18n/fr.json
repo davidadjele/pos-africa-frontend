@@ -180,7 +180,8 @@
       },
       "addition": {
         "bandeau": "Addition demandée à {{heure}} par {{nom}}",
-        "retirer": "Retirer l’addition demandée"
+        "retirer": "Retirer l’addition demandée",
+        "retirerCourt": "Retirer"
       },
       "transfert": {
         "titre": "Transférer la note de {{table}}",
@@ -211,12 +212,12 @@
         "confirmer": "Annuler la note",
         "validationContexte": "{{numero}}. Articles déjà envoyés en préparation ({{montant}}), annulation demandée par {{demandeur}} pour le motif : {{motif}}."
       },
-      "remiseLigne": "−{{remise}}, {{motif}}",
-      "offertLigne": "Offert, {{motif}}",
       "sousTotal": "Sous-total, {{articles}}",
       "remisesLignes": "Remises et offerts",
       "remiseNote": "Remise sur la note −{{remise}}, {{motif}}",
-      "retirerRemiseNote": "Retirer la remise sur la note"
+      "retirerRemiseNote": "Retirer la remise sur la note",
+      "offert": "Offert",
+      "motifValide": "{{motif}}, validé par {{nom}}"
     },
     "canaux": {
       "SUR_PLACE": "Sur place",

@@ -31,7 +31,6 @@ export function PanneauNote({
   envoiEnCours,
   actions,
   surRetirerAddition,
-  surRetirerRemiseNote,
   surRevenir,
   surEnvoyer,
   surModifier,
@@ -46,7 +45,6 @@ export function PanneauNote({
   /** Menu des actions sur la note entière, s'il y en a pour cet employé. */
   actions: ReactNode
   surRetirerAddition: () => void
-  surRetirerRemiseNote: () => void
   surRevenir: () => void
   surEnvoyer: (nombre: number) => void
   surModifier: (ligne: LigneNote, demande: DemandeLigne) => void
@@ -108,8 +106,12 @@ export function PanneauNote({
             })}
           </span>
           {modifiable && (
-            <Bouton className="shrink-0" onClick={surRetirerAddition}>
-              {t('caisse.note.addition.retirer')}
+            <Bouton
+              aria-label={t('caisse.note.addition.retirer')}
+              className="shrink-0"
+              onClick={surRetirerAddition}
+            >
+              {t('caisse.note.addition.retirerCourt')}
             </Bouton>
           )}
         </div>
@@ -164,34 +166,22 @@ export function PanneauNote({
               </span>
             )}
             {note.remiseNote !== undefined && (
-              <span className="flex items-center justify-between gap-3 text-libelle font-semibold text-info">
+              <span className="flex justify-between gap-3 text-libelle font-semibold text-info">
                 <span>
-                  {[
-                    t('caisse.note.remiseNote', {
-                      remise:
-                        note.remiseNote.taux === undefined
-                          ? courte(note.remiseNote.montant)
-                          : formaterTaux(note.remiseNote.taux),
-                      motif: libelleMotif(
-                        note.remiseNote.motif,
-                        note.remiseNote.detail,
-                        t,
-                        'caisse.motifsRemise',
-                      ),
-                    }),
-                    ...(note.remiseNote.valideePar === undefined
-                      ? []
-                      : [t('caisse.note.valideePar', { nom: note.remiseNote.valideePar })]),
-                  ].join('. ')}
+                  {t('caisse.note.remiseNote', {
+                    remise:
+                      note.remiseNote.taux === undefined
+                        ? courte(note.remiseNote.montant)
+                        : formaterTaux(note.remiseNote.taux),
+                    motif: libelleMotif(
+                      note.remiseNote.motif,
+                      note.remiseNote.detail,
+                      t,
+                      'caisse.motifsRemise',
+                    ),
+                  })}
                 </span>
-                <span className="flex shrink-0 items-center gap-2">
-                  {modifiable && (
-                    <Bouton onClick={surRetirerRemiseNote}>
-                      {t('caisse.note.retirerRemiseNote')}
-                    </Bouton>
-                  )}
-                  <span className="chiffres">−{courte(note.remiseNote.montant)}</span>
-                </span>
+                <span className="chiffres shrink-0">−{courte(note.remiseNote.montant)}</span>
               </span>
             )}
           </>
@@ -297,20 +287,17 @@ function LigneDeNote({
     t,
     'caisse.motifsRemise',
   )
-  const remise = [
-    ligne.offert
-      ? t('caisse.note.offertLigne', { motif: motifRemise })
-      : t('caisse.note.remiseLigne', {
-          remise:
-            ligne.tauxRemise === undefined
-              ? formaterMontant({ unitesMineures: ligne.remise, devise }, { forme: 'courte' })
-              : formaterTaux(ligne.tauxRemise),
-          motif: motifRemise,
-        }),
-    ...(ligne.remiseValideePar === undefined
-      ? []
-      : [t('caisse.note.valideePar', { nom: ligne.remiseValideePar })]),
-  ].join('. ')
+  const badgeRemise = ligne.offert
+    ? t('caisse.note.offert')
+    : `−${
+        ligne.tauxRemise === undefined
+          ? formaterMontant({ unitesMineures: ligne.remise, devise }, { forme: 'courte' })
+          : formaterTaux(ligne.tauxRemise)
+      }`
+  const motifEtValidation =
+    ligne.remiseValideePar === undefined
+      ? motifRemise
+      : t('caisse.note.motifValide', { motif: motifRemise, nom: ligne.remiseValideePar })
   const description = (
     <>
       <span className="flex items-center gap-1.5">
@@ -332,7 +319,10 @@ function LigneDeNote({
         {statut}
       </span>
       {!annulee && (ligne.offert || ligne.remise > 0) && (
-        <span className="text-legende font-semibold text-info">{remise}</span>
+        <span className="flex flex-wrap items-center gap-1.5">
+          <BadgeStatut ton="info">{badgeRemise}</BadgeStatut>
+          <span className="text-legende text-attenue">{motifEtValidation}</span>
+        </span>
       )}
     </>
   )

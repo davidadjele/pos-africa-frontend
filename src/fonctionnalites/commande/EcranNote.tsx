@@ -354,9 +354,6 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
             }),
           )
         }
-        surRetirerRemiseNote={() => {
-          retirerRemise(commandeId, 'remise/retrait', t('caisse.remise.laNote'))
-        }}
         surRevenir={() => void revenirAuPlan()}
         surEnvoyer={(nombre) => void envoyer(nombre)}
         surModifier={(ligne, demande) => void modifier(ligne, demande)}
