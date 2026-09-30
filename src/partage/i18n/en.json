@@ -44,8 +44,8 @@
   },
   "caisse": {
     "vide": {
-      "titre": "No products to sell yet",
-      "phrase": "Order taking and checkout arrive in the next release, along with the product catalogue."
+      "titre": "Nothing to sell yet",
+      "phrase": "This venue’s menu is empty. The owner builds it in the back office, Products."
     },
     "prise": {
       "titre": "Who is taking the till?",
@@ -91,6 +91,19 @@
     "session": {
       "changer": "Switch user",
       "utilisateur": "Till held by {{nom}}"
+    },
+    "carte": {
+      "categories": "Categories",
+      "tout": "All",
+      "recherche": "Search for a product",
+      "produits": "Products",
+      "epuise": "Sold out today",
+      "aucunResultat": "No product matches.",
+      "chargement": "Loading the menu…"
+    },
+    "note": {
+      "titre": "Current bill",
+      "phrase": "Order taking and payment arrive with the orders module."
     }
   },
   "gestion": {

@@ -259,6 +259,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/caisse/carte": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Carte de l'établissement de la tablette
+         * @description Produits proposés ici, au prix de l'établissement, dans l'ordre des onglets ; ruptures signalées.
+         */
+        get: operations["carte_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/caisse/moi": {
         parameters: {
             query?: never;
@@ -1303,6 +1323,7 @@ export interface components {
             version: number;
         };
         Entreprise: {
+            devise: string;
             /** Format: uuid */
             id: string;
             nom: string;
@@ -2006,6 +2027,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReponseRafraichissement"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    carte_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LigneCarteEtablissement"][];
                 };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */

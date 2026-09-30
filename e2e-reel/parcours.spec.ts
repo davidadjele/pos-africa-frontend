@@ -466,3 +466,43 @@ test('Tanti fixe un prix à Bè Kpota, puis la gérante déclare une rupture dep
   ).toContainText('Afi M.')
   await capturer(page, '22-rupture-telephone')
 })
+
+test('Kossi prend la caisse d’une nouvelle tablette et voit la carte de Bè Kpota', async ({
+  page,
+  browser,
+}) => {
+  await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
+  await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
+  await page
+    .getByRole('navigation', { name: 'Navigation principale' })
+    .getByRole('link', { name: 'Tablettes' })
+    .click()
+  await page.getByRole('button', { name: 'Enregistrer une tablette' }).click()
+  const formulaire = page.getByRole('form', { name: 'Enregistrer une tablette' })
+  await formulaire.getByLabel(/^Établissement/).selectOption({ label: 'Bè Kpota' })
+  await formulaire.getByLabel(/^Nom de la caisse/).fill('Caisse 2, terrasse')
+  await formulaire.getByRole('button', { name: 'Générer le code' }).click()
+  const code = (
+    (await page
+      .getByRole('region', { name: 'Code d’enregistrement' })
+      .locator('[data-code]')
+      .textContent()) ?? ''
+  ).replace(/\D/g, '')
+
+  const contexteTablette = await browser.newContext({ viewport: { width: 1280, height: 800 } })
+  const tablette = await contexteTablette.newPage()
+  await tablette.goto('/caisse')
+  await taperCode(tablette, code)
+  await tablette.getByRole('button', { name: /Kossi A\./ }).click()
+  await taperCode(tablette, '4827')
+  await tablette.getByRole('button', { name: 'Ouvrir la caisse' }).click()
+
+  const produits = tablette.getByRole('list', { name: 'Produits' })
+  await expect(produits.getByRole('listitem', { name: 'Flag 65 cl' })).toContainText('1 200')
+  await expect(produits.getByRole('listitem', { name: 'Flag 65 cl' })).toContainText(
+    'Épuisé ce jour',
+  )
+  await expect(tablette.getByRole('navigation', { name: 'Catégories' })).toContainText('Bières')
+  await capturer(tablette, '23-caisse-carte')
+  await contexteTablette.close()
+})

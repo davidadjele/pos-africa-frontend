@@ -45,7 +45,7 @@
   "caisse": {
     "vide": {
       "titre": "Aucun produit à vendre pour l’instant",
-      "phrase": "La prise de commande et l’encaissement arrivent au prochain lot, avec le catalogue des produits."
+      "phrase": "La carte de cet établissement est vide. Le propriétaire la compose dans la gestion, Produits."
     },
     "prise": {
       "titre": "Qui prend la caisse ?",
@@ -91,6 +91,19 @@
     "session": {
       "changer": "Changer d’utilisateur",
       "utilisateur": "Caisse tenue par {{nom}}"
+    },
+    "carte": {
+      "categories": "Catégories",
+      "tout": "Tout",
+      "recherche": "Rechercher un produit",
+      "produits": "Produits",
+      "epuise": "Épuisé ce jour",
+      "aucunResultat": "Aucun produit ne correspond.",
+      "chargement": "Chargement de la carte…"
+    },
+    "note": {
+      "titre": "Note en cours",
+      "phrase": "La prise de commande et l’encaissement arrivent avec le module commande."
     }
   },
   "gestion": {
