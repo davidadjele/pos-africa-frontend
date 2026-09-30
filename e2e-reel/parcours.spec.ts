@@ -538,3 +538,44 @@ test('Tanti retrouve dans l’activité les changements de la journée et l’hi
   await expect(activite).toContainText('Flag 65 cl')
   await capturer(page, '24-activite-telephone')
 })
+
+test('La gérante crée les salles de Bè Kpota et leurs tables', async ({ page }) => {
+  await seConnecter(page, AFI.telephone, AFI.motDePasse)
+  await page
+    .getByRole('navigation', { name: 'Navigation principale' })
+    .getByRole('link', { name: 'Salles et tables' })
+    .click()
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Salles et tables de Bè Kpota' }),
+  ).toBeVisible()
+
+  for (const nom of ['Terrasse', 'Bar']) {
+    await page.getByRole('button', { name: 'Nouvelle salle' }).click()
+    const dialogue = page.getByRole('dialog', { name: 'Nouvelle salle' })
+    await dialogue.getByLabel(/^Nom/).fill(nom)
+    await dialogue.getByRole('button', { name: 'Créer la salle' }).click()
+    await expect(page.getByText(`La salle « ${nom} » est créée.`)).toBeVisible()
+  }
+
+  const onglets = page.getByRole('tablist', { name: 'Salles' })
+  await onglets.getByRole('tab', { name: /Terrasse/ }).click()
+  await page.getByRole('button', { name: 'Ajouter des tables' }).click()
+  const lot = page.getByRole('dialog', { name: 'Ajouter des tables à « Terrasse »' })
+  await lot.getByLabel(/^Nombre/).fill('8')
+  await expect(lot.getByRole('status')).toContainText('T1, T2, T3, T4, T5, T6, T7, T8')
+  await capturer(page, '26-tables-en-lot')
+  await lot.getByRole('button', { name: 'Ajouter 8 tables' }).click()
+  const grille = page.getByRole('list', { name: 'Tables de Terrasse' })
+  await expect(grille.getByRole('listitem')).toHaveCount(8)
+
+  await page.getByRole('button', { name: 'Plus d’actions pour T7' }).click()
+  await page.getByRole('menuitem', { name: 'Modifier' }).click()
+  const modification = page.getByRole('dialog', { name: 'Modifier T7' })
+  await modification.getByLabel(/^Places/).fill('8')
+  await modification.getByRole('button', { name: 'Enregistrer' }).click()
+  await expect(grille.getByRole('listitem', { name: 'T7' })).toContainText('8 places')
+  await expect(onglets.getByRole('tab').first()).toContainText('Terrasse')
+  await capturer(page, '27-salles-et-tables')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await capturer(page, '27-salles-et-tables-telephone')
+})

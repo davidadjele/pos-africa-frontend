@@ -45,3 +45,15 @@ export function texteOptionnel(valeur: string): string | undefined {
   const nettoyee = valeur.trim()
   return nettoyee === '' ? undefined : nettoyee
 }
+
+/** Message du serveur pour ce champ (ReponseErreur.champs), s'il y en a un : à afficher sous le champ. */
+export function messageDuChamp(erreur: unknown, champ: string): string | undefined {
+  if (!(erreur instanceof ErreurApi)) return undefined
+  return erreur.reponse.champs?.find((invalide) => invalide.champ === champ)?.message
+}
+
+/** Vrai si chaque erreur de champ a trouvé sa place : le bandeau général n'a alors rien à ajouter. */
+export function toutSousLesChamps(erreur: unknown, champs: readonly string[]): boolean {
+  if (!(erreur instanceof ErreurApi) || erreur.reponse.champs === undefined) return false
+  return erreur.reponse.champs.every((invalide) => champs.includes(invalide.champ))
+}

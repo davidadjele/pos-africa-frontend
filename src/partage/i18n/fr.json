@@ -22,7 +22,8 @@
     "VALIDATION_REQUISE": "Cette action demande la validation d’un gérant.",
     "VALIDATION_INVALIDE": "Validation expirée ou déjà utilisée. Redemandez-la au gérant.",
     "TAXE_EN_USAGE": "Des produits actifs sont soumis à cette taxe : changez d’abord leur taxe.",
-    "CATEGORIE_EN_USAGE": "Cette catégorie contient des produits actifs : déplacez-les ou désactivez-les d’abord."
+    "CATEGORIE_EN_USAGE": "Cette catégorie contient des produits actifs : déplacez-les ou désactivez-les d’abord.",
+    "SALLE_EN_USAGE": "Cette salle a encore des tables actives : déplacez-les ou désactivez-les d’abord."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Trop d’essais infructueux : le compte est verrouillé. Réessayez dans {{duree}}.",
@@ -117,7 +118,8 @@
       "produits": "Produits",
       "taxes": "Taxes",
       "parEtablissement": "Par établissement",
-      "activite": "Activité"
+      "activite": "Activité",
+      "salles": "Salles et tables"
     },
     "tableauDeBord": {
       "titre": "Tableau de bord",
@@ -808,6 +810,74 @@
       "PAIEMENT_REMBOURSER": "rembourser un paiement",
       "CAISSE_MOUVEMENT": "un mouvement de caisse",
       "autre": "une action protégée"
+    }
+  },
+  "salles": {
+    "titre": "Salles et tables de {{etablissement}}",
+    "titreSansEtablissement": "Salles et tables",
+    "phrase": "Les salles sont les onglets de la caisse, dans cet ordre. Une table servie n’est jamais supprimée : désactivez-la.",
+    "etablissement": "Établissement",
+    "onglets": "Salles",
+    "nouvelle": "Nouvelle salle",
+    "renommer": "Renommer « {{nom}} »",
+    "plusDActionsSalle": "Plus d’actions pour la salle {{nom}}",
+    "plusDActionsTable": "Plus d’actions pour {{nom}}",
+    "ajouterTables": "Ajouter des tables",
+    "monter": "Monter",
+    "descendre": "Descendre",
+    "desactiver": "Désactiver",
+    "reactiver": "Réactiver",
+    "modifier": "Modifier",
+    "desactivee": "Désactivée",
+    "places_one": "{{count}} place",
+    "places_other": "{{count}} places",
+    "grille": "Tables de {{salle}}",
+    "chargement": "Chargement des salles…",
+    "vide": {
+      "titre": "Aucune salle",
+      "phrase": "Créez vos salles (Terrasse, Salle, Bar…), puis ajoutez leurs tables : elles apparaîtront sur la caisse."
+    },
+    "videSalle": "Aucune table dans cette salle.",
+    "enUsage_one": "« {{nom}} » a encore {{count}} table active : déplacez-la ou désactivez-la d’abord.",
+    "enUsage_other": "« {{nom}} » a encore {{count}} tables actives : déplacez-les ou désactivez-les d’abord.",
+    "resume": "{{tables}} actives, {{places}} sur la salle.",
+    "dialogueSalle": {
+      "titreCreation": "Nouvelle salle",
+      "titreRenommage": "Renommer « {{nom}} »",
+      "consequence": "Le nom de l’onglet sur la caisse.",
+      "nom": "Nom",
+      "creer": "Créer la salle",
+      "enregistrer": "Enregistrer"
+    },
+    "lot": {
+      "titre": "Ajouter des tables à « {{salle}} »",
+      "consequence": "Toutes identiques pour commencer ; chacune s’ajuste ensuite (nom, places).",
+      "nombre": "Nombre",
+      "premierNom": "Premier nom",
+      "places": "Places",
+      "apercu": "Seront créées : {{noms}}, de {{places}}.",
+      "ajouter_one": "Ajouter {{count}} table",
+      "ajouter_other": "Ajouter {{count}} tables",
+      "invalide": "Entre 1 et 50.",
+      "dejaPris_one": "{{noms}} existe déjà dans {{etablissement}}. Essayez {{suggestion}}.",
+      "dejaPris_other": "{{noms}} existent déjà dans {{etablissement}}. Essayez {{suggestion}}."
+    },
+    "table": {
+      "titre": "Modifier {{nom}}",
+      "consequence": "Son nom est unique dans l’établissement.",
+      "nom": "Nom",
+      "places": "Places",
+      "salle": "Salle",
+      "enregistrer": "Enregistrer"
+    },
+    "fait": {
+      "salleCreee": "La salle « {{nom}} » est créée.",
+      "salleRenommee": "La salle s’appelle maintenant « {{nom}} ».",
+      "tablesAjoutees_one": "{{count}} table ajoutée.",
+      "tablesAjoutees_other": "{{count}} tables ajoutées.",
+      "tableModifiee": "{{nom}} est enregistrée.",
+      "desactivee": "« {{nom}} » est désactivée.",
+      "reactivee": "« {{nom}} » est réactivée."
     }
   }
 }

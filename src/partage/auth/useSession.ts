@@ -21,6 +21,7 @@ export type Permission =
   | 'ETABLISSEMENT_GERER'
   | 'PERSONNEL_GERER'
   | 'PRIX_MODIFIER'
+  | 'SALLE_GERER'
 
 export const requeteMoi = queryOptions({
   queryKey: ['session', 'moi'],
