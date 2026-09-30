@@ -95,6 +95,8 @@ export function detailActivite(
     case 'REMISE_APPLIQUEE':
     case 'ARTICLE_OFFERT':
       return remise(evenement, t, montant)
+    case 'CAISSE_OUVERTE':
+      return t('activite.fond', { montant: montant(evenement.details.fond) })
     case 'REMISE_RETIREE':
       return t('activite.remiseRetiree', {
         montant: montant(evenement.details.montant),

@@ -1,9 +1,18 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { API, caisseOuverte } from '../../../tests/application'
-import { FLAG, NOTE_T4, NOTE_VIDE, PLAN, POULET, T1_ID } from '../../../tests/commandes'
+import {
+  FLAG,
+  FLAG_ENVOYE,
+  NOTE_COMPTOIR,
+  NOTE_T4,
+  NOTE_VIDE,
+  PLAN,
+  POULET,
+  T1_ID,
+} from '../../../tests/commandes'
 import { serveurMsw } from '../../../tests/serveurMsw'
 import type { DemandeOuverture, PlanDeSalle } from '../../partage/api/contrat'
 
@@ -82,6 +91,134 @@ describe('EcranPlan', () => {
     expect(within(tables).getByRole('button', { name: /T7/ })).toHaveTextContent(
       'Addition demandée',
     )
+  })
+
+  it('montre ce qui est déjà payé sur une note entamée', async () => {
+    const plan = structuredClone(PLAN)
+    const t4 = plan.salles[0]?.tables[1]
+    if (t4?.note !== undefined) t4.note.totalPaye = 5000
+    planServi(plan)
+    caisseOuverte('/caisse')
+
+    const tables = await screen.findByRole('list', { name: 'Tables' })
+    expect(within(tables).getByRole('button', { name: /T4/ })).toHaveTextContent(
+      'Payé 5 000 F / 13 500 F',
+    )
+  })
+
+  it('suit les tables à servir et les commandes à remettre, même payées', async () => {
+    const plan = structuredClone(PLAN)
+    const t4 = plan.salles[0]?.tables[1]
+    if (t4?.note !== undefined) t4.note.aServir = 2
+    plan.enService = [
+      {
+        id: NOTE_T4.id,
+        numero: 42,
+        canal: 'SUR_PLACE',
+        table: 'T4',
+        serveur: 'Kossi A.',
+        aServir: 2,
+        aServirDepuis: '2026-09-29T19:40:00Z',
+        payee: false,
+      },
+      {
+        id: NOTE_VIDE.id,
+        numero: 44,
+        canal: 'EMPORTER',
+        clientNom: 'Yao',
+        serveur: 'Kossi A.',
+        aServir: 1,
+        aServirDepuis: '2026-09-29T20:39:00Z',
+        payee: true,
+      },
+    ]
+    planServi(plan)
+    let remise = false
+    serveurMsw.use(
+      http.get(`${API}/caisse/commandes/${NOTE_VIDE.id}`, () =>
+        HttpResponse.json({
+          ...NOTE_VIDE,
+          canal: 'EMPORTER',
+          clientNom: 'Yao',
+          lignes: [FLAG_ENVOYE],
+        }),
+      ),
+      http.post(`${API}/caisse/commandes/${NOTE_VIDE.id}/service`, () => {
+        remise = true
+        return HttpResponse.json(NOTE_VIDE)
+      }),
+    )
+    caisseOuverte('/caisse')
+
+    const tables = await screen.findByRole('list', { name: 'Tables' })
+    expect(within(tables).getByRole('button', { name: /T4/ })).toHaveTextContent('2 à servir')
+    const aServir = screen.getByRole('list', { name: 'À servir' })
+    expect(within(aServir).getByRole('link', { name: /T4/ })).toHaveTextContent('2 à servir')
+    const aRemettre = screen.getByRole('list', { name: 'À remettre' })
+    expect(aRemettre).toHaveTextContent('n°44, À emporter, Yao')
+    expect(aRemettre).toHaveTextContent('Payée')
+
+    await userEvent.click(within(aRemettre).getByRole('button', { name: 'Remise au client' }))
+    const dialogue = screen.getByRole('dialog', { name: 'Remettre n°44 au client ?' })
+    expect(await within(dialogue).findByText('1× Flag 65 cl')).toBeVisible()
+    await userEvent.click(within(dialogue).getByRole('button', { name: 'Remise au client' }))
+
+    await vi.waitFor(() => {
+      expect(remise).toBe(true)
+    })
+  })
+
+  it('met en évidence les notes du comptoir et à emporter, avec leurs repères', async () => {
+    planServi({
+      ...PLAN,
+      sansTable: [
+        { ...NOTE_COMPTOIR, aEnvoyer: 1 },
+        {
+          ...NOTE_COMPTOIR,
+          id: 'c0000000-0000-4000-8000-000000000045',
+          numero: 45,
+          canal: 'EMPORTER',
+          clientNom: 'Yao',
+          total: 4500,
+          totalPaye: 2000,
+        },
+      ],
+    })
+    caisseOuverte('/caisse')
+
+    const resume = await screen.findByRole('region', { name: 'Notes ouvertes, toutes salles' })
+    expect(
+      within(resume).getByRole('heading', { name: /Comptoir et à emporter/ }),
+    ).toHaveTextContent('2')
+    const sansTable = within(resume).getByRole('list', { name: 'Comptoir et à emporter' })
+    const n43 = within(sansTable).getByRole('link', { name: /n°43/ })
+    expect(n43).toHaveTextContent('À encaisser 1 500 F')
+    expect(n43).toHaveTextContent('1 à envoyer')
+    expect(
+      within(sansTable).getByRole('link', { name: /n°45, À emporter, Yao/ }),
+    ).toHaveTextContent('À encaisser 2 500 F')
+  })
+
+  it('ne répète pas dans le comptoir une commande déjà à remettre', async () => {
+    planServi({
+      ...PLAN,
+      enService: [
+        {
+          id: NOTE_COMPTOIR.id,
+          numero: 43,
+          canal: 'COMPTOIR',
+          serveur: 'Essi D.',
+          aServir: 1,
+          aServirDepuis: '2026-09-29T20:40:00Z',
+          payee: false,
+        },
+      ],
+    })
+    caisseOuverte('/caisse')
+
+    const aRemettre = await screen.findByRole('list', { name: 'À remettre' })
+    expect(aRemettre).toHaveTextContent('À encaisser 1 500 F')
+    expect(screen.queryByRole('list', { name: 'Comptoir et à emporter' })).not.toBeInTheDocument()
   })
 
   it('filtre sur mes tables', async () => {
@@ -178,7 +315,7 @@ describe('EcranPlan', () => {
   })
 
   it('garde la vente au comptoir quand l’établissement n’a pas de table', async () => {
-    planServi({ salles: [], sansTable: [] })
+    planServi({ salles: [], sansTable: [], enService: [] })
     caisseOuverte('/caisse')
 
     expect(

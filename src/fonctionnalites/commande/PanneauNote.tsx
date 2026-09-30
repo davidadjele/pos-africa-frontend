@@ -29,6 +29,11 @@ export function PanneauNote({
   modifiable,
   ruptures,
   envoiEnCours,
+  peutEncaisser,
+  peutServir,
+  surServir,
+  surServirTout,
+  surEncaisser,
   actions,
   surRetirerAddition,
   surRevenir,
@@ -47,6 +52,13 @@ export function PanneauNote({
   surRetirerAddition: () => void
   surRevenir: () => void
   surEnvoyer: (nombre: number) => void
+  /** L'employé a le droit d'encaisser (caissier, gérant, propriétaire). */
+  peutEncaisser: boolean
+  surEncaisser: () => void
+  /** Tout employé qui prend des commandes suit le service, même sur une note payée. */
+  peutServir: boolean
+  surServir: (ligne: LigneNote) => void
+  surServirTout: () => void
   surModifier: (ligne: LigneNote, demande: DemandeLigne) => void
   surOuvrirLigne: (ligne: LigneNote) => void
 }>) {
@@ -62,6 +74,9 @@ export function PanneauNote({
     ...(note.clientNom === undefined ? [] : [t('caisse.note.pour', { nom: note.clientNom })]),
     ouverte,
   ].join(', ')
+  const aServir = note.lignes
+    .filter((ligne) => ligne.statut === 'ENVOYEE' && ligne.servieLe === undefined)
+    .reduce((somme, ligne) => somme + ligne.quantite, 0)
   const aEnvoyer = note.lignes
     .filter((ligne) => ligne.statut === 'BROUILLON')
     .reduce((somme, ligne) => somme + ligne.quantite, 0)
@@ -97,6 +112,21 @@ export function PanneauNote({
         </div>
         <span className="ml-auto shrink-0">{actions}</span>
       </div>
+      {peutServir && aServir > 0 && (
+        <div className="flex items-center gap-3 border-b border-trait bg-alerte-fond px-4 py-2.5 text-libelle text-encre">
+          <span className="flex-1 font-semibold">
+            {t('caisse.service.aServir', { count: aServir })}
+          </span>
+          <Bouton className="shrink-0" onClick={surServirTout}>
+            {t(note.table === undefined ? 'caisse.service.remettre' : 'caisse.service.toutServi')}
+          </Bouton>
+        </div>
+      )}
+      {note.totalPaye > 0 && (
+        <p className="m-0 border-b border-trait bg-succes-fond px-4 py-2.5 text-libelle text-encre">
+          {t('caisse.note.entamee', { paye: courte(note.totalPaye) })}
+        </p>
+      )}
       {note.additionDemandeeLe !== undefined && (
         <div className="flex items-center gap-2 border-b border-trait bg-info-fond px-4 py-2.5 text-libelle text-encre">
           <span className="flex-1">
@@ -140,6 +170,10 @@ export function PanneauNote({
               }}
               surOuvrir={() => {
                 surOuvrirLigne(ligne)
+              }}
+              peutServir={peutServir}
+              surServir={() => {
+                surServir(ligne)
               }}
             />
           ))}
@@ -204,9 +238,9 @@ export function PanneauNote({
           <span className="chiffres text-montant-total text-encre">{total}</span>
         </span>
       </div>
-      {modifiable && (
+      {(modifiable || peutEncaisser || note.totalPaye > 0) && (
         <div className="flex flex-col gap-2 px-4 pb-4">
-          {aEnvoyer > 0 && (
+          {modifiable && aEnvoyer > 0 && (
             <Bouton
               className="min-h-cible-caisse border-accent text-accent-lisible"
               enCours={envoiEnCours}
@@ -219,14 +253,18 @@ export function PanneauNote({
           )}
           <Bouton
             variante="principal"
-            disabled
+            disabled={!peutEncaisser || note.total - note.totalPaye <= 0}
             className="min-h-bouton-encaisser justify-between text-titre-carte"
+            onClick={surEncaisser}
           >
-            <span>{t('caisse.note.encaisser')}</span>
-            <span className="chiffres">
-              {formaterMontant({ unitesMineures: note.total, devise }, { forme: 'courte' })}
+            <span>
+              {t(note.totalPaye > 0 ? 'caisse.note.encaisserReste' : 'caisse.note.encaisser')}
             </span>
+            <span className="chiffres">{courte(note.total - note.totalPaye)}</span>
           </Bouton>
+          {!peutEncaisser && (
+            <p className="m-0 text-legende text-attenue">{t('caisse.note.parCaissier')}</p>
+          )}
         </div>
       )}
     </section>
@@ -240,8 +278,10 @@ function LigneDeNote({
   fuseauHoraire,
   modifiable,
   rupture,
+  peutServir,
   surModifier,
   surOuvrir,
+  surServir,
 }: Readonly<{
   ligne: LigneNote
   serveur: string
@@ -249,8 +289,10 @@ function LigneDeNote({
   fuseauHoraire: string
   modifiable: boolean
   rupture: Rupture | undefined
+  peutServir: boolean
   surModifier: (demande: DemandeLigne) => void
   surOuvrir: () => void
+  surServir: () => void
 }>) {
   const { t } = useTranslation()
   const produit = ligne.nomProduit
@@ -279,7 +321,12 @@ function LigneDeNote({
       ].join(' ')
     : brouillon
       ? `${t('caisse.note.aEnvoyer')}${auteur}`
-      : `${t('caisse.note.envoyeA', { heure: heure(ligne.envoyeeLe) })}${auteur}`
+      : [
+          t('caisse.note.envoyeA', { heure: heure(ligne.envoyeeLe) }),
+          ...(ligne.servieLe === undefined
+            ? []
+            : [t('caisse.service.serviA', { heure: heure(ligne.servieLe) })]),
+        ].join(', ') + auteur
   const barre = annulee && 'text-attenue line-through'
   const motifRemise = libelleMotif(
     ligne.motifRemise ?? 'AUTRE',
@@ -354,6 +401,15 @@ function LigneDeNote({
         </span>
       </span>
       <span className="flex justify-end gap-1">
+        {peutServir && ligne.statut === 'ENVOYEE' && ligne.servieLe === undefined && (
+          <Bouton
+            aria-label={t('caisse.service.serviPour', { produit })}
+            className="px-3"
+            onClick={surServir}
+          >
+            {t('caisse.service.servi')}
+          </Bouton>
+        )}
         {modifiable && brouillon && (
           <>
             <Bouton

@@ -181,4 +181,14 @@ describe('description de l’activité', () => {
       `−360${INSEC}F retiré, n°42`,
     )
   })
+
+  it('donne le fond d’une ouverture de caisse', () => {
+    expect(
+      detailActivite(
+        evenement({ type: 'CAISSE_OUVERTE', domaine: 'CAISSE', details: { fond: 20_000 } }),
+        t,
+        CONTEXTE,
+      ),
+    ).toBe(`Fond : 20${FINE}000${INSEC}F`)
+  })
 })

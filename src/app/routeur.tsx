@@ -15,6 +15,7 @@ import { PageTaxes } from '../fonctionnalites/catalogue/PageTaxes'
 import { PageSalles } from '../fonctionnalites/salles/PageSalles'
 import { EcranNote } from '../fonctionnalites/commande/EcranNote'
 import { EcranPlan } from '../fonctionnalites/commande/EcranPlan'
+import { EcranEncaissement } from '../fonctionnalites/encaissement/EcranEncaissement'
 import { PageChangerMotDePasse } from '../fonctionnalites/connexion/PageChangerMotDePasse'
 import { PageChoixEntreprise } from '../fonctionnalites/connexion/PageChoixEntreprise'
 import { PageConnexion } from '../fonctionnalites/connexion/PageConnexion'
@@ -117,6 +118,15 @@ const caisseAccueil = createRoute({
   getParentRoute: () => caisse,
   path: '/',
   component: EcranPlan,
+})
+
+const caisseEncaissement = createRoute({
+  getParentRoute: () => caisse,
+  path: '/notes/$commandeId/encaisser',
+  component: function RouteEncaissement() {
+    const { commandeId } = caisseEncaissement.useParams()
+    return <EcranEncaissement key={commandeId} commandeId={commandeId} />
+  },
 })
 
 const caisseNote = createRoute({
@@ -260,7 +270,7 @@ const arbre = racine.addChildren([
   changerMotDePasse,
   choixEntreprise,
   inscription,
-  caisse.addChildren([caisseAccueil, caisseNote]),
+  caisse.addChildren([caisseAccueil, caisseNote, caisseEncaissement]),
   enregistrementTablette,
   gestion.addChildren([
     gestionAccueil,

@@ -1,0 +1,229 @@
+import { screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
+import { describe, expect, it } from 'vitest'
+import { API, caisseOuverte } from '../../../tests/application'
+import { FLAG, NOTE_T4, PLAN, POULET } from '../../../tests/commandes'
+import { serveurMsw } from '../../../tests/serveurMsw'
+import type {
+  DemandeFondDeCaisse,
+  DemandePaiement,
+  EtatCaisse,
+  EtatEncaissement,
+} from '../../partage/api/contrat'
+
+const CAISSIER = ['COMMANDE_CREER', 'PAIEMENT_ENCAISSER', 'CAISSE_OUVRIR']
+const OPERATEURS = [
+  { code: 'FLOOZ', libelle: 'Flooz (Moov Africa)' },
+  { code: 'TMONEY', libelle: 'T-Money (Yas)' },
+  { code: 'AUTRE', libelle: 'Autre opérateur' },
+]
+const CAISSE_OUVERTE: EtatCaisse = {
+  ouverture: {
+    id: 'ca155e00-0000-4000-8000-000000000001',
+    fondInitial: 20_000,
+    ouvertePar: 'Yawa T.',
+    ouverteLe: '2026-09-29T07:02:00Z',
+  },
+  operateurs: OPERATEURS,
+}
+const A_PAYER: EtatEncaissement = {
+  commandeId: NOTE_T4.id,
+  numero: 42,
+  total: 10_200,
+  paye: 0,
+  reste: 10_200,
+  payee: false,
+  paiements: [],
+}
+const FLOOZ = {
+  id: 'fa000000-0000-4000-8000-000000000001',
+  mode: 'MOBILE_MONEY' as const,
+  montant: 5000,
+  monnaieRendue: 0,
+  operateur: 'FLOOZ',
+  reference: '7F3K29',
+  encaissePar: 'Yawa T.',
+  encaisseLe: '2026-09-29T20:42:00Z',
+}
+
+function encaissementServi(
+  caisse: EtatCaisse = CAISSE_OUVERTE,
+  permissions = CAISSIER,
+  etat: EtatEncaissement = A_PAYER,
+) {
+  serveurMsw.use(
+    http.get(`${API}/caisse/commandes/${NOTE_T4.id}`, () => HttpResponse.json(NOTE_T4)),
+    http.get(`${API}/caisse/commandes/${NOTE_T4.id}/encaissement`, () => HttpResponse.json(etat)),
+    http.get(`${API}/caisse/ouverture`, () => HttpResponse.json(caisse)),
+    http.get(`${API}/caisse/carte`, () => HttpResponse.json([FLAG, POULET])),
+    http.get(`${API}/caisse/plan`, () => HttpResponse.json(PLAN)),
+  )
+  caisseOuverte(`/caisse/notes/${NOTE_T4.id}/encaisser`, { permissions })
+}
+
+/** Répond aux paiements, dans l'ordre, par les états donnés, et retient ce qui a été envoyé. */
+function paiements(...etats: EtatEncaissement[]) {
+  const recus: DemandePaiement[] = []
+  serveurMsw.use(
+    http.post(`${API}/caisse/commandes/${NOTE_T4.id}/paiements`, async ({ request }) => {
+      recus.push((await request.json()) as DemandePaiement)
+      return HttpResponse.json(etats[recus.length - 1])
+    }),
+  )
+  return recus
+}
+
+async function remplacer(champ: HTMLElement, valeur: string) {
+  await userEvent.clear(champ)
+  await userEvent.type(champ, valeur)
+}
+
+describe('EcranEncaissement', () => {
+  it('fait ouvrir la caisse avec son fond avant d’encaisser', async () => {
+    const recues: DemandeFondDeCaisse[] = []
+    serveurMsw.use(
+      http.post(`${API}/caisse/ouverture`, async ({ request }) => {
+        recues.push((await request.json()) as DemandeFondDeCaisse)
+        return HttpResponse.json(CAISSE_OUVERTE)
+      }),
+    )
+    encaissementServi({ operateurs: OPERATEURS })
+
+    expect(
+      await screen.findByRole('heading', { name: 'La caisse de cette tablette n’est pas ouverte' }),
+    ).toBeVisible()
+    await remplacer(screen.getByRole('textbox', { name: /^Fond de caisse/ }), '20000')
+    await userEvent.click(screen.getByRole('button', { name: /^Ouvrir la caisse avec 20\s000/ }))
+
+    expect(await screen.findByRole('radiogroup', { name: 'Mode de paiement' })).toBeVisible()
+    expect(recues).toEqual([{ fond: 20_000 }])
+  })
+
+  it('encaisse en Mobile Money puis en espèces, et dit la monnaie à rendre', async () => {
+    const recus = paiements(
+      { ...A_PAYER, paye: 5000, reste: 5200, paiements: [FLOOZ] },
+      {
+        ...A_PAYER,
+        paye: 10_200,
+        reste: 0,
+        payee: true,
+        paiements: [
+          FLOOZ,
+          {
+            id: 'fa000000-0000-4000-8000-000000000002',
+            mode: 'ESPECES',
+            montant: 5200,
+            montantRecu: 10_000,
+            monnaieRendue: 4800,
+            encaissePar: 'Yawa T.',
+            encaisseLe: '2026-09-29T20:43:00Z',
+          },
+        ],
+      },
+    )
+    encaissementServi()
+
+    const modes = await screen.findByRole('radiogroup', { name: 'Mode de paiement' })
+    expect(within(modes).getByRole('radio', { name: /Ardoise/ })).toBeDisabled()
+    await userEvent.click(within(modes).getByRole('radio', { name: /Mobile Money/ }))
+    await userEvent.click(screen.getByRole('radio', { name: 'Flooz (Moov Africa)' }))
+    await remplacer(screen.getByRole('textbox', { name: /^Montant payé/ }), '5000')
+    await userEvent.type(
+      screen.getByRole('textbox', { name: /^Référence de la transaction/ }),
+      '7F3K29',
+    )
+    await userEvent.click(
+      screen.getByRole('button', { name: /^Valider 5\s000\sF en Mobile Money/ }),
+    )
+
+    const recap = await screen.findByRole('region', { name: 'Note à encaisser' })
+    expect(await within(recap).findByText(/Flooz \(Moov Africa\), réf\. 7F3K29/)).toBeVisible()
+    expect(recap).toHaveTextContent('Reste à payer5 200 F')
+
+    await userEvent.click(within(modes).getByRole('radio', { name: /Espèces/ }))
+    await userEvent.click(screen.getByRole('button', { name: /^10\s000$/ }))
+    expect(screen.getByRole('status', { name: 'Monnaie à rendre' })).toHaveTextContent('4 800 F')
+    await userEvent.click(screen.getByRole('button', { name: /^Valider 5\s200\sF en espèces/ }))
+
+    expect(await screen.findByRole('heading', { name: 'T4 est libre' })).toBeVisible()
+    expect(screen.getByRole('status', { name: 'Monnaie à rendre' })).toHaveTextContent('4 800 F')
+    expect(recus).toEqual([
+      {
+        id: expect.any(String) as string,
+        mode: 'MOBILE_MONEY',
+        montant: 5000,
+        operateur: 'FLOOZ',
+        reference: '7F3K29',
+      },
+      { id: expect.any(String) as string, mode: 'ESPECES', montant: 5200, montantRecu: 10_000 },
+    ])
+    expect(recus[0]?.id).not.toBe(recus[1]?.id)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Retour au plan de salle' }))
+    expect(await screen.findByRole('list', { name: 'Tables' })).toBeVisible()
+  })
+
+  it('refuse des espèces qui ne couvrent pas le montant', async () => {
+    const recus = paiements(A_PAYER)
+    encaissementServi()
+
+    await remplacer(await screen.findByRole('textbox', { name: /^Espèces reçues/ }), '5000')
+
+    expect(screen.getByText('Il manque 5 200 F.')).toBeVisible()
+    expect(screen.getByRole('button', { name: /^Valider/ })).toBeDisabled()
+    expect(recus).toEqual([])
+  })
+
+  it('dit ce qui manque pour valider un paiement Mobile Money', async () => {
+    encaissementServi()
+
+    const modes = await screen.findByRole('radiogroup', { name: 'Mode de paiement' })
+    await userEvent.click(within(modes).getByRole('radio', { name: /Mobile Money/ }))
+
+    expect(screen.getByRole('button', { name: /^Valider/ })).toBeDisabled()
+    expect(
+      screen.getByText('Pour valider : choisissez l’opérateur, recopiez la référence.'),
+    ).toBeVisible()
+    await userEvent.click(screen.getByRole('radio', { name: 'Flooz (Moov Africa)' }))
+    expect(screen.getByText('Pour valider : recopiez la référence.')).toBeVisible()
+  })
+
+  it('choisit d’office le seul opérateur proposé', async () => {
+    encaissementServi({
+      ...CAISSE_OUVERTE,
+      operateurs: [{ code: 'AUTRE', libelle: 'Autre opérateur' }],
+    })
+
+    const modes = await screen.findByRole('radiogroup', { name: 'Mode de paiement' })
+    await userEvent.click(within(modes).getByRole('radio', { name: /Mobile Money/ }))
+    await userEvent.type(
+      screen.getByRole('textbox', { name: /^Référence de la transaction/ }),
+      'GN-4471',
+    )
+
+    expect(screen.getByRole('radio', { name: 'Autre opérateur' })).toBeChecked()
+    expect(screen.getByRole('button', { name: /^Valider/ })).toBeEnabled()
+  })
+
+  it('tape le montant au clavier de la caisse', async () => {
+    encaissementServi()
+
+    const clavier = await screen.findByRole('group', { name: 'Clavier' })
+    await userEvent.click(
+      within(clavier).getByRole('button', { name: 'Effacer le dernier chiffre' }),
+    )
+    await userEvent.click(within(clavier).getByRole('button', { name: '000' }))
+
+    expect(screen.getByRole('textbox', { name: /^Espèces reçues/ })).toHaveValue('1020000')
+  })
+
+  it('ne propose pas d’ouvrir la caisse à qui n’en a pas le droit', async () => {
+    encaissementServi({ operateurs: OPERATEURS }, ['COMMANDE_CREER', 'PAIEMENT_ENCAISSER'])
+
+    expect(
+      await screen.findByText('Un caissier ou un gérant ouvre la caisse avec son code.'),
+    ).toBeVisible()
+    expect(screen.queryByRole('button', { name: /^Ouvrir la caisse/ })).not.toBeInTheDocument()
+  })
+})
