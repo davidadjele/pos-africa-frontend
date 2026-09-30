@@ -15,7 +15,7 @@ export interface paths {
          * Lister l'activité, de la plus récente
          * @description Permission ACTIVITE_CONSULTER. Un gérant ne voit que ses établissements, la carte commune et le personnel de ses établissements. Par défaut, seulement les actions critiques.
          */
-        get: operations["lister_7"];
+        get: operations["lister_8"];
         put?: never;
         post?: never;
         delete?: never;
@@ -152,7 +152,7 @@ export interface paths {
             cookie?: never;
         };
         /** Lister les tablettes visibles, actives d'abord */
-        get: operations["lister_6"];
+        get: operations["lister_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -404,7 +404,7 @@ export interface paths {
             cookie?: never;
         };
         /** Lister les catégories, dans l'ordre de la caisse */
-        get: operations["lister_5"];
+        get: operations["lister_6"];
         put?: never;
         /**
          * Créer une catégorie, placée en dernier
@@ -614,6 +614,47 @@ export interface paths {
          * @description Permission DISPONIBILITE_GERER. Tracé.
          */
         delete: operations["remettreEnVente"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/etablissements/{etablissementId}/salles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Salles et tables de l'établissement, dans l'ordre de la caisse
+         * @description Erreurs : RESSOURCE_INTROUVABLE (404), ACCES_REFUSE (hors du périmètre d'un gérant).
+         */
+        get: operations["lister_5"];
+        put?: never;
+        /**
+         * Créer une salle, placée en dernier
+         * @description Permission SALLE_GERER.
+         */
+        post: operations["creerSalle"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/etablissements/{etablissementId}/salles/ordre": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Réordonner les salles de l'établissement */
+        put: operations["ordonnerSalles"];
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -971,6 +1012,157 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/salles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Renommer une salle
+         * @description Erreurs : CONFLIT_MODIFICATION, REQUETE_INVALIDE (nom pris).
+         */
+        put: operations["renommerSalle"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/salles/{id}/desactivation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Désactiver une salle
+         * @description Refusé (SALLE_EN_USAGE, 409) tant qu'elle a des tables actives.
+         */
+        post: operations["desactiverSalle"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/salles/{id}/reactivation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Réactiver une salle */
+        post: operations["reactiverSalle"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/salles/{id}/tables/lot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ajouter plusieurs tables à une salle
+         * @description « T9 », 4 tables : T9 à T12. Erreur : REQUETE_INVALIDE (champ premierNom) si un nom est déjà pris dans l'établissement.
+         */
+        post: operations["ajouterTables"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/salles/{id}/tables/ordre": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Réordonner les tables d'une salle */
+        put: operations["ordonnerTables"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tables/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Modifier une table
+         * @description Nom, places, salle (du même établissement). Erreurs : CONFLIT_MODIFICATION, REQUETE_INVALIDE.
+         */
+        put: operations["modifierTable"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tables/{id}/desactivation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Désactiver une table
+         * @description Elle disparaît de la caisse ; les commandes passées la gardent.
+         */
+        post: operations["desactiverTable"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/tables/{id}/reactivation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Réactiver une table */
+        post: operations["reactiverTable"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/taxes": {
         parameters: {
             query?: never;
@@ -1230,6 +1422,9 @@ export interface components {
             version: number;
             ville?: string;
         };
+        DemandeOrdre: {
+            ids: string[];
+        };
         DemandeOrdreCategories: {
             ids: string[];
         };
@@ -1273,6 +1468,39 @@ export interface components {
             /** Format: int64 */
             version: number;
         };
+        DemandeSalle: {
+            /** @example Terrasse */
+            nom: string;
+            /** Format: int64 */
+            version?: number;
+        };
+        DemandeTable: {
+            /** @example T4 */
+            nom: string;
+            /**
+             * Format: int32
+             * @example 4
+             */
+            places: number;
+            /** Format: uuid */
+            salleId: string;
+            /** Format: int64 */
+            version: number;
+        };
+        DemandeTablesEnLot: {
+            /**
+             * Format: int32
+             * @example 4
+             */
+            nombre: number;
+            /**
+             * Format: int32
+             * @example 4
+             */
+            places: number;
+            /** @example T9 */
+            premierNom: string;
+        };
         DemandeTaxe: {
             /** @example TVA */
             nom: string;
@@ -1291,7 +1519,7 @@ export interface components {
              * @example LIGNE_ANNULER_APRES_ENVOI
              * @enum {string}
              */
-            permission: "COMMANDE_CREER" | "LIGNE_ANNULER_APRES_ENVOI" | "TABLE_TRANSFERER" | "REMISE_APPLIQUER" | "REMISE_AU_DELA_PLAFOND" | "ARTICLE_OFFRIR" | "PAIEMENT_ENCAISSER" | "PAIEMENT_REMBOURSER" | "CAISSE_OUVRIR" | "CAISSE_FERMER" | "CAISSE_MOUVEMENT" | "STOCK_RECEPTIONNER" | "STOCK_AJUSTER" | "CATALOGUE_GERER" | "PRIX_MODIFIER" | "RAPPORT_VENTES" | "RAPPORT_FINANCIER" | "CLIENT_CREDIT" | "PERSONNEL_GERER" | "ETABLISSEMENT_GERER" | "BACK_OFFICE" | "APPAREIL_GERER" | "DISPONIBILITE_GERER" | "ACTIVITE_CONSULTER";
+            permission: "COMMANDE_CREER" | "LIGNE_ANNULER_APRES_ENVOI" | "TABLE_TRANSFERER" | "REMISE_APPLIQUER" | "REMISE_AU_DELA_PLAFOND" | "ARTICLE_OFFRIR" | "PAIEMENT_ENCAISSER" | "PAIEMENT_REMBOURSER" | "CAISSE_OUVRIR" | "CAISSE_FERMER" | "CAISSE_MOUVEMENT" | "STOCK_RECEPTIONNER" | "STOCK_AJUSTER" | "CATALOGUE_GERER" | "PRIX_MODIFIER" | "RAPPORT_VENTES" | "RAPPORT_FINANCIER" | "CLIENT_CREDIT" | "PERSONNEL_GERER" | "ETABLISSEMENT_GERER" | "BACK_OFFICE" | "APPAREIL_GERER" | "DISPONIBILITE_GERER" | "ACTIVITE_CONSULTER" | "SALLE_GERER";
             /** @example 5937 */
             pin: string;
             /** Format: uuid */
@@ -1617,6 +1845,17 @@ export interface components {
             code: string;
             touteLEntreprise: boolean;
         };
+        SalleResume: {
+            active: boolean;
+            /** Format: uuid */
+            id: string;
+            nom: string;
+            /** Format: int32 */
+            ordre: number;
+            tables: components["schemas"]["TableResume"][];
+            /** Format: int64 */
+            version: number;
+        };
         SessionCaisseCourante: {
             nomCourt: string;
             permissions: string[];
@@ -1630,6 +1869,18 @@ export interface components {
             expireLe: string;
             /** @enum {string} */
             statut: "EN_ATTENTE" | "UTILISE" | "EXPIRE";
+        };
+        TableResume: {
+            active: boolean;
+            /** Format: uuid */
+            id: string;
+            nom: string;
+            /** Format: int32 */
+            ordre: number;
+            /** Format: int32 */
+            places: number;
+            /** Format: int64 */
+            version: number;
         };
         TaxeProduit: {
             /** Format: uuid */
@@ -1665,7 +1916,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    lister_7: {
+    lister_8: {
         parameters: {
             query?: {
                 depuis?: string;
@@ -1896,7 +2147,7 @@ export interface operations {
             };
         };
     };
-    lister_6: {
+    lister_7: {
         parameters: {
             query?: {
                 page?: number;
@@ -2272,7 +2523,7 @@ export interface operations {
     validateurs: {
         parameters: {
             query: {
-                permission: "COMMANDE_CREER" | "LIGNE_ANNULER_APRES_ENVOI" | "TABLE_TRANSFERER" | "REMISE_APPLIQUER" | "REMISE_AU_DELA_PLAFOND" | "ARTICLE_OFFRIR" | "PAIEMENT_ENCAISSER" | "PAIEMENT_REMBOURSER" | "CAISSE_OUVRIR" | "CAISSE_FERMER" | "CAISSE_MOUVEMENT" | "STOCK_RECEPTIONNER" | "STOCK_AJUSTER" | "CATALOGUE_GERER" | "PRIX_MODIFIER" | "RAPPORT_VENTES" | "RAPPORT_FINANCIER" | "CLIENT_CREDIT" | "PERSONNEL_GERER" | "ETABLISSEMENT_GERER" | "BACK_OFFICE" | "APPAREIL_GERER" | "DISPONIBILITE_GERER" | "ACTIVITE_CONSULTER";
+                permission: "COMMANDE_CREER" | "LIGNE_ANNULER_APRES_ENVOI" | "TABLE_TRANSFERER" | "REMISE_APPLIQUER" | "REMISE_AU_DELA_PLAFOND" | "ARTICLE_OFFRIR" | "PAIEMENT_ENCAISSER" | "PAIEMENT_REMBOURSER" | "CAISSE_OUVRIR" | "CAISSE_FERMER" | "CAISSE_MOUVEMENT" | "STOCK_RECEPTIONNER" | "STOCK_AJUSTER" | "CATALOGUE_GERER" | "PRIX_MODIFIER" | "RAPPORT_VENTES" | "RAPPORT_FINANCIER" | "CLIENT_CREDIT" | "PERSONNEL_GERER" | "ETABLISSEMENT_GERER" | "BACK_OFFICE" | "APPAREIL_GERER" | "DISPONIBILITE_GERER" | "ACTIVITE_CONSULTER" | "SALLE_GERER";
             };
             header?: never;
             path?: never;
@@ -2333,7 +2584,7 @@ export interface operations {
             };
         };
     };
-    lister_5: {
+    lister_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -2750,6 +3001,105 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    lister_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                etablissementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalleResume"][];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    creerSalle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                etablissementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeSalle"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SalleResume"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    ordonnerSalles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                etablissementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeOrdre"];
+            };
+        };
         responses: {
             /** @description No Content */
             204: {
@@ -3447,6 +3797,258 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["RoleAttribuable"][];
                 };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    renommerSalle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeSalle"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    desactiverSalle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    reactiverSalle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    ajouterTables: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeTablesEnLot"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TableResume"][];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    ordonnerTables: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeOrdre"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    modifierTable: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeTable"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TableResume"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    desactiverTable: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    reactiverTable: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
             default: {

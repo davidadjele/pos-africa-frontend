@@ -3,6 +3,7 @@ import {
   Activity,
   Building2,
   LayoutDashboard,
+  LayoutGrid,
   Percent,
   Store,
   TabletSmartphone,
@@ -27,6 +28,7 @@ interface EntreeNavigation {
     | '/gestion/carte-etablissement'
     | '/gestion/taxes'
     | '/gestion/etablissements'
+    | '/gestion/salles'
     | '/gestion/personnel'
     | '/gestion/tablettes'
   cle: string
@@ -66,6 +68,12 @@ const REGLAGES: EntreeNavigation[] = [
     cle: 'gestion.menu.etablissements',
     icone: Building2,
     permission: 'ETABLISSEMENT_GERER',
+  },
+  {
+    vers: '/gestion/salles',
+    cle: 'gestion.menu.salles',
+    icone: LayoutGrid,
+    permission: 'SALLE_GERER',
   },
   {
     vers: '/gestion/personnel',

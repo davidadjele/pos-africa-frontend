@@ -12,6 +12,7 @@ import { PageCarteEtablissement } from '../fonctionnalites/catalogue/PageCarteEt
 import { PageFicheProduit } from '../fonctionnalites/catalogue/PageFicheProduit'
 import { PageProduits, type RechercheProduits } from '../fonctionnalites/catalogue/PageProduits'
 import { PageTaxes } from '../fonctionnalites/catalogue/PageTaxes'
+import { PageSalles } from '../fonctionnalites/salles/PageSalles'
 import { EcranCaisse } from '../fonctionnalites/caisse/EcranCaisse'
 import { PageChangerMotDePasse } from '../fonctionnalites/connexion/PageChangerMotDePasse'
 import { PageChoixEntreprise } from '../fonctionnalites/connexion/PageChoixEntreprise'
@@ -189,6 +190,12 @@ const activite = createRoute({
   component: PageActivite,
 })
 
+const salles = createRoute({
+  getParentRoute: () => gestion,
+  path: '/salles',
+  component: PageSalles,
+})
+
 const taxes = createRoute({
   getParentRoute: () => gestion,
   path: '/taxes',
@@ -255,6 +262,7 @@ const arbre = racine.addChildren([
     carteEtablissement,
     taxes,
     activite,
+    salles,
   ]),
   plateforme.addChildren([plateformeAccueil, nouvelleEntreprise]),
   recu,

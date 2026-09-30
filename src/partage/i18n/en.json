@@ -22,7 +22,8 @@
     "VALIDATION_REQUISE": "This action needs a manager’s approval.",
     "VALIDATION_INVALIDE": "Approval expired or already used. Ask the manager again.",
     "TAXE_EN_USAGE": "Active products are subject to this tax: change their tax first.",
-    "CATEGORIE_EN_USAGE": "This category contains active products: move or disable them first."
+    "CATEGORIE_EN_USAGE": "This category contains active products: move or disable them first.",
+    "SALLE_EN_USAGE": "This area still has active tables: move or disable them first."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Too many failed attempts: the account is locked. Try again in {{duree}}.",
@@ -117,7 +118,8 @@
       "produits": "Products",
       "taxes": "Taxes",
       "parEtablissement": "By venue",
-      "activite": "Activity"
+      "activite": "Activity",
+      "salles": "Areas and tables"
     },
     "tableauDeBord": {
       "titre": "Dashboard",
@@ -808,6 +810,72 @@
       "PAIEMENT_REMBOURSER": "refund a payment",
       "CAISSE_MOUVEMENT": "make a till movement",
       "autre": "a protected action"
+    }
+  },
+  "salles": {
+    "titre": "{{etablissement}} areas and tables",
+    "titreSansEtablissement": "Areas and tables",
+    "phrase": "Areas are the till tabs, in this order. A table that has been served is never deleted: disable it.",
+    "etablissement": "Venue",
+    "onglets": "Areas",
+    "nouvelle": "New area",
+    "renommer": "Rename “{{nom}}”",
+    "plusDActionsSalle": "More actions for the {{nom}} area",
+    "plusDActionsTable": "More actions for {{nom}}",
+    "ajouterTables": "Add tables",
+    "monter": "Move up",
+    "descendre": "Move down",
+    "desactiver": "Disable",
+    "reactiver": "Enable",
+    "modifier": "Edit",
+    "desactivee": "Disabled",
+    "places_one": "{{count}} seat",
+    "places_other": "{{count}} seats",
+    "grille": "{{salle}} tables",
+    "chargement": "Loading areas…",
+    "vide": {
+      "titre": "No area",
+      "phrase": "Create your areas (Terrace, Room, Bar…), then add their tables: they will show on the till."
+    },
+    "videSalle": "No table in this area.",
+    "enUsage_one": "“{{nom}}” still has {{count}} active table: move or disable it first.",
+    "enUsage_other": "“{{nom}}” still has {{count}} active tables: move or disable them first.",
+    "resume": "{{tables}} active, {{places}} in this area.",
+    "dialogueSalle": {
+      "titreCreation": "New area",
+      "titreRenommage": "Rename “{{nom}}”",
+      "consequence": "The tab name on the till.",
+      "nom": "Name",
+      "creer": "Create the area",
+      "enregistrer": "Save"
+    },
+    "lot": {
+      "titre": "Add tables to “{{salle}}”",
+      "consequence": "All identical to start with; each can be adjusted afterwards (name, seats).",
+      "nombre": "Number",
+      "premierNom": "First name",
+      "places": "Seats",
+      "apercu": "Will be created: {{noms}}, with {{places}}.",
+      "ajouter_one": "Add {{count}} table",
+      "ajouter_other": "Add {{count}} tables",
+      "invalide": "Between 1 and 50."
+    },
+    "table": {
+      "titre": "Edit {{nom}}",
+      "consequence": "Its name is unique in the venue.",
+      "nom": "Name",
+      "places": "Seats",
+      "salle": "Area",
+      "enregistrer": "Save"
+    },
+    "fait": {
+      "salleCreee": "The “{{nom}}” area is created.",
+      "salleRenommee": "The area is now called “{{nom}}”.",
+      "tablesAjoutees_one": "{{count}} table added.",
+      "tablesAjoutees_other": "{{count}} tables added.",
+      "tableModifiee": "{{nom}} is saved.",
+      "desactivee": "“{{nom}}” is disabled.",
+      "reactivee": "“{{nom}}” is enabled again."
     }
   }
 }
