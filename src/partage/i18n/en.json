@@ -1285,7 +1285,9 @@
       "ajouter": "Add {{montant}} to the drawer",
       "valider": "Confirm",
       "validationTitre": "{{type}} of {{montant}}?",
-      "validationContexte": "Till “{{caisse}}”, requested by {{demandeur}}. Reason: {{motif}}."
+      "validationContexte": "Till “{{caisse}}”, requested by {{demandeur}}. Reason: {{motif}}.",
+      "montantRequis": "Enter the amount.",
+      "motifRequis": "Enter the reason."
     }
   },
   "cloture": {

@@ -1285,7 +1285,9 @@
       "ajouter": "Ajouter {{montant}} au tiroir",
       "valider": "Valider",
       "validationTitre": "{{type}} de {{montant}} ?",
-      "validationContexte": "Caisse « {{caisse}} », demandé par {{demandeur}}. Motif : {{motif}}."
+      "validationContexte": "Caisse « {{caisse}} », demandé par {{demandeur}}. Motif : {{motif}}.",
+      "montantRequis": "Saisissez le montant.",
+      "motifRequis": "Indiquez le motif."
     }
   },
   "cloture": {

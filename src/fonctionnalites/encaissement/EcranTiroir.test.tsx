@@ -233,4 +233,21 @@ describe('Caisse de la tablette', () => {
     ).toBeVisible()
     expect(screen.getByRole('textbox', { name: /^Fond de caisse/ })).toHaveValue('20000')
   })
+
+  it('refuse les lettres dans le montant et dit ce qui manque au lieu de ne rien faire', async () => {
+    tiroirServi()
+    caisseOuverte('/caisse/tiroir', { permissions: CAISSIER })
+
+    await userEvent.click(await screen.findByRole('button', { name: /Mouvement de caisse/ }))
+    const dialogue = screen.getByRole('dialog', { name: 'Mouvement de caisse' })
+    const montant = within(dialogue).getByRole('textbox', { name: /^Montant/ })
+    await userEvent.type(montant, 'SARDINE')
+    expect(montant).toHaveValue('')
+    await userEvent.click(within(dialogue).getByRole('button', { name: 'Valider' }))
+
+    expect(montant).toHaveAccessibleDescription('Saisissez le montant.')
+    expect(within(dialogue).getByRole('textbox', { name: /^Motif/ })).toHaveAccessibleDescription(
+      'Indiquez le motif.',
+    )
+  })
 })

@@ -337,10 +337,14 @@ function DialogueMouvement({
   const montantLu = lireMontant(montant, devise)
   const courte = (valeur: number) =>
     formaterMontant({ unitesMineures: valeur, devise }, { forme: 'courte' })
-  const valide = montantLu !== null && montantLu > 0 && motif.trim() !== ''
+  // Les manques ne s'affichent qu'après un essai : pas de rouge pendant la saisie.
+  const [essaye, setEssaye] = useState(false)
+  const montantManquant = montantLu === null || montantLu === 0
+  const motifManquant = motif.trim() === ''
 
   async function valider() {
-    if (!valide) return
+    setEssaye(true)
+    if (montantLu === null || montantManquant || motifManquant) return
     setEnCours(true)
     setErreur(null)
     const demande: DemandeMouvement = { type, montant: montantLu, motif: motif.trim() }
@@ -420,8 +424,9 @@ function DialogueMouvement({
         inputMode="numeric"
         suffixe={symboleDe(devise)}
         value={montant}
+        erreur={essaye && montantManquant ? t('tiroir.dialogue.montantRequis') : undefined}
         onChange={(evenement) => {
-          setMontant(evenement.target.value)
+          setMontant(evenement.target.value.replace(/[^\d\s]/gu, ''))
         }}
       />
       <ChampSaisie
@@ -429,6 +434,7 @@ function DialogueMouvement({
         obligatoire
         maxLength={120}
         value={motif}
+        erreur={essaye && motifManquant ? t('tiroir.dialogue.motifRequis') : undefined}
         onChange={(evenement) => {
           setMotif(evenement.target.value)
         }}
