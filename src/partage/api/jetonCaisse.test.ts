@@ -38,4 +38,18 @@ describe('appelerCaisse', () => {
     await expect(appelerCaisse('/caisse/moi')).rejects.toMatchObject({ statut: 401 })
     expect(lireJetonCaisse()).toBeNull()
   })
+
+  it('garde la session quand c’est le code d’un gérant qui est faux, pas la session', async () => {
+    serveurMsw.use(
+      http.post(`${API}/caisse/validations`, () =>
+        HttpResponse.json({ statut: 401, code: 'PIN_INCORRECT', message: 'x' }, { status: 401 }),
+      ),
+    )
+    definirJetonCaisse('eyJ.caisse')
+
+    await expect(
+      appelerCaisse('/caisse/validations', { methode: 'POST', corps: {} }),
+    ).rejects.toMatchObject({ code: 'PIN_INCORRECT' })
+    expect(lireJetonCaisse()).toBe('eyJ.caisse')
+  })
 })

@@ -52,6 +52,7 @@ export const NOTE_T4_RESUME: NoteOuverte = {
   mienne: true,
   couverts: 3,
   ouverteLe: '2026-09-29T18:55:00Z',
+  aEnvoyer: 2,
 }
 export const NOTE_COMPTOIR: NoteOuverte = {
   id: 'c0000000-0000-4000-8000-000000000043',
@@ -61,6 +62,7 @@ export const NOTE_COMPTOIR: NoteOuverte = {
   serveur: 'Essi D.',
   mienne: false,
   ouverteLe: '2026-09-29T20:37:00Z',
+  aEnvoyer: 0,
 }
 
 export const TERRASSE_ID = '5a000000-0000-4000-8000-000000000001'
@@ -88,6 +90,7 @@ export const PLAN: PlanDeSalle = {
             serveur: 'Essi D.',
             mienne: false,
             couverts: 2,
+            aEnvoyer: 0,
           },
         },
       ],
@@ -108,6 +111,7 @@ export const FLAG_ENVOYE: LigneNote = {
   prixUnitaire: 1200,
   quantite: 1,
   statut: 'ENVOYEE',
+  ajouteePar: 'Kossi A.',
   envoyeeLe: '2026-09-29T19:02:00Z',
   montant: 1200,
 }
@@ -119,6 +123,7 @@ export const POULET_A_ENVOYER: LigneNote = {
   prixUnitaire: 4500,
   quantite: 2,
   statut: 'BROUILLON',
+  ajouteePar: 'Kossi A.',
   montant: 9000,
 }
 

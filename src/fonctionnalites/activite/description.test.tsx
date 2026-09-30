@@ -115,4 +115,26 @@ describe('description de l’activité', () => {
       'Kossi A. a obtenu la validation de Afi M. pour annuler une ligne envoyée',
     )
   })
+
+  it('détaille une annulation d’article envoyé : quantité, montant, où, motif, validation', () => {
+    const annulation = (details: Record<string, unknown>, detailsNoms = {}) =>
+      detailActivite(
+        evenement({
+          type: 'LIGNE_ANNULEE',
+          domaine: 'CAISSE',
+          objetLibelle: 'Attiéké poisson',
+          details: { quantite: 1, montant: 3500, motif: 'NON_SERVIE', numero: 42, ...details },
+          detailsNoms,
+        }),
+        t,
+        CONTEXTE,
+      )
+
+    expect(annulation({ table: 'T4' }, { validateurId: 'Afi M.' })).toBe(
+      `1 × 3${FINE}500${INSEC}F, T4, n°42. Motif : Non servie (trop d’attente). Validé par Afi M.`,
+    )
+    expect(annulation({ motif: 'AUTRE', detail: 'Renversé au service' })).toBe(
+      `1 × 3${FINE}500${INSEC}F, n°42. Motif : Renversé au service.`,
+    )
+  })
 })

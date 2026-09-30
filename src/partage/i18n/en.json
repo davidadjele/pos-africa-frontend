@@ -140,6 +140,34 @@
         "aide": "For example: no chili, well done.",
         "retirer": "Remove from tab",
         "enregistrer": "Save"
+      },
+      "envoye_one": "{{count}} item sent to preparation at {{heure}}.",
+      "envoye_other": "{{count}} items sent to preparation at {{heure}}.",
+      "refusEnvoi": "Nothing was sent. {{produit}} was marked sold out ({{qui}}, {{heure}}): remove it from the tab, then send again.",
+      "refusEnvoiSansDetail": "Nothing was sent. {{produit}} is sold out: remove it from the tab, then send again.",
+      "refusEnvoiRetire": "Nothing was sent. {{produit}} is no longer on the menu: remove it from the tab, then send again.",
+      "badgeEpuise": "Sold out",
+      "badgeRetire": "Removed",
+      "ajoutePar": "added by {{nom}}",
+      "annuleeA": "Cancelled at {{heure}}, {{motif}}.",
+      "valideePar": "Approved by {{nom}}",
+      "annuler": "Cancel {{produit}}",
+      "annulation": {
+        "titre": "Cancel {{produit}}?",
+        "phrase": "{{ou}}, sent to preparation at {{heure}}. The cancellation is recorded with its reason, visible to the manager and the owner.",
+        "combien": "How many to cancel?",
+        "moins": "One less to cancel",
+        "plus": "One more to cancel",
+        "sur": "of {{count}}",
+        "motif": "Reason",
+        "choisirMotif": "Choose a reason.",
+        "detail": "Specify the reason",
+        "detailRequis": "Specify the reason.",
+        "garder": "Keep it",
+        "confirmer_one": "Cancel {{count}} item",
+        "confirmer_other": "Cancel {{count}} items",
+        "validationTitre": "Cancel {{count}} {{produit}}?",
+        "validationContexte": "{{ou}}. Item already sent to preparation, requested by {{demandeur}} for the reason: {{motif}}."
       }
     },
     "canaux": {
@@ -175,7 +203,8 @@
         "phrase": "A manager creates areas and tables in management, Areas and tables. Counter and takeaway sales remain available."
       },
       "tablesOccupees_one": "{{count}} of {{total}} tables occupied",
-      "tablesOccupees_other": "{{count}} of {{total}} tables occupied"
+      "tablesOccupees_other": "{{count}} of {{total}} tables occupied",
+      "aEnvoyer": "{{count}} to send"
     },
     "ouverture": {
       "titreTable": "Open a tab on {{table}}",
@@ -189,6 +218,14 @@
       "phraseEmporter": "The name is used to call the customer when the order is ready.",
       "client": "Customer name",
       "facultatif": "Optional."
+    },
+    "motifs": {
+      "ERREUR_SAISIE": "Entry mistake",
+      "CLIENT_CHANGE_AVIS": "Customer changed their mind",
+      "NON_SERVIE": "Not served (too long a wait)",
+      "PLAT_REFUSE": "Dish refused (quality)",
+      "EPUISE_CUISINE": "Sold out in the kitchen",
+      "AUTRE": "Other"
     }
   },
   "gestion": {
@@ -883,7 +920,8 @@
       "EMPLOYE_DESACTIVE": "<b>{{auteur}}</b> disabled <b>{{objet}}</b>",
       "EMPLOYE_REACTIVE": "<b>{{auteur}}</b> enabled <b>{{objet}}</b> again",
       "TABLETTE_REVOQUEE": "<b>{{auteur}}</b> revoked the <b>{{objet}}</b> tablet",
-      "VALIDATION_GERANT_UTILISEE": "<b>{{auteur}}</b> got <b>{{validateur}}</b>’s approval to {{action}}"
+      "VALIDATION_GERANT_UTILISEE": "<b>{{auteur}}</b> got <b>{{validateur}}</b>’s approval to {{action}}",
+      "LIGNE_ANNULEE": "<b>{{auteur}}</b> cancelled <b>{{objet}}</b> at {{etablissement}}"
     },
     "actions": {
       "LIGNE_ANNULER_APRES_ENVOI": "cancel a sent line",
@@ -894,7 +932,9 @@
       "PAIEMENT_REMBOURSER": "refund a payment",
       "CAISSE_MOUVEMENT": "make a till movement",
       "autre": "a protected action"
-    }
+    },
+    "annulation": "{{quantite}} × {{montant}}, {{ou}}. Reason: {{motif}}.",
+    "annulationValidee": "{{quantite}} × {{montant}}, {{ou}}. Reason: {{motif}}. Approved by {{validateur}}"
   },
   "salles": {
     "titre": "{{etablissement}} areas and tables",

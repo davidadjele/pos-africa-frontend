@@ -90,6 +90,8 @@ export function detailActivite(
         ? t('activite.jusqua', { date: formaterDateHeure(jusqua, fuseauHoraire) })
         : null
     }
+    case 'LIGNE_ANNULEE':
+      return annulation(evenement, t, montant)
     case 'ROLES_MODIFIES':
       return t('activite.roles', {
         avant: roles(avant, t, etablissements),
@@ -98,6 +100,32 @@ export function detailActivite(
     default:
       return null
   }
+}
+
+/** « 1 × 3 500 F, T4, n°42. Motif : Non servie. Validé par Afi M. » */
+function annulation(
+  evenement: EvenementActivite,
+  t: TFunction,
+  montant: (valeur: unknown) => string,
+): string {
+  const { quantite, motif, detail, table, numero } = evenement.details
+  const ou = [
+    ...(typeof table === 'string' ? [table] : []),
+    ...(typeof numero === 'number' ? [t('caisse.note.numero', { numero })] : []),
+  ].join(', ')
+  const valeurs = {
+    quantite: typeof quantite === 'number' ? quantite : 0,
+    montant: montant(evenement.details.montant),
+    ou,
+    motif:
+      motif === 'AUTRE' && typeof detail === 'string'
+        ? detail
+        : t(`caisse.motifs.${typeof motif === 'string' ? motif : 'AUTRE'}`),
+  }
+  const validateur = evenement.detailsNoms.validateurId
+  return validateur === undefined
+    ? t('activite.annulation', valeurs)
+    : t('activite.annulationValidee', { ...valeurs, validateur })
 }
 
 /** « SERVEUR@<établissement> » enregistrés par le serveur, rendus « Serveur à Bè Kpota ». */

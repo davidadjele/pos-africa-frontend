@@ -16,6 +16,7 @@ import { serveurMsw } from '../../../tests/serveurMsw'
 import type {
   CommandeDetail,
   DemandeAjout,
+  DemandeAnnulation,
   DemandeLigne,
   LigneCarteEtablissement,
 } from '../../partage/api/contrat'
@@ -31,6 +32,8 @@ function noteServie(
   )
   return caisseOuverte(`/caisse/notes/${note.id}`)
 }
+
+const AFI_ID = '0d6a8f3e-0000-4c1b-9a51-5d7b9b0e0301'
 
 async function noteEnCours() {
   return screen.findByRole('region', { name: 'Note en cours' })
@@ -167,6 +170,172 @@ describe('EcranNote', () => {
 
     expect(await screen.findByRole('list', { name: 'Tables' })).toBeVisible()
     expect(fermee).toBe(true)
+  })
+
+  it('envoie en préparation tout ce qui est à envoyer', async () => {
+    let envoyee = false
+    serveurMsw.use(
+      http.post(`${API}/caisse/commandes/${NOTE_T4.id}/envoi`, () => {
+        envoyee = true
+        return HttpResponse.json({
+          ...NOTE_T4,
+          lignes: [
+            FLAG_ENVOYE,
+            {
+              ...POULET_A_ENVOYER,
+              statut: 'ENVOYEE',
+              envoyeeLe: '2026-09-29T19:40:00Z',
+            },
+          ],
+          version: 4,
+        })
+      }),
+    )
+    noteServie()
+
+    const note = await noteEnCours()
+    await userEvent.click(
+      within(note).getByRole('button', { name: 'Envoyer 2 articles en préparation' }),
+    )
+
+    expect(await screen.findByText('2 articles envoyés en préparation à 19:40.')).toBeVisible()
+    expect(envoyee).toBe(true)
+    expect(within(note).queryByRole('button', { name: /Envoyer/ })).not.toBeInTheDocument()
+  })
+
+  it('n’envoie rien quand un article à envoyer vient d’être déclaré épuisé', async () => {
+    let carte = [FLAG, POULET]
+    serveurMsw.use(
+      http.get(`${API}/caisse/carte`, () => HttpResponse.json(carte)),
+      http.post(`${API}/caisse/commandes/${NOTE_T4.id}/envoi`, () => {
+        carte = [
+          FLAG,
+          { ...POULET, epuise: true, epuisePar: 'Afi M.', epuiseLe: '2026-09-29T20:05:00Z' },
+        ]
+        return HttpResponse.json(
+          { statut: 409, code: 'PRODUIT_EPUISE', message: 'x' },
+          { status: 409 },
+        )
+      }),
+      http.get(`${API}/caisse/commandes/${NOTE_T4.id}`, () => HttpResponse.json(NOTE_T4)),
+      http.get(`${API}/caisse/plan`, () => HttpResponse.json(PLAN)),
+    )
+    caisseOuverte(`/caisse/notes/${NOTE_T4.id}`)
+
+    const note = await noteEnCours()
+    await userEvent.click(within(note).getByRole('button', { name: /Envoyer/ }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Rien n’est parti. Poulet braisé a été déclaré épuisé (Afi M., 20:05) : retirez-le de la note, puis renvoyez.',
+    )
+    const lignes = within(note).getByRole('list', { name: 'Articles de la note' })
+    expect(lignes).toHaveTextContent('Poulet braiséÉpuisé')
+  })
+
+  it('annule un article envoyé avec son motif, après la validation d’un gérant', async () => {
+    const recues: DemandeAnnulation[] = []
+    serveurMsw.use(
+      http.post(
+        `${API}/caisse/commandes/${NOTE_T4.id}/lignes/${FLAG_ENVOYE.id}/annulation`,
+        async ({ request }) => {
+          const demande = (await request.json()) as DemandeAnnulation
+          recues.push(demande)
+          if (demande.validationId === undefined) {
+            return HttpResponse.json(
+              { statut: 403, code: 'VALIDATION_REQUISE', message: 'x' },
+              { status: 403 },
+            )
+          }
+          return HttpResponse.json({
+            ...NOTE_T4,
+            lignes: [
+              {
+                ...FLAG_ENVOYE,
+                statut: 'ANNULEE',
+                annuleeLe: '2026-09-29T19:40:00Z',
+                motifAnnulation: 'NON_SERVIE',
+                annulationValideePar: 'Afi M.',
+              },
+              POULET_A_ENVOYER,
+            ],
+            total: 9000,
+            version: 4,
+          })
+        },
+      ),
+      http.get(`${API}/caisse/validateurs`, () =>
+        HttpResponse.json([
+          {
+            utilisateurId: AFI_ID,
+            prenom: 'Afi',
+            nomCourt: 'Afi M.',
+            role: 'GERANT',
+            bloque: false,
+          },
+        ]),
+      ),
+      http.post(`${API}/caisse/validations`, () =>
+        HttpResponse.json(
+          { id: 'a1b20000-0000-4000-8000-000000000001', expireLe: '2026-09-29T19:41:00Z' },
+          { status: 201 },
+        ),
+      ),
+    )
+    noteServie()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Annuler Flag 65 cl' }))
+    const annulation = screen.getByRole('dialog', { name: 'Annuler Flag 65 cl ?' })
+    expect(annulation).toHaveTextContent('T4, Terrasse, envoyé en préparation à 19:02.')
+    await userEvent.click(
+      within(annulation).getByRole('radio', { name: 'Non servie (trop d’attente)' }),
+    )
+    await userEvent.click(within(annulation).getByRole('button', { name: 'Annuler 1 article' }))
+
+    const validation = await screen.findByRole('dialog', { name: 'Annuler 1 Flag 65 cl ?' })
+    expect(validation).toHaveTextContent(
+      'demandé par Kossi A. pour le motif : Non servie (trop d’attente).',
+    )
+    await userEvent.click(await within(validation).findByRole('button', { name: /Afi M\./ }))
+    for (const chiffre of '5937') {
+      await userEvent.click(within(validation).getByRole('button', { name: chiffre }))
+    }
+    await userEvent.click(within(validation).getByRole('button', { name: 'Valider' }))
+
+    const lignes = within(await noteEnCours()).getByRole('list', { name: 'Articles de la note' })
+    expect(
+      await within(lignes).findByText(
+        'Annulé à 19:40, Non servie (trop d’attente). Validé par Afi M.',
+      ),
+    ).toBeVisible()
+    expect(recues).toEqual([
+      { quantite: 1, motif: 'NON_SERVIE' },
+      { quantite: 1, motif: 'NON_SERVIE', validationId: 'a1b20000-0000-4000-8000-000000000001' },
+    ])
+  })
+
+  it('demande de préciser le motif « Autre »', async () => {
+    noteServie()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Annuler Flag 65 cl' }))
+    const annulation = screen.getByRole('dialog', { name: 'Annuler Flag 65 cl ?' })
+    await userEvent.click(within(annulation).getByRole('button', { name: 'Annuler 1 article' }))
+    expect(annulation).toHaveTextContent('Choisissez un motif.')
+    await userEvent.click(within(annulation).getByRole('radio', { name: 'Autre' }))
+    await userEvent.click(within(annulation).getByRole('button', { name: 'Annuler 1 article' }))
+    expect(
+      within(annulation).getByRole('textbox', { name: /Précisez le motif/ }),
+    ).toHaveAccessibleDescription('Précisez le motif.')
+  })
+
+  it('dit qui a pris un article sur la note d’un collègue', async () => {
+    noteServie({
+      ...NOTE_T4,
+      lignes: [FLAG_ENVOYE, { ...POULET_A_ENVOYER, ajouteePar: 'Essi D.' }],
+    })
+
+    const lignes = within(await noteEnCours()).getByRole('list', { name: 'Articles de la note' })
+    expect(lignes).toHaveTextContent('À envoyer, ajouté par Essi D.')
+    expect(lignes).not.toHaveTextContent('ajouté par Kossi A.')
   })
 
   it('filtre la carte par catégorie et par nom', async () => {

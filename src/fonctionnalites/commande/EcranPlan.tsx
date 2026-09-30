@@ -262,8 +262,11 @@ function TuileTable({
 }>) {
   const { t } = useTranslation()
   const { note } = table
+  const aEnvoyer = note?.aEnvoyer ?? 0
+  // Articles pris mais pas partis en préparation : couleur d'alerte, l'accent reste à l'action principale.
   const classes = clsx(
-    'flex min-h-36 w-full flex-col justify-between gap-2 rounded-moyen border border-trait p-3.5 text-left text-encre',
+    'flex min-h-36 w-full flex-col justify-between gap-2 rounded-moyen p-3.5 text-left text-encre',
+    aEnvoyer > 0 ? 'border-2 border-alerte-bord' : 'border border-trait',
     note === undefined ? 'bg-fond' : 'bg-surface',
   )
   const contenu =
@@ -291,7 +294,10 @@ function TuileTable({
             {dureeDepuis(note.ouverteLe)}
           </span>
         </span>
-        <span className="flex flex-col gap-1">
+        <span className="flex flex-col items-start gap-1">
+          {aEnvoyer > 0 && (
+            <BadgeStatut ton="alerte">{t('caisse.plan.aEnvoyer', { count: aEnvoyer })}</BadgeStatut>
+          )}
           <span className="chiffres text-touche font-bold">
             {formaterMontant({ unitesMineures: note.total, devise }, { forme: 'courte' })}
           </span>
@@ -316,7 +322,7 @@ function TuileTable({
             })
       }
       onClick={surToucher}
-      className={clsx(classes, 'hover:border-bordure-controle')}
+      className={clsx(classes, aEnvoyer === 0 && 'hover:border-bordure-controle')}
     >
       {contenu}
     </button>

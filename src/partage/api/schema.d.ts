@@ -360,6 +360,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/caisse/commandes/{id}/envoi": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Envoyer en préparation tout ce qui est à envoyer
+         * @description Tout ou rien. Erreurs : PRODUIT_EPUISE (409), PRODUIT_INDISPONIBLE (409) si un article à envoyer ne se vend plus.
+         */
+        post: operations["envoyer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/caisse/commandes/{id}/lignes": {
         parameters: {
             query?: never;
@@ -394,6 +414,26 @@ export interface paths {
          */
         put: operations["modifierLigne"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/commandes/{id}/lignes/{ligneId}/annulation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Annuler tout ou partie d'un article envoyé
+         * @description Motif obligatoire, tracé dans l'activité. Sans la permission LIGNE_ANNULER_APRES_ENVOI : VALIDATION_REQUISE (403), puis validation d'un gérant (POST /caisse/validations) à joindre.
+         */
+        post: operations["annuler"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1451,6 +1491,16 @@ export interface components {
             /** Format: uuid */
             produitId: string;
         };
+        DemandeAnnulation: {
+            /** @example Renversé au service */
+            detail?: string;
+            /** @enum {string} */
+            motif: "ERREUR_SAISIE" | "CLIENT_CHANGE_AVIS" | "NON_SERVIE" | "PLAT_REFUSE" | "EPUISE_CUISINE" | "AUTRE";
+            /** Format: int32 */
+            quantite: number;
+            /** Format: uuid */
+            validationId?: string;
+        };
         DemandeAppairage: {
             /** @example 482915 */
             code: string;
@@ -1824,7 +1874,7 @@ export interface components {
             /** Format: date-time */
             survenuLe: string;
             /** @enum {string} */
-            type: "TAXE_CREEE" | "TAUX_TAXE_MODIFIE" | "TAXE_DESACTIVEE" | "TAXE_REACTIVEE" | "PRIX_MODIFIE" | "TAXE_PRODUIT_MODIFIEE" | "PRODUIT_DESACTIVE" | "PRODUIT_REACTIVE" | "PRIX_ETABLISSEMENT_MODIFIE" | "PRODUIT_RETIRE_ETABLISSEMENT" | "PRODUIT_PROPOSE_ETABLISSEMENT" | "RUPTURE_DECLAREE" | "RUPTURE_LEVEE" | "ROLES_MODIFIES" | "PIN_REINITIALISE" | "EMPLOYE_DESACTIVE" | "EMPLOYE_REACTIVE" | "TABLETTE_REVOQUEE" | "VALIDATION_GERANT_UTILISEE";
+            type: "TAXE_CREEE" | "TAUX_TAXE_MODIFIE" | "TAXE_DESACTIVEE" | "TAXE_REACTIVEE" | "PRIX_MODIFIE" | "TAXE_PRODUIT_MODIFIEE" | "PRODUIT_DESACTIVE" | "PRODUIT_REACTIVE" | "PRIX_ETABLISSEMENT_MODIFIE" | "PRODUIT_RETIRE_ETABLISSEMENT" | "PRODUIT_PROPOSE_ETABLISSEMENT" | "RUPTURE_DECLAREE" | "RUPTURE_LEVEE" | "ROLES_MODIFIES" | "PIN_REINITIALISE" | "EMPLOYE_DESACTIVE" | "EMPLOYE_REACTIVE" | "TABLETTE_REVOQUEE" | "VALIDATION_GERANT_UTILISEE" | "LIGNE_ANNULEE";
         };
         LigneCarteEtablissement: {
             categorie: components["schemas"]["CategorieCarte"];
@@ -1850,12 +1900,19 @@ export interface components {
             type: "PLAT" | "BOISSON" | "ARTICLE";
         };
         LigneNote: {
+            ajouteePar: string;
+            annulationValideePar?: string;
+            /** Format: date-time */
+            annuleeLe?: string;
+            detailAnnulation?: string;
             /** Format: date-time */
             envoyeeLe?: string;
             /** Format: uuid */
             id: string;
             /** Format: int64 */
             montant: number;
+            /** @enum {string} */
+            motifAnnulation?: "ERREUR_SAISIE" | "CLIENT_CHANGE_AVIS" | "NON_SERVIE" | "PLAT_REFUSE" | "EPUISE_CUISINE" | "AUTRE";
             nomProduit: string;
             note?: string;
             /** Format: int64 */
@@ -1868,6 +1925,8 @@ export interface components {
             statut: "BROUILLON" | "ENVOYEE" | "ANNULEE";
         };
         NoteOuverte: {
+            /** Format: int32 */
+            aEnvoyer: number;
             /** @enum {string} */
             canal: "SUR_PLACE" | "COMPTOIR" | "EMPORTER";
             clientNom?: string;
@@ -2770,6 +2829,37 @@ export interface operations {
             };
         };
     };
+    envoyer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommandeDetail"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
     ajouter: {
         parameters: {
             query?: never;
@@ -2818,6 +2908,42 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["DemandeLigne"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommandeDetail"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    annuler: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                ligneId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeAnnulation"];
             };
         };
         responses: {

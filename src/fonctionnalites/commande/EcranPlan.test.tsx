@@ -38,6 +38,7 @@ describe('EcranPlan', () => {
     const t4 = within(tables).getByRole('button', { name: /T4, note de 13\s500/ })
     expect(t4).toHaveTextContent('Ma table')
     expect(t4).toHaveTextContent('Kossi A., 3 couverts')
+    expect(t4).toHaveTextContent('2 à envoyer')
     expect(within(tables).getByRole('button', { name: /T7/ })).not.toHaveTextContent('Ma table')
 
     const salles = screen.getByRole('tablist', { name: 'Salles' })
