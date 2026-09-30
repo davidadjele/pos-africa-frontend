@@ -96,9 +96,14 @@ export function EcranPlan() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
-      <div className="flex min-w-0 flex-1 flex-col gap-3.5">
-        {erreur !== null && <AlerteErreur erreur={erreur} />}
-        <div className="flex flex-wrap items-center gap-2.5">
+      {/* Écran étroit : la barre d'actions, puis ce qui attend un geste, puis les tables. */}
+      <div className="contents lg:flex lg:min-w-0 lg:flex-1 lg:flex-col lg:gap-3.5">
+        {erreur !== null && (
+          <div className="order-first lg:order-none">
+            <AlerteErreur erreur={erreur} />
+          </div>
+        )}
+        <div className="order-first flex flex-wrap items-center gap-2.5 lg:order-none">
           {salles.length > 0 && (
             <OngletsSalles salles={salles} courante={salle?.id} surChoisir={setSalleId} />
           )}
@@ -143,7 +148,9 @@ export function EcranPlan() {
           )}
         </div>
         {!peutCommander && (
-          <p className="m-0 text-corps text-attenue">{t('caisse.plan.lectureSeule')}</p>
+          <p className="order-first m-0 text-corps text-attenue lg:order-none">
+            {t('caisse.plan.lectureSeule')}
+          </p>
         )}
 
         {salles.length === 0 ? (
@@ -421,7 +428,7 @@ function ResumeNotes({
   return (
     <section
       aria-label={t('caisse.plan.totalOuvertes')}
-      className="flex min-h-0 shrink-0 flex-col gap-1 overflow-y-auto rounded-moyen border border-trait bg-surface p-5 pb-0 lg:w-ticket-largeur"
+      className="-order-1 flex min-h-0 shrink-0 flex-col gap-1 overflow-y-auto rounded-moyen border border-trait bg-surface p-5 pb-0 lg:order-none lg:w-ticket-largeur"
     >
       {aTraiter.length > 0 && (
         <div className="mb-5 flex flex-col">
