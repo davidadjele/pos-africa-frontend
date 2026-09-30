@@ -20,7 +20,9 @@
     "PIN_INCORRECT": "Code incorrect. Au 5e code erroné, le profil est bloqué.",
     "PROFIL_BLOQUE": "Profil bloqué après 5 codes erronés. Un gérant doit réinitialiser le PIN.",
     "VALIDATION_REQUISE": "Cette action demande la validation d’un gérant.",
-    "VALIDATION_INVALIDE": "Validation expirée ou déjà utilisée. Redemandez-la au gérant."
+    "VALIDATION_INVALIDE": "Validation expirée ou déjà utilisée. Redemandez-la au gérant.",
+    "TAXE_EN_USAGE": "Des produits actifs sont soumis à cette taxe : changez d’abord leur taxe.",
+    "CATEGORIE_EN_USAGE": "Cette catégorie contient des produits actifs : déplacez-les ou désactivez-les d’abord."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Trop d’essais infructueux : le compte est verrouillé. Réessayez dans {{duree}}.",
@@ -43,7 +45,7 @@
   "caisse": {
     "vide": {
       "titre": "Aucun produit à vendre pour l’instant",
-      "phrase": "La prise de commande et l’encaissement arrivent au prochain lot, avec le catalogue des produits."
+      "phrase": "La carte de cet établissement est vide. Le propriétaire la compose dans la gestion, Produits."
     },
     "prise": {
       "titre": "Qui prend la caisse ?",
@@ -89,6 +91,19 @@
     "session": {
       "changer": "Changer d’utilisateur",
       "utilisateur": "Caisse tenue par {{nom}}"
+    },
+    "carte": {
+      "categories": "Catégories",
+      "tout": "Tout",
+      "recherche": "Rechercher un produit",
+      "produits": "Produits",
+      "epuise": "Épuisé ce jour",
+      "aucunResultat": "Aucun produit ne correspond.",
+      "chargement": "Chargement de la carte…"
+    },
+    "note": {
+      "titre": "Note en cours",
+      "phrase": "La prise de commande et l’encaissement arrivent avec le module commande."
     }
   },
   "gestion": {
@@ -97,7 +112,12 @@
       "caisse": "Caisse",
       "etablissements": "Établissements",
       "personnel": "Personnel",
-      "tablettes": "Tablettes"
+      "tablettes": "Tablettes",
+      "carte": "Carte",
+      "produits": "Produits",
+      "taxes": "Taxes",
+      "parEtablissement": "Par établissement",
+      "activite": "Activité"
     },
     "tableauDeBord": {
       "titre": "Tableau de bord",
@@ -283,7 +303,9 @@
     "codeAide": "2 à 10 lettres majuscules ou chiffres, par exemple BE.",
     "ville": "Ville",
     "adresse": "Adresse",
-    "creer": "Créer l’entreprise"
+    "creer": "Créer l’entreprise",
+    "tva": "TVA",
+    "tvaAide": "Taux applicable dans le pays. Le propriétaire pourra le modifier dans les taxes."
   },
   "inscription": {
     "titre": "Créer mon entreprise",
@@ -487,6 +509,305 @@
       "titre": "Renommer « {{nom}} »",
       "consequence": "Le nouveau nom s’affiche sur la tablette et dans cette liste.",
       "fait": "La tablette s’appelle maintenant « {{nom}} »."
+    }
+  },
+  "couleurs": {
+    "OCRE": "Ocre",
+    "BRIQUE": "Brique",
+    "FEUILLE": "Feuille",
+    "LAGUNE": "Lagune",
+    "PRUNE": "Prune",
+    "SABLE": "Sable",
+    "MENTHE": "Menthe",
+    "ARDOISE": "Ardoise"
+  },
+  "typesProduit": {
+    "PLAT": "Plat",
+    "BOISSON": "Boisson",
+    "ARTICLE": "Article"
+  },
+  "taxes": {
+    "titre": "Taxes",
+    "phrase": "Les taux appliqués à vos produits. Les prix de la carte sont TTC : la taxe en est déduite sur le reçu.",
+    "tableau": "Taxes de l’entreprise",
+    "colonnes": {
+      "nom": "Nom",
+      "taux": "Taux",
+      "produits": "Produits",
+      "statut": "Statut",
+      "actions": "Actions"
+    },
+    "nbProduits_one": "{{count}} produit",
+    "nbProduits_other": "{{count}} produits",
+    "statut": {
+      "active": "Active",
+      "desactivee": "Désactivée"
+    },
+    "ajouter": "Ajouter une taxe",
+    "modifier": "Modifier",
+    "modifierNomme": "Modifier {{nom}}",
+    "plusDActions": "Plus d’actions pour {{nom}}",
+    "desactiver": "Désactiver",
+    "reactiver": "Réactiver",
+    "chargement": "Chargement des taxes…",
+    "vide": {
+      "titre": "Aucune taxe",
+      "phrase": "Ajoutez la TVA applicable dans votre pays : chaque produit pourra y être soumis."
+    },
+    "formulaire": {
+      "titreCreation": "Ajouter une taxe",
+      "titreModification": "Modifier la taxe « {{nom}} »",
+      "consequence": "Le taux s’applique aux prix TTC des produits soumis à cette taxe.",
+      "nom": "Nom",
+      "taux": "Taux",
+      "tauxAide": "Par exemple 18, ou 19,25.",
+      "tauxInvalide": "Saisissez un taux entre 0 et 100, avec deux décimales au plus.",
+      "changement": "{{avant}} → {{apres}} sur {{produits}}",
+      "changementPhrase": "Le nouveau taux s’applique aux ventes enregistrées à partir de maintenant. Les ventes passées gardent leur taux. Le changement sera visible dans l’activité, à votre nom.",
+      "creer": "Ajouter la taxe",
+      "enregistrer": "Enregistrer"
+    },
+    "creee": "La taxe « {{nom}} » est ajoutée.",
+    "modifiee": "La taxe « {{nom}} » est enregistrée.",
+    "desactivee": "La taxe « {{nom}} » est désactivée.",
+    "reactivee": "La taxe « {{nom}} » est réactivée.",
+    "enUsage_one": "« {{nom}} » s’applique encore à {{count}} produit actif : changez d’abord sa taxe dans sa fiche, puis désactivez-la.",
+    "enUsage_other": "« {{nom}} » s’applique encore à {{count}} produits actifs : changez d’abord leur taxe dans leur fiche, puis désactivez-la."
+  },
+  "produits": {
+    "titre": "Produits",
+    "phrase": "La carte commune à vos établissements. Les prix sont TTC : la taxe est calculée à rebours et figure sur le reçu.",
+    "tableau": "Produits de la carte",
+    "categories": "Catégories",
+    "touteLaCarte": "Toute la carte",
+    "recherche": "Rechercher un produit",
+    "actifs": "Actifs",
+    "desactives": "Désactivés",
+    "colonnes": {
+      "produit": "Produit",
+      "categorie": "Catégorie",
+      "prix": "Prix TTC",
+      "taxe": "Taxe",
+      "stock": "Stock",
+      "statut": "Statut",
+      "actions": "Actions"
+    },
+    "aucuneTaxe": "Aucune",
+    "stock": {
+      "suivi": "Suivi",
+      "nonSuivi": "Non suivi"
+    },
+    "statut": {
+      "actif": "Actif",
+      "desactive": "Désactivé"
+    },
+    "ajouter": "Ajouter un produit",
+    "gererCategories": "Gérer les catégories",
+    "modifier": "Modifier",
+    "modifierNomme": "Modifier {{nom}}",
+    "plusDActions": "Plus d’actions pour {{nom}}",
+    "desactiver": "Désactiver",
+    "reactiver": "Réactiver",
+    "chargement": "Chargement de la carte…",
+    "vide": {
+      "titre": "La carte est vide",
+      "phrase": "Créez d’abord vos catégories (Grillades, Bières…), puis ajoutez vos produits avec leur prix.",
+      "phraseSansDroit": "Le propriétaire ou un administrateur compose la carte."
+    },
+    "aucunResultat": "Aucun produit ne correspond.",
+    "desactive": "« {{nom}} » est désactivé : il n’apparaît plus sur la caisse.",
+    "reactive": "« {{nom}} » est de nouveau à la carte.",
+    "note": "Un produit vendu n’est jamais supprimé : désactivez-le. Le prix propre à un établissement et la rupture du jour viendront dans la carte de chaque établissement.",
+    "fiche": {
+      "retour": "Produits",
+      "titreCreation": "Ajouter un produit",
+      "titreModification": "Modifier « {{nom}} »",
+      "nom": "Nom",
+      "categorie": "Catégorie",
+      "categorieAide": "Ajoutez une catégorie depuis « Gérer les catégories ».",
+      "type": "Type",
+      "typeAide": "Article : un produit revendu tel quel (mouchoirs, cigarettes…).",
+      "prix": "Prix TTC",
+      "prixAide": "Le prix payé par le client, taxes comprises.",
+      "prixInvalide": "Saisissez un prix, par exemple 1 000.",
+      "taxe": "Taxe",
+      "dontTaxe": "Dont {{taxe}} : {{montant}} par unité.",
+      "suiviStock": "Suivre le stock de ce produit",
+      "suiviStockAide": "Coché d’office pour les boissons et les articles. Les réceptions et les pertes se saisiront dans le module Stock.",
+      "apercu": "Aperçu sur la caisse",
+      "traceNote": "Un changement de prix ou de taxe est enregistré dans l’activité (qui, quand, avant et après) et ne touche pas les ventes déjà faites.",
+      "enregistrerCreation": "Enregistrer le produit",
+      "enregistrerModification": "Enregistrer les modifications",
+      "prixSansDroit": "Seul un propriétaire ou un administrateur change les prix.",
+      "cree": "« {{nom}} » est ajouté à la carte.",
+      "modifie": "« {{nom}} » est enregistré.",
+      "chargement": "Chargement du produit…"
+    },
+    "historiquePrix": "Historique des prix",
+    "historique": {
+      "titre": "Historique des prix de « {{nom}} »",
+      "phrase": "Prix de base et prix propres aux établissements. Les ventes gardent le prix du moment où elles ont été faites.",
+      "fermer": "Fermer",
+      "vide": "Aucun changement de prix enregistré.",
+      "liste": "Changements de prix"
+    }
+  },
+  "categories": {
+    "titre": "Catégories de la carte",
+    "phrase": "Leur ordre est celui des onglets sur la caisse. La couleur repère les produits sur les tuiles.",
+    "liste": "Catégories",
+    "fermer": "Fermer",
+    "monter": "Monter {{nom}}",
+    "descendre": "Descendre {{nom}}",
+    "nbProduits_one": "{{count}} produit",
+    "nbProduits_other": "{{count}} produits",
+    "modifierNomme": "Modifier {{nom}}",
+    "modifier": "Modifier",
+    "desactiverNomme": "Désactiver {{nom}}",
+    "desactiver": "Désactiver",
+    "reactiverNomme": "Réactiver {{nom}}",
+    "reactiver": "Réactiver",
+    "desactivee": "Désactivée",
+    "nouvelle": "Nouvelle catégorie",
+    "modification": "Modifier « {{nom}} »",
+    "nom": "Nom",
+    "couleur": "Couleur",
+    "ajouter": "Ajouter la catégorie",
+    "enregistrer": "Enregistrer",
+    "annuler": "Annuler",
+    "regle": "Une catégorie qui contient des produits actifs ne se désactive pas : déplacez ou désactivez d’abord ses produits.",
+    "enUsage_one": "« {{nom}} » contient encore {{count}} produit actif : déplacez-le vers une autre catégorie ou désactivez-le d’abord.",
+    "enUsage_other": "« {{nom}} » contient encore {{count}} produits actifs : déplacez-les vers une autre catégorie ou désactivez-les d’abord."
+  },
+  "carteEtablissement": {
+    "titre": "Carte de {{etablissement}}",
+    "titreSansEtablissement": "Carte par établissement",
+    "phrase": "Ce que la caisse de cet établissement propose, et à quel prix. Les ruptures s’annulent seules le lendemain à 4 h.",
+    "etablissement": "Établissement",
+    "tableau": "Carte de l’établissement",
+    "recherche": "Rechercher un produit",
+    "compteurs": {
+      "epuises_one": "{{count}} épuisé ce jour",
+      "epuises_other": "{{count}} épuisés ce jour",
+      "prixPropres_one": "{{count}} prix propre",
+      "prixPropres_other": "{{count}} prix propres",
+      "nonProposes_one": "{{count}} pas proposé ici",
+      "nonProposes_other": "{{count}} pas proposés ici"
+    },
+    "colonnes": {
+      "produit": "Produit",
+      "prixBase": "Prix de base",
+      "prixIci": "Prix ici",
+      "disponibilite": "Disponibilité",
+      "actions": "Actions"
+    },
+    "prixDeBase": "Prix de base",
+    "prixPropre": "Prix propre",
+    "disponible": "Disponible",
+    "epuise": "Épuisé ce jour",
+    "nonPropose": "Pas proposé ici",
+    "epuiseDetail": "{{auteur}}, {{heure}}, jusqu’au lendemain 4 h",
+    "epuiser": "Épuisé ce jour",
+    "epuiserNomme": "Déclarer {{nom}} épuisé ce jour",
+    "remettre": "Remettre en vente",
+    "remettreNomme": "Remettre {{nom}} en vente",
+    "proposer": "Proposer ici",
+    "proposerNomme": "Proposer {{nom}} ici",
+    "retirer": "Ne plus proposer ici",
+    "fixerPrix": "Prix dans cet établissement",
+    "plusDActions": "Plus d’actions pour {{nom}}",
+    "chargement": "Chargement de la carte…",
+    "aucunEtablissement": "Aucun établissement à afficher.",
+    "vide": {
+      "titre": "La carte est vide",
+      "phrase": "Les produits de la carte commune apparaîtront ici dès qu’ils seront créés."
+    },
+    "aucunResultat": "Aucun produit ne correspond.",
+    "fait": {
+      "epuise": "« {{nom}} » est épuisé jusqu’au lendemain 4 h.",
+      "remis": "« {{nom}} » est de nouveau en vente.",
+      "propose": "« {{nom}} » est de nouveau proposé ici.",
+      "retire": "« {{nom}} » n’est plus proposé ici.",
+      "prix": "Prix de « {{nom}} » enregistré."
+    },
+    "dialoguePrix": {
+      "titre": "Prix de « {{nom}} » à {{etablissement}}",
+      "consequence": "Prix de base de la carte : {{prix}}. Ce prix ne vaut que sur les caisses de {{etablissement}}.",
+      "prix": "Prix TTC à {{etablissement}}",
+      "note": "Si le prix de base change ensuite, {{etablissement}} garde ce prix. « Revenir au prix de base » le supprime. Le changement est tracé dans l’activité, à votre nom.",
+      "revenir": "Revenir au prix de base",
+      "enregistrer": "Enregistrer le prix"
+    }
+  },
+  "activite": {
+    "titre": "Activité",
+    "phrase": "Les actions qui comptent : prix, taxes, carte, personnel, tablettes, validations. Qui, quand, et ce qui a changé.",
+    "liste": "Activité",
+    "periode": "Période",
+    "periodes": {
+      "jour": "Aujourd’hui",
+      "semaine": "7 derniers jours",
+      "mois": "30 derniers jours"
+    },
+    "etablissement": "Établissement",
+    "tous": "Tous",
+    "domaine": "Domaine",
+    "domaines": {
+      "CARTE": "Carte",
+      "PERSONNEL": "Personnel",
+      "TABLETTES": "Tablettes",
+      "CAISSE": "Caisse"
+    },
+    "critiquesSeulement": "Critiques seulement",
+    "tout": "Tout",
+    "critique": "Critique",
+    "information": "Information",
+    "chargement": "Chargement de l’activité…",
+    "vide": {
+      "titre": "Rien sur cette période",
+      "phrase": "Aucune action ne correspond à ces filtres. Élargissez la période ou affichez tout."
+    },
+    "equipeTonti": "Équipe Tonti",
+    "touteLaCarte": "Toute la carte",
+    "touteLEntreprise": "Toute l’entreprise",
+    "aucune": "Aucune",
+    "prixDeBase": "Prix de base",
+    "jusqua": "Jusqu’au {{date}}",
+    "tauxInitial": "Taux : {{taux}}",
+    "roles": "Avant : {{avant}}. Après : {{apres}}.",
+    "roleA": "{{role}} à {{etablissement}}",
+    "autreEtablissement": "un autre établissement",
+    "aucunRole": "aucun rôle",
+    "types": {
+      "TAXE_CREEE": "<b>{{auteur}}</b> a créé la taxe <b>{{objet}}</b>",
+      "TAUX_TAXE_MODIFIE": "<b>{{auteur}}</b> a changé le taux de <b>{{objet}}</b>",
+      "TAXE_DESACTIVEE": "<b>{{auteur}}</b> a désactivé la taxe <b>{{objet}}</b>",
+      "TAXE_REACTIVEE": "<b>{{auteur}}</b> a réactivé la taxe <b>{{objet}}</b>",
+      "PRIX_MODIFIE": "<b>{{auteur}}</b> a changé le prix de base de <b>{{objet}}</b>",
+      "TAXE_PRODUIT_MODIFIEE": "<b>{{auteur}}</b> a changé la taxe de <b>{{objet}}</b>",
+      "PRODUIT_DESACTIVE": "<b>{{auteur}}</b> a désactivé <b>{{objet}}</b>",
+      "PRODUIT_REACTIVE": "<b>{{auteur}}</b> a remis <b>{{objet}}</b> à la carte",
+      "PRIX_ETABLISSEMENT_MODIFIE": "<b>{{auteur}}</b> a changé le prix de <b>{{objet}}</b> à {{etablissement}}",
+      "PRODUIT_RETIRE_ETABLISSEMENT": "<b>{{auteur}}</b> a retiré <b>{{objet}}</b> de la carte de {{etablissement}}",
+      "PRODUIT_PROPOSE_ETABLISSEMENT": "<b>{{auteur}}</b> a remis <b>{{objet}}</b> à la carte de {{etablissement}}",
+      "RUPTURE_DECLAREE": "<b>{{auteur}}</b> a déclaré <b>{{objet}}</b> épuisé à {{etablissement}}",
+      "RUPTURE_LEVEE": "<b>{{auteur}}</b> a remis <b>{{objet}}</b> en vente à {{etablissement}}",
+      "ROLES_MODIFIES": "<b>{{auteur}}</b> a modifié les rôles de <b>{{objet}}</b>",
+      "PIN_REINITIALISE": "<b>{{auteur}}</b> a réinitialisé le PIN de <b>{{objet}}</b>",
+      "EMPLOYE_DESACTIVE": "<b>{{auteur}}</b> a désactivé <b>{{objet}}</b>",
+      "EMPLOYE_REACTIVE": "<b>{{auteur}}</b> a réactivé <b>{{objet}}</b>",
+      "TABLETTE_REVOQUEE": "<b>{{auteur}}</b> a révoqué la tablette <b>{{objet}}</b>",
+      "VALIDATION_GERANT_UTILISEE": "<b>{{auteur}}</b> a obtenu la validation de <b>{{validateur}}</b> pour {{action}}"
+    },
+    "actions": {
+      "LIGNE_ANNULER_APRES_ENVOI": "annuler une ligne envoyée",
+      "TABLE_TRANSFERER": "transférer une table",
+      "REMISE_APPLIQUER": "appliquer une remise",
+      "REMISE_AU_DELA_PLAFOND": "une remise au-delà du plafond",
+      "ARTICLE_OFFRIR": "offrir un article",
+      "PAIEMENT_REMBOURSER": "rembourser un paiement",
+      "CAISSE_MOUVEMENT": "un mouvement de caisse",
+      "autre": "une action protégée"
     }
   }
 }

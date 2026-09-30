@@ -42,6 +42,22 @@
   --color-info: var(--info);
   --color-info-fond: var(--info-fond);
   --color-voile: var(--voile);
+  --color-categorie-ocre-fond: var(--categorie-ocre-fond);
+  --color-categorie-ocre-texte: var(--categorie-ocre-texte);
+  --color-categorie-brique-fond: var(--categorie-brique-fond);
+  --color-categorie-brique-texte: var(--categorie-brique-texte);
+  --color-categorie-feuille-fond: var(--categorie-feuille-fond);
+  --color-categorie-feuille-texte: var(--categorie-feuille-texte);
+  --color-categorie-lagune-fond: var(--categorie-lagune-fond);
+  --color-categorie-lagune-texte: var(--categorie-lagune-texte);
+  --color-categorie-prune-fond: var(--categorie-prune-fond);
+  --color-categorie-prune-texte: var(--categorie-prune-texte);
+  --color-categorie-sable-fond: var(--categorie-sable-fond);
+  --color-categorie-sable-texte: var(--categorie-sable-texte);
+  --color-categorie-menthe-fond: var(--categorie-menthe-fond);
+  --color-categorie-menthe-texte: var(--categorie-menthe-texte);
+  --color-categorie-ardoise-fond: var(--categorie-ardoise-fond);
+  --color-categorie-ardoise-texte: var(--categorie-ardoise-texte);
 
   --font-texte: var(--font-texte);
   --font-chiffres: var(--font-chiffres);

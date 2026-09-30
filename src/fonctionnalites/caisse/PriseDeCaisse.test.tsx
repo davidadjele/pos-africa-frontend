@@ -48,6 +48,7 @@ function tabletteAvecPersonnel(reponseConnexion: () => Response) {
   tablette(CAISSE_BAR)
   serveurMsw.use(
     http.get(`${API}/appareil/personnel`, () => HttpResponse.json([KOSSI, YAWA, ESSI])),
+    http.get(`${API}/caisse/carte`, () => HttpResponse.json([])),
     http.post(`${API}/appareil/connexion`, async ({ request }) => {
       envois.push({ chemin: '/appareil/connexion', corps: await request.json() })
       return reponseConnexion()

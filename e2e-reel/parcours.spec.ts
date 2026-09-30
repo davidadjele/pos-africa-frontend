@@ -368,3 +368,173 @@ test('Tanti enregistre une tablette avec un code, Kossi y prend la caisse, puis 
   await expect(tablette).toHaveURL(/\/enregistrement-tablette$/)
   await contexteTablette.close()
 })
+
+test('Tanti compose sa carte : taxe, catégories, produits et changement de prix', async ({
+  page,
+}) => {
+  await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
+  await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
+  const navigation = page.getByRole('navigation', { name: 'Navigation principale' })
+
+  // La TVA saisie à la création de l'entreprise est là.
+  await navigation.getByRole('link', { name: 'Taxes' }).click()
+  const taxes = page.getByRole('table', { name: 'Taxes de l’entreprise' })
+  await expect(taxes.getByRole('row', { name: /TVA/ })).toContainText('18 %')
+  await capturer(page, '16-taxes')
+
+  // Deux catégories, la seconde remontée en tête.
+  await navigation.getByRole('link', { name: 'Produits' }).click()
+  await expect(page.getByRole('heading', { level: 2, name: 'La carte est vide' })).toBeVisible()
+  await page.getByRole('button', { name: 'Gérer les catégories' }).click()
+  const dialogue = page.getByRole('dialog', { name: 'Catégories de la carte' })
+  for (const [nom, couleur] of [
+    ['Grillades', 'Ocre'],
+    ['Bières', 'Feuille'],
+  ] as const) {
+    const formulaire = dialogue.getByRole('form', { name: 'Nouvelle catégorie' })
+    await formulaire.getByLabel(/^Nom/).fill(nom)
+    await formulaire.getByText(couleur, { exact: true }).click()
+    await formulaire.getByRole('button', { name: 'Ajouter la catégorie' }).click()
+    await expect(dialogue.getByRole('list', { name: 'Catégories' })).toContainText(nom)
+  }
+  await dialogue.getByRole('button', { name: 'Monter Bières' }).click()
+  await expect(dialogue.getByRole('listitem').first()).toContainText('Bières')
+  await capturer(page, '17-categories')
+  await dialogue.getByRole('button', { name: 'Fermer' }).click()
+
+  // Une boisson, suivie en stock d'office, avec la TVA comprise calculée.
+  await page.getByRole('link', { name: 'Ajouter un produit' }).click()
+  await page.getByLabel(/^Nom/).fill('Flag 65 cl')
+  await page.getByLabel(/^Catégorie/).selectOption({ label: 'Bières' })
+  await page.getByRole('radio', { name: 'Boisson' }).check({ force: true })
+  await page.getByLabel(/^Prix TTC/).fill('1000')
+  await expect(page.getByText('Dont TVA : 153 F par unité.')).toBeVisible()
+  await expect(page.getByRole('checkbox', { name: /Suivre le stock/ })).toBeChecked()
+  await capturer(page, '18-fiche-produit')
+  await page.getByRole('button', { name: 'Enregistrer le produit' }).click()
+  await expect(page.getByText('« Flag 65 cl » est enregistré.')).toBeVisible()
+
+  // Changement de prix, tracé côté serveur (visible dans l'activité en 2d).
+  await page.getByRole('link', { name: 'Modifier Flag 65 cl' }).click()
+  await page.getByLabel(/^Prix TTC/).fill('1100')
+  await page.getByRole('button', { name: 'Enregistrer les modifications' }).click()
+  const produits = page.getByRole('table', { name: 'Produits de la carte' })
+  await expect(produits.getByRole('row', { name: /Flag 65 cl/ })).toContainText('1 100 F')
+  await capturer(page, '19-produits')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await capturer(page, '19-produits-telephone')
+})
+
+test('Tanti fixe un prix à Bè Kpota, puis la gérante déclare une rupture depuis son téléphone', async ({
+  page,
+}) => {
+  await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
+  await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
+  await page
+    .getByRole('navigation', { name: 'Navigation principale' })
+    .getByRole('link', { name: 'Par établissement' })
+    .click()
+  await page.getByLabel(/^Établissement/).selectOption({ label: 'Bè Kpota' })
+  await expect(page.getByRole('heading', { level: 1, name: 'Carte de Bè Kpota' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Plus d’actions pour Flag 65 cl' }).click()
+  await page.getByRole('menuitem', { name: 'Prix dans cet établissement' }).click()
+  const dialogue = page.getByRole('dialog', { name: 'Prix de « Flag 65 cl » à Bè Kpota' })
+  await dialogue.getByLabel(/^Prix TTC à Bè Kpota/).fill('1200')
+  await capturer(page, '20-prix-etablissement')
+  await dialogue.getByRole('button', { name: 'Enregistrer le prix' }).click()
+  const carte = page.getByRole('table', { name: 'Carte de l’établissement' })
+  await expect(carte.getByRole('row', { name: /Flag 65 cl/ })).toContainText('Prix propre')
+  await capturer(page, '21-carte-etablissement')
+  await seDeconnecter(page)
+
+  // La gérante, sur son téléphone : seule la rupture lui est proposée.
+  await page.setViewportSize({ width: 390, height: 844 })
+  await seConnecter(page, AFI.telephone, AFI.motDePasse)
+  await page
+    .getByRole('navigation', { name: 'Navigation principale' })
+    .getByRole('link', { name: 'Par établissement' })
+    .click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Carte de Bè Kpota' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Plus d’actions pour Flag 65 cl' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Déclarer Flag 65 cl épuisé ce jour' }).click()
+  await expect(page.getByText('« Flag 65 cl » est épuisé jusqu’au lendemain 4 h.')).toBeVisible()
+  await expect(
+    page
+      .getByRole('table', { name: 'Carte de l’établissement' })
+      .getByRole('row', { name: /Flag 65 cl/ }),
+  ).toContainText('Afi M.')
+  await capturer(page, '22-rupture-telephone')
+})
+
+test('Kossi prend la caisse d’une nouvelle tablette et voit la carte de Bè Kpota', async ({
+  page,
+  browser,
+}) => {
+  await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
+  await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
+  await page
+    .getByRole('navigation', { name: 'Navigation principale' })
+    .getByRole('link', { name: 'Tablettes' })
+    .click()
+  await page.getByRole('button', { name: 'Enregistrer une tablette' }).click()
+  const formulaire = page.getByRole('form', { name: 'Enregistrer une tablette' })
+  await formulaire.getByLabel(/^Établissement/).selectOption({ label: 'Bè Kpota' })
+  await formulaire.getByLabel(/^Nom de la caisse/).fill('Caisse 2, terrasse')
+  await formulaire.getByRole('button', { name: 'Générer le code' }).click()
+  const code = (
+    (await page
+      .getByRole('region', { name: 'Code d’enregistrement' })
+      .locator('[data-code]')
+      .textContent()) ?? ''
+  ).replace(/\D/g, '')
+
+  const contexteTablette = await browser.newContext({ viewport: { width: 1280, height: 800 } })
+  const tablette = await contexteTablette.newPage()
+  await tablette.goto('/caisse')
+  await taperCode(tablette, code)
+  await tablette.getByRole('button', { name: /Kossi A\./ }).click()
+  await taperCode(tablette, '4827')
+  await tablette.getByRole('button', { name: 'Ouvrir la caisse' }).click()
+
+  const produits = tablette.getByRole('list', { name: 'Produits' })
+  await expect(produits.getByRole('listitem', { name: 'Flag 65 cl' })).toContainText('1 200')
+  await expect(produits.getByRole('listitem', { name: 'Flag 65 cl' })).toContainText(
+    'Épuisé ce jour',
+  )
+  await expect(tablette.getByRole('navigation', { name: 'Catégories' })).toContainText('Bières')
+  await capturer(tablette, '23-caisse-carte')
+  await contexteTablette.close()
+})
+
+test('Tanti retrouve dans l’activité les changements de la journée et l’historique des prix', async ({
+  page,
+}) => {
+  await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
+  await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
+  const navigation = page.getByRole('navigation', { name: 'Navigation principale' })
+  await navigation.getByRole('link', { name: 'Activité' }).click()
+
+  const activite = page.getByRole('region', { name: 'Activité' })
+  await expect(activite).toContainText('a changé le prix de Flag 65 cl à Bè Kpota')
+  await expect(activite).toContainText('a changé le prix de base de Flag 65 cl')
+  await expect(activite).toContainText('a réinitialisé le PIN de Sena Gbeasor')
+  await expect(activite).not.toContainText('épuisé')
+  await page.getByRole('button', { name: 'Tout', exact: true }).click()
+  await expect(activite).toContainText('Afi M. a déclaré Flag 65 cl épuisé à Bè Kpota')
+  await expect(activite).toContainText('Équipe Tonti a créé la taxe TVA')
+  await capturer(page, '24-activite')
+
+  await navigation.getByRole('link', { name: 'Produits' }).click()
+  await page.getByRole('button', { name: 'Plus d’actions pour Flag 65 cl' }).click()
+  await page.getByRole('menuitem', { name: 'Historique des prix' }).click()
+  const historique = page.getByRole('dialog', { name: 'Historique des prix de « Flag 65 cl »' })
+  await expect(historique.getByRole('listitem')).toHaveCount(2)
+  await expect(historique).toContainText('Bè Kpota')
+  await capturer(page, '25-historique-prix')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await historique.getByRole('button', { name: 'Fermer' }).click()
+  await navigation.getByRole('link', { name: 'Activité' }).click()
+  await expect(activite).toContainText('Flag 65 cl')
+  await capturer(page, '24-activite-telephone')
+})

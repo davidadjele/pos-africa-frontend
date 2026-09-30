@@ -24,6 +24,15 @@ const DEVISES: Record<Devise, DescriptionDevise> = {
   USD: { decimales: 2, symbole: '$US', symboleCourt: '$' },
 }
 
+export function decimalesDe(devise: Devise): number {
+  return DEVISES[devise].decimales
+}
+
+/** Symbole affiché à côté d'une saisie de montant (« FCFA », « GH₵ »). */
+export function symboleDe(devise: Devise): string {
+  return DEVISES[devise].symbole
+}
+
 const ESPACE_FINE_INSECABLE = ' '
 const ESPACE_INSECABLE = ' '
 const SIGNE_MOINS = '−'

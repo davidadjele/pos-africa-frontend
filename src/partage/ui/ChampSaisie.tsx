@@ -66,6 +66,7 @@ export function ChampSaisie({
   erreur,
   obligatoire = false,
   prefixe,
+  suffixe,
   className,
   id: idFourni,
   ...reste
@@ -73,6 +74,8 @@ export function ChampSaisie({
   InputHTMLAttributes<HTMLInputElement> & {
     /** Texte fixe devant la saisie (indicatif téléphonique), hors de la valeur envoyée. */
     prefixe?: string | undefined
+    /** Unité après la saisie (« F CFA », « % »), hors de la valeur envoyée. */
+    suffixe?: string | undefined
     ref?: React.Ref<HTMLInputElement>
   }) {
   const idGenere = useId()
@@ -105,6 +108,11 @@ export function ChampSaisie({
           {...attributsAccessibilite(id, { libelle, aide, erreur })}
           {...reste}
         />
+        {suffixe !== undefined && (
+          <span className="flex min-h-cible-min items-center rounded-normal border border-trait bg-fond px-3 text-corps text-attenue">
+            {suffixe}
+          </span>
+        )}
       </div>
     </Enveloppe>
   )

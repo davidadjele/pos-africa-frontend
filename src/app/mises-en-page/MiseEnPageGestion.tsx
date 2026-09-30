@@ -1,10 +1,13 @@
 import { Link, Outlet } from '@tanstack/react-router'
 import {
+  Activity,
   Building2,
   LayoutDashboard,
+  Percent,
   Store,
   TabletSmartphone,
   Users,
+  UtensilsCrossed,
   type LucideIcon,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -17,7 +20,15 @@ import { MenuCompte } from './MenuCompte'
 
 interface EntreeNavigation {
   vers:
-    '/gestion' | '/caisse' | '/gestion/etablissements' | '/gestion/personnel' | '/gestion/tablettes'
+    | '/gestion'
+    | '/caisse'
+    | '/gestion/activite'
+    | '/gestion/produits'
+    | '/gestion/carte-etablissement'
+    | '/gestion/taxes'
+    | '/gestion/etablissements'
+    | '/gestion/personnel'
+    | '/gestion/tablettes'
   cle: string
   icone: LucideIcon
   /** Entrée masquée sans cette permission : l'écran ne servirait qu'à afficher un refus. */
@@ -28,6 +39,24 @@ interface EntreeNavigation {
 const QUOTIDIEN: EntreeNavigation[] = [
   { vers: '/gestion', cle: 'gestion.menu.tableauDeBord', icone: LayoutDashboard },
   { vers: '/caisse', cle: 'gestion.menu.caisse', icone: Store },
+  {
+    vers: '/gestion/activite',
+    cle: 'gestion.menu.activite',
+    icone: Activity,
+    permission: 'ACTIVITE_CONSULTER',
+  },
+]
+
+// La carte : consultable par tout le back-office, les taxes seulement par qui les règle.
+const CARTE: EntreeNavigation[] = [
+  { vers: '/gestion/produits', cle: 'gestion.menu.produits', icone: UtensilsCrossed },
+  { vers: '/gestion/carte-etablissement', cle: 'gestion.menu.parEtablissement', icone: Store },
+  {
+    vers: '/gestion/taxes',
+    cle: 'gestion.menu.taxes',
+    icone: Percent,
+    permission: 'CATALOGUE_GERER',
+  },
 ]
 
 // Réglages en bas, séparés des actions quotidiennes.
@@ -51,6 +80,15 @@ const REGLAGES: EntreeNavigation[] = [
     permission: 'APPAREIL_GERER',
   },
 ]
+
+function Separateur() {
+  return (
+    <li
+      aria-hidden="true"
+      className="mx-1 w-px self-stretch bg-trait md:mx-0 md:my-1 md:h-px md:w-auto"
+    />
+  )
+}
 
 function Entree({ vers, cle, icone: Icone }: Readonly<Omit<EntreeNavigation, 'permission'>>) {
   const { t } = useTranslation()
@@ -88,13 +126,24 @@ export function MiseEnPageGestion() {
           className="shrink-0 border-b border-trait bg-surface md:w-58 md:border-r md:border-b-0"
         >
           <ul className="m-0 flex list-none gap-1 overflow-x-auto p-2 md:flex-col">
-            {QUOTIDIEN.map((entree) => (
-              <Entree key={entree.vers} {...entree} />
+            {QUOTIDIEN.filter(
+              (entree) => entree.permission === undefined || aLaPermission(entree.permission),
+            ).map((entree) => (
+              <Entree key={entree.vers} vers={entree.vers} cle={entree.cle} icone={entree.icone} />
             ))}
+            <Separateur />
             <li
               aria-hidden="true"
-              className="mx-1 w-px self-stretch bg-trait md:mx-0 md:my-1 md:h-px md:w-auto"
-            />
+              className="hidden px-3 pt-1 text-badge uppercase tracking-wide text-attenue md:block"
+            >
+              {t('gestion.menu.carte')}
+            </li>
+            {CARTE.filter(
+              (entree) => entree.permission === undefined || aLaPermission(entree.permission),
+            ).map((entree) => (
+              <Entree key={entree.vers} vers={entree.vers} cle={entree.cle} icone={entree.icone} />
+            ))}
+            <Separateur />
             {REGLAGES.filter(
               (entree) => entree.permission === undefined || aLaPermission(entree.permission),
             ).map((entree) => (

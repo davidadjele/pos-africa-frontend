@@ -20,7 +20,9 @@
     "PIN_INCORRECT": "Wrong code. After the 5th wrong code, the profile is blocked.",
     "PROFIL_BLOQUE": "Profile blocked after 5 wrong codes. A manager must reset the PIN.",
     "VALIDATION_REQUISE": "This action needs a manager’s approval.",
-    "VALIDATION_INVALIDE": "Approval expired or already used. Ask the manager again."
+    "VALIDATION_INVALIDE": "Approval expired or already used. Ask the manager again.",
+    "TAXE_EN_USAGE": "Active products are subject to this tax: change their tax first.",
+    "CATEGORIE_EN_USAGE": "This category contains active products: move or disable them first."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Too many failed attempts: the account is locked. Try again in {{duree}}.",
@@ -42,8 +44,8 @@
   },
   "caisse": {
     "vide": {
-      "titre": "No products to sell yet",
-      "phrase": "Order taking and checkout arrive in the next release, along with the product catalogue."
+      "titre": "Nothing to sell yet",
+      "phrase": "This venue’s menu is empty. The owner builds it in the back office, Products."
     },
     "prise": {
       "titre": "Who is taking the till?",
@@ -89,6 +91,19 @@
     "session": {
       "changer": "Switch user",
       "utilisateur": "Till held by {{nom}}"
+    },
+    "carte": {
+      "categories": "Categories",
+      "tout": "All",
+      "recherche": "Search for a product",
+      "produits": "Products",
+      "epuise": "Sold out today",
+      "aucunResultat": "No product matches.",
+      "chargement": "Loading the menu…"
+    },
+    "note": {
+      "titre": "Current bill",
+      "phrase": "Order taking and payment arrive with the orders module."
     }
   },
   "gestion": {
@@ -97,7 +112,12 @@
       "caisse": "Till",
       "etablissements": "Venues",
       "personnel": "Staff",
-      "tablettes": "Tablets"
+      "tablettes": "Tablets",
+      "carte": "Menu",
+      "produits": "Products",
+      "taxes": "Taxes",
+      "parEtablissement": "By venue",
+      "activite": "Activity"
     },
     "tableauDeBord": {
       "titre": "Dashboard",
@@ -283,7 +303,9 @@
     "codeAide": "2 to 10 capital letters or digits, for example BE.",
     "ville": "City",
     "adresse": "Address",
-    "creer": "Create the business"
+    "creer": "Create the business",
+    "tva": "VAT",
+    "tvaAide": "Rate that applies in the country. The owner can change it in the taxes."
   },
   "inscription": {
     "titre": "Create my business",
@@ -487,6 +509,305 @@
       "titre": "Rename “{{nom}}”",
       "consequence": "The new name shows on the tablet and in this list.",
       "fait": "The tablet is now called “{{nom}}”."
+    }
+  },
+  "couleurs": {
+    "OCRE": "Ochre",
+    "BRIQUE": "Brick",
+    "FEUILLE": "Leaf",
+    "LAGUNE": "Lagoon",
+    "PRUNE": "Plum",
+    "SABLE": "Sand",
+    "MENTHE": "Mint",
+    "ARDOISE": "Slate"
+  },
+  "typesProduit": {
+    "PLAT": "Dish",
+    "BOISSON": "Drink",
+    "ARTICLE": "Item"
+  },
+  "taxes": {
+    "titre": "Taxes",
+    "phrase": "The rates applied to your products. Menu prices include tax: the tax is taken out on the receipt.",
+    "tableau": "Business taxes",
+    "colonnes": {
+      "nom": "Name",
+      "taux": "Rate",
+      "produits": "Products",
+      "statut": "Status",
+      "actions": "Actions"
+    },
+    "nbProduits_one": "{{count}} product",
+    "nbProduits_other": "{{count}} products",
+    "statut": {
+      "active": "Active",
+      "desactivee": "Disabled"
+    },
+    "ajouter": "Add a tax",
+    "modifier": "Edit",
+    "modifierNomme": "Edit {{nom}}",
+    "plusDActions": "More actions for {{nom}}",
+    "desactiver": "Disable",
+    "reactiver": "Enable",
+    "chargement": "Loading taxes…",
+    "vide": {
+      "titre": "No tax",
+      "phrase": "Add the VAT that applies in your country: each product can then be subject to it."
+    },
+    "formulaire": {
+      "titreCreation": "Add a tax",
+      "titreModification": "Edit the “{{nom}}” tax",
+      "consequence": "The rate applies to the tax-inclusive prices of the products subject to this tax.",
+      "nom": "Name",
+      "taux": "Rate",
+      "tauxAide": "For example 18, or 19.25.",
+      "tauxInvalide": "Enter a rate between 0 and 100, with at most two decimals.",
+      "changement": "{{avant}} → {{apres}} on {{produits}}",
+      "changementPhrase": "The new rate applies to sales recorded from now on. Past sales keep their rate. The change will be visible in the activity, under your name.",
+      "creer": "Add the tax",
+      "enregistrer": "Save"
+    },
+    "creee": "The “{{nom}}” tax is added.",
+    "modifiee": "The “{{nom}}” tax is saved.",
+    "desactivee": "The “{{nom}}” tax is disabled.",
+    "reactivee": "The “{{nom}}” tax is enabled again.",
+    "enUsage_one": "“{{nom}}” still applies to {{count}} active product: change its tax in its record first, then disable it.",
+    "enUsage_other": "“{{nom}}” still applies to {{count}} active products: change their tax in their records first, then disable it."
+  },
+  "produits": {
+    "titre": "Products",
+    "phrase": "The menu shared by your venues. Prices include tax: the tax is worked out backwards and shown on the receipt.",
+    "tableau": "Menu products",
+    "categories": "Categories",
+    "touteLaCarte": "Whole menu",
+    "recherche": "Search for a product",
+    "actifs": "Active",
+    "desactives": "Disabled",
+    "colonnes": {
+      "produit": "Product",
+      "categorie": "Category",
+      "prix": "Price incl. tax",
+      "taxe": "Tax",
+      "stock": "Stock",
+      "statut": "Status",
+      "actions": "Actions"
+    },
+    "aucuneTaxe": "None",
+    "stock": {
+      "suivi": "Tracked",
+      "nonSuivi": "Not tracked"
+    },
+    "statut": {
+      "actif": "Active",
+      "desactive": "Disabled"
+    },
+    "ajouter": "Add a product",
+    "gererCategories": "Manage categories",
+    "modifier": "Edit",
+    "modifierNomme": "Edit {{nom}}",
+    "plusDActions": "More actions for {{nom}}",
+    "desactiver": "Disable",
+    "reactiver": "Enable",
+    "chargement": "Loading the menu…",
+    "vide": {
+      "titre": "The menu is empty",
+      "phrase": "First create your categories (Grills, Beers…), then add your products with their price.",
+      "phraseSansDroit": "The owner or an administrator builds the menu."
+    },
+    "aucunResultat": "No product matches.",
+    "desactive": "“{{nom}}” is disabled: it no longer shows on the till.",
+    "reactive": "“{{nom}}” is back on the menu.",
+    "note": "A product that was sold is never deleted: disable it. Venue-specific prices and “sold out today” will come in each venue’s menu.",
+    "fiche": {
+      "retour": "Products",
+      "titreCreation": "Add a product",
+      "titreModification": "Edit “{{nom}}”",
+      "nom": "Name",
+      "categorie": "Category",
+      "categorieAide": "Add a category from “Manage categories”.",
+      "type": "Type",
+      "typeAide": "Item: a product resold as is (tissues, cigarettes…).",
+      "prix": "Price incl. tax",
+      "prixAide": "The price the customer pays, tax included.",
+      "prixInvalide": "Enter a price, for example 1,000.",
+      "taxe": "Tax",
+      "dontTaxe": "Including {{taxe}}: {{montant}} per unit.",
+      "suiviStock": "Track stock for this product",
+      "suiviStockAide": "Ticked by default for drinks and items. Deliveries and losses will be entered in the Stock module.",
+      "apercu": "Preview on the till",
+      "traceNote": "A price or tax change is recorded in the activity (who, when, before and after) and does not affect sales already made.",
+      "enregistrerCreation": "Save the product",
+      "enregistrerModification": "Save changes",
+      "prixSansDroit": "Only an owner or an administrator changes prices.",
+      "cree": "“{{nom}}” is added to the menu.",
+      "modifie": "“{{nom}}” is saved.",
+      "chargement": "Loading the product…"
+    },
+    "historiquePrix": "Price history",
+    "historique": {
+      "titre": "Price history of “{{nom}}”",
+      "phrase": "Base price and venue prices. Sales keep the price they were made at.",
+      "fermer": "Close",
+      "vide": "No price change recorded.",
+      "liste": "Price changes"
+    }
+  },
+  "categories": {
+    "titre": "Menu categories",
+    "phrase": "Their order is the order of the tabs on the till. The colour marks the products on the tiles.",
+    "liste": "Categories",
+    "fermer": "Close",
+    "monter": "Move {{nom}} up",
+    "descendre": "Move {{nom}} down",
+    "nbProduits_one": "{{count}} product",
+    "nbProduits_other": "{{count}} products",
+    "modifierNomme": "Edit {{nom}}",
+    "modifier": "Edit",
+    "desactiverNomme": "Disable {{nom}}",
+    "desactiver": "Disable",
+    "reactiverNomme": "Enable {{nom}}",
+    "reactiver": "Enable",
+    "desactivee": "Disabled",
+    "nouvelle": "New category",
+    "modification": "Edit “{{nom}}”",
+    "nom": "Name",
+    "couleur": "Colour",
+    "ajouter": "Add the category",
+    "enregistrer": "Save",
+    "annuler": "Cancel",
+    "regle": "A category that contains active products cannot be disabled: move or disable its products first.",
+    "enUsage_one": "“{{nom}}” still contains {{count}} active product: move it to another category or disable it first.",
+    "enUsage_other": "“{{nom}}” still contains {{count}} active products: move them to another category or disable them first."
+  },
+  "carteEtablissement": {
+    "titre": "{{etablissement}} menu",
+    "titreSansEtablissement": "Menu by venue",
+    "phrase": "What this venue’s till offers, and at what price. “Sold out today” clears itself the next morning at 4 am.",
+    "etablissement": "Venue",
+    "tableau": "Venue menu",
+    "recherche": "Search for a product",
+    "compteurs": {
+      "epuises_one": "{{count}} sold out today",
+      "epuises_other": "{{count}} sold out today",
+      "prixPropres_one": "{{count}} venue price",
+      "prixPropres_other": "{{count}} venue prices",
+      "nonProposes_one": "{{count}} not offered here",
+      "nonProposes_other": "{{count}} not offered here"
+    },
+    "colonnes": {
+      "produit": "Product",
+      "prixBase": "Base price",
+      "prixIci": "Price here",
+      "disponibilite": "Availability",
+      "actions": "Actions"
+    },
+    "prixDeBase": "Base price",
+    "prixPropre": "Venue price",
+    "disponible": "Available",
+    "epuise": "Sold out today",
+    "nonPropose": "Not offered here",
+    "epuiseDetail": "{{auteur}}, {{heure}}, until 4 am the next morning",
+    "epuiser": "Sold out today",
+    "epuiserNomme": "Mark {{nom}} sold out today",
+    "remettre": "Back on sale",
+    "remettreNomme": "Put {{nom}} back on sale",
+    "proposer": "Offer here",
+    "proposerNomme": "Offer {{nom}} here",
+    "retirer": "Stop offering here",
+    "fixerPrix": "Price at this venue",
+    "plusDActions": "More actions for {{nom}}",
+    "chargement": "Loading the menu…",
+    "aucunEtablissement": "No venue to show.",
+    "vide": {
+      "titre": "The menu is empty",
+      "phrase": "Products from the shared menu will show here once they are created."
+    },
+    "aucunResultat": "No product matches.",
+    "fait": {
+      "epuise": "“{{nom}}” is sold out until 4 am tomorrow.",
+      "remis": "“{{nom}}” is back on sale.",
+      "propose": "“{{nom}}” is offered here again.",
+      "retire": "“{{nom}}” is no longer offered here.",
+      "prix": "Price of “{{nom}}” saved."
+    },
+    "dialoguePrix": {
+      "titre": "Price of “{{nom}}” at {{etablissement}}",
+      "consequence": "Menu base price: {{prix}}. This price only applies to the {{etablissement}} tills.",
+      "prix": "Price incl. tax at {{etablissement}}",
+      "note": "If the base price changes later, {{etablissement}} keeps this price. “Back to base price” removes it. The change is recorded in the activity, under your name.",
+      "revenir": "Back to base price",
+      "enregistrer": "Save the price"
+    }
+  },
+  "activite": {
+    "titre": "Activity",
+    "phrase": "The actions that matter: prices, taxes, menu, staff, tablets, approvals. Who, when, and what changed.",
+    "liste": "Activity",
+    "periode": "Period",
+    "periodes": {
+      "jour": "Today",
+      "semaine": "Last 7 days",
+      "mois": "Last 30 days"
+    },
+    "etablissement": "Venue",
+    "tous": "All",
+    "domaine": "Area",
+    "domaines": {
+      "CARTE": "Menu",
+      "PERSONNEL": "Staff",
+      "TABLETTES": "Tablets",
+      "CAISSE": "Till"
+    },
+    "critiquesSeulement": "Critical only",
+    "tout": "All",
+    "critique": "Critical",
+    "information": "Information",
+    "chargement": "Loading activity…",
+    "vide": {
+      "titre": "Nothing in this period",
+      "phrase": "No action matches these filters. Widen the period or show everything."
+    },
+    "equipeTonti": "Tonti team",
+    "touteLaCarte": "Whole menu",
+    "touteLEntreprise": "Whole business",
+    "aucune": "None",
+    "prixDeBase": "Base price",
+    "jusqua": "Until {{date}}",
+    "tauxInitial": "Rate: {{taux}}",
+    "roles": "Before: {{avant}}. After: {{apres}}.",
+    "roleA": "{{role}} at {{etablissement}}",
+    "autreEtablissement": "another venue",
+    "aucunRole": "no role",
+    "types": {
+      "TAXE_CREEE": "<b>{{auteur}}</b> created the <b>{{objet}}</b> tax",
+      "TAUX_TAXE_MODIFIE": "<b>{{auteur}}</b> changed the rate of <b>{{objet}}</b>",
+      "TAXE_DESACTIVEE": "<b>{{auteur}}</b> disabled the <b>{{objet}}</b> tax",
+      "TAXE_REACTIVEE": "<b>{{auteur}}</b> enabled the <b>{{objet}}</b> tax again",
+      "PRIX_MODIFIE": "<b>{{auteur}}</b> changed the base price of <b>{{objet}}</b>",
+      "TAXE_PRODUIT_MODIFIEE": "<b>{{auteur}}</b> changed the tax of <b>{{objet}}</b>",
+      "PRODUIT_DESACTIVE": "<b>{{auteur}}</b> disabled <b>{{objet}}</b>",
+      "PRODUIT_REACTIVE": "<b>{{auteur}}</b> put <b>{{objet}}</b> back on the menu",
+      "PRIX_ETABLISSEMENT_MODIFIE": "<b>{{auteur}}</b> changed the price of <b>{{objet}}</b> at {{etablissement}}",
+      "PRODUIT_RETIRE_ETABLISSEMENT": "<b>{{auteur}}</b> removed <b>{{objet}}</b> from the {{etablissement}} menu",
+      "PRODUIT_PROPOSE_ETABLISSEMENT": "<b>{{auteur}}</b> put <b>{{objet}}</b> back on the {{etablissement}} menu",
+      "RUPTURE_DECLAREE": "<b>{{auteur}}</b> marked <b>{{objet}}</b> sold out at {{etablissement}}",
+      "RUPTURE_LEVEE": "<b>{{auteur}}</b> put <b>{{objet}}</b> back on sale at {{etablissement}}",
+      "ROLES_MODIFIES": "<b>{{auteur}}</b> changed the roles of <b>{{objet}}</b>",
+      "PIN_REINITIALISE": "<b>{{auteur}}</b> reset the PIN of <b>{{objet}}</b>",
+      "EMPLOYE_DESACTIVE": "<b>{{auteur}}</b> disabled <b>{{objet}}</b>",
+      "EMPLOYE_REACTIVE": "<b>{{auteur}}</b> enabled <b>{{objet}}</b> again",
+      "TABLETTE_REVOQUEE": "<b>{{auteur}}</b> revoked the <b>{{objet}}</b> tablet",
+      "VALIDATION_GERANT_UTILISEE": "<b>{{auteur}}</b> got <b>{{validateur}}</b>’s approval to {{action}}"
+    },
+    "actions": {
+      "LIGNE_ANNULER_APRES_ENVOI": "cancel a sent line",
+      "TABLE_TRANSFERER": "transfer a table",
+      "REMISE_APPLIQUER": "apply a discount",
+      "REMISE_AU_DELA_PLAFOND": "go over the discount cap",
+      "ARTICLE_OFFRIR": "give an item for free",
+      "PAIEMENT_REMBOURSER": "refund a payment",
+      "CAISSE_MOUVEMENT": "make a till movement",
+      "autre": "a protected action"
     }
   }
 }

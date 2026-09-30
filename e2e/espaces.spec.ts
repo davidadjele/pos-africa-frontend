@@ -63,7 +63,7 @@ async function simulerApi(page: Page, { connecte }: { connecte: boolean }) {
       json: {
         id: '7c2a0000-0000-4000-8000-000000000001',
         nom: 'Caisse 1, bar',
-        entreprise: MAQUIS,
+        entreprise: { ...MAQUIS, devise: 'XOF' },
         etablissement: { id: ETABLISSEMENTS.elements[0]?.id, nom: 'Bè Kpota', ville: 'Lomé' },
         delaiVerrouillageMinutes: 3,
       },
