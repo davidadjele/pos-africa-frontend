@@ -48,7 +48,9 @@
     "annuler": "Annuler",
     "chargement": "Chargement…",
     "copier": "Copier",
-    "copie": "Copié"
+    "copie": "Copié",
+    "enregistrer": "Enregistrer",
+    "fermer": "Fermer"
   },
   "caisse": {
     "vide": {
@@ -379,7 +381,10 @@
       "taxes": "Taxes",
       "parEtablissement": "Par établissement",
       "activite": "Activité",
-      "salles": "Salles et tables"
+      "salles": "Salles et tables",
+      "stock": "Stock",
+      "aTraiter_one": "{{count}} produit à traiter",
+      "aTraiter_other": "{{count}} produits à traiter"
     },
     "tableauDeBord": {
       "titre": "Tableau de bord",
@@ -483,7 +488,10 @@
       "verrouillage": "Verrouillage de la caisse",
       "verrouillageAide": "Sans activité pendant ce délai, la caisse revient à « Qui prend la caisse ? ».",
       "minutes_one": "{{count}} minute",
-      "minutes_other": "{{count}} minutes"
+      "minutes_other": "{{count}} minutes",
+      "politiqueStock": "Politique de stock",
+      "politiqueStockAide": "Ce que fait la caisse quand une boisson n’a plus de stock enregistré.",
+      "politiqueEntreprise": "Celle de l’entreprise (souple)"
     },
     "cree": "{{nom}} a été créé.",
     "modifie": "{{nom}} a été modifié."
@@ -1018,7 +1026,8 @@
       "CARTE": "Carte",
       "PERSONNEL": "Personnel",
       "TABLETTES": "Tablettes",
-      "CAISSE": "Caisse"
+      "CAISSE": "Caisse",
+      "STOCK": "Stock"
     },
     "critiquesSeulement": "Critiques seulement",
     "tout": "Tout",
@@ -1074,7 +1083,11 @@
       "CLOTURE_CAISSE": "<b>{{auteur}}</b> a clôturé la caisse à {{etablissement}} (<b>{{objet}}</b>)",
       "ECART_CAISSE": "<b>{{auteur}}</b> a clôturé la caisse avec un écart à {{etablissement}} (<b>{{objet}}</b>)",
       "ECART_OUVERTURE_CAISSE": "<b>{{auteur}}</b> a ouvert la caisse avec un écart à {{etablissement}}",
-      "REMBOURSEMENT": "<b>{{auteur}}</b> a remboursé la note <b>{{objet}}</b> à {{etablissement}}"
+      "REMBOURSEMENT": "<b>{{auteur}}</b> a remboursé la note <b>{{objet}}</b> à {{etablissement}}",
+      "RECEPTION_STOCK": "<b>{{auteur}}</b> a réceptionné <b>{{objet}}</b> à {{etablissement}}",
+      "PERTE_STOCK": "<b>{{auteur}}</b> a déclaré une perte de <b>{{objet}}</b> à {{etablissement}}",
+      "ECART_INVENTAIRE": "<b>{{auteur}}</b> a corrigé le stock de <b>{{objet}}</b> par inventaire à {{etablissement}}",
+      "POLITIQUE_STOCK_MODIFIEE": "<b>{{auteur}}</b> a changé la politique de stock de <b>{{objet}}</b>"
     },
     "actions": {
       "LIGNE_ANNULER_APRES_ENVOI": "annuler des articles envoyés",
@@ -1104,7 +1117,17 @@
     "clotureEcart": "Attendu {{attendu}}, compté {{compte}}, écart {{ecart}} : {{explication}}",
     "ouvertureEcart": "Laissé {{attendu}}, compté {{compte}}, écart {{ecart}} : {{explication}}",
     "remboursement": "−{{montant}} en {{mode}}, {{ou}}. Motif : {{motif}}.",
-    "remboursementValide": "−{{montant}} en {{mode}}, {{ou}}. Motif : {{motif}}. Validé par {{validateur}}"
+    "remboursementValide": "−{{montant}} en {{mode}}, {{ou}}. Motif : {{motif}}. Validé par {{validateur}}",
+    "reception": "+{{quantite}}, {{apres}} en stock{{reference}}",
+    "perte": "−{{quantite}}, {{motif}}, {{apres}} en stock",
+    "ecartInventaire": "Enregistré {{attendu}}, compté {{compte}}, écart {{ecart}} : {{motif}}",
+    "politiqueStock": "{{avant}} → {{apres}}",
+    "politiques": {
+      "ENTREPRISE": "Celle de l’entreprise",
+      "SOUPLE": "Souple",
+      "AVERTISSEMENT": "Avertissement",
+      "STRICT": "Stricte"
+    }
   },
   "salles": {
     "titre": "Salles et tables de {{etablissement}}",
@@ -1446,5 +1469,161 @@
     "validationTitre": "Rembourser {{montant}} en {{mode}} ?",
     "validationContexte": "{{note}}, demandé par {{demandeur}}. Motif : {{motif}}.",
     "chargementNote": "Chargement de la note…"
+  },
+  "stock": {
+    "titre": "Stock",
+    "phrase": "Boissons et articles revendus tels quels, par établissement. Les plats cuisinés ne sont pas suivis.",
+    "chargement": "Chargement du stock…",
+    "etablissement": "Établissement",
+    "rechercher": "Rechercher un produit",
+    "tableau": "Stock de {{etablissement}}",
+    "plusDActions": "Plus d’actions pour {{nom}}",
+    "politique": "Politique de stock à {{etablissement}} : {{politique}}.",
+    "politiques": {
+      "SOUPLE": "souple, on vend même sans stock",
+      "AVERTISSEMENT": "avertissement, la caisse prévient avant de vendre",
+      "STRICT": "stricte, la caisse refuse de vendre sans stock"
+    },
+    "politiquesLongues": {
+      "SOUPLE": "Souple : on vend même sans stock",
+      "AVERTISSEMENT": "Avertissement : la caisse prévient",
+      "STRICT": "Stricte : la caisse refuse"
+    },
+    "nonCompte": "Pas encore compté",
+    "seuilCourt": "/ seuil {{seuil}}",
+    "aucunMouvement": "Aucun mouvement",
+    "colonnes": {
+      "produit": "Produit",
+      "quantite": "En stock",
+      "etat": "État",
+      "mouvement": "Dernier mouvement",
+      "actions": "Actions"
+    },
+    "etats": {
+      "A_COMPTER": "À compter",
+      "EN_STOCK": "En stock",
+      "FAIBLE": "Stock faible",
+      "RUPTURE": "Rupture",
+      "NEGATIF": "Stock négatif"
+    },
+    "filtres": {
+      "tous": "Tous",
+      "aTraiter": "À traiter",
+      "aCompter": "À compter"
+    },
+    "mouvements": {
+      "INITIAL": "Premier comptage",
+      "RECEPTION": "Réception",
+      "VENTE": "Vente",
+      "RETOUR": "Retour",
+      "PERTE": "Perte",
+      "INVENTAIRE": "Inventaire"
+    },
+    "motifs": {
+      "CASSE": "Casse",
+      "PERIME": "Périmé",
+      "CONSOMME_PERSONNEL": "Consommé par le personnel",
+      "VOL": "Vol",
+      "ERREUR_SAISIE": "Erreur de saisie",
+      "LIVRAISON_NON_SAISIE": "Livraison non saisie",
+      "AUTRE": "Autre"
+    },
+    "vide": {
+      "titre": "Aucun produit suivi en stock",
+      "phrase": "Les boissons et articles de la carte apparaissent ici. Un plat cuisiné n’est pas suivi."
+    },
+    "perte": {
+      "action": "Déclarer une perte",
+      "titre": "Déclarer une perte",
+      "phrase": "Des articles sortis du stock sans être vendus. Tracé dans l’activité comme action critique.",
+      "produit": "Produit",
+      "choisir": "Choisir un produit",
+      "quantite": "Quantité",
+      "motif": "Motif",
+      "detail": "Précisez le motif",
+      "retirer_one": "Retirer {{count}} du stock",
+      "retirer_other": "Retirer {{count}} du stock",
+      "retirerSans": "Retirer du stock",
+      "fait_one": "{{count}} {{nom}} retiré du stock.",
+      "fait_other": "{{count}} {{nom}} retirés du stock.",
+      "manques": {
+        "produit": "Choisissez le produit.",
+        "quantite": "Indiquez la quantité.",
+        "motif": "Choisissez le motif.",
+        "detail": "Précisez le motif."
+      }
+    },
+    "seuil": {
+      "action": "Régler le seuil d’alerte",
+      "titre": "Seuil d’alerte de {{nom}}",
+      "phrase": "Sous ce seuil, le produit passe en « Stock faible » : c’est le moment de commander.",
+      "champ": "Seuil d’alerte",
+      "invalide": "Un nombre entier, 0 pour aucune alerte.",
+      "fait": "Seuil d’alerte de {{nom}} : {{seuil}}."
+    },
+    "historique": {
+      "action": "Historique",
+      "titre": "Historique de {{nom}}",
+      "phrase": "{{quantite}} en stock. Chaque mouvement garde le stock qui en résulte.",
+      "aCompter": "Pas encore compté.",
+      "chargement": "Chargement de l’historique…",
+      "vide": "Aucun mouvement pour l’instant.",
+      "liste": "Mouvements"
+    },
+    "reception": {
+      "action": "Réceptionner une livraison",
+      "titre": "Réceptionner une livraison",
+      "phrase": "{{etablissement}}. Les quantités s’ajoutent au stock dès l’enregistrement.",
+      "ajouter": "Ajouter un produit",
+      "choisir": "Choisir : Castel, Coca…",
+      "reference": "N° du bon de livraison (facultatif)",
+      "aucune": "Ajoutez les produits de la livraison.",
+      "liste": "Produits reçus",
+      "quantite": "Quantité",
+      "quantiteDe": "Quantité de {{nom}}",
+      "cout": "Coût unitaire (facultatif)",
+      "coutDe": "Coût unitaire de {{nom}}",
+      "retirer": "Retirer {{nom}}",
+      "aide": "Le coût d’achat servira au calcul de la marge dans les rapports.",
+      "produits_one": "{{count}} produit",
+      "produits_other": "{{count}} produits",
+      "unites_one": "{{count}} unité",
+      "unites_other": "{{count}} unités",
+      "enregistrer": "Enregistrer : {{produits}}, {{unites}}",
+      "enregistrerSans": "Enregistrer",
+      "fait": "Réception enregistrée : {{produits}}, {{unites}}."
+    },
+    "inventaire": {
+      "action": "Faire l’inventaire",
+      "titre": "Inventaire de {{etablissement}}",
+      "etape1": "Étape 1 sur 2 : comptez sans regarder le stock enregistré. Un produit laissé vide garde son stock.",
+      "etape2": "Étape 2 sur 2 : les écarts. Chacun corrige le stock et se lit dans l’activité comme action critique.",
+      "liste": "Produits à compter",
+      "compteDe": "Compté : {{nom}}",
+      "comptes_one": "{{count}} produit compté",
+      "comptes_other": "{{count}} produits comptés",
+      "voirEcarts": "Voir les écarts",
+      "tableau": "Écarts de l’inventaire",
+      "attendu": "Enregistré",
+      "compte": "Compté",
+      "ecart": "Écart",
+      "motif": "Motif",
+      "premier": "Premier comptage",
+      "juste": "Juste",
+      "rien": "Rien à justifier",
+      "motifDe": "Motif de l’écart : {{nom}}",
+      "detailDe": "Précisez : {{nom}}",
+      "choisirMotif": "Choisir le motif",
+      "pourValider": "Pour valider : le motif de l’écart de {{liste}}.",
+      "trace": "Les écarts corrigent le stock et sont tracés comme actions critiques.",
+      "recompter": "Recompter",
+      "valider": "Valider l’inventaire",
+      "ecarts_one": "{{count}} écart",
+      "ecarts_other": "{{count}} écarts",
+      "premiers_one": "{{count}} premier comptage",
+      "premiers_other": "{{count}} premiers comptages",
+      "toutJuste": "aucun écart",
+      "fait": "Inventaire enregistré : {{resume}}."
+    }
   }
 }

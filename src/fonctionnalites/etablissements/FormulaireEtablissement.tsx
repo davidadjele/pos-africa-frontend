@@ -8,6 +8,7 @@ import type {
   DemandeEtablissement,
   DemandeModificationEtablissement,
   EtablissementResume,
+  PolitiqueStock,
 } from '../../partage/api/contrat'
 import { ErreurApi } from '../../partage/api/ErreurApi'
 import { placerErreursServeur, texteOptionnel } from '../../partage/formulaires/erreursServeur'
@@ -29,7 +30,11 @@ const schema = z.object({
   adresse: z.string().max(255, 'validation.tropLong'),
   fuseauHoraire: z.string().min(1, 'validation.obligatoire'),
   delaiVerrouillageMinutes: z.coerce.number<string>().int().min(1).max(30),
+  // Vide : celle de l'entreprise s'applique (souple par défaut).
+  politiqueStock: z.enum(['', 'SOUPLE', 'AVERTISSEMENT', 'STRICT']),
 })
+
+const POLITIQUES: PolitiqueStock[] = ['SOUPLE', 'AVERTISSEMENT', 'STRICT']
 
 /** Choix proposés : court dans un bar animé, plus long dans un restaurant calme. */
 const DELAIS_VERROUILLAGE = [1, 2, 3, 5, 10, 15, 30]
@@ -45,6 +50,7 @@ const CHAMPS = [
   'adresse',
   'fuseauHoraire',
   'delaiVerrouillageMinutes',
+  'politiqueStock',
 ] as const
 
 function valeursDe(etablissement: EtablissementResume): Saisie {
@@ -55,6 +61,7 @@ function valeursDe(etablissement: EtablissementResume): Saisie {
     adresse: etablissement.adresse ?? '',
     fuseauHoraire: etablissement.fuseauHoraire,
     delaiVerrouillageMinutes: String(etablissement.delaiVerrouillageMinutes),
+    politiqueStock: etablissement.politiqueStock ?? '',
   }
 }
 
@@ -68,6 +75,7 @@ function demandeDe(saisie: Valide): DemandeEtablissement {
     ...(adresse === undefined ? {} : { adresse }),
     fuseauHoraire: saisie.fuseauHoraire,
     delaiVerrouillageMinutes: saisie.delaiVerrouillageMinutes,
+    ...(saisie.politiqueStock === '' ? {} : { politiqueStock: saisie.politiqueStock }),
   }
 }
 
@@ -111,6 +119,7 @@ export function FormulaireEtablissement({
           adresse: '',
           fuseauHoraire: fuseauParDefaut,
           delaiVerrouillageMinutes: DELAI_PAR_DEFAUT,
+          politiqueStock: '',
         },
   })
 
@@ -227,6 +236,18 @@ export function FormulaireEtablissement({
           }))}
           erreur={message(errors.delaiVerrouillageMinutes?.message)}
           {...register('delaiVerrouillageMinutes')}
+        />
+        <ChampSelection
+          libelle={t('etablissements.formulaire.politiqueStock')}
+          aide={t('etablissements.formulaire.politiqueStockAide')}
+          options={[
+            { valeur: '', libelle: t('etablissements.formulaire.politiqueEntreprise') },
+            ...POLITIQUES.map((politique) => ({
+              valeur: politique,
+              libelle: t(`stock.politiquesLongues.${politique}`),
+            })),
+          ]}
+          {...register('politiqueStock')}
         />
       </div>
       {erreur !== null && <AlerteErreur erreur={erreur} />}

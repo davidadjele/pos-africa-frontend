@@ -30,7 +30,7 @@ import { auteurDe, detailActivite, PhraseActivite, type ContexteActivite } from 
 const TAILLE_PAGE = 50
 const JOUR = 24 * 60 * 60 * 1000
 type Periode = 'jour' | 'semaine' | 'mois'
-const DOMAINES: DomaineActivite[] = ['CARTE', 'PERSONNEL', 'TABLETTES', 'CAISSE']
+const DOMAINES: DomaineActivite[] = ['CARTE', 'PERSONNEL', 'TABLETTES', 'CAISSE', 'STOCK']
 
 interface Filtres {
   periode: Periode

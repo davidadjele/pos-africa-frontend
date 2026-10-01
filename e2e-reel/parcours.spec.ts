@@ -480,6 +480,79 @@ test('Tanti fixe un prix à Bè Kpota, puis la gérante déclare une rupture dep
   await capturer(page, '22-rupture-telephone')
 })
 
+test('La gérante compte le stock de Bè Kpota, réceptionne une livraison et déclare une casse', async ({
+  page,
+}) => {
+  await seConnecter(page, AFI.telephone, AFI.motDePasse)
+  const navigation = page.getByRole('navigation', { name: 'Navigation principale' })
+  await navigation.getByRole('link', { name: /Stock/ }).click()
+  const stock = page.getByRole('table', { name: 'Stock de Bè Kpota' })
+  await expect(stock.getByRole('row', { name: /Flag 65 cl/ })).toContainText('À compter')
+  await capturer(page, '60-stock-a-compter')
+
+  // Premier comptage : il devient le stock, sans écart à justifier.
+  await page.getByRole('link', { name: 'Faire l’inventaire' }).click()
+  await page.getByRole('textbox', { name: 'Compté : Flag 65 cl' }).fill('12')
+  await page.getByRole('button', { name: 'Voir les écarts' }).click()
+  await expect(page.getByRole('table', { name: 'Écarts de l’inventaire' })).toContainText(
+    'Premier comptage',
+  )
+  await page.getByRole('button', { name: 'Valider l’inventaire' }).click()
+  await expect(page.getByText('Inventaire enregistré : 1 premier comptage.')).toBeVisible()
+
+  await page.getByRole('link', { name: 'Réceptionner une livraison' }).click()
+  await page
+    .getByRole('combobox', { name: 'Ajouter un produit' })
+    .selectOption({ label: 'Flag 65 cl' })
+  await page.getByRole('textbox', { name: /^N° du bon de livraison/ }).fill('BL 2240')
+  await page.getByRole('textbox', { name: 'Quantité de Flag 65 cl' }).fill('24')
+  await page.getByRole('textbox', { name: 'Coût unitaire de Flag 65 cl' }).fill('650')
+  await capturer(page, '61-stock-reception')
+  await page.getByRole('button', { name: 'Enregistrer : 1 produit, 24 unités' }).click()
+  await expect(page.getByText('Réception enregistrée : 1 produit, 24 unités.')).toBeVisible()
+  await expect(stock.getByRole('row', { name: /Flag 65 cl/ })).toContainText('36')
+
+  await page.getByRole('button', { name: 'Plus d’actions pour Flag 65 cl' }).click()
+  await page.getByRole('menuitem', { name: 'Régler le seuil d’alerte' }).click()
+  const seuil = page.getByRole('dialog', { name: 'Seuil d’alerte de Flag 65 cl' })
+  await seuil.getByRole('textbox', { name: /^Seuil/ }).fill('40')
+  await seuil.getByRole('button', { name: 'Enregistrer' }).click()
+  await expect(stock.getByRole('row', { name: /Flag 65 cl/ })).toContainText('Stock faible')
+
+  await page.getByRole('button', { name: 'Déclarer une perte' }).click()
+  const perte = page.getByRole('dialog', { name: 'Déclarer une perte' })
+  await perte.getByRole('combobox', { name: /^Produit/ }).selectOption({ label: 'Flag 65 cl' })
+  await perte.getByRole('textbox', { name: /^Quantité/ }).fill('2')
+  await perte.getByRole('radio', { name: 'Casse' }).click()
+  await capturer(page, '62-stock-perte')
+  await perte.getByRole('button', { name: 'Retirer 2 du stock' }).click()
+  await expect(page.getByText('2 Flag 65 cl retirés du stock.')).toBeVisible()
+  await capturer(page, '63-stock')
+
+  // Inventaire : un écart à justifier.
+  await page.getByRole('link', { name: 'Faire l’inventaire' }).click()
+  await capturer(page, '64-inventaire-comptage')
+  await page.getByRole('textbox', { name: 'Compté : Flag 65 cl' }).fill('33')
+  await page.getByRole('button', { name: 'Voir les écarts' }).click()
+  const ecarts = page.getByRole('table', { name: 'Écarts de l’inventaire' })
+  await expect(ecarts).toContainText('−1')
+  await expect(page.getByRole('button', { name: 'Valider l’inventaire' })).toBeDisabled()
+  await ecarts.getByRole('combobox', { name: 'Motif de l’écart : Flag 65 cl' }).selectOption('VOL')
+  await capturer(page, '65-inventaire-ecarts')
+  await page.getByRole('button', { name: 'Valider l’inventaire' }).click()
+  await expect(page.getByText('Inventaire enregistré : 1 écart.')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Plus d’actions pour Flag 65 cl' }).click()
+  await page.getByRole('menuitem', { name: 'Historique' }).click()
+  const historique = page.getByRole('dialog', { name: 'Historique de Flag 65 cl' })
+  await expect(historique.getByRole('listitem')).toHaveCount(4)
+  await expect(historique).toContainText('BL 2240')
+  await capturer(page, '66-stock-historique')
+  await historique.getByRole('button', { name: 'Fermer' }).click()
+  await page.setViewportSize({ width: 390, height: 844 })
+  await capturer(page, '63-stock-telephone')
+})
+
 test('Tanti retrouve dans l’activité les changements de la journée et l’historique des prix', async ({
   page,
 }) => {
@@ -492,6 +565,10 @@ test('Tanti retrouve dans l’activité les changements de la journée et l’hi
   await expect(activite).toContainText('a changé le prix de Flag 65 cl à Bè Kpota')
   await expect(activite).toContainText('a changé le prix de base de Flag 65 cl')
   await expect(activite).toContainText('a réinitialisé le PIN de Sena Gbeasor')
+  await expect(activite).toContainText('Afi M. a déclaré une perte de Flag 65 cl à Bè Kpota')
+  await expect(activite).toContainText(
+    'Afi M. a corrigé le stock de Flag 65 cl par inventaire à Bè Kpota',
+  )
   await expect(activite).not.toContainText('épuisé')
   await page.getByRole('button', { name: 'Tout', exact: true }).click()
   await expect(activite).toContainText('Afi M. a déclaré Flag 65 cl épuisé à Bè Kpota')

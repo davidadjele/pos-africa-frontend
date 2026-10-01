@@ -13,6 +13,9 @@ import { PageFicheProduit } from '../fonctionnalites/catalogue/PageFicheProduit'
 import { PageProduits, type RechercheProduits } from '../fonctionnalites/catalogue/PageProduits'
 import { PageTaxes } from '../fonctionnalites/catalogue/PageTaxes'
 import { PageSalles } from '../fonctionnalites/salles/PageSalles'
+import { PageInventaireStock } from '../fonctionnalites/stock/PageInventaireStock'
+import { PageReceptionStock } from '../fonctionnalites/stock/PageReceptionStock'
+import { PageStock } from '../fonctionnalites/stock/PageStock'
 import { EcranNote } from '../fonctionnalites/commande/EcranNote'
 import { EcranPlan } from '../fonctionnalites/commande/EcranPlan'
 import { EcranEncaissement } from '../fonctionnalites/encaissement/EcranEncaissement'
@@ -224,6 +227,62 @@ const salles = createRoute({
   component: PageSalles,
 })
 
+/** L'établissement choisi, et le message d'une action qui ramène à la liste. */
+export interface RechercheStock {
+  etablissement?: string
+  fait?: string
+}
+
+function lireRechercheStock(recherche: Record<string, unknown>): RechercheStock {
+  return {
+    ...(typeof recherche.etablissement === 'string'
+      ? { etablissement: recherche.etablissement }
+      : {}),
+    ...(typeof recherche.fait === 'string' ? { fait: recherche.fait } : {}),
+  }
+}
+
+const stock = createRoute({
+  getParentRoute: () => gestion,
+  path: '/stock',
+  validateSearch: lireRechercheStock,
+  component: function RouteStock() {
+    const recherche = stock.useSearch()
+    // La clé repart d'un état propre à chaque retour d'action : le message s'affiche une fois.
+    return (
+      <PageStock key={`${recherche.etablissement ?? ''}${recherche.fait ?? ''}`} {...recherche} />
+    )
+  },
+})
+
+const receptionStock = createRoute({
+  getParentRoute: () => gestion,
+  path: '/stock/reception',
+  validateSearch: lireRechercheStock,
+  component: function RouteReceptionStock() {
+    const { etablissement } = receptionStock.useSearch()
+    return (
+      <PageReceptionStock
+        {...(etablissement === undefined ? {} : { etablissementId: etablissement })}
+      />
+    )
+  },
+})
+
+const inventaireStock = createRoute({
+  getParentRoute: () => gestion,
+  path: '/stock/inventaire',
+  validateSearch: lireRechercheStock,
+  component: function RouteInventaireStock() {
+    const { etablissement } = inventaireStock.useSearch()
+    return (
+      <PageInventaireStock
+        {...(etablissement === undefined ? {} : { etablissementId: etablissement })}
+      />
+    )
+  },
+})
+
 const taxes = createRoute({
   getParentRoute: () => gestion,
   path: '/taxes',
@@ -291,6 +350,9 @@ const arbre = racine.addChildren([
     taxes,
     activite,
     salles,
+    stock,
+    receptionStock,
+    inventaireStock,
   ]),
   plateforme.addChildren([plateformeAccueil, nouvelleEntreprise]),
   recu,

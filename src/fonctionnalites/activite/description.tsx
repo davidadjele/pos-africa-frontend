@@ -112,6 +112,35 @@ export function detailActivite(
     case 'CLOTURE_CAISSE':
     case 'ECART_CAISSE':
       return cloture(evenement, t, montant)
+    case 'RECEPTION_STOCK': {
+      const reference = evenement.details.reference
+      return t('activite.reception', {
+        quantite: nombre(evenement.details.quantite),
+        apres: nombreSigne(evenement.details.apres),
+        reference: typeof reference === 'string' ? `, ${reference}` : '',
+      })
+    }
+    case 'PERTE_STOCK':
+      return t('activite.perte', {
+        quantite: nombre(evenement.details.quantite),
+        motif: t(`stock.motifs.${texte(evenement.details.motif) || 'AUTRE'}`).toLowerCase(),
+        apres: nombreSigne(evenement.details.apres),
+      })
+    case 'ECART_INVENTAIRE': {
+      const { attendu, compte, ecart, motif } = evenement.details
+      const signe = typeof ecart === 'number' && ecart > 0 ? '+' : ''
+      return t('activite.ecartInventaire', {
+        attendu: nombreSigne(attendu),
+        compte: nombreSigne(compte),
+        ecart: `${signe}${nombreSigne(ecart)}`,
+        motif: t(`stock.motifs.${texte(motif) || 'AUTRE'}`).toLowerCase(),
+      })
+    }
+    case 'POLITIQUE_STOCK_MODIFIEE':
+      return t('activite.politiqueStock', {
+        avant: t(`activite.politiques.${texte(evenement.details.avant) || 'ENTREPRISE'}`),
+        apres: t(`activite.politiques.${texte(evenement.details.apres) || 'ENTREPRISE'}`),
+      })
     case 'REMBOURSEMENT': {
       const { mode, motif, detail } = evenement.details
       const valeurs = {
@@ -263,6 +292,16 @@ function ou(evenement: EvenementActivite, t: TFunction): string {
 function numero(evenement: EvenementActivite, t: TFunction): string {
   const valeur = evenement.details.numero
   return typeof valeur === 'number' ? t('caisse.note.numero', { numero: valeur }) : ''
+}
+
+function nombre(valeur: unknown): string {
+  return typeof valeur === 'number' ? String(Math.abs(valeur)) : ''
+}
+
+/** « −3 » avec le signe moins typographique, comme les montants. */
+function nombreSigne(valeur: unknown): string {
+  if (typeof valeur !== 'number') return ''
+  return valeur < 0 ? `−${String(Math.abs(valeur))}` : String(valeur)
 }
 
 function texte(valeur: unknown): string {
