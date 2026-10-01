@@ -45,6 +45,7 @@ const SITUATION: SituationCaisse = {
     especes: 5700,
     mobileMoney: 2400,
     carte: 0,
+    ardoise: 0,
     total: 8100,
     remboursements: AUCUN_REMBOURSEMENT,
   },
@@ -69,6 +70,8 @@ const Z: RapportZ = {
   clotureePar: 'Yawa T.',
   ventes: {
     ...SITUATION.ventes,
+    ardoise: 2000,
+    total: 10_100,
     remboursements: { total: 2600, especes: 1100, mobileMoney: 1500, carte: 0 },
   },
   remises: 0,
@@ -136,6 +139,18 @@ describe('Caisse de la tablette', () => {
     const especes = screen.getByRole('region', { name: 'Espèces dans le tiroir' })
     expect(especes).toHaveTextContent('Attendu15 700 F')
     expect(screen.getByText('1 note encore ouverte dans l’établissement.')).toBeVisible()
+  })
+
+  it('compte l’ardoise dans les ventes, sans rien attendre dans le tiroir', async () => {
+    tiroirServi({ ...SITUATION, ventes: { ...SITUATION.ventes, ardoise: 13_500, total: 21_600 } })
+    caisseOuverte('/caisse/tiroir', { permissions: GERANT })
+
+    const ventes = await screen.findByRole('region', { name: 'Ventes de la caisse' })
+    expect(ventes).toHaveTextContent('Ardoise13 500')
+    expect(ventes).toHaveTextContent('Total vendu21 600 F')
+    expect(screen.getByRole('region', { name: 'Espèces dans le tiroir' })).toHaveTextContent(
+      'Attendu15 700 F',
+    )
   })
 
   it('déduit les remboursements des ventes et, en espèces, de l’attendu', async () => {
@@ -266,7 +281,10 @@ describe('Caisse de la tablette', () => {
     expect(z).toHaveTextContent('Remboursements−2 600')
     expect(z).toHaveTextContent('dont espèces1 100')
     expect(z).toHaveTextContent('dont Mobile Money1 500')
-    expect(z).toHaveTextContent('Ventes nettes5 500')
+    // Une note sur l'ardoise est vendue, pas encaissée.
+    expect(z).toHaveTextContent('Ventes (2 notes)10 100')
+    expect(z).toHaveTextContent('dont ardoise2 000')
+    expect(z).toHaveTextContent('Ventes nettes7 500')
     // L'attendu s'explique sur le Z lui-même : fond, espèces reçues et rendues, mouvements.
     expect(z).toHaveTextContent('Fond de caisse20 000')
     expect(z).toHaveTextContent('Monnaie rendue−4 300')

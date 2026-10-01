@@ -1015,6 +1015,51 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await capturer(page, '69-historique-vente')
   await historiqueFlag.getByRole('button', { name: 'Fermer' }).click()
 
+  // Ardoise : Tanti ouvre un compte à un habitué ; au comptoir, sa bière dépasse le plafond, la gérante confirme.
+  await navigation.getByRole('link', { name: 'Ardoises' }).click()
+  await page.getByLabel(/^Établissement/).selectOption({ label: 'Bè Kpota' })
+  await page.getByRole('button', { name: 'Nouveau client' }).click()
+  const nouveauClient = page.getByRole('dialog', { name: 'Nouveau client' })
+  await nouveauClient.getByLabel(/^Nom/).fill('Komlan D.')
+  await nouveauClient.getByLabel(/^Téléphone/).fill('+22890123456')
+  await nouveauClient.getByLabel(/^Plafond/).fill('1000')
+  await nouveauClient.getByLabel(/^Note interne/).fill('Paie chaque fin de mois.')
+  await capturer(page, '70-ardoise-nouveau-client')
+  await nouveauClient.getByRole('button', { name: 'Ouvrir l’ardoise' }).click()
+  await expect(page.getByText('Ardoise ouverte pour Komlan D.')).toBeVisible()
+
+  await tablette.getByRole('button', { name: 'Plan de salle' }).click()
+  await tablette.getByRole('button', { name: 'Vente au comptoir' }).click()
+  await carte.getByRole('button', { name: /Flag 65 cl/ }).click()
+  await note.getByRole('button', { name: /Encaisser/ }).click()
+  await modes.getByRole('radio', { name: /Ardoise/ }).click()
+  await tablette
+    .getByRole('radiogroup', { name: 'Client' })
+    .getByRole('radio', { name: /Komlan D\./ })
+    .click()
+  await expect(tablette.getByRole('alert')).toContainText('Plafond dépassé de 200 F')
+  await capturer(tablette, '71-encaisser-ardoise')
+  await tablette
+    .getByRole('button', { name: /^Dépasser le plafond : 1\s200\sF sur l’ardoise de Komlan D\./ })
+    .click()
+  await expect(tablette.getByRole('heading', { name: /est encaissée/ })).toBeVisible()
+  await tablette.getByRole('button', { name: 'Retour au plan de salle' }).click()
+
+  await page.getByRole('button', { name: /Tous les clients/ }).click()
+  await page.getByRole('link', { name: 'Komlan D.' }).click()
+  const ficheKomlan = page.getByRole('region', { name: 'Ce que doit Komlan D.' })
+  await expect(ficheKomlan).toContainText('1 200 F')
+  await expect(page.getByRole('table', { name: 'Mouvements de l’ardoise' })).toContainText(
+    'Vente à crédit',
+  )
+  await capturer(page, '72-fiche-client')
+  await page.getByRole('link', { name: 'Ardoises' }).last().click()
+  await expect(page.getByRole('region', { name: 'Résumé des ardoises' })).toContainText('1 200 F')
+  await capturer(page, '73-ardoises')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await capturer(page, '73-ardoises-telephone')
+  await page.setViewportSize({ width: 1280, height: 800 })
+
   // Kossi prend la tablette laissée sur l'écran de la caisse : il arrive sur le plan, pas sur une erreur.
   await tablette.getByRole('banner').getByRole('button', { name: 'Changer d’utilisateur' }).click()
   await tablette.getByRole('button', { name: /Kossi A\./ }).click()
@@ -1030,8 +1075,9 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   // Fin de service : la gérante sort 10 000 F vers le coffre, puis clôture en comptant à l'aveugle.
   await tablette.getByRole('button', { name: 'Caisse', exact: true }).click()
   const ventes = tablette.getByRole('region', { name: 'Ventes de la caisse' })
-  await expect(ventes).toContainText('2 notes encaissées')
-  await expect(ventes).toContainText('Ventes nettes13 500 F')
+  await expect(ventes).toContainText('3 notes encaissées')
+  await expect(ventes).toContainText('Ardoise1 200')
+  await expect(ventes).toContainText('Ventes nettes14 700 F')
   const especes = tablette.getByRole('region', { name: 'Espèces dans le tiroir' })
   await expect(especes).toContainText('Attendu22 500 F')
   await tablette.getByRole('button', { name: /Mouvement de caisse/ }).click()
@@ -1072,7 +1118,8 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await expect(z).toContainText('Retraits−10 000')
   await expect(z).toContainText('Remboursements−4 500')
   await expect(z).toContainText('dont carte4 500')
-  await expect(z).toContainText('Ventes nettes13 500')
+  await expect(z).toContainText('dont ardoise1 200')
+  await expect(z).toContainText('Ventes nettes14 700')
   await capturer(tablette, '51-rapport-z')
   await tablette.setViewportSize({ width: 390, height: 844 })
   await capturer(tablette, '51-rapport-z-telephone')
@@ -1128,5 +1175,8 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await expect(activite).toContainText('écart −5 000 F : Monnaie prêtée au bar')
   await expect(activite).toContainText(/Afi M\. a remboursé la note n°\d+ à Bè Kpota/)
   await expect(activite).toContainText('en carte, T6')
+  await expect(activite).toContainText(
+    'Afi M. a dépassé le plafond de l’ardoise de Komlan D. à Bè Kpota',
+  )
   await capturer(page, '40-activite-caisse')
 })

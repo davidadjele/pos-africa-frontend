@@ -4,6 +4,7 @@ import {
   Building2,
   LayoutDashboard,
   LayoutGrid,
+  NotebookPen,
   Percent,
   Store,
   TabletSmartphone,
@@ -35,6 +36,7 @@ interface EntreeNavigation {
     | '/gestion/personnel'
     | '/gestion/tablettes'
     | '/gestion/stock'
+    | '/gestion/ardoises'
   cle: string
   icone: LucideIcon
   /** Entrée masquée sans l'une de ces permissions : l'écran ne servirait qu'à afficher un refus. */
@@ -59,6 +61,12 @@ const QUOTIDIEN: EntreeNavigation[] = [
     icone: Package,
     permission: ['STOCK_RECEPTIONNER', 'STOCK_AJUSTER'],
     compteur: 'stock',
+  },
+  {
+    vers: '/gestion/ardoises',
+    cle: 'gestion.menu.ardoises',
+    icone: NotebookPen,
+    permission: 'CLIENT_CREDIT',
   },
 ]
 

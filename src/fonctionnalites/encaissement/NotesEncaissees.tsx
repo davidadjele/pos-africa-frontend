@@ -333,7 +333,10 @@ function Rembourser({
   const clientRequetes = useQueryClient()
   const validation = useValidation()
   const session = useSessionCaisse()
-  const disponibles = etat.modes.filter((candidat) => candidat.paye > candidat.rembourse)
+  // Rembourser une vente sur l'ardoise corrigera ce que doit le client : prévu avec les règlements (6b).
+  const disponibles = etat.modes.filter(
+    (candidat) => candidat.mode !== 'ARDOISE' && candidat.paye > candidat.rembourse,
+  )
   const [selection, setSelection] = useState<Record<string, number>>({})
   const [mode, setMode] = useState<ModePaiement | null>(disponibles[0]?.mode ?? null)
   const [operateur, setOperateur] = useState<string | null>(

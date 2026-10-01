@@ -15,8 +15,8 @@ import { Bouton, classesBouton } from '../../partage/ui/Bouton'
 import { ChampSaisie, ChampSelection } from '../../partage/ui/ChampSaisie'
 import { Chargement } from '../../partage/ui/Chargement'
 import { Tableau, type ColonneTableau } from '../../partage/ui/Tableau'
+import { useEtablissementChoisi } from '../etablissements/useEtablissementChoisi'
 import { lireQuantite } from './DialoguesStock'
-import { useEtablissementDuStock } from './PageStock'
 import { quantiteSignee } from './presentation'
 import { requeteStock, requeteStockATraiter } from './requetes'
 
@@ -44,7 +44,7 @@ export function PageInventaireStock({ etablissementId }: Readonly<{ etablissemen
   const { t } = useTranslation()
   const clientRequetes = useQueryClient()
   const naviguer = useNavigate()
-  const { etablissements, etablissement } = useEtablissementDuStock(etablissementId)
+  const { etablissements, etablissement } = useEtablissementChoisi(etablissementId)
   const stock = useQuery({
     ...requeteStock(etablissement?.id ?? ''),
     enabled: etablissement !== undefined,

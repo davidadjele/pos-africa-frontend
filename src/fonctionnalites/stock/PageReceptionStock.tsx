@@ -12,8 +12,8 @@ import { AlerteErreur } from '../../partage/ui/Alerte'
 import { Bouton, classesBouton } from '../../partage/ui/Bouton'
 import { ChampSaisie, ChampSelection } from '../../partage/ui/ChampSaisie'
 import { Chargement } from '../../partage/ui/Chargement'
+import { useEtablissementChoisi } from '../etablissements/useEtablissementChoisi'
 import { lireQuantite } from './DialoguesStock'
-import { useEtablissementDuStock } from './PageStock'
 import { requeteStock, requeteStockATraiter } from './requetes'
 
 interface LigneSaisie {
@@ -29,7 +29,7 @@ export function PageReceptionStock({ etablissementId }: Readonly<{ etablissement
   const naviguer = useNavigate()
   const { moi } = useSession()
   const devise = (moi?.entrepriseCourante?.devise ?? 'XOF') as Devise
-  const { etablissements, etablissement } = useEtablissementDuStock(etablissementId)
+  const { etablissements, etablissement } = useEtablissementChoisi(etablissementId)
   const stock = useQuery({
     ...requeteStock(etablissement?.id ?? ''),
     enabled: etablissement !== undefined,

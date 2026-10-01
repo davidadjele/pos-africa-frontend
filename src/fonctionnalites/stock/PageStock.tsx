@@ -4,12 +4,7 @@ import { clsx } from 'clsx'
 import { ClipboardList, History, PackagePlus, RotateCw, SlidersHorizontal } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type {
-  EtablissementResume,
-  EtatStock,
-  LigneStock,
-  PolitiqueStock,
-} from '../../partage/api/contrat'
+import type { EtatStock, LigneStock, PolitiqueStock } from '../../partage/api/contrat'
 import { useSession } from '../../partage/auth/useSession'
 import { formaterDateHeure } from '../../partage/dates/formaterDate'
 import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
@@ -20,7 +15,7 @@ import { Chargement } from '../../partage/ui/Chargement'
 import { EtatVide } from '../../partage/ui/EtatVide'
 import { MenuActions, type ActionMenu } from '../../partage/ui/MenuActions'
 import { Tableau, type ColonneTableau } from '../../partage/ui/Tableau'
-import { requeteEtablissements } from '../etablissements/requetes'
+import { useEtablissementChoisi } from '../etablissements/useEtablissementChoisi'
 import { DialogueHistorique, DialoguePerte, DialogueSeuil } from './DialoguesStock'
 import { estATraiter, libelleMouvement, quantiteSignee, rangStock, TONS_ETAT } from './presentation'
 import { requeteStock, requeteStockATraiter } from './requetes'
@@ -39,15 +34,6 @@ type Ouvert =
   | { type: 'historique'; ligne: LigneStock }
   | null
 
-/** L'établissement choisi : celui de l'adresse, sinon le premier visible. */
-export function useEtablissementDuStock(etablissementId: string | undefined) {
-  const etablissements = useQuery(requeteEtablissements(0))
-  const etablissement: EtablissementResume | undefined =
-    etablissements.data?.elements.find((candidat) => candidat.id === etablissementId) ??
-    etablissements.data?.elements[0]
-  return { etablissements, etablissement }
-}
-
 /**
  * Le stock d'un établissement : ce qui est à traiter d'abord (négatif, rupture, sous le seuil), puis ce qui reste à
  * compter. Réception, perte et inventaire selon les droits de chacun.
@@ -60,7 +46,7 @@ export function PageStock({
   const clientRequetes = useQueryClient()
   const naviguer = useNavigate()
   const { aLaPermission } = useSession()
-  const { etablissements, etablissement } = useEtablissementDuStock(etablissementId)
+  const { etablissements, etablissement } = useEtablissementChoisi(etablissementId)
   const stock = useQuery({
     ...requeteStock(etablissement?.id ?? ''),
     enabled: etablissement !== undefined,

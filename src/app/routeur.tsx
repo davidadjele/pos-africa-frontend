@@ -13,6 +13,8 @@ import { PageFicheProduit } from '../fonctionnalites/catalogue/PageFicheProduit'
 import { PageProduits, type RechercheProduits } from '../fonctionnalites/catalogue/PageProduits'
 import { PageTaxes } from '../fonctionnalites/catalogue/PageTaxes'
 import { PageSalles } from '../fonctionnalites/salles/PageSalles'
+import { PageArdoises } from '../fonctionnalites/ardoise/PageArdoises'
+import { PageFicheClient } from '../fonctionnalites/ardoise/PageFicheClient'
 import { PageInventaireStock } from '../fonctionnalites/stock/PageInventaireStock'
 import { PageReceptionStock } from '../fonctionnalites/stock/PageReceptionStock'
 import { PageStock } from '../fonctionnalites/stock/PageStock'
@@ -283,6 +285,38 @@ const inventaireStock = createRoute({
   },
 })
 
+const ardoises = createRoute({
+  getParentRoute: () => gestion,
+  path: '/ardoises',
+  validateSearch: lireRechercheStock,
+  component: function RouteArdoises() {
+    const { etablissement } = ardoises.useSearch()
+    return (
+      <PageArdoises
+        key={etablissement ?? ''}
+        {...(etablissement === undefined ? {} : { etablissement })}
+      />
+    )
+  },
+})
+
+const ficheClient = createRoute({
+  getParentRoute: () => gestion,
+  path: '/ardoises/$clientId',
+  validateSearch: lireRechercheStock,
+  component: function RouteFicheClient() {
+    const { clientId } = ficheClient.useParams()
+    const { etablissement } = ficheClient.useSearch()
+    return (
+      <PageFicheClient
+        key={clientId}
+        clientId={clientId}
+        {...(etablissement === undefined ? {} : { etablissement })}
+      />
+    )
+  },
+})
+
 const taxes = createRoute({
   getParentRoute: () => gestion,
   path: '/taxes',
@@ -353,6 +387,8 @@ const arbre = racine.addChildren([
     stock,
     receptionStock,
     inventaireStock,
+    ardoises,
+    ficheClient,
   ]),
   plateforme.addChildren([plateformeAccueil, nouvelleEntreprise]),
   recu,

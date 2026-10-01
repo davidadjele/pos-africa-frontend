@@ -20,6 +20,7 @@ const ACTIONS_VALIDEES = new Set([
   'ARTICLE_OFFRIR',
   'PAIEMENT_REMBOURSER',
   'CAISSE_MOUVEMENT',
+  'CLIENT_CREDIT',
 ])
 
 /** Phrase de l'action : l'auteur et l'objet en gras, sans jargon. */
@@ -142,6 +143,36 @@ export function detailActivite(
         apres: nombreSigne(evenement.details.apres),
         detail: texte(evenement.details.detail),
       })
+    case 'VENTE_ARDOISE':
+    case 'PLAFOND_ARDOISE_DEPASSE': {
+      const { plafond, depassement } = evenement.details
+      const valeurs = {
+        montant: montant(evenement.details.montant),
+        note: texte(evenement.details.note),
+        solde: montant(evenement.details.solde),
+        plafond: montant(plafond),
+        depassement: montant(depassement),
+      }
+      const cle =
+        evenement.type === 'VENTE_ARDOISE' ? 'activite.venteArdoise' : 'activite.depassementArdoise'
+      const validateur = evenement.detailsNoms.validateurId
+      return validateur === undefined
+        ? t(cle, valeurs)
+        : t(
+            evenement.type === 'VENTE_ARDOISE'
+              ? 'activite.venteArdoiseValidee'
+              : 'activite.depassementArdoiseValide',
+            {
+              ...valeurs,
+              validateur,
+            },
+          )
+    }
+    case 'PLAFOND_ARDOISE_MODIFIE': {
+      const plafond = (valeur: unknown) =>
+        typeof valeur === 'number' ? montant(valeur) : t('activite.sansPlafond')
+      return t('activite.plafondArdoise', { avant: plafond(avant), apres: plafond(apres) })
+    }
     case 'POLITIQUE_STOCK_MODIFIEE':
       return t('activite.politiqueStock', {
         avant: t(`activite.politiques.${texte(evenement.details.avant) || 'ENTREPRISE'}`),

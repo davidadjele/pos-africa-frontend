@@ -28,6 +28,7 @@ const SITUATION: SituationCaisse = {
     especes: 9000,
     mobileMoney: 9000,
     carte: 0,
+    ardoise: 0,
     total: 18_000,
     remboursements: { total: 0, especes: 0, mobileMoney: 0, carte: 0 },
   },

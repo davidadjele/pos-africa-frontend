@@ -140,6 +140,8 @@ function Tiroir() {
   }
 
   const { ouverture, ventes, mouvements, especes, notesOuvertes } = situation.data
+  // Une note mise sur l'ardoise est vendue sans être encaissée.
+  const totalVentes = ventes.ardoise > 0 ? 'tiroir.ventes.totalVendu' : 'tiroir.ventes.total'
   const courte = (montant: number) =>
     formaterMontant({ unitesMineures: montant, devise }, { forme: 'courte' })
   const nombre = (montant: number) =>
@@ -222,17 +224,18 @@ function Tiroir() {
               valeur={nombre(ventes.mobileMoney)}
             />
             <Montant libelle={t('encaissement.modes.CARTE')} valeur={nombre(ventes.carte)} />
+            {ventes.ardoise > 0 && (
+              <Montant libelle={t('encaissement.modes.ARDOISE')} valeur={nombre(ventes.ardoise)} />
+            )}
             {ventes.remboursements.total > 0 && (
               <>
-                <Montant libelle={t('tiroir.ventes.total')} valeur={nombre(ventes.total)} />
+                <Montant libelle={t(totalVentes)} valeur={nombre(ventes.total)} />
                 <LignesRemboursements remboursements={ventes.remboursements} nombre={nombre} />
               </>
             )}
             <span className="mt-1 flex items-baseline justify-between border-t border-encre pt-2">
               <span className="text-corps-fort text-encre">
-                {t(
-                  ventes.remboursements.total > 0 ? 'tiroir.ventes.nettes' : 'tiroir.ventes.total',
-                )}
+                {t(ventes.remboursements.total > 0 ? 'tiroir.ventes.nettes' : totalVentes)}
               </span>
               <span className="chiffres text-montant-total text-encre">
                 {courte(ventes.total - ventes.remboursements.total)}
@@ -760,23 +763,30 @@ function RapportDeCloture({
       </span>
       <SectionZ titre={t('cloture.z.sections.ventes')}>
         <Montant
-          libelle={t('cloture.z.ventes', { count: rapport.ventes.notes })}
+          libelle={t(
+            rapport.ventes.ardoise > 0 ? 'cloture.z.ventesAvecArdoise' : 'cloture.z.ventes',
+            { count: rapport.ventes.notes },
+          )}
           valeur={nombre(rapport.ventes.total)}
         />
-        {(['ESPECES', 'MOBILE_MONEY', 'CARTE'] as const).map((mode) => (
-          <Montant
-            key={mode}
-            retrait
-            libelle={t('cloture.z.dontMode', { mode: t(`encaissement.modesEn.${mode}`) })}
-            valeur={nombre(
-              mode === 'ESPECES'
-                ? rapport.ventes.especes
-                : mode === 'MOBILE_MONEY'
-                  ? rapport.ventes.mobileMoney
-                  : rapport.ventes.carte,
-            )}
-          />
-        ))}
+        {(
+          [
+            ['ESPECES', rapport.ventes.especes],
+            ['MOBILE_MONEY', rapport.ventes.mobileMoney],
+            ['CARTE', rapport.ventes.carte],
+            ['ARDOISE', rapport.ventes.ardoise],
+          ] as const
+        )
+          // L'ardoise n'apparaît que les jours où l'on a vendu à crédit.
+          .filter(([mode, montant]) => mode !== 'ARDOISE' || montant > 0)
+          .map(([mode, montant]) => (
+            <Montant
+              key={mode}
+              retrait
+              libelle={t('cloture.z.dontMode', { mode: t(`encaissement.modesEn.${mode}`) })}
+              valeur={nombre(montant)}
+            />
+          ))}
         <LignesRemboursements remboursements={rapport.ventes.remboursements} nombre={nombre} />
         <span className="mt-1 flex justify-between gap-3 border-t border-trait pt-1.5 text-corps-fort text-encre">
           <span>{t('tiroir.ventes.nettes')}</span>
