@@ -52,6 +52,7 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
   const fuseauHoraire = appareil?.etablissement.fuseauHoraire ?? 'Africa/Lome'
   const session = useSessionCaisse()
   const peutCommander = session?.permissions.includes('COMMANDE_CREER') ?? false
+  const peutEncaisser = session?.permissions.includes('PAIEMENT_ENCAISSER') ?? false
   const note = useQuery(requeteCommande(commandeId))
   const carte = useQuery(requeteCarteCaisse)
   const [erreur, setErreur] = useState<unknown>(null)
@@ -305,6 +306,9 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
     )
   }
 
+  // Une note entamée par un paiement ne se modifie plus : on l'encaisse jusqu'au bout.
+  const modifiable = peutCommander && note.data.totalPaye === 0
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
@@ -318,7 +322,7 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
             carte={carte.data}
             devise={devise}
             surChoisir={(produit) => {
-              if (peutCommander) void ajouter(produit)
+              if (modifiable) void ajouter(produit)
             }}
           />
         )}
@@ -327,11 +331,31 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
         note={note.data}
         devise={devise}
         fuseauHoraire={fuseauHoraire}
-        modifiable={peutCommander}
+        modifiable={modifiable}
+        peutEncaisser={peutEncaisser}
+        peutServir={peutCommander && note.data.statut !== 'ANNULEE'}
+        surServir={(ligne) =>
+          void agir(() =>
+            appelerCaisse<CommandeDetail>(
+              `/caisse/commandes/${commandeId}/lignes/${ligne.id}/service`,
+              { methode: 'POST' },
+            ),
+          )
+        }
+        surServirTout={() =>
+          void agir(() =>
+            appelerCaisse<CommandeDetail>(`/caisse/commandes/${commandeId}/service`, {
+              methode: 'POST',
+            }),
+          )
+        }
+        surEncaisser={() =>
+          void naviguer({ to: '/caisse/notes/$commandeId/encaisser', params: { commandeId } })
+        }
         ruptures={rupturesDe(carte.data, note.data.lignes)}
         envoiEnCours={enCours && aAnnuler === null && aValider === null}
         actions={
-          peutCommander ? (
+          modifiable ? (
             <ActionsNote
               note={note.data}
               devise={devise}

@@ -181,4 +181,75 @@ describe('description de l’activité', () => {
       `−360${INSEC}F retiré, n°42`,
     )
   })
+
+  it('donne le fond d’une ouverture de caisse', () => {
+    expect(
+      detailActivite(
+        evenement({ type: 'CAISSE_OUVERTE', domaine: 'CAISSE', details: { fond: 20_000 } }),
+        t,
+        CONTEXTE,
+      ),
+    ).toBe(`Fond : 20${FINE}000${INSEC}F`)
+  })
+
+  it('détaille les mouvements d’espèces et les clôtures, avec leur écart', () => {
+    const detail = (
+      type: EvenementActivite['type'],
+      details: Record<string, unknown>,
+      detailsNoms = {},
+    ) => detailActivite(evenement({ type, domaine: 'CAISSE', details, detailsNoms }), t, CONTEXTE)
+
+    expect(detail('RETRAIT_CAISSE', { montant: 10_000, motif: 'Vers le coffre' })).toBe(
+      `10${FINE}000${INSEC}F, motif : Vers le coffre`,
+    )
+    expect(
+      detail('DEPENSE_CAISSE', { montant: 2500, motif: 'Glace' }, { validateurId: 'Afi M.' }),
+    ).toBe(`2${FINE}500${INSEC}F, motif : Glace. Validé par Afi M.`)
+    expect(detail('CLOTURE_CAISSE', { attendu: 15_700, compte: 15_700, ecart: 0 })).toBe(
+      `Attendu 15${FINE}700${INSEC}F, compté 15${FINE}700${INSEC}F`,
+    )
+    expect(
+      detail('ECART_CAISSE', {
+        attendu: 15_700,
+        compte: 15_000,
+        ecart: -700,
+        explication: 'Monnaie rendue en trop',
+      }),
+    ).toBe(
+      `Attendu 15${FINE}700${INSEC}F, compté 15${FINE}000${INSEC}F, écart −700${INSEC}F : Monnaie rendue en trop`,
+    )
+    expect(
+      detail('ECART_OUVERTURE_CAISSE', {
+        attendu: 20_000,
+        fond: 15_000,
+        ecart: -5000,
+        explication: 'Monnaie prêtée au bar',
+      }),
+    ).toBe(
+      `Laissé 20${FINE}000${INSEC}F, compté 15${FINE}000${INSEC}F, écart −5${FINE}000${INSEC}F : Monnaie prêtée au bar`,
+    )
+  })
+
+  it('détaille un remboursement : montant, mode, note, motif et validation', () => {
+    expect(
+      detailActivite(
+        evenement({
+          type: 'REMBOURSEMENT',
+          domaine: 'CAISSE',
+          details: {
+            montant: 4500,
+            mode: 'ESPECES',
+            motif: 'ARTICLE_NON_CONFORME',
+            numero: 42,
+            table: 'T4',
+          },
+          detailsNoms: { validateurId: 'Afi M.' },
+        }),
+        t,
+        CONTEXTE,
+      ),
+    ).toBe(
+      `−4${FINE}500${INSEC}F en espèces, T4, n°42. Motif : Article non conforme. Validé par Afi M.`,
+    )
+  })
 })

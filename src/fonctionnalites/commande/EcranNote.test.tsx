@@ -345,6 +345,97 @@ describe('EcranNote', () => {
     expect(lignes).not.toHaveTextContent('ajouté par Kossi A.')
   })
 
+  it('ouvre l’encaissement pour qui a le droit d’encaisser', async () => {
+    serveurMsw.use(
+      http.get(`${API}/caisse/commandes/${NOTE_T4.id}`, () => HttpResponse.json(NOTE_T4)),
+      http.get(`${API}/caisse/carte`, () => HttpResponse.json([FLAG, POULET])),
+      http.get(`${API}/caisse/ouverture`, () => HttpResponse.json({ operateurs: [] })),
+      http.get(`${API}/caisse/commandes/${NOTE_T4.id}/encaissement`, () =>
+        HttpResponse.json({
+          commandeId: NOTE_T4.id,
+          numero: 42,
+          total: 10_200,
+          paye: 0,
+          reste: 10_200,
+          payee: false,
+          paiements: [],
+        }),
+      ),
+    )
+    caisseOuverte(`/caisse/notes/${NOTE_T4.id}`, {
+      permissions: ['COMMANDE_CREER', 'PAIEMENT_ENCAISSER'],
+    })
+
+    const note = await noteEnCours()
+    await userEvent.click(within(note).getByRole('button', { name: /Encaisser/ }))
+
+    expect(await screen.findByRole('heading', { name: 'Encaisser T4' })).toBeVisible()
+  })
+
+  it('laisse l’encaissement au caissier', async () => {
+    noteServie()
+
+    const note = await noteEnCours()
+    expect(within(note).getByRole('button', { name: /Encaisser/ })).toBeDisabled()
+    expect(note).toHaveTextContent('Un caissier encaisse cette note.')
+  })
+
+  it('verrouille une note entamée par un paiement', async () => {
+    noteServie({ ...NOTE_T4, totalPaye: 5000 })
+
+    const note = await noteEnCours()
+    expect(note).toHaveTextContent('5 000 F déjà payés : la note ne se modifie plus.')
+    expect(within(note).queryByRole('button', { name: /Un de plus/ })).not.toBeInTheDocument()
+    expect(within(note).queryByRole('button', { name: /Actions sur/ })).not.toBeInTheDocument()
+  })
+
+  it('marque servi un article envoyé, ou tout d’un coup', async () => {
+    const servi = { ...FLAG_ENVOYE, servieLe: '2026-09-29T19:21:00Z' }
+    const lignes: string[] = []
+    serveurMsw.use(
+      http.post(`${API}/caisse/commandes/${NOTE_T4.id}/lignes/${FLAG_ENVOYE.id}/service`, () => {
+        lignes.push(FLAG_ENVOYE.id)
+        return HttpResponse.json({ ...NOTE_T4, lignes: [servi, POULET_A_ENVOYER] })
+      }),
+    )
+    noteServie()
+
+    const note = await noteEnCours()
+    expect(note).toHaveTextContent('1 article à servir')
+    await userEvent.click(within(note).getByRole('button', { name: 'Servi : Flag 65 cl' }))
+
+    expect(await within(note).findByText(/servi à 19:21/)).toBeVisible()
+    expect(within(note).queryByRole('button', { name: 'Tout servi' })).not.toBeInTheDocument()
+    expect(lignes).toEqual([FLAG_ENVOYE.id])
+  })
+
+  it('remet au client une commande payée du comptoir', async () => {
+    let remise = false
+    const payee = {
+      ...NOTE_VIDE,
+      statut: 'PAYEE' as const,
+      lignes: [FLAG_ENVOYE],
+      total: 1200,
+      totalPaye: 1200,
+    }
+    serveurMsw.use(
+      http.post(`${API}/caisse/commandes/${NOTE_VIDE.id}/service`, () => {
+        remise = true
+        return HttpResponse.json({
+          ...payee,
+          lignes: [{ ...FLAG_ENVOYE, servieLe: '2026-09-29T20:45:00Z' }],
+        })
+      }),
+    )
+    noteServie(payee)
+
+    const note = await noteEnCours()
+    await userEvent.click(within(note).getByRole('button', { name: 'Remise au client' }))
+
+    expect(await within(note).findByText(/servi à 20:45/)).toBeVisible()
+    expect(remise).toBe(true)
+  })
+
   it('filtre la carte par catégorie et par nom', async () => {
     noteServie()
 

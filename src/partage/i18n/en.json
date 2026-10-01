@@ -27,7 +27,10 @@
     "TABLE_OCCUPEE": "This table already has an open tab: a colleague has probably just opened it. The floor plan is up to date.",
     "PRODUIT_EPUISE": "This product is sold out for today. It was not added.",
     "PRODUIT_INDISPONIBLE": "This product is no longer on this location’s menu. It was not added.",
-    "NOTE_NON_VIDE": "This tab has items: it cannot be closed this way."
+    "NOTE_NON_VIDE": "This tab has items: it cannot be closed this way.",
+    "NOTE_ENTAMEE": "A payment has already been taken on this tab: it can no longer be changed.",
+    "CAISSE_FERMEE": "The till on this tablet is not open. Open it with its float to take payments.",
+    "REMBOURSEMENT_HORS_JOURNEE": "Only today’s bills can be refunded at the till."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Too many failed attempts: the account is locked. Try again in {{duree}}.",
@@ -217,7 +220,10 @@
       "remiseNote": "Tab discount −{{remise}}, {{motif}}",
       "retirerRemiseNote": "Remove the tab discount",
       "offert": "Free",
-      "motifValide": "{{motif}}, approved by {{nom}}"
+      "motifValide": "{{motif}}, approved by {{nom}}",
+      "encaisserReste": "Take the rest",
+      "parCaissier": "A cashier takes payment for this tab.",
+      "entamee": "{{paye}} already paid: the tab can no longer be changed."
     },
     "canaux": {
       "SUR_PLACE": "Dine-in",
@@ -257,7 +263,15 @@
       "aTraiter": "To handle",
       "additionDemandee": "Bill requested",
       "depuis": "{{serveur}}, since {{heure}}",
-      "prisA": "{{serveur}}, taken at {{heure}}"
+      "prisA": "{{serveur}}, taken at {{heure}}",
+      "paye": "Paid {{paye}} / {{total}}",
+      "aServir": "To serve",
+      "aRemettre": "To hand over",
+      "badgeAServir": "{{count}} to serve",
+      "payee": "Paid",
+      "enPreparation": "{{serveur}}, in preparation since {{heure}}",
+      "aEncaisser": "To collect {{montant}}",
+      "aEncaisserCourt": "To collect"
     },
     "ouverture": {
       "titreTable": "Open a tab on {{table}}",
@@ -336,6 +350,21 @@
       "confirmer_one": "Offer {{count}} item",
       "confirmer_other": "Offer {{count}} items",
       "validationTitre": "Offer {{count}} {{produit}}?"
+    },
+    "service": {
+      "aServir_one": "{{count}} item to serve",
+      "aServir_other": "{{count}} items to serve",
+      "toutServi": "All served",
+      "remettre": "Hand over to customer",
+      "servi": "Served",
+      "serviPour": "Served: {{produit}}",
+      "serviA": "served at {{heure}}",
+      "depuis": "in preparation since {{heure}}"
+    },
+    "remettre": {
+      "titre": "Hand {{numero}} over to the customer?",
+      "phrase": "{{ou}}. Check the items before handing over.",
+      "chargement": "Loading items…"
     }
   },
   "gestion": {
@@ -1037,7 +1066,15 @@
       "SERVEUR_CHANGE": "<b>{{auteur}}</b> handed the tab <b>{{objet}}</b> to another server at {{etablissement}}",
       "REMISE_APPLIQUEE": "<b>{{auteur}}</b> gave a discount on <b>{{objet}}</b> at {{etablissement}}",
       "ARTICLE_OFFERT": "<b>{{auteur}}</b> offered <b>{{objet}}</b> at {{etablissement}}",
-      "REMISE_RETIREE": "<b>{{auteur}}</b> removed the discount on <b>{{objet}}</b> at {{etablissement}}"
+      "REMISE_RETIREE": "<b>{{auteur}}</b> removed the discount on <b>{{objet}}</b> at {{etablissement}}",
+      "CAISSE_OUVERTE": "<b>{{auteur}}</b> opened the till at {{etablissement}}",
+      "RETRAIT_CAISSE": "<b>{{auteur}}</b> withdrew cash from the till at {{etablissement}}",
+      "DEPENSE_CAISSE": "<b>{{auteur}}</b> paid an expense in cash at {{etablissement}}",
+      "APPORT_CAISSE": "<b>{{auteur}}</b> added cash to the till at {{etablissement}}",
+      "CLOTURE_CAISSE": "<b>{{auteur}}</b> closed the till at {{etablissement}} (<b>{{objet}}</b>)",
+      "ECART_CAISSE": "<b>{{auteur}}</b> closed the till with a difference at {{etablissement}} (<b>{{objet}}</b>)",
+      "ECART_OUVERTURE_CAISSE": "<b>{{auteur}}</b> opened the till with a discrepancy at {{etablissement}}",
+      "REMBOURSEMENT": "<b>{{auteur}}</b> refunded bill <b>{{objet}}</b> at {{etablissement}}"
     },
     "actions": {
       "LIGNE_ANNULER_APRES_ENVOI": "cancel items already sent",
@@ -1059,7 +1096,15 @@
     "remiseValidee": "−{{montant}}, {{ou}}. Reason: {{motif}}. Approved by {{validateur}}",
     "offert": "{{quantite}} × free ({{montant}}), {{ou}}. Reason: {{motif}}.",
     "offertValide": "{{quantite}} × free ({{montant}}), {{ou}}. Reason: {{motif}}. Approved by {{validateur}}",
-    "remiseRetiree": "−{{montant}} removed, {{ou}}"
+    "remiseRetiree": "−{{montant}} removed, {{ou}}",
+    "fond": "Float: {{montant}}",
+    "mouvement": "{{montant}}, reason: {{motif}}",
+    "mouvementValide": "{{montant}}, reason: {{motif}}. Approved by {{validateur}}",
+    "cloture": "Expected {{attendu}}, counted {{compte}}",
+    "clotureEcart": "Expected {{attendu}}, counted {{compte}}, difference {{ecart}}: {{explication}}",
+    "ouvertureEcart": "Left {{attendu}}, counted {{compte}}, difference {{ecart}}: {{explication}}",
+    "remboursement": "−{{montant}} in {{mode}}, {{ou}}. Reason: {{motif}}.",
+    "remboursementValide": "−{{montant}} in {{mode}}, {{ou}}. Reason: {{motif}}. Approved by {{validateur}}"
   },
   "salles": {
     "titre": "{{etablissement}} areas and tables",
@@ -1128,5 +1173,278 @@
       "desactivee": "“{{nom}}” is disabled.",
       "reactivee": "“{{nom}}” is enabled again."
     }
+  },
+  "encaissement": {
+    "titre": "Take payment for {{ou}}",
+    "retourNote": "Back to the tab",
+    "chargement": "Loading payment…",
+    "recap": "Tab to pay",
+    "total": "Total",
+    "paiements": "Payments",
+    "paye": "Paid",
+    "reste": "Left to pay",
+    "modes": {
+      "titre": "Payment method",
+      "ESPECES": "Cash",
+      "MOBILE_MONEY": "Mobile Money",
+      "CARTE": "Card",
+      "ARDOISE": "House account"
+    },
+    "aides": {
+      "ESPECES": "Change computed",
+      "MOBILE_MONEY": "Operator and reference",
+      "CARTE": "Bank terminal",
+      "ARDOISE": "Coming soon"
+    },
+    "montant": "Amount paid",
+    "recu": "Cash received",
+    "exact": "Exact amount",
+    "rendu": "Change to give",
+    "renduDetail": "{{recu}} received, {{du}} due",
+    "manque": "{{montant}} missing.",
+    "operateur": "Operator",
+    "reference": "Transaction reference",
+    "referenceFacultative": "Card slip reference (optional)",
+    "verifier": "Check on the phone that the payment has arrived before confirming.",
+    "valider": "Confirm {{montant}} by {{mode}}",
+    "aide": "Split payment possible: the rest can be paid with another method.",
+    "paiementDe": "{{mode}}, {{detail}}",
+    "clavier": "Keypad",
+    "effacer": "Delete the last digit",
+    "fin": {
+      "badge": "Tab paid",
+      "titreTable": "{{table}} is free",
+      "titre": "{{numero}} is paid",
+      "retour": "Back to the floor plan",
+      "recu": "Receipts (print, WhatsApp) come with the receipts module."
+    },
+    "ouverture": {
+      "titre": "The till on this tablet is not open",
+      "phrase": "Count the cash in the drawer before the first payment: it becomes the float and is checked at closing.",
+      "ouvrir": "Open the till with {{montant}}",
+      "sansDroit": "A cashier or a manager opens the till with their code.",
+      "premiere": "First opening on this tablet: the counted float becomes the reference.",
+      "aveugle": "Count the whole drawer. The float left at the last closing appears once the count is confirmed, to check nothing moved.",
+      "controle": "Float check",
+      "laisse": "Left at closing"
+    },
+    "referenceCourte": "ref. {{reference}}",
+    "modesEn": {
+      "ESPECES": "cash",
+      "MOBILE_MONEY": "Mobile Money",
+      "CARTE": "card"
+    },
+    "manques": {
+      "pourValider": "To confirm: {{liste}}.",
+      "operateur": "choose the operator",
+      "reference": "copy the reference"
+    },
+    "partage": {
+      "titre": "Split the bill",
+      "libre": "Free amount",
+      "parts": "Equal shares",
+      "articles": "By item",
+      "aides": {
+        "libre": "Mixed payment",
+        "parts": "Same amount for everyone",
+        "articles": "Everyone pays what they had"
+      },
+      "nombre": "Number of shares",
+      "arrondi": "Any rounding remainder goes on the last share.",
+      "moins": "One share less",
+      "plus": "One share more",
+      "liste": "Shares",
+      "part": "Share {{numero}}",
+      "statuts": {
+        "payee": "Paid",
+        "enCours": "Current",
+        "aPayer": "To pay"
+      },
+      "ceQuePaie": "What this guest pays",
+      "toutLeReste": "Everything left",
+      "articlesListe": "Items to pay",
+      "surLaNote_one": "{{count}} on the bill, {{payees}} paid",
+      "surLaNote_other": "{{count}} on the bill, {{payees}} paid",
+      "unDeMoins": "One {{nom}} less",
+      "unDePlus": "One {{nom}} more",
+      "selection": "Selection",
+      "aidesPaiement": {
+        "parts": "Each share is a payment: the bill closes with the last one.",
+        "articles": "The amount comes from the chosen items, discounts included."
+      }
+    }
+  },
+  "tiroir": {
+    "bouton": "Till",
+    "titre": "Till “{{caisse}}”",
+    "ouverte": "Opened at {{heure}} by {{nom}}, float {{fond}}",
+    "chargement": "Loading the till…",
+    "retourPlan": "Floor plan",
+    "mouvement": "Cash movement",
+    "cloturer": "Close the till",
+    "ventes": {
+      "titre": "Till sales",
+      "notes_one": "{{count}} tab paid",
+      "notes_other": "{{count}} tabs paid",
+      "total": "Total taken",
+      "remboursements": "Refunds",
+      "nettes": "Net sales"
+    },
+    "mouvements": {
+      "titre": "Cash movements",
+      "aucun": "No movement since opening.",
+      "par": "{{heure}}, {{nom}}",
+      "valide": "{{heure}}, {{nom}}, approved by {{validateur}}"
+    },
+    "types": {
+      "RETRAIT": "Withdrawal",
+      "DEPENSE": "Expense",
+      "APPORT": "Top-up"
+    },
+    "aides": {
+      "RETRAIT": "To the safe, the owner",
+      "DEPENSE": "Purchase paid in cash",
+      "APPORT": "Change added to the drawer"
+    },
+    "especes": {
+      "titre": "Cash in the drawer",
+      "fond": "Float",
+      "recues": "Cash received",
+      "rendues": "Change given",
+      "apports": "Top-ups",
+      "retraits": "Withdrawals",
+      "depenses": "Expenses",
+      "attendu": "Expected",
+      "reserve": "The expected cash is shown to managers only: at closing, the drawer is counted before seeing what is expected.",
+      "remboursements": "Cash refunds"
+    },
+    "notesOuvertes_one": "{{count}} tab still open at this location.",
+    "notesOuvertes_other": "{{count}} tabs still open at this location.",
+    "dialogue": {
+      "titre": "Cash movement",
+      "phrase": "Cash goes in or out of the drawer without a sale. It counts in the expected cash at closing.",
+      "type": "Movement type",
+      "montant": "Amount",
+      "motif": "Reason",
+      "sortir": "Take {{montant}} out of the drawer",
+      "ajouter": "Add {{montant}} to the drawer",
+      "valider": "Confirm",
+      "validationTitre": "{{type}} of {{montant}}?",
+      "validationContexte": "Till “{{caisse}}”, requested by {{demandeur}}. Reason: {{motif}}.",
+      "montantRequis": "Enter the amount.",
+      "motifRequis": "Enter the reason."
+    },
+    "vues": {
+      "titre": "Till views",
+      "situation": "Status",
+      "notes": "Paid bills"
+    }
+  },
+  "cloture": {
+    "titre": "Close the till “{{caisse}}”",
+    "etapes": "1. Count the cash, 2. See the difference, 3. Close",
+    "billets": "Notes",
+    "pieces": "Coins",
+    "nombre": "Number of {{nature}} of {{valeur}}",
+    "billet": "notes",
+    "piece": "coins",
+    "moins": "One less: {{valeur}}",
+    "plus": "One more: {{valeur}}",
+    "total": "Total counted",
+    "compte": "Cash counted",
+    "aveugle": "Count the whole drawer, float included. The expected cash appears once the count is confirmed: count what you have, not what you should have.",
+    "valider": "Confirm the count",
+    "attendu": "Expected",
+    "juste": "Till balanced",
+    "manque": "Short",
+    "surplus": "Over",
+    "explication": "Explanation of the difference",
+    "explicationRequise": "Explain the difference before closing.",
+    "fondLaisse": "Float left for the next opening",
+    "recompter": "Count again",
+    "cloturer": "Close the till",
+    "z": {
+      "badge": "Till closed",
+      "titre": "Z report #{{numero}}",
+      "periode": "From {{ouverture}} to {{cloture}}, closed by {{nom}}",
+      "dontMode": "of which {{mode}}",
+      "remises": "Discounts and free items",
+      "annulations": "Items cancelled ({{nombre}})",
+      "tva": "VAT collected",
+      "attendu": "Expected cash",
+      "compte": "Cash counted",
+      "ecart": "Difference",
+      "fondLaisse": "Float left",
+      "fige": "Frozen: it will not change. History comes with reports, printing with receipts.",
+      "terminer": "Done",
+      "ventes_one": "Sales collected ({{count}} bill)",
+      "ventes_other": "Sales collected ({{count}} bills)",
+      "sections": {
+        "ventes": "Sales",
+        "information": "For information",
+        "tiroir": "Cash in the drawer",
+        "comptage": "Count"
+      }
+    },
+    "comptage": "Cash count"
+  },
+  "remboursement": {
+    "titre": "Paid bills",
+    "chargement": "Loading paid bills…",
+    "chercher": "Search a bill",
+    "chercherAide": "Bill no., table or customer",
+    "nombre_one": "{{count}} bill paid today",
+    "nombre_other": "{{count}} bills paid today",
+    "vide": {
+      "titre": "No bill paid today",
+      "message": "Bills show up here once paid."
+    },
+    "canaux": {
+      "SUR_PLACE": "Dine in",
+      "COMPTOIR": "Counter",
+      "EMPORTER": "Takeaway"
+    },
+    "rembourseeTotale": "Refunded",
+    "rembourseePartielle": "Partly refunded",
+    "choisir": "Pick a bill to see its details or refund it.",
+    "faits": "Refunds",
+    "badge": "Refunded",
+    "validePar": "Approved by {{nom}}",
+    "horsJournee": "Bill from a past day: refund it from the back office.",
+    "toutRembourse": "Every item on this bill has been refunded.",
+    "rembourser": "Refund",
+    "retour": "Back to the bill",
+    "titreRembourser": "Refund {{note}}",
+    "articles": "Items to refund",
+    "toutLaNote": "Whole bill",
+    "surLaNote_one": "{{count}} paid, {{rembourses}} refunded",
+    "surLaNote_other": "{{count}} paid, {{rembourses}} refunded",
+    "aRembourser": "To refund",
+    "mode": "Give the money back in",
+    "aideEspeces": "Out of the till, {{montant}} at most",
+    "aidePaye": "Sent back to the customer, {{montant}} at most",
+    "referenceRetour": "Reference of the return transfer",
+    "referenceCarte": "Card terminal void reference (optional)",
+    "motif": "Reason",
+    "motifs": {
+      "ERREUR_ENCAISSEMENT": "Payment error",
+      "ARTICLE_NON_CONFORME": "Faulty item",
+      "ARTICLE_NON_SERVI": "Item not served",
+      "AUTRE": "Other"
+    },
+    "detail": "Specify the reason",
+    "manques": {
+      "pour": "To refund: {{liste}}.",
+      "articles": "pick the items",
+      "plafond": "at most {{montant}} in this mode",
+      "motif": "pick the reason",
+      "detail": "specify the reason",
+      "transfert": "operator and transfer reference"
+    },
+    "trace": "Logged as a critical action; in cash, it comes out of the till’s expected amount.",
+    "valider": "Refund {{montant}} in {{mode}}",
+    "validationTitre": "Refund {{montant}} in {{mode}}?",
+    "validationContexte": "{{note}}, requested by {{demandeur}}. Reason: {{motif}}.",
+    "chargementNote": "Loading the bill…"
   }
 }

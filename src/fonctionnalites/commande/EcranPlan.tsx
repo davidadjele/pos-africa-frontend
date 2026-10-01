@@ -2,13 +2,14 @@ import type { TFunction } from 'i18next'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { clsx } from 'clsx'
-import { Plus, RotateCw } from 'lucide-react'
+import { Plus, RotateCw, Wallet } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appelerCaisse } from '../../partage/api/appelerCaisse'
 import type {
   CommandeDetail,
   DemandeOuverture,
+  NoteEnService,
   NoteOuverte,
   SallePlan,
   TablePlan,
@@ -37,7 +38,10 @@ export function EcranPlan() {
   const { data: appareil } = useQuery(requeteAppareil)
   const devise = (appareil?.entreprise.devise ?? 'XOF') as Devise
   const fuseauHoraire = appareil?.etablissement.fuseauHoraire ?? 'Africa/Lome'
-  const peutCommander = useSessionCaisse()?.permissions.includes('COMMANDE_CREER') ?? false
+  const permissions = useSessionCaisse()?.permissions ?? []
+  const peutCommander = permissions.includes('COMMANDE_CREER')
+  const tientLaCaisse =
+    permissions.includes('PAIEMENT_ENCAISSER') || permissions.includes('CAISSE_FERMER')
   const plan = useQuery(requetePlan)
   const [salleId, setSalleId] = useState<string | null>(null)
   const [mesTables, setMesTables] = useState(false)
@@ -95,9 +99,14 @@ export function EcranPlan() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
-      <div className="flex min-w-0 flex-1 flex-col gap-3.5">
-        {erreur !== null && <AlerteErreur erreur={erreur} />}
-        <div className="flex flex-wrap items-center gap-2.5">
+      {/* Écran étroit : la barre d'actions, puis ce qui attend un geste, puis les tables. */}
+      <div className="contents lg:flex lg:min-w-0 lg:flex-1 lg:flex-col lg:gap-3.5">
+        {erreur !== null && (
+          <div className="order-first lg:order-none">
+            <AlerteErreur erreur={erreur} />
+          </div>
+        )}
+        <div className="order-first flex flex-wrap items-center gap-2.5 lg:order-none">
           {salles.length > 0 && (
             <OngletsSalles salles={salles} courante={salle?.id} surChoisir={setSalleId} />
           )}
@@ -120,6 +129,15 @@ export function EcranPlan() {
             </button>
           )}
           <span className="flex-1" />
+          {tientLaCaisse && (
+            <Bouton
+              className="min-h-cible-caisse"
+              icone={Wallet}
+              onClick={() => void naviguer({ to: '/caisse/tiroir' })}
+            >
+              {t('tiroir.bouton')}
+            </Bouton>
+          )}
           {peutCommander && (
             <>
               <Bouton
@@ -142,7 +160,9 @@ export function EcranPlan() {
           )}
         </div>
         {!peutCommander && (
-          <p className="m-0 text-corps text-attenue">{t('caisse.plan.lectureSeule')}</p>
+          <p className="order-first m-0 text-corps text-attenue lg:order-none">
+            {t('caisse.plan.lectureSeule')}
+          </p>
         )}
 
         {salles.length === 0 ? (
@@ -185,6 +205,7 @@ export function EcranPlan() {
 
       <ResumeNotes
         aTraiter={aTraiter(salles, sansTable, t)}
+        enService={plan.data.enService}
         notes={[...occupees.flatMap((table) => (table.note ? [table.note] : [])), ...sansTable]}
         sansTable={sansTable}
         occupees={occupees.length}
@@ -303,12 +324,28 @@ function TuileTable({
         </span>
         <span className="flex flex-col items-start gap-1">
           {addition && <BadgeStatut ton="info">{t('caisse.plan.additionDemandee')}</BadgeStatut>}
+          {note.aServir > 0 && (
+            <BadgeStatut ton="neutre">
+              {t('caisse.plan.badgeAServir', { count: note.aServir })}
+            </BadgeStatut>
+          )}
           {aEnvoyer > 0 && (
             <BadgeStatut ton="alerte">{t('caisse.plan.aEnvoyer', { count: aEnvoyer })}</BadgeStatut>
           )}
           <span className="chiffres text-touche font-bold">
             {formaterMontant({ unitesMineures: note.total, devise }, { forme: 'courte' })}
           </span>
+          {note.totalPaye > 0 && (
+            <span className="chiffres text-legende font-semibold text-succes">
+              {t('caisse.plan.paye', {
+                paye: formaterMontant(
+                  { unitesMineures: note.totalPaye, devise },
+                  { forme: 'courte' },
+                ),
+                total: formaterMontant({ unitesMineures: note.total, devise }, { forme: 'courte' }),
+              })}
+            </span>
+          )}
           <span className="text-legende text-attenue">
             {note.couverts === undefined
               ? note.serveur
@@ -374,6 +411,7 @@ function aTraiter(salles: SallePlan[], sansTable: NoteOuverte[], t: TFunction): 
 
 function ResumeNotes({
   aTraiter,
+  enService,
   notes,
   sansTable,
   occupees,
@@ -382,6 +420,7 @@ function ResumeNotes({
   fuseauHoraire,
 }: Readonly<{
   aTraiter: NoteATraiter[]
+  enService: NoteEnService[]
   notes: NoteOuverte[]
   sansTable: NoteOuverte[]
   occupees: number
@@ -392,10 +431,16 @@ function ResumeNotes({
   const { t } = useTranslation()
   // Montants entiers en unités mineures : la somme reste exacte.
   const total = notes.reduce((somme, note) => somme + note.total, 0)
+  // Une commande déjà « à remettre » n'est pas répétée plus bas : son reste à encaisser y figure.
+  const aRemettre = new Set(
+    enService.filter((note) => note.canal !== 'SUR_PLACE').map((note) => note.id),
+  )
+  const restes = new Map(sansTable.map((note) => [note.id, note.total - note.totalPaye]))
+  const comptoir = sansTable.filter((note) => !aRemettre.has(note.id))
   return (
     <section
       aria-label={t('caisse.plan.totalOuvertes')}
-      className="flex shrink-0 flex-col gap-1 rounded-moyen border border-trait bg-surface p-5 lg:w-ticket-largeur"
+      className="-order-1 flex min-h-0 shrink-0 flex-col gap-1 overflow-y-auto rounded-moyen border border-trait bg-surface p-5 pb-0 lg:order-none lg:w-ticket-largeur"
     >
       {aTraiter.length > 0 && (
         <div className="mb-5 flex flex-col">
@@ -441,28 +486,38 @@ function ResumeNotes({
           </ul>
         </div>
       )}
-      <span className="text-legende text-attenue">{t('caisse.plan.totalOuvertes')}</span>
-      <span className="chiffres text-montant-total text-encre">
-        {formaterMontant({ unitesMineures: total, devise })}
-      </span>
-      <span className="text-legende text-attenue">
-        {t('caisse.plan.notes', { count: notes.length })}
-        {tables > 0 && `, ${t('caisse.plan.tablesOccupees', { count: occupees, total: tables })}`}
-      </span>
-      <h2 className="m-0 mt-5 text-libelle font-bold text-encre">{t('caisse.plan.sansTable')}</h2>
+      <SuiviDuService
+        enService={enService}
+        restes={restes}
+        devise={devise}
+        fuseauHoraire={fuseauHoraire}
+      />
+      {/* Sans tuile sur le plan : les notes du comptoir et à emporter se voient ici, en évidence. */}
+      {(sansTable.length === 0 || comptoir.length > 0) && (
+        <h2 className="m-0 text-libelle font-bold text-encre">
+          {t('caisse.plan.sansTable')}{' '}
+          <span className="chiffres font-medium text-attenue">{comptoir.length}</span>
+        </h2>
+      )}
       {sansTable.length === 0 ? (
         <p className="m-0 mt-1 text-legende text-attenue">{t('caisse.plan.aucuneSansTable')}</p>
-      ) : (
-        <ul className="m-0 list-none p-0">
-          {sansTable.map((note) => (
-            <li key={note.id} className="border-b border-trait last:border-b-0">
+      ) : comptoir.length === 0 ? null : (
+        <ul
+          aria-label={t('caisse.plan.sansTable')}
+          className="m-0 mt-1.5 flex list-none flex-col gap-2 p-0"
+        >
+          {comptoir.map((note) => (
+            <li key={note.id}>
               <Link
                 to="/caisse/notes/$commandeId"
                 params={{ commandeId: note.id }}
-                className="flex min-h-cible-caisse items-center gap-2.5 py-3 text-encre no-underline"
+                className={clsx(
+                  'flex min-h-cible-caisse items-center gap-2.5 rounded-moyen bg-surface px-3 py-2.5 text-encre no-underline hover:bg-fond',
+                  note.aEnvoyer > 0 ? 'border-2 border-alerte-bord' : 'border border-trait',
+                )}
               >
-                <span className="flex flex-1 flex-col">
-                  <span className="text-libelle font-bold">
+                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="text-corps-fort">
                     {[
                       t('caisse.note.numero', { numero: note.numero }),
                       t(`caisse.canaux.${note.canal}`),
@@ -475,8 +530,28 @@ function ResumeNotes({
                       heure: formaterHeure(note.ouverteLe, fuseauHoraire),
                     })}
                   </span>
+                  <span className="flex flex-wrap gap-1">
+                    {note.additionDemandeeLe !== undefined && (
+                      <BadgeStatut ton="info">{t('caisse.plan.additionDemandee')}</BadgeStatut>
+                    )}
+                    {note.total - note.totalPaye > 0 && (
+                      <BadgeStatut ton="info">
+                        {t('caisse.plan.aEncaisser', {
+                          montant: formaterMontant(
+                            { unitesMineures: note.total - note.totalPaye, devise },
+                            { forme: 'courte' },
+                          ),
+                        })}
+                      </BadgeStatut>
+                    )}
+                    {note.aEnvoyer > 0 && (
+                      <BadgeStatut ton="alerte">
+                        {t('caisse.plan.aEnvoyer', { count: note.aEnvoyer })}
+                      </BadgeStatut>
+                    )}
+                  </span>
                 </span>
-                <span className="chiffres text-montant-ligne">
+                <span className="chiffres text-montant-tuile">
                   {formaterMontant({ unitesMineures: note.total, devise }, { forme: 'courte' })}
                 </span>
               </Link>
@@ -484,6 +559,17 @@ function ResumeNotes({
           ))}
         </ul>
       )}
+      {/* Collé en bas : il reste visible quand la liste défile. */}
+      <div className="sticky bottom-0 mt-auto flex flex-col gap-1 border-t border-trait bg-surface py-4">
+        <span className="text-legende text-attenue">{t('caisse.plan.totalOuvertes')}</span>
+        <span className="chiffres text-montant-total text-encre">
+          {formaterMontant({ unitesMineures: total, devise })}
+        </span>
+        <span className="text-legende text-attenue">
+          {t('caisse.plan.notes', { count: notes.length })}
+          {tables > 0 && `, ${t('caisse.plan.tablesOccupees', { count: occupees, total: tables })}`}
+        </span>
+      </div>
     </section>
   )
 }
@@ -570,6 +656,193 @@ function DialogueOuverture({
           </Bouton>
         </div>
       </div>
+    </Dialogue>
+  )
+}
+
+/** « T4 » ou « n°44, À emporter, Yao » : de quoi appeler le client. */
+function libelleEnService(note: NoteEnService, t: TFunction): string {
+  if (note.table !== undefined) return note.table
+  return [
+    t('caisse.note.numero', { numero: note.numero }),
+    t(`caisse.canaux.${note.canal}`),
+    ...(note.clientNom === undefined ? [] : [note.clientNom]),
+  ].join(', ')
+}
+
+/**
+ * Le suivi du service : à table, ce qui n'est pas encore servi ; au comptoir et à emporter, ce qui
+ * n'est pas encore remis au client. Payées ou non, les notes restent là jusqu'au bout.
+ */
+function SuiviDuService({
+  enService,
+  restes,
+  devise,
+  fuseauHoraire,
+}: Readonly<{
+  enService: NoteEnService[]
+  /** Reste à encaisser des notes ouvertes du comptoir et à emporter. */
+  restes: ReadonlyMap<string, number>
+  devise: Devise
+  fuseauHoraire: string
+}>) {
+  const { t } = useTranslation()
+  const [aRemettre, setARemettre] = useState<NoteEnService | null>(null)
+  const tables = enService.filter((note) => note.canal === 'SUR_PLACE')
+  const sansTable = enService.filter((note) => note.canal !== 'SUR_PLACE')
+  const detail = (note: NoteEnService) =>
+    t('caisse.plan.enPreparation', {
+      serveur: note.serveur,
+      heure: formaterHeure(note.aServirDepuis, fuseauHoraire),
+    })
+  return (
+    <>
+      {tables.length > 0 && (
+        <div className="mb-5 flex flex-col">
+          <h2 className="m-0 text-libelle font-bold text-encre">
+            {t('caisse.plan.aServir')}{' '}
+            <span className="chiffres font-medium text-attenue">{tables.length}</span>
+          </h2>
+          <ul aria-label={t('caisse.plan.aServir')} className="m-0 list-none p-0">
+            {tables.map((note) => (
+              <li key={note.id} className="border-b border-trait last:border-b-0">
+                <Link
+                  to="/caisse/notes/$commandeId"
+                  params={{ commandeId: note.id }}
+                  className="flex min-h-cible-caisse items-center gap-2.5 py-2 text-encre no-underline"
+                >
+                  <span className="flex flex-1 flex-col">
+                    <span className="text-libelle font-bold">{libelleEnService(note, t)}</span>
+                    <span className="text-legende text-attenue">{detail(note)}</span>
+                  </span>
+                  {note.payee && <BadgeStatut ton="succes">{t('caisse.plan.payee')}</BadgeStatut>}
+                  <BadgeStatut ton="neutre">
+                    {t('caisse.plan.badgeAServir', { count: note.aServir })}
+                  </BadgeStatut>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {sansTable.length > 0 && (
+        <div className="mb-5 flex flex-col">
+          <h2 className="m-0 text-libelle font-bold text-encre">
+            {t('caisse.plan.aRemettre')}{' '}
+            <span className="chiffres font-medium text-attenue">{sansTable.length}</span>
+          </h2>
+          <ul aria-label={t('caisse.plan.aRemettre')} className="m-0 list-none p-0">
+            {sansTable.map((note) => (
+              <li
+                key={note.id}
+                className="flex flex-col gap-1.5 border-b border-trait py-2.5 last:border-b-0"
+              >
+                <Link
+                  to="/caisse/notes/$commandeId"
+                  params={{ commandeId: note.id }}
+                  className="flex flex-col text-encre no-underline"
+                >
+                  <span className="text-libelle font-bold">{libelleEnService(note, t)}</span>
+                  <span className="text-legende text-attenue">{detail(note)}</span>
+                </Link>
+                <span className="flex items-center justify-between gap-2">
+                  {note.payee ? (
+                    <BadgeStatut ton="succes">{t('caisse.plan.payee')}</BadgeStatut>
+                  ) : (
+                    <BadgeStatut ton="info">
+                      {(restes.get(note.id) ?? 0) > 0
+                        ? t('caisse.plan.aEncaisser', {
+                            montant: formaterMontant(
+                              { unitesMineures: restes.get(note.id) ?? 0, devise },
+                              { forme: 'courte' },
+                            ),
+                          })
+                        : t('caisse.plan.aEncaisserCourt')}
+                    </BadgeStatut>
+                  )}
+                  <Bouton
+                    className="shrink-0"
+                    onClick={() => {
+                      setARemettre(note)
+                    }}
+                  >
+                    {t('caisse.service.remettre')}
+                  </Bouton>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {aRemettre !== null && (
+        <DialogueRemettre
+          note={aRemettre}
+          surFermer={() => {
+            setARemettre(null)
+          }}
+        />
+      )}
+    </>
+  )
+}
+
+/** Remettre une commande au client : les articles sont rappelés pour vérifier avant de la donner. */
+function DialogueRemettre({
+  note,
+  surFermer,
+}: Readonly<{ note: NoteEnService; surFermer: () => void }>) {
+  const { t } = useTranslation()
+  const clientRequetes = useQueryClient()
+  const detail = useQuery(requeteCommande(note.id))
+  const [enCours, setEnCours] = useState(false)
+  const [erreur, setErreur] = useState<unknown>(null)
+  const lignes = (detail.data?.lignes ?? []).filter(
+    (ligne) => ligne.statut === 'ENVOYEE' && ligne.servieLe === undefined,
+  )
+
+  async function remettre() {
+    setEnCours(true)
+    setErreur(null)
+    try {
+      clientRequetes.setQueryData(
+        requeteCommande(note.id).queryKey,
+        await appelerCaisse<CommandeDetail>(`/caisse/commandes/${note.id}/service`, {
+          methode: 'POST',
+        }),
+      )
+      await clientRequetes.invalidateQueries({ queryKey: requetePlan.queryKey })
+      surFermer()
+    } catch (echec) {
+      setErreur(echec)
+    } finally {
+      setEnCours(false)
+    }
+  }
+
+  return (
+    <Dialogue
+      titre={t('caisse.remettre.titre', {
+        numero: t('caisse.note.numero', { numero: note.numero }),
+      })}
+      consequence={t('caisse.remettre.phrase', { ou: libelleEnService(note, t) })}
+      libelleAnnuler={t('commun.annuler')}
+      libelleConfirmer={t('caisse.service.remettre')}
+      enCours={enCours}
+      surAnnuler={surFermer}
+      surConfirmer={() => void remettre()}
+    >
+      {erreur !== null && <AlerteErreur erreur={erreur} />}
+      {detail.isPending ? (
+        <Chargement texte={t('caisse.remettre.chargement')} />
+      ) : (
+        <ul className="m-0 flex list-none flex-col gap-1.5 rounded-normal bg-fond px-3.5 py-3 text-corps text-encre">
+          {lignes.map((ligne) => (
+            <li key={ligne.id}>
+              {ligne.quantite}× {ligne.nomProduit}
+            </li>
+          ))}
+        </ul>
+      )}
     </Dialogue>
   )
 }

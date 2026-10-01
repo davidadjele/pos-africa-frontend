@@ -53,6 +53,8 @@ export const NOTE_T4_RESUME: NoteOuverte = {
   couverts: 3,
   ouverteLe: '2026-09-29T18:55:00Z',
   aEnvoyer: 2,
+  totalPaye: 0,
+  aServir: 0,
 }
 export const NOTE_COMPTOIR: NoteOuverte = {
   id: 'c0000000-0000-4000-8000-000000000043',
@@ -63,6 +65,8 @@ export const NOTE_COMPTOIR: NoteOuverte = {
   mienne: false,
   ouverteLe: '2026-09-29T20:37:00Z',
   aEnvoyer: 0,
+  totalPaye: 0,
+  aServir: 0,
 }
 
 export const TERRASSE_ID = '5a000000-0000-4000-8000-000000000001'
@@ -102,6 +106,7 @@ export const PLAN: PlanDeSalle = {
     },
   ],
   sansTable: [NOTE_COMPTOIR],
+  enService: [],
 }
 
 export const FLAG_ENVOYE: LigneNote = {
@@ -146,6 +151,7 @@ export const NOTE_T4: CommandeDetail = {
   ouverteLe: '2026-09-29T18:55:00Z',
   lignes: [FLAG_ENVOYE, POULET_A_ENVOYER],
   total: 10200,
+  totalPaye: 0,
   sousTotal: 10200,
   remises: 0,
   articles: 3,
@@ -163,6 +169,7 @@ export const NOTE_VIDE: CommandeDetail = {
   ouverteLe: '2026-09-29T20:39:00Z',
   lignes: [],
   total: 0,
+  totalPaye: 0,
   sousTotal: 0,
   remises: 0,
   articles: 0,
