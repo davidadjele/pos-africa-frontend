@@ -7,6 +7,7 @@ import { PLAN } from '../../../tests/commandes'
 import { serveurMsw } from '../../../tests/serveurMsw'
 import type {
   DemandeCloture,
+  DemandeFondDeCaisse,
   DemandeMouvement,
   RapportZ,
   SituationCaisse,
@@ -228,8 +229,9 @@ describe('Caisse de la tablette', () => {
     expect(await screen.findByRole('list', { name: 'Tables' })).toBeVisible()
   })
 
-  it('propose de rouvrir la caisse fermée avec le fond laissé à la clôture', async () => {
+  it('fait recompter le fond à l’ouverture et expliquer un écart avec la dernière clôture', async () => {
     tiroirServi()
+    const ouvertures: DemandeFondDeCaisse[] = []
     serveurMsw.use(
       http.get(`${API}/caisse/situation`, () =>
         HttpResponse.json({ statut: 409, code: 'CAISSE_FERMEE', message: 'x' }, { status: 409 }),
@@ -239,29 +241,56 @@ describe('Caisse de la tablette', () => {
         await new Promise((resolve) => setTimeout(resolve, 50))
         return HttpResponse.json({ operateurs: [], dernierFond: 20_000 })
       }),
+      http.post(`${API}/caisse/ouverture`, async ({ request }) => {
+        ouvertures.push((await request.json()) as DemandeFondDeCaisse)
+        return HttpResponse.json({ ouverture: OUVERTURE, operateurs: [] })
+      }),
     )
     caisseOuverte('/caisse/tiroir', { permissions: CAISSIER })
 
-    expect(
-      await screen.findByText(/À la dernière clôture, 20\s000\sF ont été laissés en fond/),
-    ).toBeVisible()
-    expect(screen.getByRole('textbox', { name: /^Fond de caisse/ })).toHaveValue('20000')
+    const billets = await screen.findByRole('textbox', {
+      name: /^Nombre de billets de 10\s000\sF$/,
+    })
+    expect(screen.queryByText(/20\s000/)).not.toBeInTheDocument()
+    await remplacer(billets, '1')
+    await userEvent.click(screen.getByRole('button', { name: /^Un de plus : 5\s000\sF$/ }))
+    await userEvent.click(screen.getByRole('button', { name: 'Valider le comptage' }))
+
+    const controle = screen.getByRole('region', { name: 'Contrôle du fond' })
+    expect(controle).toHaveTextContent('Laissé à la clôture20 000 F')
+    expect(controle).toHaveTextContent('Manque−5 000 F')
+    const ouvrir = screen.getByRole('button', { name: /^Ouvrir la caisse avec 15\s000/ })
+    expect(ouvrir).toBeDisabled()
+    await userEvent.type(
+      screen.getByRole('textbox', { name: /^Explication de l’écart/ }),
+      'Monnaie prêtée au bar',
+    )
+    await userEvent.click(ouvrir)
+
+    expect(ouvertures).toEqual([{ fond: 15_000, explication: 'Monnaie prêtée au bar' }])
   })
 
-  it('refuse les lettres dans le montant et dit ce qui manque au lieu de ne rien faire', async () => {
+  it('ouvre sans explication quand le fond est celui laissé à la clôture', async () => {
     tiroirServi()
+    serveurMsw.use(
+      http.get(`${API}/caisse/situation`, () =>
+        HttpResponse.json({ statut: 409, code: 'CAISSE_FERMEE', message: 'x' }, { status: 409 }),
+      ),
+      http.get(`${API}/caisse/ouverture`, () =>
+        HttpResponse.json({ operateurs: [], dernierFond: 20_000 }),
+      ),
+    )
     caisseOuverte('/caisse/tiroir', { permissions: CAISSIER })
 
-    await userEvent.click(await screen.findByRole('button', { name: /Mouvement de caisse/ }))
-    const dialogue = screen.getByRole('dialog', { name: 'Mouvement de caisse' })
-    const montant = within(dialogue).getByRole('textbox', { name: /^Montant/ })
-    await userEvent.type(montant, 'SARDINE')
-    expect(montant).toHaveValue('')
-    await userEvent.click(within(dialogue).getByRole('button', { name: 'Valider' }))
-
-    expect(montant).toHaveAccessibleDescription('Saisissez le montant.')
-    expect(within(dialogue).getByRole('textbox', { name: /^Motif/ })).toHaveAccessibleDescription(
-      'Indiquez le motif.',
+    await remplacer(
+      await screen.findByRole('textbox', { name: /^Nombre de billets de 10\s000\sF$/ }),
+      '2',
     )
+    await userEvent.click(screen.getByRole('button', { name: 'Valider le comptage' }))
+
+    expect(screen.getByRole('region', { name: 'Contrôle du fond' })).toHaveTextContent(
+      'Caisse juste',
+    )
+    expect(screen.getByRole('button', { name: /^Ouvrir la caisse avec 20\s000/ })).toBeEnabled()
   })
 })

@@ -112,6 +112,16 @@ export function detailActivite(
     case 'CLOTURE_CAISSE':
     case 'ECART_CAISSE':
       return cloture(evenement, t, montant)
+    case 'ECART_OUVERTURE_CAISSE': {
+      const { attendu, fond, ecart, explication } = evenement.details
+      return t('activite.ouvertureEcart', {
+        attendu: montant(attendu),
+        compte: montant(fond),
+        ecart:
+          typeof ecart === 'number' ? `${ecart > 0 ? '+' : '−'}${montant(Math.abs(ecart))}` : '',
+        explication: texte(explication),
+      })
+    }
     case 'REMISE_RETIREE':
       return t('activite.remiseRetiree', {
         montant: montant(evenement.details.montant),

@@ -218,5 +218,15 @@ describe('description de l’activité', () => {
     ).toBe(
       `Attendu 15${FINE}700${INSEC}F, compté 15${FINE}000${INSEC}F, écart −700${INSEC}F : Monnaie rendue en trop`,
     )
+    expect(
+      detail('ECART_OUVERTURE_CAISSE', {
+        attendu: 20_000,
+        fond: 15_000,
+        ecart: -5000,
+        explication: 'Monnaie prêtée au bar',
+      }),
+    ).toBe(
+      `Laissé 20${FINE}000${INSEC}F, compté 15${FINE}000${INSEC}F, écart −5${FINE}000${INSEC}F : Monnaie prêtée au bar`,
+    )
   })
 })

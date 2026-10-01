@@ -122,7 +122,7 @@ describe('EcranEncaissement', () => {
     expect(
       await screen.findByRole('heading', { name: 'La caisse de cette tablette n’est pas ouverte' }),
     ).toBeVisible()
-    await remplacer(screen.getByRole('textbox', { name: /^Fond de caisse/ }), '20000')
+    await remplacer(screen.getByRole('textbox', { name: /^Nombre de billets de 10\s000\sF$/ }), '2')
     await userEvent.click(screen.getByRole('button', { name: /^Ouvrir la caisse avec 20\s000/ }))
 
     expect(await screen.findByRole('radiogroup', { name: 'Mode de paiement' })).toBeVisible()

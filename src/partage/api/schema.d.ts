@@ -811,7 +811,11 @@ export interface paths {
         /** La caisse de cette tablette : ouverte ou non, et les opérateurs Mobile Money du pays */
         get: operations["etat"];
         put?: never;
-        /** Ouvrir la caisse de cette tablette avec son fond */
+        /**
+         * Ouvrir la caisse de cette tablette avec son fond
+         * @description Le fond compté est comparé à celui laissé à la clôture précédente (dernierFond) : un écart exige une \
+         *     explication, tracée comme action critique.
+         */
         post: operations["ouvrir"];
         delete?: never;
         options?: never;
@@ -2010,6 +2014,7 @@ export interface components {
             ville?: string;
         };
         DemandeFondDeCaisse: {
+            explication?: string;
             /**
              * Format: int64
              * @example 20000
@@ -2429,7 +2434,7 @@ export interface components {
             /** Format: date-time */
             survenuLe: string;
             /** @enum {string} */
-            type: "TAXE_CREEE" | "TAUX_TAXE_MODIFIE" | "TAXE_DESACTIVEE" | "TAXE_REACTIVEE" | "PRIX_MODIFIE" | "TAXE_PRODUIT_MODIFIEE" | "PRODUIT_DESACTIVE" | "PRODUIT_REACTIVE" | "PRIX_ETABLISSEMENT_MODIFIE" | "PRODUIT_RETIRE_ETABLISSEMENT" | "PRODUIT_PROPOSE_ETABLISSEMENT" | "RUPTURE_DECLAREE" | "RUPTURE_LEVEE" | "ROLES_MODIFIES" | "PIN_REINITIALISE" | "EMPLOYE_DESACTIVE" | "EMPLOYE_REACTIVE" | "TABLETTE_REVOQUEE" | "VALIDATION_GERANT_UTILISEE" | "LIGNE_ANNULEE" | "NOTE_ANNULEE" | "TABLE_TRANSFEREE" | "SERVEUR_CHANGE" | "REMISE_APPLIQUEE" | "ARTICLE_OFFERT" | "REMISE_RETIREE" | "CAISSE_OUVERTE" | "RETRAIT_CAISSE" | "DEPENSE_CAISSE" | "APPORT_CAISSE" | "CLOTURE_CAISSE" | "ECART_CAISSE";
+            type: "TAXE_CREEE" | "TAUX_TAXE_MODIFIE" | "TAXE_DESACTIVEE" | "TAXE_REACTIVEE" | "PRIX_MODIFIE" | "TAXE_PRODUIT_MODIFIEE" | "PRODUIT_DESACTIVE" | "PRODUIT_REACTIVE" | "PRIX_ETABLISSEMENT_MODIFIE" | "PRODUIT_RETIRE_ETABLISSEMENT" | "PRODUIT_PROPOSE_ETABLISSEMENT" | "RUPTURE_DECLAREE" | "RUPTURE_LEVEE" | "ROLES_MODIFIES" | "PIN_REINITIALISE" | "EMPLOYE_DESACTIVE" | "EMPLOYE_REACTIVE" | "TABLETTE_REVOQUEE" | "VALIDATION_GERANT_UTILISEE" | "LIGNE_ANNULEE" | "NOTE_ANNULEE" | "TABLE_TRANSFEREE" | "SERVEUR_CHANGE" | "REMISE_APPLIQUEE" | "ARTICLE_OFFERT" | "REMISE_RETIREE" | "CAISSE_OUVERTE" | "RETRAIT_CAISSE" | "DEPENSE_CAISSE" | "APPORT_CAISSE" | "CLOTURE_CAISSE" | "ECART_CAISSE" | "ECART_OUVERTURE_CAISSE";
         };
         LigneCarteEtablissement: {
             categorie: components["schemas"]["CategorieCarte"];

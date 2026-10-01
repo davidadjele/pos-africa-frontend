@@ -1071,7 +1071,8 @@
       "DEPENSE_CAISSE": "<b>{{auteur}}</b> a payé une dépense en espèces à {{etablissement}}",
       "APPORT_CAISSE": "<b>{{auteur}}</b> a ajouté des espèces à la caisse à {{etablissement}}",
       "CLOTURE_CAISSE": "<b>{{auteur}}</b> a clôturé la caisse à {{etablissement}} (<b>{{objet}}</b>)",
-      "ECART_CAISSE": "<b>{{auteur}}</b> a clôturé la caisse avec un écart à {{etablissement}} (<b>{{objet}}</b>)"
+      "ECART_CAISSE": "<b>{{auteur}}</b> a clôturé la caisse avec un écart à {{etablissement}} (<b>{{objet}}</b>)",
+      "ECART_OUVERTURE_CAISSE": "<b>{{auteur}}</b> a ouvert la caisse avec un écart à {{etablissement}}"
     },
     "actions": {
       "LIGNE_ANNULER_APRES_ENVOI": "annuler des articles envoyés",
@@ -1098,7 +1099,8 @@
     "mouvement": "{{montant}}, motif : {{motif}}",
     "mouvementValide": "{{montant}}, motif : {{motif}}. Validé par {{validateur}}",
     "cloture": "Attendu {{attendu}}, compté {{compte}}",
-    "clotureEcart": "Attendu {{attendu}}, compté {{compte}}, écart {{ecart}} : {{explication}}"
+    "clotureEcart": "Attendu {{attendu}}, compté {{compte}}, écart {{ecart}} : {{explication}}",
+    "ouvertureEcart": "Laissé {{attendu}}, compté {{compte}}, écart {{ecart}} : {{explication}}"
   },
   "salles": {
     "titre": "Salles et tables de {{etablissement}}",
@@ -1214,11 +1216,13 @@
     },
     "ouverture": {
       "titre": "La caisse de cette tablette n’est pas ouverte",
-      "phrase": "Comptez le fond de caisse avant le premier encaissement : il servira à vérifier la caisse à la clôture.",
-      "fond": "Fond de caisse",
+      "phrase": "Comptez les espèces du tiroir avant le premier encaissement : elles servent de fond et seront vérifiées à la clôture.",
       "ouvrir": "Ouvrir la caisse avec {{montant}}",
       "sansDroit": "Un caissier ou un gérant ouvre la caisse avec son code.",
-      "dernierFond": "À la dernière clôture, {{montant}} ont été laissés en fond."
+      "premiere": "Première ouverture de cette tablette : le fond compté devient la référence.",
+      "aveugle": "Comptez tout le tiroir. Le fond laissé à la dernière clôture s’affiche une fois le comptage validé, pour vérifier que rien n’a bougé.",
+      "controle": "Contrôle du fond",
+      "laisse": "Laissé à la clôture"
     },
     "referenceCourte": "réf. {{reference}}",
     "modesEn": {
@@ -1259,7 +1263,11 @@
       "surLaNote_other": "{{count}} sur la note, {{payees}} payés",
       "unDeMoins": "Un {{nom}} de moins",
       "unDePlus": "Un {{nom}} de plus",
-      "selection": "Sélection"
+      "selection": "Sélection",
+      "aidesPaiement": {
+        "parts": "Chaque part est un paiement : la note se clôt avec la dernière.",
+        "articles": "Le montant vient des articles choisis, remises comprises."
+      }
     }
   },
   "tiroir": {
@@ -1359,6 +1367,7 @@
       "terminer": "Terminer",
       "ventes_one": "Ventes encaissées ({{count}} note)",
       "ventes_other": "Ventes encaissées ({{count}} notes)"
-    }
+    },
+    "comptage": "Comptage des espèces"
   }
 }

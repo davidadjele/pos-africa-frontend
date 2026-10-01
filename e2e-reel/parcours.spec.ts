@@ -750,8 +750,15 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   // La tablette reprend là où elle était : la note n°3, désormais encaissable.
   await expect(note.getByRole('heading', { name: /n°3/ })).toBeVisible()
   await note.getByRole('button', { name: /Encaisser/ }).click()
-  await tablette.getByLabel(/^Fond de caisse/).fill('20000')
-  await tablette.getByRole('button', { name: /^Ouvrir la caisse avec/ }).click()
+  // Première ouverture : la gérante compte le fond, billet par billet.
+  await tablette.getByRole('textbox', { name: /^Nombre de billets de 10\s000\sF$/ }).fill('1')
+  await tablette.getByRole('button', { name: /^Un de plus : 5\s000\sF$/ }).click()
+  await tablette.getByRole('button', { name: /^Un de plus : 2\s000\sF$/ }).click()
+  await tablette.getByRole('button', { name: /^Un de plus : 2\s000\sF$/ }).click()
+  await tablette.getByRole('textbox', { name: /^Nombre de pièces de 500\sF$/ }).fill('2')
+  await expect(tablette.getByRole('status', { name: 'Espèces comptées' })).toContainText('20 000 F')
+  await capturer(tablette, '40b-ouverture-comptage')
+  await tablette.getByRole('button', { name: /^Ouvrir la caisse avec 20\s000/ }).click()
   const modes = tablette.getByRole('radiogroup', { name: 'Mode de paiement' })
   await modes.getByRole('radio', { name: /Mobile Money/ }).click()
   await tablette.getByRole('radio', { name: /^Flooz/ }).click()
@@ -832,7 +839,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     .click()
   await expect(tablette.getByRole('status', { name: 'Sélection' })).toContainText('4 500 F')
   await modes.getByRole('radio', { name: /Carte/ }).click()
-  await capturer(tablette, '53-partage-par-articles')
+  await capturer(tablette, '55-partage-par-articles')
   await tablette.getByRole('button', { name: /^Valider 4\s500\sF en carte/ }).click()
   await expect(recap).toContainText('1× Poulet braisé, carte')
   await partage.getByRole('radio', { name: /Parts égales/ }).click()
@@ -840,14 +847,14 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await expect(parts).toContainText('Part 1En cours4 500')
   await expect(parts).toContainText('Part 2À payer4 500')
   await modes.getByRole('radio', { name: /Carte/ }).click()
-  await capturer(tablette, '54-partage-parts-egales')
+  await capturer(tablette, '56-partage-parts-egales')
   await tablette.getByRole('button', { name: /^Valider 4\s500\sF en carte/ }).click()
   await expect(recap).toContainText('Part 1, carte')
   await modes.getByRole('radio', { name: /Mobile Money/ }).click()
   await tablette.getByRole('radio', { name: /^Flooz/ }).click()
   await tablette.getByLabel(/^Référence de la transaction/).fill('9KQ2M1')
   await tablette.setViewportSize({ width: 390, height: 844 })
-  await capturer(tablette, '54-partage-parts-egales-telephone')
+  await capturer(tablette, '56-partage-parts-egales-telephone')
   await tablette.setViewportSize({ width: 1280, height: 800 })
   await tablette.getByRole('button', { name: /^Valider 4\s500\sF en Mobile Money/ }).click()
   await expect(tablette.getByRole('heading', { name: 'T6 est libre' })).toBeVisible()
@@ -904,11 +911,29 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
 
   // Caisse fermée : la réouverture propose le fond laissé à la clôture.
   await tablette.getByRole('button', { name: 'Caisse', exact: true }).click()
-  await expect(tablette.getByLabel(/^Fond de caisse/)).toHaveValue('20000')
+  // Réouverture : on recompte à l'aveugle, puis on compare au fond laissé à la clôture.
+  await expect(tablette.getByText(/20\s000/)).toHaveCount(0)
+  await tablette.getByRole('textbox', { name: /^Nombre de billets de 10\s000\sF$/ }).fill('1')
+  await tablette.getByRole('button', { name: /^Un de plus : 5\s000\sF$/ }).click()
+  await capturer(tablette, '52-reouverture-comptage')
+  await tablette.setViewportSize({ width: 390, height: 844 })
+  await capturer(tablette, '52-reouverture-comptage-telephone')
+  await tablette.setViewportSize({ width: 1280, height: 800 })
+  await tablette.getByRole('button', { name: 'Valider le comptage' }).click()
+  const controle = tablette.getByRole('region', { name: 'Contrôle du fond' })
+  await expect(controle).toContainText('Laissé à la clôture20 000 F')
+  await expect(controle).toContainText('Manque−5 000 F')
+  await tablette
+    .getByRole('textbox', { name: /^Explication de l’écart/ })
+    .fill('Monnaie prêtée au bar')
   await expect(
-    tablette.getByText(/À la dernière clôture, 20\s000\sF ont été laissés en fond/),
-  ).toBeVisible()
-  await capturer(tablette, '52-caisse-a-rouvrir')
+    tablette.getByRole('button', { name: /^Ouvrir la caisse avec 15\s000/ }),
+  ).toBeEnabled()
+  await capturer(tablette, '53-reouverture-ecart')
+  await tablette.getByRole('button', { name: /^Ouvrir la caisse avec 15\s000/ }).click()
+  await expect(tablette.getByRole('region', { name: 'Ventes de la caisse' })).toContainText(
+    '0 note encaissée',
+  )
   await tablette.getByRole('button', { name: 'Plan de salle' }).click()
 
   await tablette.setViewportSize({ width: 390, height: 844 })
@@ -929,5 +954,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     'Afi M. a clôturé la caisse avec un écart à Bè Kpota (Z n°1)',
   )
   await expect(activite).toContainText(': Monnaie rendue en trop')
+  await expect(activite).toContainText('Afi M. a ouvert la caisse avec un écart à Bè Kpota')
+  await expect(activite).toContainText('écart −5 000 F : Monnaie prêtée au bar')
   await capturer(page, '40-activite-caisse')
 })

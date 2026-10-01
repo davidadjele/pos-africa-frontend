@@ -17,7 +17,6 @@ import type {
   TypeMouvement,
 } from '../../partage/api/contrat'
 import { formaterHeure } from '../../partage/dates/formaterDate'
-import { coupuresDe, totalCompte } from '../../partage/montants/coupures'
 import { formaterMontant, symboleDe, type Devise } from '../../partage/montants/formaterMontant'
 import { lireMontant } from '../../partage/montants/lireMontant'
 import { AlerteErreur } from '../../partage/ui/Alerte'
@@ -29,6 +28,7 @@ import { Dialogue } from '../../partage/ui/Dialogue'
 import { useSessionCaisse } from '../caisse/requetes'
 import { useValidation } from '../commande/useValidation'
 import { requeteAppareil } from '../tablette/requetes'
+import { EtapeComptage, ResultatEcart, useComptage } from './Comptage'
 import { OuvertureCaisse } from './EcranEncaissement'
 import { requeteOuvertureCaisse } from './requetes'
 
@@ -77,7 +77,7 @@ export function EcranTiroir() {
         return <Chargement texte={t('tiroir.chargement')} />
       }
       return (
-        <div className="mx-auto flex w-full max-w-[640px] flex-col gap-3">
+        <div className="flex flex-col gap-3 lg:min-h-0 lg:flex-1">
           <div className="flex">{retour}</div>
           <OuvertureCaisse
             devise={devise}
@@ -465,25 +465,14 @@ function Cloture({
   surTermine: () => void
 }>) {
   const { t } = useTranslation()
-  const coupures = coupuresDe(devise)
-  const [comptage, setComptage] = useState<Record<number, string>>({})
-  const [totalSaisi, setTotalSaisi] = useState('')
+  const comptage = useComptage(devise)
   const [resultat, setResultat] = useState<ResultatComptage | null>(null)
   const [explication, setExplication] = useState('')
   const [fondLaisse, setFondLaisse] = useState(String(situation.ouverture.fondInitial))
   const [rapport, setRapport] = useState<RapportZ | null>(null)
   const [enCours, setEnCours] = useState(false)
   const [erreur, setErreur] = useState<unknown>(null)
-  const courte = (valeur: number) =>
-    formaterMontant({ unitesMineures: valeur, devise }, { forme: 'courte' })
-  const compte =
-    coupures === null
-      ? (lireMontant(totalSaisi, devise) ?? 0)
-      : totalCompte(
-          Object.fromEntries(
-            Object.entries(comptage).map(([valeur, nombre]) => [valeur, Number(nombre) || 0]),
-          ),
-        )
+  const compte = comptage.total
 
   async function envoyer<T>(chemin: string, corps: object): Promise<T | null> {
     setEnCours(true)
@@ -535,32 +524,12 @@ function Cloture({
           className="mx-auto flex w-full max-w-[640px] flex-col gap-3.5 rounded-moyen border border-trait bg-surface p-6"
         >
           {erreur !== null && <AlerteErreur erreur={erreur} />}
-          <div className="grid grid-cols-3 gap-2.5">
-            <Chiffre libelle={t('cloture.attendu')} valeur={courte(resultat.attendu)} />
-            <Chiffre libelle={t('cloture.compte')} valeur={courte(resultat.compte)} />
-            <span
-              className={clsx(
-                'flex flex-col rounded-normal px-2.5 py-1.5',
-                ecart === 0
-                  ? 'bg-succes-fond text-succes'
-                  : ecart < 0
-                    ? 'bg-danger-fond text-danger'
-                    : 'bg-alerte-fond text-alerte-texte',
-              )}
-            >
-              <span className="text-legende font-semibold">
-                {ecart === 0
-                  ? t('cloture.juste')
-                  : ecart < 0
-                    ? t('cloture.manque')
-                    : t('cloture.surplus')}
-              </span>
-              <span className="chiffres text-montant-tuile">
-                {ecart > 0 ? '+' : ecart < 0 ? '−' : ''}
-                {courte(Math.abs(ecart))}
-              </span>
-            </span>
-          </div>
+          <ResultatEcart
+            libelleAttendu={t('cloture.attendu')}
+            attendu={resultat.attendu}
+            compte={resultat.compte}
+            devise={devise}
+          />
           {ecart !== 0 && (
             <ChampSaisie
               libelle={t('cloture.explication')}
@@ -625,54 +594,12 @@ function Cloture({
     <div className="flex flex-col gap-3 lg:min-h-0 lg:flex-1">
       {titre}
       {erreur !== null && <AlerteErreur erreur={erreur} />}
-      <div className="flex flex-col gap-3 lg:min-h-0 lg:flex-1 lg:flex-row">
-        <section className="grid min-w-0 flex-1 content-start gap-x-7 rounded-moyen lg:overflow-y-auto border border-trait bg-surface p-5 sm:grid-cols-2">
-          {coupures === null ? (
-            <ChampSaisie
-              libelle={t('cloture.compte')}
-              inputMode="numeric"
-              suffixe={symboleDe(devise)}
-              value={totalSaisi}
-              onChange={(evenement) => {
-                setTotalSaisi(evenement.target.value)
-              }}
-            />
-          ) : (
-            (['billets', 'pieces'] as const).map((nature) =>
-              coupures[nature].length === 0 ? null : (
-                <div key={nature} className="flex flex-col">
-                  <h2 className="m-0 border-b border-trait pb-1.5 text-libelle font-bold text-attenue">
-                    {t(`cloture.${nature}`)}
-                  </h2>
-                  {coupures[nature].map((valeur) => (
-                    <LigneCoupure
-                      key={valeur}
-                      valeur={valeur}
-                      nature={t(nature === 'billets' ? 'cloture.billet' : 'cloture.piece')}
-                      nombre={comptage[valeur] ?? ''}
-                      devise={devise}
-                      surChanger={(nombre) => {
-                        setComptage((actuel) => ({ ...actuel, [valeur]: nombre }))
-                      }}
-                    />
-                  ))}
-                </div>
-              ),
-            )
-          )}
-        </section>
-        <aside className="flex shrink-0 flex-col gap-3 rounded-moyen border border-trait bg-surface p-5 lg:w-ticket-largeur">
-          <span className="text-legende text-attenue">{t('cloture.compte')}</span>
-          <output
-            aria-label={t('cloture.compte')}
-            className="chiffres text-montant-total text-encre"
-          >
-            {courte(compte)}
-          </output>
-          <p className="m-0 text-legende text-attenue">{t('cloture.aveugle')}</p>
+      <EtapeComptage
+        comptage={comptage}
+        aide={t('cloture.aveugle')}
+        action={
           <Bouton
             variante="principal"
-            className="mt-auto"
             enCours={enCours}
             onClick={() =>
               void envoyer<ResultatComptage>('/caisse/cloture/comptage', {
@@ -684,77 +611,8 @@ function Cloture({
           >
             {t('cloture.valider')}
           </Bouton>
-        </aside>
-      </div>
-    </div>
-  )
-}
-
-function Chiffre({ libelle, valeur }: Readonly<{ libelle: string; valeur: string }>) {
-  return (
-    <span className="flex flex-col px-1 py-1.5">
-      <span className="text-legende text-attenue">{libelle}</span>
-      <span className="chiffres text-montant-tuile text-encre">{valeur}</span>
-    </span>
-  )
-}
-
-function LigneCoupure({
-  valeur,
-  nature,
-  nombre,
-  devise,
-  surChanger,
-}: Readonly<{
-  valeur: number
-  nature: string
-  nombre: string
-  devise: Devise
-  surChanger: (nombre: string) => void
-}>) {
-  const { t } = useTranslation()
-  const libelle = formaterMontant({ unitesMineures: valeur, devise }, { forme: 'courte' })
-  const quantite = Number(nombre) || 0
-  return (
-    <div className="grid grid-cols-[72px_minmax(0,1fr)_auto] items-center gap-2.5 border-b border-trait py-1.5">
-      <span className="chiffres text-corps-fort text-encre">
-        {formaterMontant({ unitesMineures: valeur, devise }, { forme: 'nombre' })}
-      </span>
-      <span className="flex items-center rounded-normal border border-trait">
-        <button
-          type="button"
-          aria-label={t('cloture.moins', { valeur: libelle })}
-          disabled={quantite <= 0}
-          onClick={() => {
-            surChanger(String(Math.max(0, quantite - 1)))
-          }}
-          className="size-cible-min text-titre-section text-attenue"
-        >
-          −
-        </button>
-        <input
-          aria-label={t('cloture.nombre', { nature, valeur: libelle })}
-          inputMode="numeric"
-          value={nombre}
-          onChange={(evenement) => {
-            surChanger(evenement.target.value.replace(/\D/gu, ''))
-          }}
-          className="chiffres min-w-0 flex-1 border-0 bg-transparent text-center text-montant-ligne text-encre outline-none"
-        />
-        <button
-          type="button"
-          aria-label={t('cloture.plus', { valeur: libelle })}
-          onClick={() => {
-            surChanger(String(quantite + 1))
-          }}
-          className="size-cible-min text-titre-section text-attenue"
-        >
-          +
-        </button>
-      </span>
-      <span className="chiffres text-right text-corps text-encre">
-        {formaterMontant({ unitesMineures: valeur * quantite, devise }, { forme: 'nombre' })}
-      </span>
+        }
+      />
     </div>
   )
 }

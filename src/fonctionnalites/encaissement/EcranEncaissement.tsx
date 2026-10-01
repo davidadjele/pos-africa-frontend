@@ -9,6 +9,7 @@ import { appelerCaisse } from '../../partage/api/appelerCaisse'
 import { ErreurApi } from '../../partage/api/ErreurApi'
 import type {
   CommandeDetail,
+  DemandeFondDeCaisse,
   DemandePaiement,
   DemandePartage,
   EtatCaisse,
@@ -30,6 +31,7 @@ import { Chargement } from '../../partage/ui/Chargement'
 import { useSessionCaisse } from '../caisse/requetes'
 import { requeteCommande, requetePlan } from '../commande/requetes'
 import { requeteAppareil } from '../tablette/requetes'
+import { EtapeComptage, ResultatEcart, useComptage } from './Comptage'
 import { requeteEncaissement, requeteOuvertureCaisse } from './requetes'
 
 const MODES: ModePaiement[] = ['ESPECES', 'MOBILE_MONEY', 'CARTE']
@@ -99,27 +101,27 @@ export function EcranEncaissement({ commandeId }: Readonly<{ commandeId: string 
         </Bouton>
         <h1 className="m-0 text-titre-page text-encre">{t('encaissement.titre', { ou })}</h1>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
-        <Recapitulatif
-          note={note.data}
-          etat={etat.data}
-          operateurs={caisse.data.operateurs}
+      {caisse.data.ouverture === undefined ? (
+        <OuvertureCaisse
+          key={caisse.data.dernierFond ?? 'sans-fond'}
           devise={devise}
-          fuseauHoraire={fuseauHoraire}
+          peutOuvrir={session?.permissions.includes('CAISSE_OUVRIR') ?? false}
+          {...(caisse.data.dernierFond === undefined
+            ? {}
+            : { dernierFond: caisse.data.dernierFond })}
+          surOuverte={(ouverte) => {
+            clientRequetes.setQueryData(requeteOuvertureCaisse.queryKey, ouverte)
+          }}
         />
-        {caisse.data.ouverture === undefined ? (
-          <OuvertureCaisse
-            key={caisse.data.dernierFond ?? 'sans-fond'}
+      ) : (
+        <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
+          <Recapitulatif
+            note={note.data}
+            etat={etat.data}
+            operateurs={caisse.data.operateurs}
             devise={devise}
-            peutOuvrir={session?.permissions.includes('CAISSE_OUVRIR') ?? false}
-            {...(caisse.data.dernierFond === undefined
-              ? {}
-              : { dernierFond: caisse.data.dernierFond })}
-            surOuverte={(ouverte) => {
-              clientRequetes.setQueryData(requeteOuvertureCaisse.queryKey, ouverte)
-            }}
+            fuseauHoraire={fuseauHoraire}
           />
-        ) : (
           <Paiement
             key={etat.data.paiements.length}
             etat={etat.data}
@@ -142,8 +144,8 @@ export function EcranEncaissement({ commandeId }: Readonly<{ commandeId: string 
             }}
             surCaisseFermee={() => void caisse.refetch()}
           />
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -416,7 +418,7 @@ function Paiement({
         <div
           role="radiogroup"
           aria-label={t('encaissement.partage.titre')}
-          className="grid grid-cols-1 gap-2 sm:grid-cols-3"
+          className="grid grid-cols-3 gap-2"
         >
           {PARTAGES.map((candidat) => (
             <button
@@ -429,12 +431,12 @@ function Paiement({
                 if (partage !== candidat) choisirPartage(candidat)
               }}
               className={clsx(
-                'flex min-h-cible-caisse flex-col items-start justify-center gap-0.5 rounded-moyen bg-surface px-3 py-1.5 text-left text-encre',
+                'flex min-h-16 flex-col items-start justify-center gap-0.5 rounded-moyen bg-surface px-3 py-1.5 text-left text-encre',
                 partage === candidat ? 'border-2 border-accent' : 'border border-trait',
               )}
             >
               <span className="text-corps-fort">{t(`encaissement.partage.${candidat}`)}</span>
-              <span className="text-legende text-attenue">
+              <span className="hidden text-legende text-attenue sm:block">
                 {t(`encaissement.partage.aides.${candidat}`)}
               </span>
             </button>
@@ -476,7 +478,7 @@ function Paiement({
                 }
               }}
               className={clsx(
-                'flex min-h-18 flex-col items-start justify-center gap-0.5 rounded-moyen px-3 text-left text-encre',
+                'flex min-h-16 flex-col items-start justify-center gap-0.5 rounded-moyen px-3 py-1.5 text-left text-encre',
                 mode === candidat ? 'border-2 border-accent' : 'border border-trait',
                 candidat === 'ARDOISE' ? 'bg-fond opacity-50' : 'bg-surface',
               )}
@@ -614,7 +616,11 @@ function Paiement({
           <span className="flex-1 text-legende text-attenue">
             {aCompleter.length > 0
               ? t('encaissement.manques.pourValider', { liste: aCompleter.join(', ') })
-              : t('encaissement.aide')}
+              : t(
+                  partage === 'libre'
+                    ? 'encaissement.aide'
+                    : `encaissement.partage.aidesPaiement.${partage}`,
+                )}
           </span>
           <Bouton
             variante="principal"
@@ -630,7 +636,8 @@ function Paiement({
           </Bouton>
         </div>
       </section>
-      <ClavierMontant surToucher={toucher} />
+      {/* Le clavier ne sert qu'à saisir un montant libre ou les espèces reçues. */}
+      {(partage === 'libre' || mode === 'ESPECES') && <ClavierMontant surToucher={toucher} />}
     </>
   )
 }
@@ -885,6 +892,10 @@ function ClavierMontant({ surToucher }: Readonly<{ surToucher: (touche: string) 
   )
 }
 
+/**
+ * Ouvrir la caisse : on compte le fond à l'aveugle, puis on le compare à celui laissé à la clôture précédente. Un
+ * écart s'explique : il est tracé comme action critique.
+ */
 export function OuvertureCaisse({
   devise,
   peutOuvrir,
@@ -897,23 +908,25 @@ export function OuvertureCaisse({
   surOuverte: (etat: EtatCaisse) => void
 }>) {
   const { t } = useTranslation()
-  const [fond, setFond] = useState(dernierFond === undefined ? '' : String(dernierFond))
+  const comptage = useComptage(devise)
+  // Comptage validé : place au contrôle avec le fond laissé à la clôture.
+  const [compte, setCompte] = useState<number | null>(null)
+  const [explication, setExplication] = useState('')
   const [enCours, setEnCours] = useState(false)
   const [erreur, setErreur] = useState<unknown>(null)
-  const fondLu = lireMontant(fond, devise)
   const courte = (valeur: number) =>
     formaterMontant({ unitesMineures: valeur, devise }, { forme: 'courte' })
 
-  async function ouvrir() {
-    if (fondLu === null) return
+  async function ouvrir(fond: number) {
     setEnCours(true)
     setErreur(null)
     try {
+      const demande: DemandeFondDeCaisse = {
+        fond,
+        ...(explication.trim() === '' ? {} : { explication: explication.trim() }),
+      }
       surOuverte(
-        await appelerCaisse<EtatCaisse>('/caisse/ouverture', {
-          methode: 'POST',
-          corps: { fond: fondLu },
-        }),
+        await appelerCaisse<EtatCaisse>('/caisse/ouverture', { methode: 'POST', corps: demande }),
       )
     } catch (echec) {
       setErreur(echec)
@@ -922,41 +935,103 @@ export function OuvertureCaisse({
     }
   }
 
-  return (
-    <section className="flex min-w-0 flex-1 flex-col gap-3 rounded-moyen border border-trait bg-surface p-5">
+  const entete = (
+    <div className="flex flex-col gap-1 rounded-moyen border border-trait bg-surface px-5 py-4">
       <h2 className="m-0 text-titre-section text-encre">{t('encaissement.ouverture.titre')}</h2>
-      <p className="m-0 text-corps text-attenue">{t('encaissement.ouverture.phrase')}</p>
-      {erreur !== null && <AlerteErreur erreur={erreur} />}
-      {peutOuvrir ? (
-        <>
+      <p className="m-0 text-corps text-attenue">
+        {peutOuvrir ? t('encaissement.ouverture.phrase') : t('encaissement.ouverture.sansDroit')}
+      </p>
+    </div>
+  )
+  if (!peutOuvrir) return entete
+
+  if (compte !== null && dernierFond !== undefined) {
+    const aExpliquer = compte !== dernierFond && explication.trim() === ''
+    return (
+      <section
+        aria-label={t('encaissement.ouverture.controle')}
+        className="mx-auto flex w-full max-w-[640px] flex-col gap-4 rounded-moyen border border-trait bg-surface p-6"
+      >
+        <h2 className="m-0 text-titre-section text-encre">
+          {t('encaissement.ouverture.controle')}
+        </h2>
+        {erreur !== null && <AlerteErreur erreur={erreur} />}
+        <ResultatEcart
+          libelleAttendu={t('encaissement.ouverture.laisse')}
+          attendu={dernierFond}
+          compte={compte}
+          devise={devise}
+        />
+        {compte !== dernierFond && (
           <ChampSaisie
-            libelle={t('encaissement.ouverture.fond')}
-            inputMode="numeric"
-            suffixe={symboleDe(devise)}
-            value={fond}
+            libelle={t('cloture.explication')}
+            obligatoire
+            maxLength={200}
+            value={explication}
             onChange={(evenement) => {
-              setFond(evenement.target.value)
+              setExplication(evenement.target.value)
             }}
           />
-          {dernierFond !== undefined && (
-            <p className="m-0 text-legende text-attenue">
-              {t('encaissement.ouverture.dernierFond', { montant: courte(dernierFond) })}
-            </p>
-          )}
+        )}
+        {aExpliquer && (
+          <p className="m-0 text-legende text-danger">{t('cloture.explicationRequise')}</p>
+        )}
+        <div className="flex flex-wrap gap-2">
+          <Bouton
+            className="flex-1"
+            onClick={() => {
+              setCompte(null)
+            }}
+          >
+            {t('cloture.recompter')}
+          </Bouton>
           <Bouton
             variante="principal"
-            disabled={fondLu === null}
+            className="flex-[2]"
+            disabled={aExpliquer}
             enCours={enCours}
-            className="self-start"
-            onClick={() => void ouvrir()}
+            onClick={() => void ouvrir(compte)}
           >
-            {t('encaissement.ouverture.ouvrir', { montant: courte(fondLu ?? 0) })}
+            {t('encaissement.ouverture.ouvrir', { montant: courte(compte) })}
           </Bouton>
-        </>
-      ) : (
-        <p className="m-0 text-corps text-encre">{t('encaissement.ouverture.sansDroit')}</p>
-      )}
-    </section>
+        </div>
+      </section>
+    )
+  }
+
+  return (
+    <div className="flex min-w-0 flex-1 flex-col gap-3 lg:min-h-0">
+      {entete}
+      {erreur !== null && <AlerteErreur erreur={erreur} />}
+      <EtapeComptage
+        comptage={comptage}
+        aide={t(
+          dernierFond === undefined
+            ? 'encaissement.ouverture.premiere'
+            : 'encaissement.ouverture.aveugle',
+        )}
+        action={
+          dernierFond === undefined ? (
+            <Bouton
+              variante="principal"
+              enCours={enCours}
+              onClick={() => void ouvrir(comptage.total)}
+            >
+              {t('encaissement.ouverture.ouvrir', { montant: courte(comptage.total) })}
+            </Bouton>
+          ) : (
+            <Bouton
+              variante="principal"
+              onClick={() => {
+                setCompte(comptage.total)
+              }}
+            >
+              {t('cloture.valider')}
+            </Bouton>
+          )
+        }
+      />
+    </div>
   )
 }
 

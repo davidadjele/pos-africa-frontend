@@ -1071,7 +1071,8 @@
       "DEPENSE_CAISSE": "<b>{{auteur}}</b> paid an expense in cash at {{etablissement}}",
       "APPORT_CAISSE": "<b>{{auteur}}</b> added cash to the till at {{etablissement}}",
       "CLOTURE_CAISSE": "<b>{{auteur}}</b> closed the till at {{etablissement}} (<b>{{objet}}</b>)",
-      "ECART_CAISSE": "<b>{{auteur}}</b> closed the till with a difference at {{etablissement}} (<b>{{objet}}</b>)"
+      "ECART_CAISSE": "<b>{{auteur}}</b> closed the till with a difference at {{etablissement}} (<b>{{objet}}</b>)",
+      "ECART_OUVERTURE_CAISSE": "<b>{{auteur}}</b> opened the till with a discrepancy at {{etablissement}}"
     },
     "actions": {
       "LIGNE_ANNULER_APRES_ENVOI": "cancel items already sent",
@@ -1098,7 +1099,8 @@
     "mouvement": "{{montant}}, reason: {{motif}}",
     "mouvementValide": "{{montant}}, reason: {{motif}}. Approved by {{validateur}}",
     "cloture": "Expected {{attendu}}, counted {{compte}}",
-    "clotureEcart": "Expected {{attendu}}, counted {{compte}}, difference {{ecart}}: {{explication}}"
+    "clotureEcart": "Expected {{attendu}}, counted {{compte}}, difference {{ecart}}: {{explication}}",
+    "ouvertureEcart": "Left {{attendu}}, counted {{compte}}, difference {{ecart}}: {{explication}}"
   },
   "salles": {
     "titre": "{{etablissement}} areas and tables",
@@ -1214,11 +1216,13 @@
     },
     "ouverture": {
       "titre": "The till on this tablet is not open",
-      "phrase": "Count the float before the first payment: it is used to check the till at closing.",
-      "fond": "Float",
+      "phrase": "Count the cash in the drawer before the first payment: it becomes the float and is checked at closing.",
       "ouvrir": "Open the till with {{montant}}",
       "sansDroit": "A cashier or a manager opens the till with their code.",
-      "dernierFond": "At the last closing, {{montant}} was left as float."
+      "premiere": "First opening on this tablet: the counted float becomes the reference.",
+      "aveugle": "Count the whole drawer. The float left at the last closing appears once the count is confirmed, to check nothing moved.",
+      "controle": "Float check",
+      "laisse": "Left at closing"
     },
     "referenceCourte": "ref. {{reference}}",
     "modesEn": {
@@ -1259,7 +1263,11 @@
       "surLaNote_other": "{{count}} on the bill, {{payees}} paid",
       "unDeMoins": "One {{nom}} less",
       "unDePlus": "One {{nom}} more",
-      "selection": "Selection"
+      "selection": "Selection",
+      "aidesPaiement": {
+        "parts": "Each share is a payment: the bill closes with the last one.",
+        "articles": "The amount comes from the chosen items, discounts included."
+      }
     }
   },
   "tiroir": {
@@ -1359,6 +1367,7 @@
       "terminer": "Done",
       "ventes_one": "Sales collected ({{count}} bill)",
       "ventes_other": "Sales collected ({{count}} bills)"
-    }
+    },
+    "comptage": "Cash count"
   }
 }
