@@ -14,6 +14,8 @@ import type {
 const CAISSIER = ['COMMANDE_CREER', 'PAIEMENT_ENCAISSER', 'CAISSE_FERMER', 'CAISSE_OUVRIR']
 const NOTE_42 = 'c0000000-0000-4000-8000-000000000042'
 const POULETS = '1e000000-0000-4000-8000-000000000001'
+const FLAGS = '1e000000-0000-4000-8000-000000000002'
+const FLAG_PRODUIT = 'b0000000-0000-4000-8000-000000000002'
 const SITUATION: SituationCaisse = {
   ouverture: {
     id: 'ca155e00-0000-4000-8000-000000000001',
@@ -65,6 +67,7 @@ const A_REMBOURSER: EtatRemboursement = {
   articles: [
     {
       ligneId: POULETS,
+      produitId: 'b0000000-0000-4000-8000-000000000001',
       nom: 'Poulet braisé',
       quantite: 2,
       montant: 9000,
@@ -72,7 +75,8 @@ const A_REMBOURSER: EtatRemboursement = {
       rembourse: 0,
     },
     {
-      ligneId: '1e000000-0000-4000-8000-000000000002',
+      ligneId: FLAGS,
+      produitId: FLAG_PRODUIT,
       nom: 'Flag 65 cl',
       quantite: 3,
       montant: 3600,
@@ -207,5 +211,30 @@ describe('Notes encaissées', () => {
         validationId: 'a1b20000-0000-4000-8000-000000000009',
       },
     ])
+  })
+
+  it('demande si un article suivi remboursé revient en stock', async () => {
+    const recus = notesServies()
+    caisseOuverte('/caisse/tiroir', {
+      permissions: CAISSIER,
+      stock: {
+        politique: 'SOUPLE',
+        articles: [{ produitId: FLAG_PRODUIT, quantite: 20, faible: false }],
+      },
+    })
+
+    await userEvent.click(await screen.findByRole('tab', { name: 'Notes encaissées' }))
+    await userEvent.click(await screen.findByRole('button', { name: /n°42, T4/ }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Rembourser' }))
+    const articles = screen.getByRole('list', { name: 'Articles à rembourser' })
+    await userEvent.click(within(articles).getByRole('button', { name: 'Un Flag 65 cl de plus' }))
+    await userEvent.click(screen.getByRole('radio', { name: 'Article non conforme' }))
+    const stock = screen.getByRole('radiogroup', { name: 'Les articles suivis en stock' })
+    expect(within(stock).getByRole('radio', { name: /Perdu/ })).toBeChecked()
+    await userEvent.click(within(stock).getByRole('radio', { name: /Revient en stock/ }))
+    await userEvent.click(screen.getByRole('button', { name: /^Rembourser 1\s200\sF en espèces/ }))
+
+    await screen.findByRole('dialog', { name: /^Rembourser 1\s200\sF/ })
+    expect(recus[0]).toMatchObject({ motif: 'ARTICLE_NON_CONFORME', retourEnStock: true })
   })
 })

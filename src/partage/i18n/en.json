@@ -48,7 +48,9 @@
     "annuler": "Cancel",
     "chargement": "Loading…",
     "copier": "Copy",
-    "copie": "Copied"
+    "copie": "Copied",
+    "enregistrer": "Save",
+    "fermer": "Close"
   },
   "caisse": {
     "vide": {
@@ -107,7 +109,10 @@
       "produits": "Products",
       "epuise": "Sold out today",
       "aucunResultat": "No product matches.",
-      "chargement": "Loading the menu…"
+      "chargement": "Loading the menu…",
+      "plusEnStock": "Out of stock",
+      "restants_one": "{{count}} left",
+      "restants_other": "{{count}} left"
     },
     "note": {
       "titre": "Current tab",
@@ -365,6 +370,18 @@
       "titre": "Hand {{numero}} over to the customer?",
       "phrase": "{{ou}}. Check the items before handing over.",
       "chargement": "Loading items…"
+    },
+    "stock": {
+      "titre": "{{produit}} is out of stock",
+      "phrase": "The recorded stock is used up. A delivery may not have been recorded: the sale will be flagged to the manager.",
+      "annuler": "Don’t add",
+      "vendre": "Sell anyway",
+      "article": "The item",
+      "articles": "Items tracked in stock",
+      "revient": "Back in stock",
+      "revientAide": "Intact, unopened",
+      "perdu": "Lost",
+      "perduAide": "Opened, broken, unusable"
     }
   },
   "gestion": {
@@ -379,7 +396,10 @@
       "taxes": "Taxes",
       "parEtablissement": "By venue",
       "activite": "Activity",
-      "salles": "Areas and tables"
+      "salles": "Areas and tables",
+      "stock": "Stock",
+      "aTraiter_one": "{{count}} product to handle",
+      "aTraiter_other": "{{count}} products to handle"
     },
     "tableauDeBord": {
       "titre": "Dashboard",
@@ -483,7 +503,10 @@
       "verrouillage": "Till lock",
       "verrouillageAide": "After this long without activity, the till goes back to “Who is taking the till?”.",
       "minutes_one": "{{count}} minute",
-      "minutes_other": "{{count}} minutes"
+      "minutes_other": "{{count}} minutes",
+      "politiqueStock": "Stock policy",
+      "politiqueStockAide": "What the till does when a drink has no recorded stock left.",
+      "politiqueEntreprise": "The company’s (lenient)"
     },
     "cree": "{{nom}} has been created.",
     "modifie": "{{nom}} has been updated."
@@ -1018,7 +1041,8 @@
       "CARTE": "Menu",
       "PERSONNEL": "Staff",
       "TABLETTES": "Tablets",
-      "CAISSE": "Till"
+      "CAISSE": "Till",
+      "STOCK": "Stock"
     },
     "critiquesSeulement": "Critical only",
     "tout": "All",
@@ -1074,7 +1098,12 @@
       "CLOTURE_CAISSE": "<b>{{auteur}}</b> closed the till at {{etablissement}} (<b>{{objet}}</b>)",
       "ECART_CAISSE": "<b>{{auteur}}</b> closed the till with a difference at {{etablissement}} (<b>{{objet}}</b>)",
       "ECART_OUVERTURE_CAISSE": "<b>{{auteur}}</b> opened the till with a discrepancy at {{etablissement}}",
-      "REMBOURSEMENT": "<b>{{auteur}}</b> refunded bill <b>{{objet}}</b> at {{etablissement}}"
+      "REMBOURSEMENT": "<b>{{auteur}}</b> refunded bill <b>{{objet}}</b> at {{etablissement}}",
+      "RECEPTION_STOCK": "<b>{{auteur}}</b> received <b>{{objet}}</b> at {{etablissement}}",
+      "PERTE_STOCK": "<b>{{auteur}}</b> recorded a loss of <b>{{objet}}</b> at {{etablissement}}",
+      "ECART_INVENTAIRE": "<b>{{auteur}}</b> corrected the stock of <b>{{objet}}</b> by stocktake at {{etablissement}}",
+      "POLITIQUE_STOCK_MODIFIEE": "<b>{{auteur}}</b> changed the stock policy of <b>{{objet}}</b>",
+      "VENTE_SANS_STOCK": "<b>{{auteur}}</b> sold <b>{{objet}}</b> without recorded stock at {{etablissement}}"
     },
     "actions": {
       "LIGNE_ANNULER_APRES_ENVOI": "cancel items already sent",
@@ -1104,7 +1133,18 @@
     "clotureEcart": "Expected {{attendu}}, counted {{compte}}, difference {{ecart}}: {{explication}}",
     "ouvertureEcart": "Left {{attendu}}, counted {{compte}}, difference {{ecart}}: {{explication}}",
     "remboursement": "−{{montant}} in {{mode}}, {{ou}}. Reason: {{motif}}.",
-    "remboursementValide": "−{{montant}} in {{mode}}, {{ou}}. Reason: {{motif}}. Approved by {{validateur}}"
+    "remboursementValide": "−{{montant}} in {{mode}}, {{ou}}. Reason: {{motif}}. Approved by {{validateur}}",
+    "reception": "+{{quantite}}, {{apres}} in stock{{reference}}",
+    "perte": "−{{quantite}}, {{motif}}, {{apres}} in stock",
+    "ecartInventaire": "Recorded {{attendu}}, counted {{compte}}, difference {{ecart}}: {{motif}}",
+    "politiqueStock": "{{avant}} → {{apres}}",
+    "politiques": {
+      "ENTREPRISE": "The company’s",
+      "SOUPLE": "Lenient",
+      "AVERTISSEMENT": "Warning",
+      "STRICT": "Strict"
+    },
+    "venteSansStock": "−{{quantite}}, {{apres}} in stock, {{detail}}"
   },
   "salles": {
     "titre": "{{etablissement}} areas and tables",
@@ -1446,5 +1486,174 @@
     "validationTitre": "Refund {{montant}} in {{mode}}?",
     "validationContexte": "{{note}}, requested by {{demandeur}}. Reason: {{motif}}.",
     "chargementNote": "Loading the bill…"
+  },
+  "stock": {
+    "titre": "Stock",
+    "phrase": "Drinks and items resold as is, per site. Cooked dishes are not tracked.",
+    "chargement": "Loading stock…",
+    "etablissement": "Site",
+    "rechercher": "Search a product",
+    "tableau": "Stock at {{etablissement}}",
+    "plusDActions": "More actions for {{nom}}",
+    "politiques": {
+      "SOUPLE": "lenient, selling even without stock",
+      "AVERTISSEMENT": "warning, the till warns before selling",
+      "STRICT": "strict, the till refuses to sell without stock"
+    },
+    "politiquesLongues": {
+      "SOUPLE": "Lenient: sell even without stock",
+      "AVERTISSEMENT": "Warning: the till warns",
+      "STRICT": "Strict: the till refuses"
+    },
+    "nonCompte": "Not counted yet",
+    "seuilCourt": "/ threshold {{seuil}}",
+    "aucunMouvement": "No movement",
+    "colonnes": {
+      "produit": "Product",
+      "quantite": "In stock",
+      "etat": "Status",
+      "mouvement": "Last movement",
+      "actions": "Actions"
+    },
+    "etats": {
+      "A_COMPTER": "To count",
+      "EN_STOCK": "In stock",
+      "FAIBLE": "Low stock",
+      "RUPTURE": "Out of stock",
+      "NEGATIF": "Negative stock"
+    },
+    "filtres": {
+      "tous": "All",
+      "aTraiter": "To handle",
+      "aCompter": "To count"
+    },
+    "mouvements": {
+      "INITIAL": "First count",
+      "RECEPTION": "Delivery",
+      "VENTE": "Sale",
+      "RETOUR": "Return",
+      "PERTE": "Loss",
+      "INVENTAIRE": "Stocktake"
+    },
+    "motifs": {
+      "CASSE": "Breakage",
+      "PERIME": "Expired",
+      "CONSOMME_PERSONNEL": "Consumed by staff",
+      "VOL": "Theft",
+      "ERREUR_SAISIE": "Entry error",
+      "LIVRAISON_NON_SAISIE": "Delivery not recorded",
+      "AUTRE": "Other",
+      "ANNULE": "Cancelled, lost",
+      "REMBOURSE": "Refunded, lost"
+    },
+    "vide": {
+      "titre": "No product tracked in stock",
+      "phrase": "Drinks and items on the menu show up here. A cooked dish is not tracked."
+    },
+    "perte": {
+      "action": "Record a loss",
+      "titre": "Record a loss",
+      "phrase": "Items that left the stock without being sold. Logged as a critical action.",
+      "produit": "Product",
+      "choisir": "Pick a product",
+      "quantite": "Quantity",
+      "motif": "Reason",
+      "detail": "Specify the reason",
+      "retirer_one": "Remove {{count}} from stock",
+      "retirer_other": "Remove {{count}} from stock",
+      "retirerSans": "Remove from stock",
+      "fait_one": "{{count}} {{nom}} removed from stock.",
+      "fait_other": "{{count}} {{nom}} removed from stock.",
+      "manques": {
+        "produit": "Pick the product.",
+        "quantite": "Enter the quantity.",
+        "motif": "Pick the reason.",
+        "detail": "Specify the reason."
+      }
+    },
+    "seuil": {
+      "action": "Set the alert threshold",
+      "titre": "Alert threshold for {{nom}}",
+      "phrase": "Below this threshold, the product shows as “Low stock”: time to order.",
+      "champ": "Alert threshold",
+      "invalide": "A whole number, 0 for no alert.",
+      "fait": "Alert threshold for {{nom}}: {{seuil}}."
+    },
+    "historique": {
+      "action": "History",
+      "titre": "History of {{nom}}",
+      "phrase": "{{quantite}} in stock. Each movement keeps the resulting stock.",
+      "aCompter": "Not counted yet.",
+      "chargement": "Loading history…",
+      "vide": "No movement yet.",
+      "liste": "Movements"
+    },
+    "reception": {
+      "action": "Receive a delivery",
+      "titre": "Receive a delivery",
+      "phrase": "{{etablissement}}. Quantities are added to stock once saved.",
+      "ajouter": "Add a product",
+      "choisir": "Pick: Castel, Coke…",
+      "reference": "Delivery note no. (optional)",
+      "aucune": "Add the products of the delivery.",
+      "liste": "Products received",
+      "quantite": "Quantity",
+      "quantiteDe": "Quantity of {{nom}}",
+      "cout": "Unit cost (optional)",
+      "coutDe": "Unit cost of {{nom}}",
+      "retirer": "Remove {{nom}}",
+      "aide": "The purchase cost will be used for margins in reports.",
+      "produits_one": "{{count}} product",
+      "produits_other": "{{count}} products",
+      "unites_one": "{{count}} unit",
+      "unites_other": "{{count}} units",
+      "enregistrer": "Save: {{produits}}, {{unites}}",
+      "enregistrerSans": "Save",
+      "fait": "Delivery saved: {{produits}}, {{unites}}."
+    },
+    "inventaire": {
+      "action": "Do a stocktake",
+      "titre": "Stocktake at {{etablissement}}",
+      "etape1": "Step 1 of 2: count without looking at the recorded stock. A product left blank keeps its stock.",
+      "etape2": "Step 2 of 2: the differences. Each one corrects the stock and is logged as a critical action.",
+      "liste": "Products to count",
+      "compteDe": "Counted: {{nom}}",
+      "comptes_one": "{{count}} product counted",
+      "comptes_other": "{{count}} products counted",
+      "voirEcarts": "See the differences",
+      "tableau": "Stocktake differences",
+      "attendu": "Recorded",
+      "compte": "Counted",
+      "ecart": "Difference",
+      "motif": "Reason",
+      "premier": "First count",
+      "juste": "Exact",
+      "rien": "Nothing to explain",
+      "motifDe": "Reason for the difference: {{nom}}",
+      "detailDe": "Specify: {{nom}}",
+      "choisirMotif": "Pick the reason",
+      "pourValider": "To confirm: the reason for the difference on {{liste}}.",
+      "trace": "Differences correct the stock and are logged as critical actions.",
+      "recompter": "Count again",
+      "valider": "Confirm the stocktake",
+      "ecarts_one": "{{count}} difference",
+      "ecarts_other": "{{count}} differences",
+      "premiers_one": "{{count}} first count",
+      "premiers_other": "{{count}} first counts",
+      "toutJuste": "no difference",
+      "fait": "Stocktake saved: {{resume}}."
+    },
+    "politiqueTitre": "Stock policy",
+    "politiqueModifier": "Change",
+    "politiquesCourtes": {
+      "SOUPLE": "Lenient",
+      "AVERTISSEMENT": "Warning",
+      "STRICT": "Strict"
+    },
+    "politiquesEffets": {
+      "SOUPLE": "The till sells even without stock at {{etablissement}}: negative stock points to an unrecorded delivery.",
+      "AVERTISSEMENT": "At {{etablissement}}, the till warns when an item has no stock left, then sells once confirmed.",
+      "STRICT": "At {{etablissement}}, the till refuses to sell an item with no stock left."
+    }
   }
 }

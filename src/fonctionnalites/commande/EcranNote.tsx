@@ -20,6 +20,7 @@ import type { Devise } from '../../partage/montants/formaterMontant'
 import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
 import { Bouton } from '../../partage/ui/Bouton'
 import { Chargement } from '../../partage/ui/Chargement'
+import { Dialogue } from '../../partage/ui/Dialogue'
 import { useSessionCaisse } from '../caisse/requetes'
 import { requeteAppareil } from '../tablette/requetes'
 import { DialogueValidationGerant } from '../validation/DialogueValidationGerant'
@@ -37,7 +38,13 @@ import { useValidation } from './useValidation'
 import { CarteCaisse } from './CarteCaisse'
 import { DialogueAnnulation, DialogueLigne } from './DialoguesLigne'
 import { ouEstLaNote, PanneauNote, type Rupture } from './PanneauNote'
-import { requeteCarteCaisse, requeteCommande, requetePlan } from './requetes'
+import {
+  requeteCarteCaisse,
+  requeteCommande,
+  requetePlan,
+  requeteStockCaisse,
+  stockDuProduit,
+} from './requetes'
 
 /**
  * Une note ouverte : la carte à gauche, la note à droite. Chaque geste est enregistré aussitôt, pour
@@ -55,6 +62,11 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
   const peutEncaisser = session?.permissions.includes('PAIEMENT_ENCAISSER') ?? false
   const note = useQuery(requeteCommande(commandeId))
   const carte = useQuery(requeteCarteCaisse)
+  const stock = useQuery(requeteStockCaisse)
+  // Politique « avertissement » : l'article sans stock attend la confirmation avant d'être ajouté.
+  const [sansStockAConfirmer, setSansStockAConfirmer] = useState<LigneCarteEtablissement | null>(
+    null,
+  )
   const [erreur, setErreur] = useState<unknown>(null)
   const [refus, setRefus] = useState<string | null>(null)
   const [confirmation, setConfirmation] = useState<string | null>(null)
@@ -95,6 +107,23 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
     } catch (echec) {
       setErreur(echec)
     }
+  }
+
+  /** Ajouter, ou d'abord prévenir si l'établissement le demande pour un article qui n'a plus de stock. */
+  function choisir(produit: LigneCarteEtablissement) {
+    const article = stockDuProduit(stock.data, produit.produitId)
+    const dejaSurLaNote = (note.data?.lignes ?? [])
+      .filter((ligne) => ligne.statut === 'BROUILLON' && ligne.produitId === produit.produitId)
+      .reduce((somme, ligne) => somme + ligne.quantite, 0)
+    if (
+      stock.data?.politique === 'AVERTISSEMENT' &&
+      article?.quantite !== undefined &&
+      article.quantite - dejaSurLaNote <= 0
+    ) {
+      setSansStockAConfirmer(produit)
+      return
+    }
+    void ajouter(produit)
   }
 
   async function ajouter(produit: LigneCarteEtablissement) {
@@ -148,6 +177,7 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
         }),
       )
       void clientRequetes.invalidateQueries({ queryKey: requetePlan.queryKey })
+      void clientRequetes.invalidateQueries({ queryKey: requeteStockCaisse.queryKey })
     } catch (echec) {
       if (
         echec instanceof ErreurApi &&
@@ -180,6 +210,7 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
         ),
       )
       setAValider(null)
+      void clientRequetes.invalidateQueries({ queryKey: requeteStockCaisse.queryKey })
     } catch (echec) {
       // Sans le droit d'annuler : un gérant présent valide par son PIN, puis l'annulation repart.
       if (
@@ -321,8 +352,9 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
           <CarteCaisse
             carte={carte.data}
             devise={devise}
+            stock={stock.data}
             surChoisir={(produit) => {
-              if (modifiable) void ajouter(produit)
+              if (modifiable) choisir(produit)
             }}
           />
         )}
@@ -439,9 +471,26 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
           }}
         />
       )}
+      {sansStockAConfirmer !== null && (
+        <Dialogue
+          titre={t('caisse.stock.titre', { produit: sansStockAConfirmer.nom })}
+          consequence={t('caisse.stock.phrase')}
+          libelleAnnuler={t('caisse.stock.annuler')}
+          libelleConfirmer={t('caisse.stock.vendre')}
+          surAnnuler={() => {
+            setSansStockAConfirmer(null)
+          }}
+          surConfirmer={() => {
+            const produit = sansStockAConfirmer
+            setSansStockAConfirmer(null)
+            void ajouter(produit)
+          }}
+        />
+      )}
       {aAnnuler !== null && (
         <DialogueAnnulation
           ligne={aAnnuler}
+          suiviEnStock={stockDuProduit(stock.data, aAnnuler.produitId) !== undefined}
           ou={ouEstLaNote(note.data, t)}
           fuseauHoraire={fuseauHoraire}
           enCours={enCours}

@@ -460,7 +460,7 @@ export interface paths {
             cookie?: never;
         };
         /** Où en est le paiement d'une note */
-        get: operations["etat_2"];
+        get: operations["etat_3"];
         put?: never;
         post?: never;
         delete?: never;
@@ -678,7 +678,7 @@ export interface paths {
             cookie?: never;
         };
         /** Ce qu'on peut encore rembourser sur une note encaissée */
-        get: operations["etat_1"];
+        get: operations["etat_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -928,6 +928,23 @@ export interface paths {
          * @description Espèces attendues seulement avec RAPPORT_FINANCIER. Erreur : CAISSE_FERMEE (409).
          */
         get: operations["situation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Le stock restant des produits suivis et la politique de l'établissement de la tablette */
+        get: operations["stock"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1236,6 +1253,128 @@ export interface paths {
         get?: never;
         /** Réordonner les salles de l'établissement */
         put: operations["ordonnerSalles"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/etablissements/{etablissementId}/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Le stock des produits suivis, avec la politique de l'établissement */
+        get: operations["etat_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/etablissements/{etablissementId}/stock/inventaires": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Valider un inventaire
+         * @description Un premier comptage initialise le produit. Ensuite, chaque écart exige un motif (champ lignes[i].motif). Un produit non compté garde son stock.
+         */
+        post: operations["inventorier"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/etablissements/{etablissementId}/stock/inventaires/ecarts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Les écarts d'un comptage, sans rien enregistrer */
+        post: operations["ecarts"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/etablissements/{etablissementId}/stock/pertes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Déclarer une perte : casse, périmé, consommé par le personnel… */
+        post: operations["declarerPerte"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/etablissements/{etablissementId}/stock/receptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Réceptionner une livraison de plusieurs produits */
+        post: operations["receptionner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/etablissements/{etablissementId}/stock/{produitId}/mouvements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Les derniers mouvements d'un produit, du plus récent au plus ancien */
+        get: operations["historique"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/etablissements/{etablissementId}/stock/{produitId}/seuil": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Régler le seuil d'alerte d'un produit */
+        put: operations["fixerSeuil"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1692,6 +1831,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/stock/a-traiter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Nombre de produits à traiter dans les établissements visibles */
+        get: operations["aTraiter"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/tables/{id}": {
         parameters: {
             query?: never;
@@ -1879,12 +2035,21 @@ export interface components {
             /** Format: int64 */
             montant: number;
             nom: string;
+            /** Format: uuid */
+            produitId: string;
             /** Format: int32 */
             quantite: number;
             /** Format: int64 */
             rembourse: number;
             /** Format: int32 */
             rembourses: number;
+        };
+        ArticleEnCaisse: {
+            faible: boolean;
+            /** Format: uuid */
+            produitId: string;
+            /** Format: int32 */
+            quantite?: number;
         };
         ArticlePaye: {
             nom: string;
@@ -1990,6 +2155,7 @@ export interface components {
             motif: "ERREUR_SAISIE" | "CLIENT_PARTI" | "CLIENT_CHANGE_AVIS" | "NON_SERVIE" | "PLAT_REFUSE" | "EPUISE_CUISINE" | "AUTRE";
             /** Format: int32 */
             quantite: number;
+            retourEnStock?: boolean;
             /** Format: uuid */
             validationId?: string;
         };
@@ -1998,6 +2164,7 @@ export interface components {
             detail?: string;
             /** @enum {string} */
             motif: "ERREUR_SAISIE" | "CLIENT_PARTI" | "CLIENT_CHANGE_AVIS" | "NON_SERVIE" | "PLAT_REFUSE" | "EPUISE_CUISINE" | "AUTRE";
+            retourEnStock?: boolean;
             /** Format: uuid */
             validationId?: string;
         };
@@ -2088,6 +2255,11 @@ export interface components {
             fuseauHoraire: string;
             /** @example Bè Kpota */
             nom: string;
+            /**
+             * @description Vide : celle de l'entreprise (souple par défaut)
+             * @enum {string}
+             */
+            politiqueStock?: "SOUPLE" | "AVERTISSEMENT" | "STRICT";
             /** @example Lomé */
             ville?: string;
         };
@@ -2103,6 +2275,9 @@ export interface components {
             entreprise: components["schemas"]["DonneesEntreprise"];
             etablissement: components["schemas"]["DonneesPremierEtablissement"];
             proprietaire: components["schemas"]["DonneesProprietaireInscription"];
+        };
+        DemandeInventaire: {
+            lignes: components["schemas"]["LigneInventaire"][];
         };
         DemandeLigne: {
             note?: string;
@@ -2132,6 +2307,11 @@ export interface components {
             fuseauHoraire: string;
             /** @example Bè Kpota */
             nom: string;
+            /**
+             * @description Vide : celle de l'entreprise (souple par défaut)
+             * @enum {string}
+             */
+            politiqueStock?: "SOUPLE" | "AVERTISSEMENT" | "STRICT";
             /** Format: int64 */
             version: number;
             ville?: string;
@@ -2194,6 +2374,15 @@ export interface components {
             /** Format: int32 */
             parts?: number;
         };
+        DemandePerteStock: {
+            detail?: string;
+            /** @enum {string} */
+            motif: "CASSE" | "PERIME" | "CONSOMME_PERSONNEL" | "VOL" | "ERREUR_SAISIE" | "LIVRAISON_NON_SAISIE" | "AUTRE" | "ANNULE" | "REMBOURSE";
+            /** Format: uuid */
+            produitId: string;
+            /** Format: int32 */
+            quantite: number;
+        };
         DemandePriseDeCaisse: {
             /** @example 4827 */
             pin: string;
@@ -2229,6 +2418,11 @@ export interface components {
             /** Format: uuid */
             entrepriseId?: string;
         };
+        DemandeReceptionStock: {
+            lignes: components["schemas"]["LigneReceptionStock"][];
+            /** @example BL 2240 */
+            reference?: string;
+        };
         DemandeRemboursement: {
             articles: components["schemas"]["DemandeArticle"][];
             detail?: string;
@@ -2243,6 +2437,7 @@ export interface components {
             /** @example FLOOZ */
             operateur?: string;
             reference?: string;
+            retourEnStock?: boolean;
             /** Format: uuid */
             validationId?: string;
         };
@@ -2279,6 +2474,10 @@ export interface components {
         DemandeServeur: {
             /** Format: uuid */
             serveurId: string;
+        };
+        DemandeSeuilStock: {
+            /** Format: int32 */
+            seuil: number;
         };
         DemandeTable: {
             /** @example T4 */
@@ -2384,6 +2583,18 @@ export interface components {
             /** @example +228 90 11 22 33 */
             telephone?: string;
         };
+        EcartInventaire: {
+            /** Format: int32 */
+            attendu?: number;
+            /** Format: int32 */
+            compte: number;
+            /** Format: int32 */
+            ecart?: number;
+            initial: boolean;
+            nom: string;
+            /** Format: uuid */
+            produitId: string;
+        };
         EmployeResume: {
             actif: boolean;
             affectations: components["schemas"]["AffectationEmploye"][];
@@ -2477,6 +2688,8 @@ export interface components {
             /** Format: uuid */
             id: string;
             nom: string;
+            /** @enum {string} */
+            politiqueStock?: "SOUPLE" | "AVERTISSEMENT" | "STRICT";
             /** Format: int64 */
             version: number;
             ville?: string;
@@ -2523,6 +2736,11 @@ export interface components {
             /** Format: int64 */
             total: number;
         };
+        EtatStock: {
+            lignes: components["schemas"]["LigneStock"][];
+            /** @enum {string} */
+            politique: "SOUPLE" | "AVERTISSEMENT" | "STRICT";
+        };
         EvenementActivite: {
             auteurNom?: string;
             critique: boolean;
@@ -2533,7 +2751,7 @@ export interface components {
                 [key: string]: string;
             };
             /** @enum {string} */
-            domaine: "CARTE" | "PERSONNEL" | "TABLETTES" | "CAISSE";
+            domaine: "CARTE" | "PERSONNEL" | "TABLETTES" | "CAISSE" | "STOCK";
             /** Format: uuid */
             etablissementId?: string;
             etablissementNom?: string;
@@ -2546,7 +2764,7 @@ export interface components {
             /** Format: date-time */
             survenuLe: string;
             /** @enum {string} */
-            type: "TAXE_CREEE" | "TAUX_TAXE_MODIFIE" | "TAXE_DESACTIVEE" | "TAXE_REACTIVEE" | "PRIX_MODIFIE" | "TAXE_PRODUIT_MODIFIEE" | "PRODUIT_DESACTIVE" | "PRODUIT_REACTIVE" | "PRIX_ETABLISSEMENT_MODIFIE" | "PRODUIT_RETIRE_ETABLISSEMENT" | "PRODUIT_PROPOSE_ETABLISSEMENT" | "RUPTURE_DECLAREE" | "RUPTURE_LEVEE" | "ROLES_MODIFIES" | "PIN_REINITIALISE" | "EMPLOYE_DESACTIVE" | "EMPLOYE_REACTIVE" | "TABLETTE_REVOQUEE" | "VALIDATION_GERANT_UTILISEE" | "LIGNE_ANNULEE" | "NOTE_ANNULEE" | "TABLE_TRANSFEREE" | "SERVEUR_CHANGE" | "REMISE_APPLIQUEE" | "ARTICLE_OFFERT" | "REMISE_RETIREE" | "CAISSE_OUVERTE" | "RETRAIT_CAISSE" | "DEPENSE_CAISSE" | "APPORT_CAISSE" | "CLOTURE_CAISSE" | "ECART_CAISSE" | "ECART_OUVERTURE_CAISSE" | "REMBOURSEMENT";
+            type: "TAXE_CREEE" | "TAUX_TAXE_MODIFIE" | "TAXE_DESACTIVEE" | "TAXE_REACTIVEE" | "PRIX_MODIFIE" | "TAXE_PRODUIT_MODIFIEE" | "PRODUIT_DESACTIVE" | "PRODUIT_REACTIVE" | "PRIX_ETABLISSEMENT_MODIFIE" | "PRODUIT_RETIRE_ETABLISSEMENT" | "PRODUIT_PROPOSE_ETABLISSEMENT" | "RUPTURE_DECLAREE" | "RUPTURE_LEVEE" | "ROLES_MODIFIES" | "PIN_REINITIALISE" | "EMPLOYE_DESACTIVE" | "EMPLOYE_REACTIVE" | "TABLETTE_REVOQUEE" | "VALIDATION_GERANT_UTILISEE" | "LIGNE_ANNULEE" | "NOTE_ANNULEE" | "TABLE_TRANSFEREE" | "SERVEUR_CHANGE" | "REMISE_APPLIQUEE" | "ARTICLE_OFFERT" | "REMISE_RETIREE" | "CAISSE_OUVERTE" | "RETRAIT_CAISSE" | "DEPENSE_CAISSE" | "APPORT_CAISSE" | "CLOTURE_CAISSE" | "ECART_CAISSE" | "ECART_OUVERTURE_CAISSE" | "REMBOURSEMENT" | "RECEPTION_STOCK" | "PERTE_STOCK" | "ECART_INVENTAIRE" | "POLITIQUE_STOCK_MODIFIEE" | "VENTE_SANS_STOCK";
         };
         LigneCarteEtablissement: {
             categorie: components["schemas"]["CategorieCarte"];
@@ -2570,6 +2788,15 @@ export interface components {
             tauxTaxePointsDeBase: number;
             /** @enum {string} */
             type: "PLAT" | "BOISSON" | "ARTICLE";
+        };
+        LigneInventaire: {
+            /** Format: int32 */
+            compte: number;
+            detail?: string;
+            /** @enum {string} */
+            motif?: "CASSE" | "PERIME" | "CONSOMME_PERSONNEL" | "VOL" | "ERREUR_SAISIE" | "LIVRAISON_NON_SAISIE" | "AUTRE" | "ANNULE" | "REMBOURSE";
+            /** Format: uuid */
+            produitId: string;
         };
         LigneNote: {
             ajouteePar: string;
@@ -2609,6 +2836,27 @@ export interface components {
             /** Format: int32 */
             tauxRemise?: number;
         };
+        LigneReceptionStock: {
+            /** Format: int64 */
+            coutUnitaire?: number;
+            /** Format: uuid */
+            produitId: string;
+            /** Format: int32 */
+            quantite: number;
+        };
+        LigneStock: {
+            categorie: string;
+            dernierMouvement?: components["schemas"]["MouvementStockResume"];
+            /** @enum {string} */
+            etat: "A_COMPTER" | "EN_STOCK" | "FAIBLE" | "RUPTURE" | "NEGATIF";
+            nom: string;
+            /** Format: uuid */
+            produitId: string;
+            /** Format: int32 */
+            quantite?: number;
+            /** Format: int32 */
+            seuil: number;
+        };
         ModeRemboursable: {
             /** @enum {string} */
             mode: "ESPECES" | "MOBILE_MONEY" | "CARTE";
@@ -2630,6 +2878,25 @@ export interface components {
             motif: string;
             /** @enum {string} */
             type: "RETRAIT" | "DEPENSE" | "APPORT";
+        };
+        MouvementStockResume: {
+            /** Format: int64 */
+            coutUnitaire?: number;
+            detail?: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            le: string;
+            /** @enum {string} */
+            motif?: "CASSE" | "PERIME" | "CONSOMME_PERSONNEL" | "VOL" | "ERREUR_SAISIE" | "LIVRAISON_NON_SAISIE" | "AUTRE" | "ANNULE" | "REMBOURSE";
+            par: string;
+            /** Format: int32 */
+            quantite: number;
+            /** Format: int32 */
+            quantiteApres: number;
+            reference?: string;
+            /** @enum {string} */
+            type: "INITIAL" | "RECEPTION" | "VENTE" | "RETOUR" | "PERTE" | "INVENTAIRE";
         };
         NoteEnService: {
             /** Format: int32 */
@@ -2990,6 +3257,15 @@ export interface components {
             /** @enum {string} */
             statut: "EN_ATTENTE" | "UTILISE" | "EXPIRE";
         };
+        StockATraiter: {
+            /** Format: int32 */
+            nombre: number;
+        };
+        StockCaisse: {
+            articles: components["schemas"]["ArticleEnCaisse"][];
+            /** @enum {string} */
+            politique: "SOUPLE" | "AVERTISSEMENT" | "STRICT";
+        };
         TableNote: {
             /** Format: uuid */
             id: string;
@@ -3076,7 +3352,7 @@ export interface operations {
                 depuis?: string;
                 jusqua?: string;
                 etablissementId?: string;
-                domaine?: "CARTE" | "PERSONNEL" | "TABLETTES" | "CAISSE";
+                domaine?: "CARTE" | "PERSONNEL" | "TABLETTES" | "CAISSE" | "STOCK";
                 critiques?: boolean;
                 page?: number;
                 taille?: number;
@@ -3905,7 +4181,7 @@ export interface operations {
             };
         };
     };
-    etat_2: {
+    etat_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -4284,7 +4560,7 @@ export interface operations {
             };
         };
     };
-    etat_1: {
+    etat_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -4748,6 +5024,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SituationCaisse"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    stock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockCaisse"];
                 };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
@@ -5348,6 +5653,245 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    etat_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                etablissementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EtatStock"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    inventorier: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                etablissementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeInventaire"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EtatStock"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    ecarts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                etablissementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeInventaire"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EcartInventaire"][];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    declarerPerte: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                etablissementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandePerteStock"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EtatStock"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    receptionner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                etablissementId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeReceptionStock"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EtatStock"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    historique: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                etablissementId: string;
+                produitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MouvementStockResume"][];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    fixerSeuil: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                etablissementId: string;
+                produitId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeSeuilStock"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EtatStock"];
+                };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
             default: {
@@ -6197,6 +6741,35 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    aTraiter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockATraiter"];
+                };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
             default: {

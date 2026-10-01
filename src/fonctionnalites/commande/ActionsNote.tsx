@@ -22,8 +22,9 @@ import { MenuActions, type ActionMenu } from '../../partage/ui/MenuActions'
 import { usePiegeFocus } from '../../partage/ui/usePiegeFocus'
 import { DialogueValidationGerant } from '../validation/DialogueValidationGerant'
 import { ChoixMotif, libelleMotif, useChoixMotif } from './ChoixMotif'
+import { ChoixRetourStock, retourParDefaut } from './DialoguesLigne'
 import { DialogueRemise, libelleRemise } from './DialoguesRemise'
-import { requetePlan } from './requetes'
+import { requetePlan, requeteStockCaisse, stockDuProduit } from './requetes'
 import { useValidation } from './useValidation'
 
 const MOTIFS_NOTE: MotifAnnulation[] = [
@@ -599,6 +600,13 @@ function DialogueAnnulationNote({
 }>) {
   const { t } = useTranslation()
   const choix = useChoixMotif<MotifAnnulation>()
+  const stock = useQuery(requeteStockCaisse)
+  const suiviEnStock = note.lignes.some(
+    (ligne) =>
+      ligne.statut === 'ENVOYEE' && stockDuProduit(stock.data, ligne.produitId) !== undefined,
+  )
+  const [retour, setRetour] = useState<boolean | null>(null)
+  const revient = retour ?? (choix.motif !== null && retourParDefaut(choix.motif))
   const somme = (statut: 'ENVOYEE' | 'BROUILLON') => {
     const lignes = note.lignes.filter((ligne) => ligne.statut === statut)
     return {
@@ -627,7 +635,9 @@ function DialogueAnnulationNote({
       surAnnuler={surFermer}
       surConfirmer={() => {
         const motif = choix.valider()
-        if (motif !== null) surAnnuler(motif)
+        if (motif !== null) {
+          surAnnuler({ ...motif, ...(suiviEnStock ? { retourEnStock: revient } : {}) })
+        }
       }}
     >
       {envoyes.quantite + aEnvoyer.quantite > 0 && (
@@ -647,6 +657,13 @@ function DialogueAnnulationNote({
         </ul>
       )}
       <ChoixMotif motifs={MOTIFS_NOTE} choix={choix} />
+      {suiviEnStock && choix.motif !== null && (
+        <ChoixRetourStock
+          libelle={t('caisse.stock.articles')}
+          revient={revient}
+          surChoisir={setRetour}
+        />
+      )}
     </Dialogue>
   )
 }

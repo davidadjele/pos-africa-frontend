@@ -252,4 +252,36 @@ describe('description de l’activité', () => {
       `−4${FINE}500${INSEC}F en espèces, T4, n°42. Motif : Article non conforme. Validé par Afi M.`,
     )
   })
+
+  it('détaille les réceptions, pertes, écarts d’inventaire et la politique de stock', () => {
+    const detail = (type: EvenementActivite['type'], details: Record<string, unknown>) =>
+      detailActivite(evenement({ type, domaine: 'STOCK', details }), t, CONTEXTE)
+
+    expect(detail('RECEPTION_STOCK', { quantite: 48, apres: 72, reference: 'BL 2240' })).toBe(
+      '+48, 72 en stock, BL 2240',
+    )
+    expect(detail('PERTE_STOCK', { quantite: 2, motif: 'CASSE', apres: 22 })).toBe(
+      '−2, casse, 22 en stock',
+    )
+    expect(detail('ECART_INVENTAIRE', { attendu: 24, compte: 21, ecart: -3, motif: 'CASSE' })).toBe(
+      'Enregistré 24, compté 21, écart −3 : casse',
+    )
+    expect(detail('POLITIQUE_STOCK_MODIFIEE', { avant: 'ENTREPRISE', apres: 'STRICT' })).toBe(
+      'Celle de l’entreprise → Stricte',
+    )
+  })
+
+  it('signale une vente sans stock enregistré', () => {
+    expect(
+      detailActivite(
+        evenement({
+          type: 'VENTE_SANS_STOCK',
+          domaine: 'STOCK',
+          details: { quantite: 2, apres: -1, detail: 'n°42, T4' },
+        }),
+        t,
+        CONTEXTE,
+      ),
+    ).toBe('−2, −1 en stock, n°42, T4')
+  })
 })
