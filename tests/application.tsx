@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw'
 import { creerClientRequetes } from '../src/app/clientRequetes'
 import { Fournisseurs } from '../src/app/Fournisseurs'
 import { creerRouteur } from '../src/app/routeur'
-import type { AppareilCourant, ReponseMoi } from '../src/partage/api/contrat'
+import type { AppareilCourant, ReponseMoi, StockCaisse } from '../src/partage/api/contrat'
 import { definirJetonCaisse } from '../src/partage/api/jetonCaisse'
 import { serveurMsw } from './serveurMsw'
 
@@ -113,12 +113,20 @@ export function ouvrir(chemin: string) {
 }
 
 /** Kossi tient la caisse du bar : tablette enregistrée, session de caisse ouverte sur cet écran. */
+/** Par défaut, aucun produit suivi : la caisse vend sans se soucier du stock. */
+export const STOCK_SANS_SUIVI: StockCaisse = { politique: 'SOUPLE', articles: [] }
+
 export function caisseOuverte(
   chemin: string,
-  { permissions = ['COMMANDE_CREER'], plafondRemise = 0 } = {},
+  {
+    permissions = ['COMMANDE_CREER'],
+    plafondRemise = 0,
+    stock = STOCK_SANS_SUIVI,
+  }: { permissions?: string[]; plafondRemise?: number; stock?: StockCaisse } = {},
 ) {
   tablette(CAISSE_BAR)
   serveurMsw.use(
+    http.get(`${API}/caisse/stock`, () => HttpResponse.json(stock)),
     http.get(`${API}/caisse/moi`, () =>
       HttpResponse.json({
         utilisateurId: '0d6a8f3e-0000-4c1b-9a51-5d7b9b0e0201',

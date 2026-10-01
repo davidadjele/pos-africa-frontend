@@ -45,8 +45,12 @@ export function quantiteSignee(quantite: number, avecPlus = false): string {
 /** Le détail d'un mouvement, sous son badge de type : « BL 2231 », « Casse ». */
 export function detailMouvement(mouvement: MouvementStockResume, t: TFunction): string {
   if (mouvement.reference !== undefined) return mouvement.reference
-  if (mouvement.motif !== undefined) return t(`stock.motifs.${mouvement.motif}`)
-  return ''
+  // La note d'origine d'une vente, d'un retour ou d'une perte après annulation : « n°42, T4 ».
+  const parties = [
+    ...(mouvement.motif === undefined ? [] : [t(`stock.motifs.${mouvement.motif}`)]),
+    ...(mouvement.detail === undefined ? [] : [mouvement.detail]),
+  ]
+  return parties.join(', ')
 }
 
 /** « Réception, BL 2231 », « Perte, casse », « Inventaire (−2) », « Premier comptage ». */
@@ -55,8 +59,8 @@ export function libelleMouvement(mouvement: MouvementStockResume, t: TFunction):
   if (mouvement.reference !== undefined) return `${type}, ${mouvement.reference}`
   if (mouvement.type === 'INVENTAIRE')
     return `${type} (${quantiteSignee(mouvement.quantite, true)})`
-  if (mouvement.motif !== undefined) {
-    return `${type}, ${t(`stock.motifs.${mouvement.motif}`).toLowerCase()}`
-  }
-  return type
+  const detail = detailMouvement(mouvement, t)
+  return detail === ''
+    ? type
+    : `${type}, ${mouvement.motif === undefined ? detail : detail.charAt(0).toLowerCase() + detail.slice(1)}`
 }

@@ -2,22 +2,26 @@ import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
-import { API, caisseOuverte } from '../../../tests/application'
+import { API, caisseOuverte, STOCK_SANS_SUIVI } from '../../../tests/application'
 import { FLAG, FLAG_ENVOYE, NOTE_T4, PLAN, POULET, T1_ID } from '../../../tests/commandes'
 import { serveurMsw } from '../../../tests/serveurMsw'
-import type { CommandeDetail, DemandeAnnulationNote } from '../../partage/api/contrat'
+import type { CommandeDetail, DemandeAnnulationNote, StockCaisse } from '../../partage/api/contrat'
 
 const ESSI_ID = '0d6a8f3e-0000-4c1b-9a51-5d7b9b0e0202'
 const AFI_ID = '0d6a8f3e-0000-4c1b-9a51-5d7b9b0e0301'
 const TOUT = ['COMMANDE_CREER', 'TABLE_TRANSFERER']
 
-function noteServie(permissions = TOUT, note: CommandeDetail = NOTE_T4) {
+function noteServie(
+  permissions = TOUT,
+  note: CommandeDetail = NOTE_T4,
+  stock: StockCaisse = STOCK_SANS_SUIVI,
+) {
   serveurMsw.use(
     http.get(`${API}/caisse/commandes/${note.id}`, () => HttpResponse.json(note)),
     http.get(`${API}/caisse/carte`, () => HttpResponse.json([FLAG, POULET])),
     http.get(`${API}/caisse/plan`, () => HttpResponse.json(PLAN)),
   )
-  caisseOuverte(`/caisse/notes/${note.id}`, { permissions })
+  caisseOuverte(`/caisse/notes/${note.id}`, { permissions, stock })
 }
 
 /** Retient les corps reçus sur une route de la note et répond par la note donnée. */
@@ -163,6 +167,25 @@ describe('Actions sur la note', () => {
       { motif: 'CLIENT_PARTI' },
       { motif: 'CLIENT_PARTI', validationId: 'a1b20000-0000-4000-8000-000000000002' },
     ])
+  })
+
+  it('demande si les articles suivis reviennent en stock quand on annule la note', async () => {
+    const recues = route('post', 'annulation', NOTE_T4)
+    noteServie(TOUT, NOTE_T4, {
+      politique: 'SOUPLE',
+      articles: [{ produitId: FLAG.produitId, quantite: 12, faible: false }],
+    })
+
+    await choisirAction('Annuler la note')
+    const dialogue = screen.getByRole('dialog', { name: 'Annuler la note de T4 ?' })
+    await userEvent.click(within(dialogue).getByRole('radio', { name: 'Le client est parti' }))
+    const stock = within(dialogue).getByRole('radiogroup', { name: 'Les articles suivis en stock' })
+    // Client parti : ce qui était servi est perdu, sauf si l'on dit le contraire.
+    expect(within(stock).getByRole('radio', { name: /Perdu/ })).toBeChecked()
+    await userEvent.click(within(dialogue).getByRole('button', { name: 'Annuler la note' }))
+
+    await screen.findByRole('list', { name: 'Tables' })
+    expect(recues).toEqual([{ motif: 'CLIENT_PARTI', retourEnStock: false }])
   })
 
   it('annule sans validation une note dont rien n’est parti', async () => {

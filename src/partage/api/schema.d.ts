@@ -936,6 +936,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/caisse/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Le stock restant des produits suivis et la politique de l'établissement de la tablette */
+        get: operations["stock"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/caisse/validateurs": {
         parameters: {
             query?: never;
@@ -2018,12 +2035,21 @@ export interface components {
             /** Format: int64 */
             montant: number;
             nom: string;
+            /** Format: uuid */
+            produitId: string;
             /** Format: int32 */
             quantite: number;
             /** Format: int64 */
             rembourse: number;
             /** Format: int32 */
             rembourses: number;
+        };
+        ArticleEnCaisse: {
+            faible: boolean;
+            /** Format: uuid */
+            produitId: string;
+            /** Format: int32 */
+            quantite?: number;
         };
         ArticlePaye: {
             nom: string;
@@ -2129,6 +2155,7 @@ export interface components {
             motif: "ERREUR_SAISIE" | "CLIENT_PARTI" | "CLIENT_CHANGE_AVIS" | "NON_SERVIE" | "PLAT_REFUSE" | "EPUISE_CUISINE" | "AUTRE";
             /** Format: int32 */
             quantite: number;
+            retourEnStock?: boolean;
             /** Format: uuid */
             validationId?: string;
         };
@@ -2137,6 +2164,7 @@ export interface components {
             detail?: string;
             /** @enum {string} */
             motif: "ERREUR_SAISIE" | "CLIENT_PARTI" | "CLIENT_CHANGE_AVIS" | "NON_SERVIE" | "PLAT_REFUSE" | "EPUISE_CUISINE" | "AUTRE";
+            retourEnStock?: boolean;
             /** Format: uuid */
             validationId?: string;
         };
@@ -2349,7 +2377,7 @@ export interface components {
         DemandePerteStock: {
             detail?: string;
             /** @enum {string} */
-            motif: "CASSE" | "PERIME" | "CONSOMME_PERSONNEL" | "VOL" | "ERREUR_SAISIE" | "LIVRAISON_NON_SAISIE" | "AUTRE";
+            motif: "CASSE" | "PERIME" | "CONSOMME_PERSONNEL" | "VOL" | "ERREUR_SAISIE" | "LIVRAISON_NON_SAISIE" | "AUTRE" | "ANNULE" | "REMBOURSE";
             /** Format: uuid */
             produitId: string;
             /** Format: int32 */
@@ -2409,6 +2437,7 @@ export interface components {
             /** @example FLOOZ */
             operateur?: string;
             reference?: string;
+            retourEnStock?: boolean;
             /** Format: uuid */
             validationId?: string;
         };
@@ -2735,7 +2764,7 @@ export interface components {
             /** Format: date-time */
             survenuLe: string;
             /** @enum {string} */
-            type: "TAXE_CREEE" | "TAUX_TAXE_MODIFIE" | "TAXE_DESACTIVEE" | "TAXE_REACTIVEE" | "PRIX_MODIFIE" | "TAXE_PRODUIT_MODIFIEE" | "PRODUIT_DESACTIVE" | "PRODUIT_REACTIVE" | "PRIX_ETABLISSEMENT_MODIFIE" | "PRODUIT_RETIRE_ETABLISSEMENT" | "PRODUIT_PROPOSE_ETABLISSEMENT" | "RUPTURE_DECLAREE" | "RUPTURE_LEVEE" | "ROLES_MODIFIES" | "PIN_REINITIALISE" | "EMPLOYE_DESACTIVE" | "EMPLOYE_REACTIVE" | "TABLETTE_REVOQUEE" | "VALIDATION_GERANT_UTILISEE" | "LIGNE_ANNULEE" | "NOTE_ANNULEE" | "TABLE_TRANSFEREE" | "SERVEUR_CHANGE" | "REMISE_APPLIQUEE" | "ARTICLE_OFFERT" | "REMISE_RETIREE" | "CAISSE_OUVERTE" | "RETRAIT_CAISSE" | "DEPENSE_CAISSE" | "APPORT_CAISSE" | "CLOTURE_CAISSE" | "ECART_CAISSE" | "ECART_OUVERTURE_CAISSE" | "REMBOURSEMENT" | "RECEPTION_STOCK" | "PERTE_STOCK" | "ECART_INVENTAIRE" | "POLITIQUE_STOCK_MODIFIEE";
+            type: "TAXE_CREEE" | "TAUX_TAXE_MODIFIE" | "TAXE_DESACTIVEE" | "TAXE_REACTIVEE" | "PRIX_MODIFIE" | "TAXE_PRODUIT_MODIFIEE" | "PRODUIT_DESACTIVE" | "PRODUIT_REACTIVE" | "PRIX_ETABLISSEMENT_MODIFIE" | "PRODUIT_RETIRE_ETABLISSEMENT" | "PRODUIT_PROPOSE_ETABLISSEMENT" | "RUPTURE_DECLAREE" | "RUPTURE_LEVEE" | "ROLES_MODIFIES" | "PIN_REINITIALISE" | "EMPLOYE_DESACTIVE" | "EMPLOYE_REACTIVE" | "TABLETTE_REVOQUEE" | "VALIDATION_GERANT_UTILISEE" | "LIGNE_ANNULEE" | "NOTE_ANNULEE" | "TABLE_TRANSFEREE" | "SERVEUR_CHANGE" | "REMISE_APPLIQUEE" | "ARTICLE_OFFERT" | "REMISE_RETIREE" | "CAISSE_OUVERTE" | "RETRAIT_CAISSE" | "DEPENSE_CAISSE" | "APPORT_CAISSE" | "CLOTURE_CAISSE" | "ECART_CAISSE" | "ECART_OUVERTURE_CAISSE" | "REMBOURSEMENT" | "RECEPTION_STOCK" | "PERTE_STOCK" | "ECART_INVENTAIRE" | "POLITIQUE_STOCK_MODIFIEE" | "VENTE_SANS_STOCK";
         };
         LigneCarteEtablissement: {
             categorie: components["schemas"]["CategorieCarte"];
@@ -2765,7 +2794,7 @@ export interface components {
             compte: number;
             detail?: string;
             /** @enum {string} */
-            motif?: "CASSE" | "PERIME" | "CONSOMME_PERSONNEL" | "VOL" | "ERREUR_SAISIE" | "LIVRAISON_NON_SAISIE" | "AUTRE";
+            motif?: "CASSE" | "PERIME" | "CONSOMME_PERSONNEL" | "VOL" | "ERREUR_SAISIE" | "LIVRAISON_NON_SAISIE" | "AUTRE" | "ANNULE" | "REMBOURSE";
             /** Format: uuid */
             produitId: string;
         };
@@ -2859,7 +2888,7 @@ export interface components {
             /** Format: date-time */
             le: string;
             /** @enum {string} */
-            motif?: "CASSE" | "PERIME" | "CONSOMME_PERSONNEL" | "VOL" | "ERREUR_SAISIE" | "LIVRAISON_NON_SAISIE" | "AUTRE";
+            motif?: "CASSE" | "PERIME" | "CONSOMME_PERSONNEL" | "VOL" | "ERREUR_SAISIE" | "LIVRAISON_NON_SAISIE" | "AUTRE" | "ANNULE" | "REMBOURSE";
             par: string;
             /** Format: int32 */
             quantite: number;
@@ -3231,6 +3260,11 @@ export interface components {
         StockATraiter: {
             /** Format: int32 */
             nombre: number;
+        };
+        StockCaisse: {
+            articles: components["schemas"]["ArticleEnCaisse"][];
+            /** @enum {string} */
+            politique: "SOUPLE" | "AVERTISSEMENT" | "STRICT";
         };
         TableNote: {
             /** Format: uuid */
@@ -4990,6 +5024,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SituationCaisse"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    stock: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StockCaisse"];
                 };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */

@@ -972,6 +972,49 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     'Remboursements−4 500',
   )
 
+  // Le stock suit la vente : le Flag, de nouveau en vente, sort à l'envoi et revient s'il n'est pas servi.
+  await tablette.getByRole('button', { name: 'Plan de salle' }).click()
+  await navigation.getByRole('link', { name: 'Par établissement' }).click()
+  await page.getByLabel(/^Établissement/).selectOption({ label: 'Bè Kpota' })
+  await page.getByRole('button', { name: 'Remettre Flag 65 cl en vente' }).click()
+  await expect(page.getByText('« Flag 65 cl » est de nouveau en vente.')).toBeVisible()
+  await tablette.getByRole('button', { name: 'Vente au comptoir' }).click()
+  const flag = carte.getByRole('button', { name: /Flag 65 cl/ })
+  await expect(flag).toContainText('33 restants')
+  await capturer(tablette, '67-tuile-stock-faible')
+  await flag.click()
+  await flag.click()
+  await note.getByRole('button', { name: /Envoyer 2 articles/ }).click()
+  await tablette.getByRole('button', { name: 'Actions sur Flag 65 cl' }).click()
+  await tablette
+    .getByRole('dialog', { name: 'Flag 65 cl' })
+    .getByRole('button', { name: /^Annuler/ })
+    .click()
+  const annulationFlag = tablette.getByRole('dialog', { name: 'Annuler Flag 65 cl ?' })
+  await annulationFlag.getByRole('radio', { name: 'Non servie (trop d’attente)' }).click()
+  await expect(
+    annulationFlag.getByRole('radiogroup', { name: 'L’article' }).getByRole('radio', {
+      name: /Revient en stock/,
+    }),
+  ).toHaveAttribute('aria-checked', 'true')
+  await capturer(tablette, '68-annulation-retour-stock')
+  await annulationFlag.getByRole('button', { name: 'Annuler 1 article' }).click()
+  await expect(annulationFlag).toHaveCount(0)
+  await note.getByRole('button', { name: 'Plan de salle' }).click()
+  await tablette.getByRole('button', { name: 'Caisse', exact: true }).click()
+
+  await navigation.getByRole('link', { name: /Stock/ }).click()
+  await page.getByLabel(/^Établissement/).selectOption({ label: 'Bè Kpota' })
+  await expect(page.getByRole('table', { name: 'Stock de Bè Kpota' })).toBeVisible()
+  await page.getByRole('button', { name: 'Plus d’actions pour Flag 65 cl' }).click()
+  await page.getByRole('menuitem', { name: 'Historique' }).click()
+  const historiqueFlag = page.getByRole('dialog', { name: 'Historique de Flag 65 cl' })
+  await expect(historiqueFlag.getByRole('listitem').first()).toContainText('Retour')
+  await expect(historiqueFlag.getByRole('listitem').nth(1)).toContainText('Vente')
+  await expect(historiqueFlag).toContainText('32 en stock')
+  await capturer(page, '69-historique-vente')
+  await historiqueFlag.getByRole('button', { name: 'Fermer' }).click()
+
   // Kossi prend la tablette laissée sur l'écran de la caisse : il arrive sur le plan, pas sur une erreur.
   await tablette.getByRole('banner').getByRole('button', { name: 'Changer d’utilisateur' }).click()
   await tablette.getByRole('button', { name: /Kossi A\./ }).click()

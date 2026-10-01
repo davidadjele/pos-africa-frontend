@@ -136,6 +136,12 @@ export function detailActivite(
         motif: t(`stock.motifs.${texte(motif) || 'AUTRE'}`).toLowerCase(),
       })
     }
+    case 'VENTE_SANS_STOCK':
+      return t('activite.venteSansStock', {
+        quantite: nombre(evenement.details.quantite),
+        apres: nombreSigne(evenement.details.apres),
+        detail: texte(evenement.details.detail),
+      })
     case 'POLITIQUE_STOCK_MODIFIEE':
       return t('activite.politiqueStock', {
         avant: t(`activite.politiques.${texte(evenement.details.avant) || 'ENTREPRISE'}`),

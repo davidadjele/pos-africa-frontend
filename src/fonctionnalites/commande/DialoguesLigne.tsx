@@ -1,3 +1,4 @@
+import { clsx } from 'clsx'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type {
@@ -70,8 +71,21 @@ export function DialogueLigne({
 }
 
 /** Ligne envoyée : combien en annuler et pourquoi. Le motif part dans l'activité du gérant. */
+/** Un article jamais servi ou saisi par erreur revient intact ; les autres motifs supposent une perte. */
+const REVIENNENT_EN_STOCK: MotifAnnulation[] = [
+  'ERREUR_SAISIE',
+  'CLIENT_CHANGE_AVIS',
+  'NON_SERVIE',
+  'EPUISE_CUISINE',
+]
+
+export function retourParDefaut(motif: MotifAnnulation): boolean {
+  return REVIENNENT_EN_STOCK.includes(motif)
+}
+
 export function DialogueAnnulation({
   ligne,
+  suiviEnStock = false,
   ou,
   fuseauHoraire,
   enCours,
@@ -79,6 +93,8 @@ export function DialogueAnnulation({
   surAnnuler,
 }: Readonly<{
   ligne: LigneNote
+  /** Article suivi en stock : on demande s'il revient en stock ou s'il est perdu. */
+  suiviEnStock?: boolean
   ou: string
   fuseauHoraire: string
   enCours: boolean
@@ -88,6 +104,8 @@ export function DialogueAnnulation({
   const { t } = useTranslation()
   const [quantite, setQuantite] = useState(1)
   const choix = useChoixMotif<MotifAnnulation>()
+  const [retour, setRetour] = useState<boolean | null>(null)
+  const revient = retour ?? (choix.motif !== null && retourParDefaut(choix.motif))
 
   return (
     <Dialogue
@@ -103,7 +121,9 @@ export function DialogueAnnulation({
       surAnnuler={surFermer}
       surConfirmer={() => {
         const motif = choix.valider()
-        if (motif !== null) surAnnuler({ quantite, ...motif })
+        if (motif !== null) {
+          surAnnuler({ quantite, ...motif, ...(suiviEnStock ? { retourEnStock: revient } : {}) })
+        }
       }}
     >
       {ligne.quantite > 1 && (
@@ -138,6 +158,51 @@ export function DialogueAnnulation({
         </div>
       )}
       <ChoixMotif motifs={MOTIFS} choix={choix} />
+      {suiviEnStock && choix.motif !== null && (
+        <ChoixRetourStock
+          libelle={t('caisse.stock.article')}
+          revient={revient}
+          surChoisir={setRetour}
+        />
+      )}
     </Dialogue>
+  )
+}
+
+/** Revient en stock ou perdu : proposé d'après le motif, l'employé le corrige s'il le faut. */
+export function ChoixRetourStock({
+  libelle,
+  revient,
+  surChoisir,
+}: Readonly<{ libelle: string; revient: boolean; surChoisir: (revient: boolean) => void }>) {
+  const { t } = useTranslation()
+  return (
+    <div role="radiogroup" aria-label={libelle} className="flex flex-col gap-2">
+      <span className="text-libelle text-encre">{libelle}</span>
+      <div className="grid grid-cols-2 gap-2">
+        {([true, false] as const).map((valeur) => (
+          <button
+            key={String(valeur)}
+            type="button"
+            role="radio"
+            aria-checked={revient === valeur}
+            onClick={() => {
+              surChoisir(valeur)
+            }}
+            className={clsx(
+              'flex min-h-16 flex-col items-start justify-center gap-0.5 rounded-normal bg-surface px-3 py-1.5 text-left text-encre',
+              revient === valeur ? 'border-2 border-accent' : 'border border-trait',
+            )}
+          >
+            <span className="text-corps-fort">
+              {t(valeur ? 'caisse.stock.revient' : 'caisse.stock.perdu')}
+            </span>
+            <span className="text-legende text-attenue">
+              {t(valeur ? 'caisse.stock.revientAide' : 'caisse.stock.perduAide')}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
   )
 }

@@ -109,7 +109,10 @@
       "produits": "Produits",
       "epuise": "Épuisé ce jour",
       "aucunResultat": "Aucun produit ne correspond.",
-      "chargement": "Chargement de la carte…"
+      "chargement": "Chargement de la carte…",
+      "plusEnStock": "Plus en stock",
+      "restants_one": "{{count}} restant",
+      "restants_other": "{{count}} restants"
     },
     "note": {
       "titre": "Note en cours",
@@ -367,6 +370,18 @@
       "titre": "Remettre {{numero}} au client ?",
       "phrase": "{{ou}}. Vérifiez les articles avant de remettre.",
       "chargement": "Chargement des articles…"
+    },
+    "stock": {
+      "titre": "{{produit}} n’est plus en stock",
+      "phrase": "Le stock enregistré est épuisé. Une livraison n’a peut-être pas été saisie : la vente sera signalée au gérant.",
+      "annuler": "Ne pas ajouter",
+      "vendre": "Vendre quand même",
+      "article": "L’article",
+      "articles": "Les articles suivis en stock",
+      "revient": "Revient en stock",
+      "revientAide": "Intact, pas ouvert",
+      "perdu": "Perdu",
+      "perduAide": "Ouvert, cassé, inutilisable"
     }
   },
   "gestion": {
@@ -1087,7 +1102,8 @@
       "RECEPTION_STOCK": "<b>{{auteur}}</b> a réceptionné <b>{{objet}}</b> à {{etablissement}}",
       "PERTE_STOCK": "<b>{{auteur}}</b> a déclaré une perte de <b>{{objet}}</b> à {{etablissement}}",
       "ECART_INVENTAIRE": "<b>{{auteur}}</b> a corrigé le stock de <b>{{objet}}</b> par inventaire à {{etablissement}}",
-      "POLITIQUE_STOCK_MODIFIEE": "<b>{{auteur}}</b> a changé la politique de stock de <b>{{objet}}</b>"
+      "POLITIQUE_STOCK_MODIFIEE": "<b>{{auteur}}</b> a changé la politique de stock de <b>{{objet}}</b>",
+      "VENTE_SANS_STOCK": "<b>{{auteur}}</b> a vendu <b>{{objet}}</b> sans stock enregistré à {{etablissement}}"
     },
     "actions": {
       "LIGNE_ANNULER_APRES_ENVOI": "annuler des articles envoyés",
@@ -1127,7 +1143,8 @@
       "SOUPLE": "Souple",
       "AVERTISSEMENT": "Avertissement",
       "STRICT": "Stricte"
-    }
+    },
+    "venteSansStock": "−{{quantite}}, {{apres}} en stock, {{detail}}"
   },
   "salles": {
     "titre": "Salles et tables de {{etablissement}}",
@@ -1525,7 +1542,9 @@
       "VOL": "Vol",
       "ERREUR_SAISIE": "Erreur de saisie",
       "LIVRAISON_NON_SAISIE": "Livraison non saisie",
-      "AUTRE": "Autre"
+      "AUTRE": "Autre",
+      "ANNULE": "Annulé, perdu",
+      "REMBOURSE": "Remboursé, perdu"
     },
     "vide": {
       "titre": "Aucun produit suivi en stock",

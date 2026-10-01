@@ -270,4 +270,18 @@ describe('description de l’activité', () => {
       'Celle de l’entreprise → Stricte',
     )
   })
+
+  it('signale une vente sans stock enregistré', () => {
+    expect(
+      detailActivite(
+        evenement({
+          type: 'VENTE_SANS_STOCK',
+          domaine: 'STOCK',
+          details: { quantite: 2, apres: -1, detail: 'n°42, T4' },
+        }),
+        t,
+        CONTEXTE,
+      ),
+    ).toBe('−2, −1 en stock, n°42, T4')
+  })
 })

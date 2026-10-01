@@ -2,20 +2,23 @@ import { clsx } from 'clsx'
 import { Search } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { LigneCarteEtablissement } from '../../partage/api/contrat'
+import type { LigneCarteEtablissement, StockCaisse } from '../../partage/api/contrat'
 import { formaterMontant, type Devise } from '../../partage/montants/formaterMontant'
 import { BadgeStatut } from '../../partage/ui/BadgeStatut'
 import { EtatVide } from '../../partage/ui/EtatVide'
 import { COULEURS_CATEGORIE } from '../catalogue/couleurs'
+import { sansStock, stockDuProduit } from './requetes'
 
 /** La carte de l'établissement, par catégorie, au prix d'ici : toucher une tuile ajoute le produit. */
 export function CarteCaisse({
   carte,
   devise,
+  stock,
   surChoisir,
 }: Readonly<{
   carte: LigneCarteEtablissement[]
   devise: Devise
+  stock?: StockCaisse | undefined
   surChoisir: (ligne: LigneCarteEtablissement) => void
 }>) {
   const { t } = useTranslation()
@@ -94,7 +97,7 @@ export function CarteCaisse({
           >
             {visibles.map((ligne) => (
               <li key={ligne.produitId}>
-                <Tuile ligne={ligne} devise={devise} surChoisir={surChoisir} />
+                <Tuile stock={stock} ligne={ligne} devise={devise} surChoisir={surChoisir} />
               </li>
             ))}
           </ul>
@@ -132,24 +135,30 @@ function OngletCategorie({
 function Tuile({
   ligne,
   devise,
+  stock,
   surChoisir,
 }: Readonly<{
   ligne: LigneCarteEtablissement
   devise: Devise
+  stock: StockCaisse | undefined
   surChoisir: (ligne: LigneCarteEtablissement) => void
 }>) {
   const { t } = useTranslation()
+  const article = stockDuProduit(stock, ligne.produitId)
+  const vide = article !== undefined && sansStock(article)
+  // En politique stricte, la caisse refuse ce qui n'a plus de stock : la tuile se grise comme une rupture.
+  const bloquee = ligne.epuise || (vide && stock?.politique === 'STRICT')
   return (
     <button
       type="button"
-      disabled={ligne.epuise}
+      disabled={bloquee}
       onClick={() => {
         surChoisir(ligne)
       }}
       className={clsx(
         'flex h-25 w-full flex-col justify-between gap-2 rounded-normal border border-trait border-l-[5px] p-3 pl-3.5 text-left',
         COULEURS_CATEGORIE[ligne.categorie.couleur].bord,
-        ligne.epuise ? 'bg-fond opacity-60' : 'bg-surface hover:bg-fond',
+        bloquee ? 'bg-fond opacity-60' : 'bg-surface hover:bg-fond',
       )}
     >
       <span className="text-corps leading-tight text-encre">{ligne.nom}</span>
@@ -157,7 +166,18 @@ function Tuile({
         <span className="chiffres text-montant-tuile text-encre">
           {formaterMontant({ unitesMineures: ligne.prix, devise }, { forme: 'nombre' })}
         </span>
-        {ligne.epuise && <BadgeStatut ton="neutre">{t('caisse.carte.epuise')}</BadgeStatut>}
+        {ligne.epuise ? (
+          <BadgeStatut ton="neutre">{t('caisse.carte.epuise')}</BadgeStatut>
+        ) : vide ? (
+          <BadgeStatut ton="danger">{t('caisse.carte.plusEnStock')}</BadgeStatut>
+        ) : (
+          article?.faible === true &&
+          article.quantite !== undefined && (
+            <BadgeStatut ton="alerte">
+              {t('caisse.carte.restants', { count: article.quantite })}
+            </BadgeStatut>
+          )
+        )}
       </span>
     </button>
   )

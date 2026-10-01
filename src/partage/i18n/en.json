@@ -109,7 +109,10 @@
       "produits": "Products",
       "epuise": "Sold out today",
       "aucunResultat": "No product matches.",
-      "chargement": "Loading the menu…"
+      "chargement": "Loading the menu…",
+      "plusEnStock": "Out of stock",
+      "restants_one": "{{count}} left",
+      "restants_other": "{{count}} left"
     },
     "note": {
       "titre": "Current tab",
@@ -367,6 +370,18 @@
       "titre": "Hand {{numero}} over to the customer?",
       "phrase": "{{ou}}. Check the items before handing over.",
       "chargement": "Loading items…"
+    },
+    "stock": {
+      "titre": "{{produit}} is out of stock",
+      "phrase": "The recorded stock is used up. A delivery may not have been recorded: the sale will be flagged to the manager.",
+      "annuler": "Don’t add",
+      "vendre": "Sell anyway",
+      "article": "The item",
+      "articles": "Items tracked in stock",
+      "revient": "Back in stock",
+      "revientAide": "Intact, unopened",
+      "perdu": "Lost",
+      "perduAide": "Opened, broken, unusable"
     }
   },
   "gestion": {
@@ -1087,7 +1102,8 @@
       "RECEPTION_STOCK": "<b>{{auteur}}</b> received <b>{{objet}}</b> at {{etablissement}}",
       "PERTE_STOCK": "<b>{{auteur}}</b> recorded a loss of <b>{{objet}}</b> at {{etablissement}}",
       "ECART_INVENTAIRE": "<b>{{auteur}}</b> corrected the stock of <b>{{objet}}</b> by stocktake at {{etablissement}}",
-      "POLITIQUE_STOCK_MODIFIEE": "<b>{{auteur}}</b> changed the stock policy of <b>{{objet}}</b>"
+      "POLITIQUE_STOCK_MODIFIEE": "<b>{{auteur}}</b> changed the stock policy of <b>{{objet}}</b>",
+      "VENTE_SANS_STOCK": "<b>{{auteur}}</b> sold <b>{{objet}}</b> without recorded stock at {{etablissement}}"
     },
     "actions": {
       "LIGNE_ANNULER_APRES_ENVOI": "cancel items already sent",
@@ -1127,7 +1143,8 @@
       "SOUPLE": "Lenient",
       "AVERTISSEMENT": "Warning",
       "STRICT": "Strict"
-    }
+    },
+    "venteSansStock": "−{{quantite}}, {{apres}} in stock, {{detail}}"
   },
   "salles": {
     "titre": "{{etablissement}} areas and tables",
@@ -1525,7 +1542,9 @@
       "VOL": "Theft",
       "ERREUR_SAISIE": "Entry error",
       "LIVRAISON_NON_SAISIE": "Delivery not recorded",
-      "AUTRE": "Other"
+      "AUTRE": "Other",
+      "ANNULE": "Cancelled, lost",
+      "REMBOURSE": "Refunded, lost"
     },
     "vide": {
       "titre": "No product tracked in stock",

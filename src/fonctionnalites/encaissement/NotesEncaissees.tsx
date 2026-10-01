@@ -24,6 +24,8 @@ import { Chargement } from '../../partage/ui/Chargement'
 import { EtatVide } from '../../partage/ui/EtatVide'
 import { useSessionCaisse } from '../caisse/requetes'
 import { useValidation } from '../commande/useValidation'
+import { ChoixRetourStock } from '../commande/DialoguesLigne'
+import { requeteStockCaisse, stockDuProduit } from '../commande/requetes'
 import { ChoixArticles, ChoixOperateur } from './ChoixArticles'
 import { requeteNotesEncaissees, requeteOuvertureCaisse, requeteRemboursement } from './requetes'
 
@@ -353,6 +355,15 @@ function Rembourser({
     paye: article.rembourse,
   }))
   const montant = totalSelection(articles, selection)
+  const stock = useQuery(requeteStockCaisse)
+  // La question du stock ne vaut que pour les articles choisis qui y sont suivis (boissons, articles revendus).
+  const suiviEnStock = etat.articles.some(
+    (article) =>
+      (selection[article.ligneId] ?? 0) > 0 &&
+      stockDuProduit(stock.data, article.produitId) !== undefined,
+  )
+  const [retour, setRetour] = useState<boolean | null>(null)
+  const revient = retour ?? (motif === 'ERREUR_ENCAISSEMENT' || motif === 'ARTICLE_NON_SERVI')
   const choisi = disponibles.find((candidat) => candidat.mode === mode)
   const manques = [
     ...(montant === 0 ? [t('remboursement.manques.articles')] : []),
@@ -379,6 +390,7 @@ function Rembourser({
         .map(([ligneId, quantite]) => ({ ligneId, quantite })),
       motif,
       ...(motif === 'AUTRE' ? { detail: detail.trim() } : {}),
+      ...(suiviEnStock ? { retourEnStock: revient } : {}),
       ...(mode === 'MOBILE_MONEY' && operateur !== null ? { operateur } : {}),
       ...(mode !== 'ESPECES' && reference.trim() !== '' ? { reference: reference.trim() } : {}),
     }
@@ -546,6 +558,13 @@ function Rembourser({
               onChange={(evenement) => {
                 setDetail(evenement.target.value)
               }}
+            />
+          )}
+          {suiviEnStock && motif !== null && (
+            <ChoixRetourStock
+              libelle={t('caisse.stock.articles')}
+              revient={revient}
+              surChoisir={setRetour}
             />
           )}
         </div>
