@@ -1047,8 +1047,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Désactiver une catégorie
-         * @description Refusé (CATEGORIE_EN_USAGE, 409) tant qu'elle a des produits actifs.
+         * Désactiver
+         * @description Permission CATALOGUE_GERER. Retiré de la caisse et des choix ; l'historique reste. Refusé (409) tant que la ressource sert encore : voir la description de la section.
          */
         post: operations["desactiver_3"];
         delete?: never;
@@ -1066,7 +1066,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Réactiver une catégorie */
+        /**
+         * Réactiver
+         * @description Permission CATALOGUE_GERER.
+         */
         post: operations["reactiver_4"];
         delete?: never;
         options?: never;
@@ -1531,8 +1534,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Désactiver un produit
-         * @description Il disparaît de la caisse ; ses ventes passées restent.
+         * Désactiver
+         * @description Permission CATALOGUE_GERER. Retiré de la caisse et des choix ; l'historique reste. Refusé (409) tant que la ressource sert encore : voir la description de la section.
          */
         post: operations["desactiver_1"];
         delete?: never;
@@ -1550,7 +1553,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Réactiver un produit */
+        /**
+         * Réactiver
+         * @description Permission CATALOGUE_GERER.
+         */
         post: operations["reactiver_1"];
         delete?: never;
         options?: never;
@@ -1794,8 +1800,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Désactiver une taxe
-         * @description Refusé (TAXE_EN_USAGE, 409) tant que des produits actifs y sont soumis.
+         * Désactiver
+         * @description Permission CATALOGUE_GERER. Retiré de la caisse et des choix ; l'historique reste. Refusé (409) tant que la ressource sert encore : voir la description de la section.
          */
         post: operations["desactiver"];
         delete?: never;
@@ -1813,7 +1819,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Réactiver une taxe */
+        /**
+         * Réactiver
+         * @description Permission CATALOGUE_GERER.
+         */
         post: operations["reactiver"];
         delete?: never;
         options?: never;
