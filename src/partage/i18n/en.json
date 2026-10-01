@@ -1230,6 +1230,36 @@
       "pourValider": "To confirm: {{liste}}.",
       "operateur": "choose the operator",
       "reference": "copy the reference"
+    },
+    "partage": {
+      "titre": "Split the bill",
+      "libre": "Free amount",
+      "parts": "Equal shares",
+      "articles": "By item",
+      "aides": {
+        "libre": "Mixed payment",
+        "parts": "Same amount for everyone",
+        "articles": "Everyone pays what they had"
+      },
+      "nombre": "Number of shares",
+      "arrondi": "Any rounding remainder goes on the last share.",
+      "moins": "One share less",
+      "plus": "One share more",
+      "liste": "Shares",
+      "part": "Share {{numero}}",
+      "statuts": {
+        "payee": "Paid",
+        "enCours": "Current",
+        "aPayer": "To pay"
+      },
+      "ceQuePaie": "What this guest pays",
+      "toutLeReste": "Everything left",
+      "articlesListe": "Items to pay",
+      "surLaNote_one": "{{count}} on the bill, {{payees}} paid",
+      "surLaNote_other": "{{count}} on the bill, {{payees}} paid",
+      "unDeMoins": "One {{nom}} less",
+      "unDePlus": "One {{nom}} more",
+      "selection": "Selection"
     }
   },
   "tiroir": {

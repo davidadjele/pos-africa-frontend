@@ -10,14 +10,17 @@ import { ErreurApi } from '../../partage/api/ErreurApi'
 import type {
   CommandeDetail,
   DemandePaiement,
+  DemandePartage,
   EtatCaisse,
   EtatEncaissement,
   ModePaiement,
   OperateurMobileMoney,
+  PaiementResume,
 } from '../../partage/api/contrat'
 import { formaterHeure } from '../../partage/dates/formaterDate'
 import { formaterMontant, symboleDe, type Devise } from '../../partage/montants/formaterMontant'
 import { lireMontant } from '../../partage/montants/lireMontant'
+import { montantArticles, partsAVenir, totalSelection } from '../../partage/montants/partage'
 import { formaterTaux } from '../../partage/montants/taxes'
 import { AlerteErreur } from '../../partage/ui/Alerte'
 import { BadgeStatut } from '../../partage/ui/BadgeStatut'
@@ -122,6 +125,10 @@ export function EcranEncaissement({ commandeId }: Readonly<{ commandeId: string 
             etat={etat.data}
             operateurs={caisse.data.operateurs}
             devise={devise}
+            couverts={note.data.couverts}
+            surPartage={(nouvel) => {
+              clientRequetes.setQueryData(requeteEncaissement(commandeId).queryKey, nouvel)
+            }}
             surPaye={(nouvel) => {
               clientRequetes.setQueryData(requeteEncaissement(commandeId).queryKey, nouvel)
               if (nouvel.payee) {
@@ -206,13 +213,7 @@ function Recapitulatif({
               <BadgeStatut ton="succes">{t('encaissement.paye')}</BadgeStatut>
               <span className="flex flex-1 flex-col">
                 <span className="text-libelle font-bold text-encre">
-                  {libellePaiement(
-                    paiement.mode,
-                    paiement.operateur,
-                    paiement.reference,
-                    operateurs,
-                    t,
-                  )}
+                  {libellePaiement(paiement, etat.paiements, operateurs, t)}
                 </span>
                 <span className="text-legende text-attenue">
                   {formaterHeure(paiement.encaisseLe, fuseauHoraire)}, {paiement.encaissePar}
@@ -233,17 +234,24 @@ function Recapitulatif({
   )
 }
 
+/** « Flooz, réf. 7F3K29 », « Part 2, espèces », « 1× Poulet braisé, carte ». */
 function libellePaiement(
-  mode: ModePaiement,
-  operateur: string | undefined,
-  reference: string | undefined,
+  paiement: PaiementResume,
+  paiements: readonly PaiementResume[],
   operateurs: OperateurMobileMoney[],
   t: TFunction,
 ): string {
-  const nom =
+  const { mode, operateur, reference } = paiement
+  const quoi = paiement.part
+    ? t('encaissement.partage.part', {
+        numero: paiements.filter((autre) => autre.part).indexOf(paiement) + 1,
+      })
+    : paiement.articles.map((article) => `${String(article.quantite)}× ${article.nom}`).join(', ')
+  const moyen =
     mode === 'MOBILE_MONEY'
       ? (operateurs.find((candidat) => candidat.code === operateur)?.libelle ?? operateur ?? '')
-      : t(`encaissement.modes.${mode}`)
+      : t(quoi === '' ? `encaissement.modes.${mode}` : `encaissement.modesEn.${mode}`)
+  const nom = quoi === '' ? moyen : `${quoi}, ${moyen}`
   return reference === undefined
     ? nom
     : t('encaissement.paiementDe', {
@@ -262,23 +270,36 @@ function montantsRapides(du: number): number[] {
   return [...suivants].sort((a, b) => a - b).slice(0, 3)
 }
 
+type Partage = 'libre' | 'parts' | 'articles'
+const PARTAGES: Partage[] = ['libre', 'parts', 'articles']
+const PARTS_MAX = 20
+
 function Paiement({
   etat,
   operateurs,
   devise,
+  couverts,
+  surPartage,
   surPaye,
   surCaisseFermee,
 }: Readonly<{
   etat: EtatEncaissement
   operateurs: OperateurMobileMoney[]
   devise: Devise
+  couverts: number | undefined
+  surPartage: (etat: EtatEncaissement) => void
   surPaye: (etat: EtatEncaissement) => void
   surCaisseFermee: () => void
 }>) {
   const { t } = useTranslation()
+  const [partage, setPartage] = useState<Partage>(etat.parts === undefined ? 'libre' : 'parts')
+  const [selection, setSelection] = useState<Record<string, number>>({})
   const [mode, setMode] = useState<ModePaiement>('ESPECES')
   const [montant, setMontant] = useState(String(etat.reste))
-  const [recu, setRecu] = useState(String(etat.reste))
+  // null : le client donne le compte exact ; le champ suit alors le montant calculé (part, articles).
+  const [recu, setRecu] = useState<string | null>(
+    etat.parts === undefined ? String(etat.reste) : null,
+  )
   const [actif, setActif] = useState<'montant' | 'recu'>('recu')
   // Un seul opérateur proposé (pays sans opérateur configuré) : il est choisi d'office.
   const [operateur, setOperateur] = useState<string | null>(
@@ -292,8 +313,15 @@ function Paiement({
   const courte = (valeur: number) =>
     formaterMontant({ unitesMineures: valeur, devise }, { forme: 'courte' })
 
-  const montantLu = lireMontant(montant, devise)
-  const recuLu = lireMontant(recu, devise)
+  const montantSaisi = lireMontant(montant, devise)
+  // En parts égales ou par articles, le montant ne se saisit pas : il se calcule comme le serveur.
+  const montantLu =
+    partage === 'parts'
+      ? (etat.montantPart ?? null)
+      : partage === 'articles'
+        ? totalSelection(etat.articles, selection)
+        : montantSaisi
+  const recuLu = recu === null ? montantLu : lireMontant(recu, devise)
   const montantValide = montantLu !== null && montantLu > 0 && montantLu <= etat.reste
   const manque =
     mode === 'ESPECES' && montantLu !== null && (recuLu ?? 0) < montantLu
@@ -309,14 +337,49 @@ function Paiement({
   const valide = montantValide && manque === 0 && aCompleter.length === 0
 
   function toucher(touche: string) {
-    const modifier = actif === 'montant' ? setMontant : setRecu
-    modifier((valeur) => (touche === 'effacer' ? valeur.slice(0, -1) : `${valeur}${touche}`))
+    const suivant = (valeur: string) =>
+      touche === 'effacer' ? valeur.slice(0, -1) : `${valeur}${touche}`
+    if (actif === 'montant') {
+      setMontant(suivant)
+    } else {
+      // Premier chiffre sur un montant exact : on repart d'un champ vide.
+      setRecu((valeur) => suivant(valeur ?? ''))
+    }
+  }
+
+  async function partager(parts: number | null) {
+    setEnCours(true)
+    setErreur(null)
+    try {
+      surPartage(
+        await appelerCaisse<EtatEncaissement>(`/caisse/commandes/${etat.commandeId}/partage`, {
+          methode: 'PUT',
+          corps: (parts === null ? {} : { parts }) satisfies DemandePartage,
+        }),
+      )
+    } catch (echec) {
+      setErreur(echec)
+    } finally {
+      setEnCours(false)
+    }
+  }
+
+  function choisirPartage(choisi: Partage) {
+    setPartage(choisi)
+    setSelection({})
+    setRecu(null)
+    if (choisi === 'parts' && etat.parts === undefined) {
+      void partager(Math.min(PARTS_MAX, Math.max(2, couverts ?? 2)))
+    } else if (choisi !== 'parts' && etat.parts !== undefined) {
+      void partager(null)
+    }
   }
 
   async function valider() {
     if (!valide) return
     setEnCours(true)
     setErreur(null)
+    const choisis = Object.entries(selection).filter(([, quantite]) => quantite > 0)
     const demande: DemandePaiement = {
       id,
       mode,
@@ -324,6 +387,10 @@ function Paiement({
       ...(mode === 'ESPECES' ? { montantRecu: recuLu ?? montantLu } : {}),
       ...(mode === 'MOBILE_MONEY' && operateur !== null ? { operateur } : {}),
       ...(mode !== 'ESPECES' && reference.trim() !== '' ? { reference: reference.trim() } : {}),
+      ...(partage === 'parts' ? { part: true } : {}),
+      ...(partage === 'articles'
+        ? { articles: choisis.map(([ligneId, quantite]) => ({ ligneId, quantite })) }
+        : {}),
     }
     try {
       surPaye(
@@ -346,6 +413,50 @@ function Paiement({
     <>
       <section className="flex min-w-0 flex-1 flex-col gap-3 rounded-moyen border border-trait bg-surface p-4">
         {erreur !== null && <AlerteErreur erreur={erreur} />}
+        <div
+          role="radiogroup"
+          aria-label={t('encaissement.partage.titre')}
+          className="grid grid-cols-1 gap-2 sm:grid-cols-3"
+        >
+          {PARTAGES.map((candidat) => (
+            <button
+              key={candidat}
+              type="button"
+              role="radio"
+              aria-checked={partage === candidat}
+              disabled={enCours}
+              onClick={() => {
+                if (partage !== candidat) choisirPartage(candidat)
+              }}
+              className={clsx(
+                'flex min-h-cible-caisse flex-col items-start justify-center gap-0.5 rounded-moyen bg-surface px-3 py-1.5 text-left text-encre',
+                partage === candidat ? 'border-2 border-accent' : 'border border-trait',
+              )}
+            >
+              <span className="text-corps-fort">{t(`encaissement.partage.${candidat}`)}</span>
+              <span className="text-legende text-attenue">
+                {t(`encaissement.partage.aides.${candidat}`)}
+              </span>
+            </button>
+          ))}
+        </div>
+        {partage === 'parts' && etat.parts !== undefined && (
+          <PartsEgales
+            etat={etat}
+            parts={etat.parts}
+            devise={devise}
+            enCours={enCours}
+            surChanger={(parts) => void partager(parts)}
+          />
+        )}
+        {partage === 'articles' && (
+          <ArticlesAPayer
+            etat={etat}
+            selection={selection}
+            devise={devise}
+            surChanger={setSelection}
+          />
+        )}
         <div
           role="radiogroup"
           aria-label={t('encaissement.modes.titre')}
@@ -377,25 +488,27 @@ function Paiement({
             </button>
           ))}
         </div>
-        <ChampSaisie
-          libelle={t('encaissement.montant')}
-          inputMode="numeric"
-          suffixe={symboleDe(devise)}
-          value={montant}
-          onFocus={() => {
-            setActif('montant')
-          }}
-          onChange={(evenement) => {
-            setMontant(evenement.target.value)
-          }}
-        />
+        {partage === 'libre' && (
+          <ChampSaisie
+            libelle={t('encaissement.montant')}
+            inputMode="numeric"
+            suffixe={symboleDe(devise)}
+            value={montant}
+            onFocus={() => {
+              setActif('montant')
+            }}
+            onChange={(evenement) => {
+              setMontant(evenement.target.value)
+            }}
+          />
+        )}
         {mode === 'ESPECES' && (
           <>
             <ChampSaisie
               libelle={t('encaissement.recu')}
               inputMode="numeric"
               suffixe={symboleDe(devise)}
-              value={recu}
+              value={recu ?? String(montantLu ?? '')}
               onFocus={() => {
                 setActif('recu')
               }}
@@ -519,6 +632,222 @@ function Paiement({
       </section>
       <ClavierMontant surToucher={toucher} />
     </>
+  )
+}
+
+function PartsEgales({
+  etat,
+  parts,
+  devise,
+  enCours,
+  surChanger,
+}: Readonly<{
+  etat: EtatEncaissement
+  parts: number
+  devise: Devise
+  enCours: boolean
+  surChanger: (parts: number) => void
+}>) {
+  const { t } = useTranslation()
+  const nombre = (valeur: number) =>
+    formaterMontant({ unitesMineures: valeur, devise }, { forme: 'nombre' })
+  const payees = etat.paiements.filter((paiement) => paiement.part)
+  const aVenir = partsAVenir(etat.reste, parts, etat.partsPayees)
+  const minimum = Math.max(2, etat.partsPayees + 1)
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-wrap items-center gap-3 rounded-moyen border border-trait px-3 py-2">
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="text-corps-fort text-encre">{t('encaissement.partage.nombre')}</span>
+          <span className="text-legende text-attenue">{t('encaissement.partage.arrondi')}</span>
+        </span>
+        <Compteur
+          valeur={parts}
+          libelleMoins={t('encaissement.partage.moins')}
+          libellePlus={t('encaissement.partage.plus')}
+          moinsPossible={!enCours && parts > minimum}
+          plusPossible={!enCours && parts < PARTS_MAX}
+          surChanger={surChanger}
+        />
+      </div>
+      <ul
+        aria-label={t('encaissement.partage.liste')}
+        className="m-0 flex list-none flex-col overflow-hidden rounded-moyen border border-trait p-0"
+      >
+        {payees.map((paiement, rang) => (
+          <LignePart
+            key={paiement.id}
+            numero={rang + 1}
+            statut="payee"
+            montant={nombre(paiement.montant)}
+          />
+        ))}
+        {aVenir.map((montant, rang) => (
+          <LignePart
+            key={`a-venir-${String(rang)}`}
+            numero={payees.length + rang + 1}
+            statut={rang === 0 ? 'enCours' : 'aPayer'}
+            montant={nombre(montant)}
+          />
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+const TONS_PART = { payee: 'succes', enCours: 'info', aPayer: 'neutre' } as const
+
+function LignePart({
+  numero,
+  statut,
+  montant,
+}: Readonly<{ numero: number; statut: keyof typeof TONS_PART; montant: string }>) {
+  const { t } = useTranslation()
+  return (
+    <li
+      className={clsx(
+        'flex items-center gap-3 border-b border-trait px-3 py-2 last:border-b-0',
+        statut === 'enCours' ? 'bg-fond' : 'bg-surface',
+      )}
+    >
+      <span className="w-16 text-corps-fort text-encre">
+        {t('encaissement.partage.part', { numero })}
+      </span>
+      <BadgeStatut ton={TONS_PART[statut]}>
+        {t(`encaissement.partage.statuts.${statut}`)}
+      </BadgeStatut>
+      <span className="chiffres ml-auto text-montant-ligne text-encre">{montant}</span>
+    </li>
+  )
+}
+
+function ArticlesAPayer({
+  etat,
+  selection,
+  devise,
+  surChanger,
+}: Readonly<{
+  etat: EtatEncaissement
+  selection: Record<string, number>
+  devise: Devise
+  surChanger: (selection: Record<string, number>) => void
+}>) {
+  const { t } = useTranslation()
+  const nombre = (valeur: number) =>
+    formaterMontant({ unitesMineures: valeur, devise }, { forme: 'nombre' })
+  const restants = (article: EtatEncaissement['articles'][number]) =>
+    article.quantite - article.payees
+  return (
+    <div className="flex flex-col rounded-moyen border border-trait">
+      <div className="flex items-center justify-between gap-3 border-b border-trait px-3 py-2">
+        <span className="text-corps-fort text-encre">{t('encaissement.partage.ceQuePaie')}</span>
+        <Bouton
+          onClick={() => {
+            surChanger(
+              Object.fromEntries(
+                etat.articles.map((article) => [article.ligneId, restants(article)]),
+              ),
+            )
+          }}
+        >
+          {t('encaissement.partage.toutLeReste')}
+        </Bouton>
+      </div>
+      <ul aria-label={t('encaissement.partage.articlesListe')} className="m-0 list-none p-0">
+        {etat.articles.map((article) => {
+          const choisies = selection[article.ligneId] ?? 0
+          return (
+            <li
+              key={article.ligneId}
+              className="flex flex-wrap items-center gap-3 border-b border-trait px-3 py-2 last:border-b-0"
+            >
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="text-corps-fort text-encre">{article.nom}</span>
+                <span className="text-legende text-attenue">
+                  {t('encaissement.partage.surLaNote', {
+                    count: article.quantite,
+                    payees: article.payees,
+                  })}
+                </span>
+              </span>
+              {restants(article) === 0 ? (
+                <BadgeStatut ton="succes">{t('encaissement.paye')}</BadgeStatut>
+              ) : (
+                <Compteur
+                  valeur={choisies}
+                  libelleMoins={t('encaissement.partage.unDeMoins', { nom: article.nom })}
+                  libellePlus={t('encaissement.partage.unDePlus', { nom: article.nom })}
+                  moinsPossible={choisies > 0}
+                  plusPossible={choisies < restants(article)}
+                  surChanger={(valeur) => {
+                    surChanger({ ...selection, [article.ligneId]: valeur })
+                  }}
+                />
+              )}
+              <span className="chiffres w-20 text-right text-montant-ligne text-encre">
+                {choisies === 0 ? '' : nombre(montantArticles(article, choisies))}
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+      <div className="flex items-baseline justify-between border-t border-trait px-3 py-2">
+        <span className="text-corps-fort text-encre">{t('encaissement.partage.selection')}</span>
+        <output
+          aria-label={t('encaissement.partage.selection')}
+          className="chiffres text-montant-total text-encre"
+        >
+          {formaterMontant(
+            { unitesMineures: totalSelection(etat.articles, selection), devise },
+            { forme: 'courte' },
+          )}
+        </output>
+      </div>
+    </div>
+  )
+}
+
+function Compteur({
+  valeur,
+  libelleMoins,
+  libellePlus,
+  moinsPossible,
+  plusPossible,
+  surChanger,
+}: Readonly<{
+  valeur: number
+  libelleMoins: string
+  libellePlus: string
+  moinsPossible: boolean
+  plusPossible: boolean
+  surChanger: (valeur: number) => void
+}>) {
+  return (
+    <span className="flex items-center rounded-normal border border-trait">
+      <button
+        type="button"
+        aria-label={libelleMoins}
+        disabled={!moinsPossible}
+        onClick={() => {
+          surChanger(valeur - 1)
+        }}
+        className="size-cible-min text-titre-section text-attenue disabled:opacity-40"
+      >
+        −
+      </button>
+      <span className="chiffres min-w-10 text-center text-montant-ligne text-encre">{valeur}</span>
+      <button
+        type="button"
+        aria-label={libellePlus}
+        disabled={!plusPossible}
+        onClick={() => {
+          surChanger(valeur + 1)
+        }}
+        className="size-cible-min text-titre-section text-attenue disabled:opacity-40"
+      >
+        +
+      </button>
+    </span>
   )
 }
 

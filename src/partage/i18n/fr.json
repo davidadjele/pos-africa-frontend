@@ -1230,6 +1230,36 @@
       "pourValider": "Pour valider : {{liste}}.",
       "operateur": "choisissez l’opérateur",
       "reference": "recopiez la référence"
+    },
+    "partage": {
+      "titre": "Partager l’addition",
+      "libre": "Montant libre",
+      "parts": "Parts égales",
+      "articles": "Par articles",
+      "aides": {
+        "libre": "Paiement mixte",
+        "parts": "Même montant pour chacun",
+        "articles": "Chacun paie ce qu’il a pris"
+      },
+      "nombre": "Nombre de parts",
+      "arrondi": "Un reste d’arrondi va sur la dernière part.",
+      "moins": "Une part de moins",
+      "plus": "Une part de plus",
+      "liste": "Parts",
+      "part": "Part {{numero}}",
+      "statuts": {
+        "payee": "Payée",
+        "enCours": "En cours",
+        "aPayer": "À payer"
+      },
+      "ceQuePaie": "Ce que paie ce client",
+      "toutLeReste": "Tout le reste",
+      "articlesListe": "Articles à payer",
+      "surLaNote_one": "{{count}} sur la note, {{payees}} payé",
+      "surLaNote_other": "{{count}} sur la note, {{payees}} payés",
+      "unDeMoins": "Un {{nom}} de moins",
+      "unDePlus": "Un {{nom}} de plus",
+      "selection": "Sélection"
     }
   },
   "tiroir": {

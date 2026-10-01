@@ -3,11 +3,19 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { API, caisseOuverte } from '../../../tests/application'
-import { FLAG, NOTE_T4, PLAN, POULET } from '../../../tests/commandes'
+import {
+  FLAG,
+  FLAG_ENVOYE,
+  NOTE_T4,
+  PLAN,
+  POULET,
+  POULET_A_ENVOYER,
+} from '../../../tests/commandes'
 import { serveurMsw } from '../../../tests/serveurMsw'
 import type {
   DemandeFondDeCaisse,
   DemandePaiement,
+  DemandePartage,
   EtatCaisse,
   EtatEncaissement,
 } from '../../partage/api/contrat'
@@ -34,6 +42,25 @@ const A_PAYER: EtatEncaissement = {
   paye: 0,
   reste: 10_200,
   payee: false,
+  partsPayees: 0,
+  articles: [
+    {
+      ligneId: FLAG_ENVOYE.id,
+      nom: 'Flag 65 cl',
+      quantite: 1,
+      montant: 1200,
+      payees: 0,
+      paye: 0,
+    },
+    {
+      ligneId: POULET_A_ENVOYER.id,
+      nom: 'Poulet braisé',
+      quantite: 2,
+      montant: 9000,
+      payees: 0,
+      paye: 0,
+    },
+  ],
   paiements: [],
 }
 const FLOOZ = {
@@ -45,6 +72,8 @@ const FLOOZ = {
   reference: '7F3K29',
   encaissePar: 'Yawa T.',
   encaisseLe: '2026-09-29T20:42:00Z',
+  part: false,
+  articles: [],
 }
 
 function encaissementServi(
@@ -118,6 +147,8 @@ describe('EcranEncaissement', () => {
             monnaieRendue: 4800,
             encaissePar: 'Yawa T.',
             encaisseLe: '2026-09-29T20:43:00Z',
+            part: false,
+            articles: [],
           },
         ],
       },
@@ -162,6 +193,104 @@ describe('EcranEncaissement', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Retour au plan de salle' }))
     expect(await screen.findByRole('list', { name: 'Tables' })).toBeVisible()
+  })
+
+  it('partage l’addition en parts égales, proposées d’après les couverts', async () => {
+    const partages: DemandePartage[] = []
+    const enTrois = { ...A_PAYER, parts: 3, montantPart: 3400 }
+    serveurMsw.use(
+      http.put(`${API}/caisse/commandes/${NOTE_T4.id}/partage`, async ({ request }) => {
+        const demande = (await request.json()) as DemandePartage
+        partages.push(demande)
+        return HttpResponse.json(
+          demande.parts === 4 ? { ...A_PAYER, parts: 4, montantPart: 2550 } : enTrois,
+        )
+      }),
+    )
+    const recus = paiements({
+      ...enTrois,
+      paye: 3400,
+      reste: 6800,
+      partsPayees: 1,
+      paiements: [
+        {
+          ...FLOOZ,
+          mode: 'ESPECES',
+          montant: 3400,
+          montantRecu: 5000,
+          monnaieRendue: 1600,
+          part: true,
+        },
+      ],
+    })
+    encaissementServi()
+
+    const partage = await screen.findByRole('radiogroup', { name: 'Partager l’addition' })
+    await userEvent.click(within(partage).getByRole('radio', { name: /Parts égales/ }))
+    const parts = await screen.findByRole('list', { name: 'Parts' })
+    expect(parts).toHaveTextContent('Part 1En cours3 400')
+    expect(parts).toHaveTextContent('Part 3À payer3 400')
+    expect(screen.queryByRole('textbox', { name: /^Montant payé/ })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Une part de plus' }))
+    expect(await within(parts).findByText('Part 4')).toBeVisible()
+    await userEvent.click(screen.getByRole('button', { name: 'Une part de moins' }))
+    await remplacer(screen.getByRole('textbox', { name: /^Espèces reçues/ }), '5000')
+    await userEvent.click(screen.getByRole('button', { name: /^Valider 3\s400\sF en espèces/ }))
+
+    const recap = screen.getByRole('region', { name: 'Note à encaisser' })
+    expect(await within(recap).findByText(/Part 1, espèces/)).toBeVisible()
+    expect(partages).toEqual([{ parts: 3 }, { parts: 4 }, { parts: 3 }])
+    expect(recus).toEqual([
+      {
+        id: expect.any(String) as string,
+        mode: 'ESPECES',
+        montant: 3400,
+        montantRecu: 5000,
+        part: true,
+      },
+    ])
+  })
+
+  it('fait payer à chacun ses articles', async () => {
+    const recus = paiements({
+      ...A_PAYER,
+      paye: 4500,
+      reste: 5700,
+      paiements: [
+        {
+          id: 'fa000000-0000-4000-8000-000000000003',
+          mode: 'CARTE',
+          montant: 4500,
+          monnaieRendue: 0,
+          encaissePar: 'Yawa T.',
+          encaisseLe: '2026-09-29T20:44:00Z',
+          part: false,
+          articles: [{ nom: 'Poulet braisé', quantite: 1 }],
+        },
+      ],
+    })
+    encaissementServi()
+
+    const partage = await screen.findByRole('radiogroup', { name: 'Partager l’addition' })
+    await userEvent.click(within(partage).getByRole('radio', { name: /Par articles/ }))
+    const articles = screen.getByRole('list', { name: 'Articles à payer' })
+    await userEvent.click(
+      within(articles).getByRole('button', { name: 'Un Poulet braisé de plus' }),
+    )
+    expect(screen.getByRole('status', { name: 'Sélection' })).toHaveTextContent('4 500 F')
+    await userEvent.click(screen.getByRole('radio', { name: /Carte/ }))
+    await userEvent.click(screen.getByRole('button', { name: /^Valider 4\s500\sF en carte/ }))
+
+    const recap = screen.getByRole('region', { name: 'Note à encaisser' })
+    expect(await within(recap).findByText(/1× Poulet braisé, carte/)).toBeVisible()
+    expect(recus).toEqual([
+      {
+        id: expect.any(String) as string,
+        mode: 'CARTE',
+        montant: 4500,
+        articles: [{ ligneId: POULET_A_ENVOYER.id, quantite: 1 }],
+      },
+    ])
   })
 
   it('refuse des espèces qui ne couvrent pas le montant', async () => {

@@ -638,9 +638,32 @@ export interface paths {
         /**
          * Encaisser un paiement sur une note
          * @description Paiement mixte : plusieurs paiements jusqu'au total. Ce qui reste à envoyer part d'abord en préparation. \
+         *     Addition partagée : part = true règle la prochaine part égale, articles règle des articles ; le montant \
+         *     doit alors être celui que calcule le serveur. \
          *     Erreurs : CAISSE_FERMEE (409), PRODUIT_EPUISE (409).
          */
         post: operations["encaisser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/commandes/{id}/partage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Partager l'addition en parts égales, ou revenir au montant libre
+         * @description Chaque part se paie ensuite par POST /paiements avec part = true. Le nombre de parts reste modifiable \
+         *     tant qu'il dépasse les parts payées.
+         */
+        put: operations["partager"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1768,6 +1791,24 @@ export interface components {
             /** Format: int64 */
             version: number;
         };
+        ArticleAPayer: {
+            /** Format: uuid */
+            ligneId: string;
+            /** Format: int64 */
+            montant: number;
+            nom: string;
+            /** Format: int64 */
+            paye: number;
+            /** Format: int32 */
+            payees: number;
+            /** Format: int32 */
+            quantite: number;
+        };
+        ArticlePaye: {
+            nom: string;
+            /** Format: int32 */
+            quantite: number;
+        };
         CategorieCarte: {
             /** @enum {string} */
             couleur: "OCRE" | "BRIQUE" | "FEUILLE" | "LAGUNE" | "PRUNE" | "SABLE" | "MENTHE" | "ARDOISE";
@@ -1881,6 +1922,12 @@ export interface components {
         DemandeAppairage: {
             /** @example 482915 */
             code: string;
+        };
+        DemandeArticle: {
+            /** Format: uuid */
+            ligneId: string;
+            /** Format: int32 */
+            quantite: number;
         };
         DemandeCategorie: {
             /** @enum {string} */
@@ -2045,6 +2092,7 @@ export interface components {
             tableId?: string;
         };
         DemandePaiement: {
+            articles?: components["schemas"]["DemandeArticle"][];
             /** Format: uuid */
             id: string;
             /** @enum {string} */
@@ -2055,8 +2103,13 @@ export interface components {
             montantRecu?: number;
             /** @example ORANGE_MONEY */
             operateur?: string;
+            part?: boolean;
             /** @example 7F3K29 */
             reference?: string;
+        };
+        DemandePartage: {
+            /** Format: int32 */
+            parts?: number;
         };
         DemandePriseDeCaisse: {
             /** @example 4827 */
@@ -2333,11 +2386,18 @@ export interface components {
             ouverture?: components["schemas"]["OuvertureResume"];
         };
         EtatEncaissement: {
+            articles: components["schemas"]["ArticleAPayer"][];
             /** Format: uuid */
             commandeId: string;
+            /** Format: int64 */
+            montantPart?: number;
             /** Format: int32 */
             numero: number;
             paiements: components["schemas"]["PaiementResume"][];
+            /** Format: int32 */
+            parts?: number;
+            /** Format: int32 */
+            partsPayees: number;
             /** Format: int64 */
             paye: number;
             payee: boolean;
@@ -2556,6 +2616,7 @@ export interface components {
             total: number;
         };
         PaiementResume: {
+            articles: components["schemas"]["ArticlePaye"][];
             /** Format: date-time */
             encaisseLe: string;
             encaissePar: string;
@@ -2570,6 +2631,7 @@ export interface components {
             /** Format: int64 */
             montantRecu?: number;
             operateur?: string;
+            part: boolean;
             reference?: string;
         };
         PlanDeSalle: {
@@ -3990,6 +4052,41 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["DemandePaiement"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EtatEncaissement"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    partager: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandePartage"];
             };
         };
         responses: {
