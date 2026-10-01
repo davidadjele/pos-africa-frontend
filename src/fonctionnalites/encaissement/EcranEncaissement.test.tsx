@@ -347,6 +347,13 @@ describe('EcranEncaissement', () => {
     expect(screen.getByRole('textbox', { name: /^Espèces reçues/ })).toHaveValue('1020000')
   })
 
+  it('renvoie à la note un serveur qui prend la tablette sur l’encaissement', async () => {
+    encaissementServi(CAISSE_OUVERTE, ['COMMANDE_CREER'])
+
+    expect(await screen.findByRole('region', { name: 'Note en cours' })).toBeVisible()
+    expect(screen.queryByRole('radiogroup', { name: 'Mode de paiement' })).not.toBeInTheDocument()
+  })
+
   it('ne propose pas d’ouvrir la caisse à qui n’en a pas le droit', async () => {
     encaissementServi({ operateurs: OPERATEURS }, ['COMMANDE_CREER', 'PAIEMENT_ENCAISSER'])
 

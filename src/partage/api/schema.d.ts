@@ -460,7 +460,7 @@ export interface paths {
             cookie?: never;
         };
         /** Où en est le paiement d'une note */
-        get: operations["etat_1"];
+        get: operations["etat_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -670,6 +670,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/caisse/commandes/{id}/remboursement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ce qu'on peut encore rembourser sur une note encaissée */
+        get: operations["etat_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/commandes/{id}/remboursements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rembourser des articles d'une note encaissée
+         * @description Dans un mode où la note a été payée, sans dépasser ce qui y a été payé. Sans le droit \
+         *     PAIEMENT_REMBOURSER, la validation d'un gérant est requise. Erreurs : VALIDATION_REQUISE (403), \
+         *     CAISSE_FERMEE (409), REMBOURSEMENT_HORS_JOURNEE (409).
+         */
+        post: operations["rembourser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/caisse/commandes/{id}/remise": {
         parameters: {
             query?: never;
@@ -795,6 +834,23 @@ export interface paths {
          * @description Sans CAISSE_MOUVEMENT : VALIDATION_REQUISE (403), puis validation d'un gérant (objet : la caisse ouverte).
          */
         post: operations["mouvement"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/notes-encaissees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Les notes encaissées de la journée commerciale en cours, les plus récentes d'abord */
+        get: operations["notes"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1808,6 +1864,19 @@ export interface components {
             /** Format: int32 */
             quantite: number;
         };
+        ArticleARembourser: {
+            /** Format: uuid */
+            ligneId: string;
+            /** Format: int64 */
+            montant: number;
+            nom: string;
+            /** Format: int32 */
+            quantite: number;
+            /** Format: int64 */
+            rembourse: number;
+            /** Format: int32 */
+            rembourses: number;
+        };
         ArticlePaye: {
             nom: string;
             /** Format: int32 */
@@ -2151,6 +2220,23 @@ export interface components {
             /** Format: uuid */
             entrepriseId?: string;
         };
+        DemandeRemboursement: {
+            articles: components["schemas"]["DemandeArticle"][];
+            detail?: string;
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            mode: "ESPECES" | "MOBILE_MONEY" | "CARTE";
+            /** Format: int64 */
+            montant: number;
+            /** @enum {string} */
+            motif: "ERREUR_ENCAISSEMENT" | "ARTICLE_NON_CONFORME" | "ARTICLE_NON_SERVI" | "AUTRE";
+            /** @example FLOOZ */
+            operateur?: string;
+            reference?: string;
+            /** Format: uuid */
+            validationId?: string;
+        };
         DemandeRemise: {
             /** @example Client du quartier */
             detail?: string;
@@ -2359,6 +2445,8 @@ export interface components {
             /** Format: int64 */
             recues: number;
             /** Format: int64 */
+            remboursements: number;
+            /** Format: int64 */
             rendues: number;
             /** Format: int64 */
             retraits: number;
@@ -2411,6 +2499,21 @@ export interface components {
             /** Format: int64 */
             total: number;
         };
+        EtatRemboursement: {
+            articles: components["schemas"]["ArticleARembourser"][];
+            /** Format: uuid */
+            commandeId: string;
+            modes: components["schemas"]["ModeRemboursable"][];
+            /** Format: int32 */
+            numero: number;
+            remboursable: boolean;
+            /** Format: int64 */
+            rembourse: number;
+            remboursements: components["schemas"]["RemboursementResume"][];
+            table?: string;
+            /** Format: int64 */
+            total: number;
+        };
         EvenementActivite: {
             auteurNom?: string;
             critique: boolean;
@@ -2434,7 +2537,7 @@ export interface components {
             /** Format: date-time */
             survenuLe: string;
             /** @enum {string} */
-            type: "TAXE_CREEE" | "TAUX_TAXE_MODIFIE" | "TAXE_DESACTIVEE" | "TAXE_REACTIVEE" | "PRIX_MODIFIE" | "TAXE_PRODUIT_MODIFIEE" | "PRODUIT_DESACTIVE" | "PRODUIT_REACTIVE" | "PRIX_ETABLISSEMENT_MODIFIE" | "PRODUIT_RETIRE_ETABLISSEMENT" | "PRODUIT_PROPOSE_ETABLISSEMENT" | "RUPTURE_DECLAREE" | "RUPTURE_LEVEE" | "ROLES_MODIFIES" | "PIN_REINITIALISE" | "EMPLOYE_DESACTIVE" | "EMPLOYE_REACTIVE" | "TABLETTE_REVOQUEE" | "VALIDATION_GERANT_UTILISEE" | "LIGNE_ANNULEE" | "NOTE_ANNULEE" | "TABLE_TRANSFEREE" | "SERVEUR_CHANGE" | "REMISE_APPLIQUEE" | "ARTICLE_OFFERT" | "REMISE_RETIREE" | "CAISSE_OUVERTE" | "RETRAIT_CAISSE" | "DEPENSE_CAISSE" | "APPORT_CAISSE" | "CLOTURE_CAISSE" | "ECART_CAISSE" | "ECART_OUVERTURE_CAISSE";
+            type: "TAXE_CREEE" | "TAUX_TAXE_MODIFIE" | "TAXE_DESACTIVEE" | "TAXE_REACTIVEE" | "PRIX_MODIFIE" | "TAXE_PRODUIT_MODIFIEE" | "PRODUIT_DESACTIVE" | "PRODUIT_REACTIVE" | "PRIX_ETABLISSEMENT_MODIFIE" | "PRODUIT_RETIRE_ETABLISSEMENT" | "PRODUIT_PROPOSE_ETABLISSEMENT" | "RUPTURE_DECLAREE" | "RUPTURE_LEVEE" | "ROLES_MODIFIES" | "PIN_REINITIALISE" | "EMPLOYE_DESACTIVE" | "EMPLOYE_REACTIVE" | "TABLETTE_REVOQUEE" | "VALIDATION_GERANT_UTILISEE" | "LIGNE_ANNULEE" | "NOTE_ANNULEE" | "TABLE_TRANSFEREE" | "SERVEUR_CHANGE" | "REMISE_APPLIQUEE" | "ARTICLE_OFFERT" | "REMISE_RETIREE" | "CAISSE_OUVERTE" | "RETRAIT_CAISSE" | "DEPENSE_CAISSE" | "APPORT_CAISSE" | "CLOTURE_CAISSE" | "ECART_CAISSE" | "ECART_OUVERTURE_CAISSE" | "REMBOURSEMENT";
         };
         LigneCarteEtablissement: {
             categorie: components["schemas"]["CategorieCarte"];
@@ -2497,6 +2600,15 @@ export interface components {
             /** Format: int32 */
             tauxRemise?: number;
         };
+        ModeRemboursable: {
+            /** @enum {string} */
+            mode: "ESPECES" | "MOBILE_MONEY" | "CARTE";
+            operateur?: string;
+            /** Format: int64 */
+            paye: number;
+            /** Format: int64 */
+            rembourse: number;
+        };
         MouvementResume: {
             approuvePar?: string;
             /** Format: date-time */
@@ -2525,6 +2637,25 @@ export interface components {
             payee: boolean;
             serveur: string;
             table?: string;
+        };
+        NoteEncaissee: {
+            /** @enum {string} */
+            canal: "SUR_PLACE" | "COMPTOIR" | "EMPORTER";
+            clientNom?: string;
+            /** Format: date-time */
+            clotureeLe?: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: date */
+            journee: string;
+            /** Format: int32 */
+            numero: number;
+            payee: boolean;
+            /** Format: int64 */
+            rembourse: number;
+            table?: string;
+            /** Format: int64 */
+            total: number;
         };
         NoteOuverte: {
             /** Format: int32 */
@@ -2693,6 +2824,34 @@ export interface components {
             /** Format: int64 */
             tva: number;
             ventes: components["schemas"]["VentesCaisse"];
+        };
+        RemboursementResume: {
+            approuvePar?: string;
+            articles: components["schemas"]["ArticlePaye"][];
+            detail?: string;
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            mode: "ESPECES" | "MOBILE_MONEY" | "CARTE";
+            /** Format: int64 */
+            montant: number;
+            /** @enum {string} */
+            motif: "ERREUR_ENCAISSEMENT" | "ARTICLE_NON_CONFORME" | "ARTICLE_NON_SERVI" | "AUTRE";
+            operateur?: string;
+            reference?: string;
+            /** Format: date-time */
+            rembourseLe: string;
+            remboursePar: string;
+        };
+        RemboursementsCaisse: {
+            /** Format: int64 */
+            carte: number;
+            /** Format: int64 */
+            especes: number;
+            /** Format: int64 */
+            mobileMoney: number;
+            /** Format: int64 */
+            total: number;
         };
         RemiseNote: {
             detail?: string;
@@ -2889,6 +3048,7 @@ export interface components {
             mobileMoney: number;
             /** Format: int32 */
             notes: number;
+            remboursements: components["schemas"]["RemboursementsCaisse"];
             /** Format: int64 */
             total: number;
         };
@@ -3736,7 +3896,7 @@ export interface operations {
             };
         };
     };
-    etat_1: {
+    etat_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -4115,6 +4275,72 @@ export interface operations {
             };
         };
     };
+    etat_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EtatRemboursement"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    rembourser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeRemboursement"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EtatRemboursement"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
     remiserNote: {
         parameters: {
             query?: never;
@@ -4335,6 +4561,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SituationCaisse"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    notes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteEncaissee"][];
                 };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */

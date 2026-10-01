@@ -29,7 +29,8 @@
     "PRODUIT_INDISPONIBLE": "This product is no longer on this location’s menu. It was not added.",
     "NOTE_NON_VIDE": "This tab has items: it cannot be closed this way.",
     "NOTE_ENTAMEE": "A payment has already been taken on this tab: it can no longer be changed.",
-    "CAISSE_FERMEE": "The till on this tablet is not open. Open it with its float to take payments."
+    "CAISSE_FERMEE": "The till on this tablet is not open. Open it with its float to take payments.",
+    "REMBOURSEMENT_HORS_JOURNEE": "Only today’s bills can be refunded at the till."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Too many failed attempts: the account is locked. Try again in {{duree}}.",
@@ -1072,7 +1073,8 @@
       "APPORT_CAISSE": "<b>{{auteur}}</b> added cash to the till at {{etablissement}}",
       "CLOTURE_CAISSE": "<b>{{auteur}}</b> closed the till at {{etablissement}} (<b>{{objet}}</b>)",
       "ECART_CAISSE": "<b>{{auteur}}</b> closed the till with a difference at {{etablissement}} (<b>{{objet}}</b>)",
-      "ECART_OUVERTURE_CAISSE": "<b>{{auteur}}</b> opened the till with a discrepancy at {{etablissement}}"
+      "ECART_OUVERTURE_CAISSE": "<b>{{auteur}}</b> opened the till with a discrepancy at {{etablissement}}",
+      "REMBOURSEMENT": "<b>{{auteur}}</b> refunded bill <b>{{objet}}</b> at {{etablissement}}"
     },
     "actions": {
       "LIGNE_ANNULER_APRES_ENVOI": "cancel items already sent",
@@ -1100,7 +1102,9 @@
     "mouvementValide": "{{montant}}, reason: {{motif}}. Approved by {{validateur}}",
     "cloture": "Expected {{attendu}}, counted {{compte}}",
     "clotureEcart": "Expected {{attendu}}, counted {{compte}}, difference {{ecart}}: {{explication}}",
-    "ouvertureEcart": "Left {{attendu}}, counted {{compte}}, difference {{ecart}}: {{explication}}"
+    "ouvertureEcart": "Left {{attendu}}, counted {{compte}}, difference {{ecart}}: {{explication}}",
+    "remboursement": "−{{montant}} in {{mode}}, {{ou}}. Reason: {{motif}}.",
+    "remboursementValide": "−{{montant}} in {{mode}}, {{ou}}. Reason: {{motif}}. Approved by {{validateur}}"
   },
   "salles": {
     "titre": "{{etablissement}} areas and tables",
@@ -1282,7 +1286,9 @@
       "titre": "Till sales",
       "notes_one": "{{count}} tab paid",
       "notes_other": "{{count}} tabs paid",
-      "total": "Total taken"
+      "total": "Total taken",
+      "remboursements": "Refunds",
+      "nettes": "Net sales"
     },
     "mouvements": {
       "titre": "Cash movements",
@@ -1309,7 +1315,8 @@
       "retraits": "Withdrawals",
       "depenses": "Expenses",
       "attendu": "Expected",
-      "reserve": "The expected cash is shown to managers only: at closing, the drawer is counted before seeing what is expected."
+      "reserve": "The expected cash is shown to managers only: at closing, the drawer is counted before seeing what is expected.",
+      "remboursements": "Cash refunds"
     },
     "notesOuvertes_one": "{{count}} tab still open at this location.",
     "notesOuvertes_other": "{{count}} tabs still open at this location.",
@@ -1326,6 +1333,11 @@
       "validationContexte": "Till “{{caisse}}”, requested by {{demandeur}}. Reason: {{motif}}.",
       "montantRequis": "Enter the amount.",
       "motifRequis": "Enter the reason."
+    },
+    "vues": {
+      "titre": "Till views",
+      "situation": "Status",
+      "notes": "Paid bills"
     }
   },
   "cloture": {
@@ -1366,8 +1378,73 @@
       "fige": "Frozen: it will not change. History comes with reports, printing with receipts.",
       "terminer": "Done",
       "ventes_one": "Sales collected ({{count}} bill)",
-      "ventes_other": "Sales collected ({{count}} bills)"
+      "ventes_other": "Sales collected ({{count}} bills)",
+      "sections": {
+        "ventes": "Sales",
+        "information": "For information",
+        "tiroir": "Cash in the drawer",
+        "comptage": "Count"
+      }
     },
     "comptage": "Cash count"
+  },
+  "remboursement": {
+    "titre": "Paid bills",
+    "chargement": "Loading paid bills…",
+    "chercher": "Search a bill",
+    "chercherAide": "Bill no., table or customer",
+    "nombre_one": "{{count}} bill paid today",
+    "nombre_other": "{{count}} bills paid today",
+    "vide": {
+      "titre": "No bill paid today",
+      "message": "Bills show up here once paid."
+    },
+    "canaux": {
+      "SUR_PLACE": "Dine in",
+      "COMPTOIR": "Counter",
+      "EMPORTER": "Takeaway"
+    },
+    "rembourseeTotale": "Refunded",
+    "rembourseePartielle": "Partly refunded",
+    "choisir": "Pick a bill to see its details or refund it.",
+    "faits": "Refunds",
+    "badge": "Refunded",
+    "validePar": "Approved by {{nom}}",
+    "horsJournee": "Bill from a past day: refund it from the back office.",
+    "toutRembourse": "Every item on this bill has been refunded.",
+    "rembourser": "Refund",
+    "retour": "Back to the bill",
+    "titreRembourser": "Refund {{note}}",
+    "articles": "Items to refund",
+    "toutLaNote": "Whole bill",
+    "surLaNote_one": "{{count}} paid, {{rembourses}} refunded",
+    "surLaNote_other": "{{count}} paid, {{rembourses}} refunded",
+    "aRembourser": "To refund",
+    "mode": "Give the money back in",
+    "aideEspeces": "Out of the till, {{montant}} at most",
+    "aidePaye": "Sent back to the customer, {{montant}} at most",
+    "referenceRetour": "Reference of the return transfer",
+    "referenceCarte": "Card terminal void reference (optional)",
+    "motif": "Reason",
+    "motifs": {
+      "ERREUR_ENCAISSEMENT": "Payment error",
+      "ARTICLE_NON_CONFORME": "Faulty item",
+      "ARTICLE_NON_SERVI": "Item not served",
+      "AUTRE": "Other"
+    },
+    "detail": "Specify the reason",
+    "manques": {
+      "pour": "To refund: {{liste}}.",
+      "articles": "pick the items",
+      "plafond": "at most {{montant}} in this mode",
+      "motif": "pick the reason",
+      "detail": "specify the reason",
+      "transfert": "operator and transfer reference"
+    },
+    "trace": "Logged as a critical action; in cash, it comes out of the till’s expected amount.",
+    "valider": "Refund {{montant}} in {{mode}}",
+    "validationTitre": "Refund {{montant}} in {{mode}}?",
+    "validationContexte": "{{note}}, requested by {{demandeur}}. Reason: {{motif}}.",
+    "chargementNote": "Loading the bill…"
   }
 }

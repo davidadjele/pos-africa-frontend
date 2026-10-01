@@ -27,9 +27,27 @@ const OUVERTURE = {
   ouvertePar: 'Afi M.',
   ouverteLe: '2026-09-29T07:02:00Z',
 }
+const AUCUN_REMBOURSEMENT = { total: 0, especes: 0, mobileMoney: 0, carte: 0 }
+const ESPECES = {
+  fond: 20_000,
+  recues: 10_000,
+  rendues: 4300,
+  remboursements: 0,
+  apports: 0,
+  retraits: 10_000,
+  depenses: 0,
+  attendu: 15_700,
+}
 const SITUATION: SituationCaisse = {
   ouverture: OUVERTURE,
-  ventes: { notes: 2, especes: 5700, mobileMoney: 2400, carte: 0, total: 8100 },
+  ventes: {
+    notes: 2,
+    especes: 5700,
+    mobileMoney: 2400,
+    carte: 0,
+    total: 8100,
+    remboursements: AUCUN_REMBOURSEMENT,
+  },
   mouvements: [
     {
       id: 'b0b00000-0000-4000-8000-000000000001',
@@ -40,15 +58,8 @@ const SITUATION: SituationCaisse = {
       effectueLe: '2026-09-29T15:30:00Z',
     },
   ],
-  especes: {
-    fond: 20_000,
-    recues: 10_000,
-    rendues: 4300,
-    apports: 0,
-    retraits: 10_000,
-    depenses: 0,
-    attendu: 15_700,
-  },
+  especes: ESPECES,
+
   notesOuvertes: 1,
 }
 const Z: RapportZ = {
@@ -56,7 +67,10 @@ const Z: RapportZ = {
   ouverteLe: '2026-09-29T07:02:00Z',
   clotureeLe: '2026-09-29T23:14:00Z',
   clotureePar: 'Yawa T.',
-  ventes: SITUATION.ventes,
+  ventes: {
+    ...SITUATION.ventes,
+    remboursements: { total: 2600, especes: 1100, mobileMoney: 1500, carte: 0 },
+  },
   remises: 0,
   annulations: 0,
   articlesAnnules: 0,
@@ -65,6 +79,7 @@ const Z: RapportZ = {
     fond: 20_000,
     recues: 10_000,
     rendues: 4300,
+    remboursements: 0,
     apports: 0,
     retraits: 10_000,
     depenses: 0,
@@ -121,6 +136,34 @@ describe('Caisse de la tablette', () => {
     const especes = screen.getByRole('region', { name: 'Espèces dans le tiroir' })
     expect(especes).toHaveTextContent('Attendu15 700 F')
     expect(screen.getByText('1 note encore ouverte dans l’établissement.')).toBeVisible()
+  })
+
+  it('déduit les remboursements des ventes et, en espèces, de l’attendu', async () => {
+    tiroirServi({
+      ...SITUATION,
+      ventes: {
+        ...SITUATION.ventes,
+        remboursements: { total: 4500, especes: 4500, mobileMoney: 0, carte: 0 },
+      },
+      especes: { ...ESPECES, remboursements: 4500, attendu: 11_200 },
+    })
+    caisseOuverte('/caisse/tiroir', { permissions: GERANT })
+
+    const ventes = await screen.findByRole('region', { name: 'Ventes de la caisse' })
+    expect(ventes).toHaveTextContent('Remboursements−4 500')
+    expect(ventes).toHaveTextContent('Ventes nettes3 600 F')
+    expect(ventes).toHaveTextContent('dont espèces4 500')
+    expect(screen.getByRole('region', { name: 'Espèces dans le tiroir' })).toHaveTextContent(
+      'Remboursements en espèces−4 500',
+    )
+  })
+
+  it('renvoie au plan de salle un serveur qui prend la tablette sur l’écran de la caisse', async () => {
+    tiroirServi()
+    caisseOuverte('/caisse/tiroir', { permissions: ['COMMANDE_CREER'] })
+
+    expect(await screen.findByRole('list', { name: 'Tables' })).toBeVisible()
+    expect(screen.queryByRole('region', { name: 'Ventes de la caisse' })).not.toBeInTheDocument()
   })
 
   it('cache les espèces attendues au caissier', async () => {
@@ -216,6 +259,14 @@ describe('Caisse de la tablette', () => {
 
     const z = await screen.findByRole('region', { name: 'Rapport Z n°12' })
     expect(z).toHaveTextContent('Écart−700')
+    // Une section par question : combien vendu, pour information, le tiroir, le comptage.
+    for (const section of ['Ventes', 'Pour information', 'Espèces du tiroir', 'Comptage']) {
+      expect(within(z).getByRole('heading', { name: section })).toBeVisible()
+    }
+    expect(z).toHaveTextContent('Remboursements−2 600')
+    expect(z).toHaveTextContent('dont espèces1 100')
+    expect(z).toHaveTextContent('dont Mobile Money1 500')
+    expect(z).toHaveTextContent('Ventes nettes5 500')
     // L'attendu s'explique sur le Z lui-même : fond, espèces reçues et rendues, mouvements.
     expect(z).toHaveTextContent('Fond de caisse20 000')
     expect(z).toHaveTextContent('Monnaie rendue−4 300')

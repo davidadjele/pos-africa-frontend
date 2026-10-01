@@ -1,8 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/react-router'
+import { Navigate, useNavigate } from '@tanstack/react-router'
 import { clsx } from 'clsx'
 import { ArrowLeft, Lock, Plus, RotateCw } from 'lucide-react'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appelerCaisse } from '../../partage/api/appelerCaisse'
 import { ErreurApi } from '../../partage/api/ErreurApi'
@@ -12,6 +12,7 @@ import type {
   EspecesCaisse,
   MouvementResume,
   RapportZ,
+  RemboursementsCaisse,
   ResultatComptage,
   SituationCaisse,
   TypeMouvement,
@@ -30,6 +31,7 @@ import { useValidation } from '../commande/useValidation'
 import { requeteAppareil } from '../tablette/requetes'
 import { EtapeComptage, ResultatEcart, useComptage } from './Comptage'
 import { OuvertureCaisse } from './EcranEncaissement'
+import { NotesEncaissees } from './NotesEncaissees'
 import { requeteOuvertureCaisse } from './requetes'
 
 const TYPES: TypeMouvement[] = ['RETRAIT', 'DEPENSE', 'APPORT']
@@ -51,6 +53,19 @@ export const requeteSituation = {
  * et sa clôture. Les espèces attendues ne se montrent qu'au gérant : le caissier compte à l'aveugle.
  */
 export function EcranTiroir() {
+  const permissions = useSessionCaisse()?.permissions
+  // La tablette reste sur l'écran courant quand on change d'utilisateur : un serveur n'a rien à faire ici.
+  if (
+    permissions !== undefined &&
+    !permissions.includes('PAIEMENT_ENCAISSER') &&
+    !permissions.includes('CAISSE_FERMER')
+  ) {
+    return <Navigate to="/caisse" />
+  }
+  return <Tiroir />
+}
+
+function Tiroir() {
   const { t } = useTranslation()
   const naviguer = useNavigate()
   const clientRequetes = useQueryClient()
@@ -62,6 +77,7 @@ export function EcranTiroir() {
   const situation = useQuery(requeteSituation)
   const caisse = useQuery(requeteOuvertureCaisse)
   const [etape, setEtape] = useState<'situation' | 'mouvement' | 'cloture'>('situation')
+  const [vue, setVue] = useState<'situation' | 'notes'>('situation')
   const nomCaisse = appareil?.nom ?? ''
   const retour = (
     <Bouton icone={ArrowLeft} onClick={() => void naviguer({ to: '/caisse' })}>
@@ -145,7 +161,7 @@ export function EcranTiroir() {
             })}
           </span>
         </span>
-        <span className="flex gap-2 [&>*]:flex-1 md:[&>*]:flex-none">
+        <span className="flex flex-col gap-2 sm:flex-row md:[&>*]:flex-none">
           {permissions.includes('PAIEMENT_ENCAISSER') && (
             <Bouton
               icone={Plus}
@@ -169,66 +185,101 @@ export function EcranTiroir() {
           )}
         </span>
       </div>
-      <div className="flex flex-col gap-3 lg:min-h-0 lg:flex-1 lg:flex-row">
-        <section
-          aria-label={t('tiroir.ventes.titre')}
-          className="flex min-w-0 flex-1 flex-col gap-1 rounded-moyen lg:overflow-y-auto border border-trait bg-surface p-5"
-        >
-          <h2 className="m-0 text-titre-carte text-encre">{t('tiroir.ventes.titre')}</h2>
-          <span className="text-legende text-attenue">
-            {t('tiroir.ventes.notes', { count: ventes.notes })}
-          </span>
-          <Montant libelle={t('encaissement.modes.ESPECES')} valeur={nombre(ventes.especes)} />
-          <Montant
-            libelle={t('encaissement.modes.MOBILE_MONEY')}
-            valeur={nombre(ventes.mobileMoney)}
-          />
-          <Montant libelle={t('encaissement.modes.CARTE')} valeur={nombre(ventes.carte)} />
-          <span className="mt-1 flex items-baseline justify-between border-t border-encre pt-2">
-            <span className="text-corps-fort text-encre">{t('tiroir.ventes.total')}</span>
-            <span className="chiffres text-montant-total text-encre">{courte(ventes.total)}</span>
-          </span>
-          <h2 className="m-0 mt-5 text-titre-carte text-encre">{t('tiroir.mouvements.titre')}</h2>
-          {mouvements.length === 0 ? (
-            <p className="m-0 text-corps text-attenue">{t('tiroir.mouvements.aucun')}</p>
-          ) : (
-            <ul className="m-0 list-none p-0">
-              {mouvements.map((mouvement) => (
-                <LigneMouvement
-                  key={mouvement.id}
-                  mouvement={mouvement}
-                  devise={devise}
-                  fuseauHoraire={fuseauHoraire}
-                />
-              ))}
-            </ul>
-          )}
-          {notesOuvertes > 0 && (
-            <p className="m-0 mt-4 text-legende text-attenue">
-              {t('tiroir.notesOuvertes', { count: notesOuvertes })}
-            </p>
-          )}
-        </section>
-        {especes === undefined ? (
-          <p className="m-0 rounded-moyen border border-trait bg-surface p-5 text-corps text-attenue lg:w-ticket-largeur">
-            {t('tiroir.especes.reserve')}
-          </p>
-        ) : (
-          <section
-            aria-label={t('tiroir.especes.titre')}
-            className="flex shrink-0 flex-col gap-1 rounded-moyen border border-trait bg-surface p-5 lg:w-ticket-largeur"
+      <div role="tablist" aria-label={t('tiroir.vues.titre')} className="flex gap-2">
+        {(['situation', 'notes'] as const).map((candidat) => (
+          <button
+            key={candidat}
+            type="button"
+            role="tab"
+            aria-selected={vue === candidat}
+            onClick={() => {
+              setVue(candidat)
+            }}
+            className={clsx(
+              'min-h-cible-min rounded-normal bg-surface px-4 text-corps text-encre',
+              vue === candidat ? 'border-2 border-accent font-bold' : 'border border-trait',
+            )}
           >
-            <h2 className="m-0 text-titre-carte text-encre">{t('tiroir.especes.titre')}</h2>
-            <DetailEspeces especes={especes} nombre={nombre} />
+            {t(`tiroir.vues.${candidat}`)}
+          </button>
+        ))}
+      </div>
+      {vue === 'notes' ? (
+        <NotesEncaissees devise={devise} fuseauHoraire={fuseauHoraire} />
+      ) : (
+        <div className="flex flex-col gap-3 lg:min-h-0 lg:flex-1 lg:flex-row">
+          <section
+            aria-label={t('tiroir.ventes.titre')}
+            className="flex min-w-0 flex-1 flex-col gap-1 rounded-moyen lg:overflow-y-auto border border-trait bg-surface p-5"
+          >
+            <h2 className="m-0 text-titre-carte text-encre">{t('tiroir.ventes.titre')}</h2>
+            <span className="text-legende text-attenue">
+              {t('tiroir.ventes.notes', { count: ventes.notes })}
+            </span>
+            <Montant libelle={t('encaissement.modes.ESPECES')} valeur={nombre(ventes.especes)} />
+            <Montant
+              libelle={t('encaissement.modes.MOBILE_MONEY')}
+              valeur={nombre(ventes.mobileMoney)}
+            />
+            <Montant libelle={t('encaissement.modes.CARTE')} valeur={nombre(ventes.carte)} />
+            {ventes.remboursements.total > 0 && (
+              <>
+                <Montant libelle={t('tiroir.ventes.total')} valeur={nombre(ventes.total)} />
+                <LignesRemboursements remboursements={ventes.remboursements} nombre={nombre} />
+              </>
+            )}
             <span className="mt-1 flex items-baseline justify-between border-t border-encre pt-2">
-              <span className="text-corps-fort text-encre">{t('tiroir.especes.attendu')}</span>
+              <span className="text-corps-fort text-encre">
+                {t(
+                  ventes.remboursements.total > 0 ? 'tiroir.ventes.nettes' : 'tiroir.ventes.total',
+                )}
+              </span>
               <span className="chiffres text-montant-total text-encre">
-                {courte(especes.attendu)}
+                {courte(ventes.total - ventes.remboursements.total)}
               </span>
             </span>
+            <h2 className="m-0 mt-5 text-titre-carte text-encre">{t('tiroir.mouvements.titre')}</h2>
+            {mouvements.length === 0 ? (
+              <p className="m-0 text-corps text-attenue">{t('tiroir.mouvements.aucun')}</p>
+            ) : (
+              <ul className="m-0 list-none p-0">
+                {mouvements.map((mouvement) => (
+                  <LigneMouvement
+                    key={mouvement.id}
+                    mouvement={mouvement}
+                    devise={devise}
+                    fuseauHoraire={fuseauHoraire}
+                  />
+                ))}
+              </ul>
+            )}
+            {notesOuvertes > 0 && (
+              <p className="m-0 mt-4 text-legende text-attenue">
+                {t('tiroir.notesOuvertes', { count: notesOuvertes })}
+              </p>
+            )}
           </section>
-        )}
-      </div>
+          {especes === undefined ? (
+            <p className="m-0 rounded-moyen border border-trait bg-surface p-5 text-corps text-attenue lg:w-ticket-largeur">
+              {t('tiroir.especes.reserve')}
+            </p>
+          ) : (
+            <section
+              aria-label={t('tiroir.especes.titre')}
+              className="flex shrink-0 flex-col gap-1 rounded-moyen border border-trait bg-surface p-5 lg:w-ticket-largeur"
+            >
+              <h2 className="m-0 text-titre-carte text-encre">{t('tiroir.especes.titre')}</h2>
+              <DetailEspeces especes={especes} nombre={nombre} />
+              <span className="mt-1 flex items-baseline justify-between border-t border-encre pt-2">
+                <span className="text-corps-fort text-encre">{t('tiroir.especes.attendu')}</span>
+                <span className="chiffres text-montant-total text-encre">
+                  {courte(especes.attendu)}
+                </span>
+              </span>
+            </section>
+          )}
+        </div>
+      )}
       {etape === 'mouvement' && (
         <DialogueMouvement
           ouvertureId={ouverture.id}
@@ -253,6 +304,53 @@ function signe(prefixe: '+' | '−', valeur: number, nombre: (valeur: number) =>
   return valeur === 0 ? nombre(0) : `${prefixe}${nombre(valeur)}`
 }
 
+/** Une partie du rapport Z, sous son titre : chaque partie répond à une seule question. */
+function SectionZ({ titre, children }: Readonly<{ titre: string; children: ReactNode }>) {
+  return (
+    <div className="mt-3 flex flex-col border-t border-trait pt-3">
+      <h2 className="m-0 mb-1 text-libelle font-bold uppercase tracking-wide text-attenue">
+        {titre}
+      </h2>
+      {children}
+    </div>
+  )
+}
+
+/**
+ * Les remboursements, puis leur détail par mode : tous réduisent les ventes, seuls ceux en espèces sortent du
+ * tiroir.
+ */
+function LignesRemboursements({
+  remboursements,
+  nombre,
+}: Readonly<{ remboursements: RemboursementsCaisse; nombre: (valeur: number) => string }>) {
+  const { t } = useTranslation()
+  if (remboursements.total === 0) return null
+  const parMode = [
+    ['ESPECES', remboursements.especes],
+    ['MOBILE_MONEY', remboursements.mobileMoney],
+    ['CARTE', remboursements.carte],
+  ] as const
+  return (
+    <>
+      <Montant
+        libelle={t('tiroir.ventes.remboursements')}
+        valeur={signe('−', remboursements.total, nombre)}
+      />
+      {parMode
+        .filter(([, montant]) => montant > 0)
+        .map(([mode, montant]) => (
+          <Montant
+            key={mode}
+            retrait
+            libelle={t('cloture.z.dontMode', { mode: t(`encaissement.modesEn.${mode}`) })}
+            valeur={nombre(montant)}
+          />
+        ))}
+    </>
+  )
+}
+
 /** D'où vient l'attendu : le même détail sur l'écran de la caisse et sur le rapport Z. */
 function DetailEspeces({
   especes,
@@ -264,6 +362,12 @@ function DetailEspeces({
       <Montant libelle={t('tiroir.especes.fond')} valeur={nombre(especes.fond)} />
       <Montant libelle={t('tiroir.especes.recues')} valeur={signe('+', especes.recues, nombre)} />
       <Montant libelle={t('tiroir.especes.rendues')} valeur={signe('−', especes.rendues, nombre)} />
+      {especes.remboursements > 0 && (
+        <Montant
+          libelle={t('tiroir.especes.remboursements')}
+          valeur={signe('−', especes.remboursements, nombre)}
+        />
+      )}
       <Montant libelle={t('tiroir.especes.apports')} valeur={signe('+', especes.apports, nombre)} />
       <Montant
         libelle={t('tiroir.especes.retraits')}
@@ -277,9 +381,15 @@ function DetailEspeces({
   )
 }
 
-function Montant({ libelle, valeur }: Readonly<{ libelle: string; valeur: string }>) {
+function Montant({
+  libelle,
+  valeur,
+  retrait = false,
+}: Readonly<{ libelle: string; valeur: string; retrait?: boolean }>) {
   return (
-    <span className="flex justify-between gap-3 py-1 text-corps text-attenue">
+    <span
+      className={clsx('flex justify-between gap-3 py-1 text-corps text-attenue', retrait && 'pl-4')}
+    >
       <span>{libelle}</span>
       <span className="chiffres text-encre">{valeur}</span>
     </span>
@@ -648,42 +758,56 @@ function RapportDeCloture({
           nom: rapport.clotureePar,
         })}
       </span>
-      <div className="mt-2.5">
+      <SectionZ titre={t('cloture.z.sections.ventes')}>
         <Montant
           libelle={t('cloture.z.ventes', { count: rapport.ventes.notes })}
           valeur={nombre(rapport.ventes.total)}
         />
-        <Montant
-          libelle={t('cloture.z.dontMode', { mode: t('encaissement.modesEn.ESPECES') })}
-          valeur={nombre(rapport.ventes.especes)}
-        />
-        <Montant
-          libelle={t('cloture.z.dontMode', { mode: t('encaissement.modesEn.MOBILE_MONEY') })}
-          valeur={nombre(rapport.ventes.mobileMoney)}
-        />
-        <Montant
-          libelle={t('cloture.z.dontMode', { mode: t('encaissement.modesEn.CARTE') })}
-          valeur={nombre(rapport.ventes.carte)}
-        />
+        {(['ESPECES', 'MOBILE_MONEY', 'CARTE'] as const).map((mode) => (
+          <Montant
+            key={mode}
+            retrait
+            libelle={t('cloture.z.dontMode', { mode: t(`encaissement.modesEn.${mode}`) })}
+            valeur={nombre(
+              mode === 'ESPECES'
+                ? rapport.ventes.especes
+                : mode === 'MOBILE_MONEY'
+                  ? rapport.ventes.mobileMoney
+                  : rapport.ventes.carte,
+            )}
+          />
+        ))}
+        <LignesRemboursements remboursements={rapport.ventes.remboursements} nombre={nombre} />
+        <span className="mt-1 flex justify-between gap-3 border-t border-trait pt-1.5 text-corps-fort text-encre">
+          <span>{t('tiroir.ventes.nettes')}</span>
+          <span className="chiffres">
+            {nombre(rapport.ventes.total - rapport.ventes.remboursements.total)}
+          </span>
+        </span>
+      </SectionZ>
+      <SectionZ titre={t('cloture.z.sections.information')}>
         <Montant libelle={t('cloture.z.remises')} valeur={signe('−', rapport.remises, nombre)} />
         <Montant
           libelle={t('cloture.z.annulations', { nombre: rapport.articlesAnnules })}
           valeur={signe('−', rapport.annulations, nombre)}
         />
         <Montant libelle={t('cloture.z.tva')} valeur={nombre(rapport.tva)} />
-      </div>
-      <div className="border-t border-trait pt-2">
+      </SectionZ>
+      <SectionZ titre={t('cloture.z.sections.tiroir')}>
         <DetailEspeces especes={rapport.especes} nombre={nombre} />
-      </div>
-      <div className="border-t border-encre pt-2">
-        <Montant libelle={t('cloture.z.attendu')} valeur={nombre(rapport.especes.attendu)} />
+        <span className="mt-1 flex justify-between gap-3 border-t border-trait pt-1.5 text-corps-fort text-encre">
+          <span>{t('cloture.z.attendu')}</span>
+          <span className="chiffres">{nombre(rapport.especes.attendu)}</span>
+        </span>
+      </SectionZ>
+      <SectionZ titre={t('cloture.z.sections.comptage')}>
         <Montant libelle={t('cloture.z.compte')} valeur={nombre(rapport.compte)} />
         <Montant
           libelle={t('cloture.z.ecart')}
           valeur={`${rapport.ecart > 0 ? '+' : rapport.ecart < 0 ? '−' : ''}${nombre(Math.abs(rapport.ecart))}`}
         />
         <Montant libelle={t('cloture.z.fondLaisse')} valeur={nombre(rapport.fondLaisse)} />
-      </div>
+      </SectionZ>
       <p className="m-0 mt-2 text-legende text-attenue">{t('cloture.z.fige')}</p>
       <Bouton variante="principal" className="mt-2 min-h-cible-caisse" onClick={surTermine}>
         {t('cloture.z.terminer')}

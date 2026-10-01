@@ -229,4 +229,27 @@ describe('description de l’activité', () => {
       `Laissé 20${FINE}000${INSEC}F, compté 15${FINE}000${INSEC}F, écart −5${FINE}000${INSEC}F : Monnaie prêtée au bar`,
     )
   })
+
+  it('détaille un remboursement : montant, mode, note, motif et validation', () => {
+    expect(
+      detailActivite(
+        evenement({
+          type: 'REMBOURSEMENT',
+          domaine: 'CAISSE',
+          details: {
+            montant: 4500,
+            mode: 'ESPECES',
+            motif: 'ARTICLE_NON_CONFORME',
+            numero: 42,
+            table: 'T4',
+          },
+          detailsNoms: { validateurId: 'Afi M.' },
+        }),
+        t,
+        CONTEXTE,
+      ),
+    ).toBe(
+      `−4${FINE}500${INSEC}F en espèces, T4, n°42. Motif : Article non conforme. Validé par Afi M.`,
+    )
+  })
 })

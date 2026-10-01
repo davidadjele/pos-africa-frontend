@@ -112,6 +112,22 @@ export function detailActivite(
     case 'CLOTURE_CAISSE':
     case 'ECART_CAISSE':
       return cloture(evenement, t, montant)
+    case 'REMBOURSEMENT': {
+      const { mode, motif, detail } = evenement.details
+      const valeurs = {
+        montant: montant(evenement.details.montant),
+        mode: t(`encaissement.modesEn.${texte(mode) || 'ESPECES'}`),
+        ou: ou(evenement, t),
+        motif:
+          motif === 'AUTRE' && typeof detail === 'string'
+            ? detail
+            : t(`remboursement.motifs.${texte(motif) || 'AUTRE'}`),
+      }
+      const validateur = evenement.detailsNoms.validateurId
+      return validateur === undefined
+        ? t('activite.remboursement', valeurs)
+        : t('activite.remboursementValide', { ...valeurs, validateur })
+    }
     case 'ECART_OUVERTURE_CAISSE': {
       const { attendu, fond, ecart, explication } = evenement.details
       return t('activite.ouvertureEcart', {

@@ -1,6 +1,6 @@
 import type { TFunction } from 'i18next'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from '@tanstack/react-router'
+import { Navigate, useNavigate } from '@tanstack/react-router'
 import { clsx } from 'clsx'
 import { ArrowLeft, Delete, RotateCw } from 'lucide-react'
 import { useState } from 'react'
@@ -21,16 +21,18 @@ import type {
 import { formaterHeure } from '../../partage/dates/formaterDate'
 import { formaterMontant, symboleDe, type Devise } from '../../partage/montants/formaterMontant'
 import { lireMontant } from '../../partage/montants/lireMontant'
-import { montantArticles, partsAVenir, totalSelection } from '../../partage/montants/partage'
+import { partsAVenir, totalSelection } from '../../partage/montants/partage'
 import { formaterTaux } from '../../partage/montants/taxes'
 import { AlerteErreur } from '../../partage/ui/Alerte'
 import { BadgeStatut } from '../../partage/ui/BadgeStatut'
 import { Bouton } from '../../partage/ui/Bouton'
 import { ChampSaisie } from '../../partage/ui/ChampSaisie'
 import { Chargement } from '../../partage/ui/Chargement'
+import { Compteur } from '../../partage/ui/Compteur'
 import { useSessionCaisse } from '../caisse/requetes'
 import { requeteCommande, requetePlan } from '../commande/requetes'
 import { requeteAppareil } from '../tablette/requetes'
+import { ChoixArticles, ChoixOperateur } from './ChoixArticles'
 import { EtapeComptage, ResultatEcart, useComptage } from './Comptage'
 import { requeteEncaissement, requeteOuvertureCaisse } from './requetes'
 
@@ -43,6 +45,15 @@ const PALIERS = [1000, 2000, 5000, 10_000, 20_000]
  * tablette : renvoyé après un réseau coupé, il n'est pas compté deux fois.
  */
 export function EcranEncaissement({ commandeId }: Readonly<{ commandeId: string }>) {
+  const permissions = useSessionCaisse()?.permissions
+  // Après un changement d'utilisateur, qui n'encaisse pas retrouve la note qu'il peut consulter.
+  if (permissions !== undefined && !permissions.includes('PAIEMENT_ENCAISSER')) {
+    return <Navigate to="/caisse/notes/$commandeId" params={{ commandeId }} />
+  }
+  return <Encaissement commandeId={commandeId} />
+}
+
+function Encaissement({ commandeId }: Readonly<{ commandeId: string }>) {
   const { t } = useTranslation()
   const clientRequetes = useQueryClient()
   const naviguer = useNavigate()
@@ -452,10 +463,24 @@ function Paiement({
           />
         )}
         {partage === 'articles' && (
-          <ArticlesAPayer
-            etat={etat}
+          <ChoixArticles
+            articles={etat.articles}
             selection={selection}
             devise={devise}
+            libelles={{
+              titre: t('encaissement.partage.ceQuePaie'),
+              liste: t('encaissement.partage.articlesListe'),
+              tout: t('encaissement.partage.toutLeReste'),
+              total: t('encaissement.partage.selection'),
+              regle: t('encaissement.paye'),
+              tonRegle: 'succes',
+            }}
+            sousTitre={(article) =>
+              t('encaissement.partage.surLaNote', {
+                count: article.quantite,
+                payees: article.payees,
+              })
+            }
             surChanger={setSelection}
           />
         )}
@@ -565,31 +590,7 @@ function Paiement({
         )}
         {mode === 'MOBILE_MONEY' && (
           <>
-            <div
-              role="radiogroup"
-              aria-label={t('encaissement.operateur')}
-              className="grid grid-cols-2 gap-2"
-            >
-              {operateurs.map((candidat) => (
-                <button
-                  key={candidat.code}
-                  type="button"
-                  role="radio"
-                  aria-checked={operateur === candidat.code}
-                  onClick={() => {
-                    setOperateur(candidat.code)
-                  }}
-                  className={clsx(
-                    'min-h-cible-caisse rounded-normal bg-surface px-3 text-corps text-encre',
-                    operateur === candidat.code
-                      ? 'border-2 border-accent font-bold'
-                      : 'border border-bordure-controle',
-                  )}
-                >
-                  {candidat.libelle}
-                </button>
-              ))}
-            </div>
+            <ChoixOperateur operateurs={operateurs} valeur={operateur} surChoisir={setOperateur} />
             <ChampSaisie
               libelle={t('encaissement.reference')}
               obligatoire
@@ -725,136 +726,6 @@ function LignePart({
       </BadgeStatut>
       <span className="chiffres ml-auto text-montant-ligne text-encre">{montant}</span>
     </li>
-  )
-}
-
-function ArticlesAPayer({
-  etat,
-  selection,
-  devise,
-  surChanger,
-}: Readonly<{
-  etat: EtatEncaissement
-  selection: Record<string, number>
-  devise: Devise
-  surChanger: (selection: Record<string, number>) => void
-}>) {
-  const { t } = useTranslation()
-  const nombre = (valeur: number) =>
-    formaterMontant({ unitesMineures: valeur, devise }, { forme: 'nombre' })
-  const restants = (article: EtatEncaissement['articles'][number]) =>
-    article.quantite - article.payees
-  return (
-    <div className="flex flex-col rounded-moyen border border-trait">
-      <div className="flex items-center justify-between gap-3 border-b border-trait px-3 py-2">
-        <span className="text-corps-fort text-encre">{t('encaissement.partage.ceQuePaie')}</span>
-        <Bouton
-          onClick={() => {
-            surChanger(
-              Object.fromEntries(
-                etat.articles.map((article) => [article.ligneId, restants(article)]),
-              ),
-            )
-          }}
-        >
-          {t('encaissement.partage.toutLeReste')}
-        </Bouton>
-      </div>
-      <ul aria-label={t('encaissement.partage.articlesListe')} className="m-0 list-none p-0">
-        {etat.articles.map((article) => {
-          const choisies = selection[article.ligneId] ?? 0
-          return (
-            <li
-              key={article.ligneId}
-              className="flex flex-wrap items-center gap-3 border-b border-trait px-3 py-2 last:border-b-0"
-            >
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="text-corps-fort text-encre">{article.nom}</span>
-                <span className="text-legende text-attenue">
-                  {t('encaissement.partage.surLaNote', {
-                    count: article.quantite,
-                    payees: article.payees,
-                  })}
-                </span>
-              </span>
-              {restants(article) === 0 ? (
-                <BadgeStatut ton="succes">{t('encaissement.paye')}</BadgeStatut>
-              ) : (
-                <Compteur
-                  valeur={choisies}
-                  libelleMoins={t('encaissement.partage.unDeMoins', { nom: article.nom })}
-                  libellePlus={t('encaissement.partage.unDePlus', { nom: article.nom })}
-                  moinsPossible={choisies > 0}
-                  plusPossible={choisies < restants(article)}
-                  surChanger={(valeur) => {
-                    surChanger({ ...selection, [article.ligneId]: valeur })
-                  }}
-                />
-              )}
-              <span className="chiffres w-20 text-right text-montant-ligne text-encre">
-                {choisies === 0 ? '' : nombre(montantArticles(article, choisies))}
-              </span>
-            </li>
-          )
-        })}
-      </ul>
-      <div className="flex items-baseline justify-between border-t border-trait px-3 py-2">
-        <span className="text-corps-fort text-encre">{t('encaissement.partage.selection')}</span>
-        <output
-          aria-label={t('encaissement.partage.selection')}
-          className="chiffres text-montant-total text-encre"
-        >
-          {formaterMontant(
-            { unitesMineures: totalSelection(etat.articles, selection), devise },
-            { forme: 'courte' },
-          )}
-        </output>
-      </div>
-    </div>
-  )
-}
-
-function Compteur({
-  valeur,
-  libelleMoins,
-  libellePlus,
-  moinsPossible,
-  plusPossible,
-  surChanger,
-}: Readonly<{
-  valeur: number
-  libelleMoins: string
-  libellePlus: string
-  moinsPossible: boolean
-  plusPossible: boolean
-  surChanger: (valeur: number) => void
-}>) {
-  return (
-    <span className="flex items-center rounded-normal border border-trait">
-      <button
-        type="button"
-        aria-label={libelleMoins}
-        disabled={!moinsPossible}
-        onClick={() => {
-          surChanger(valeur - 1)
-        }}
-        className="size-cible-min text-titre-section text-attenue disabled:opacity-40"
-      >
-        −
-      </button>
-      <span className="chiffres min-w-10 text-center text-montant-ligne text-encre">{valeur}</span>
-      <button
-        type="button"
-        aria-label={libellePlus}
-        disabled={!plusPossible}
-        onClick={() => {
-          surChanger(valeur + 1)
-        }}
-        className="size-cible-min text-titre-section text-attenue disabled:opacity-40"
-      >
-        +
-      </button>
-    </span>
   )
 }
 

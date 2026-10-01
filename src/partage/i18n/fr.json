@@ -29,7 +29,8 @@
     "PRODUIT_INDISPONIBLE": "Ce produit n’est plus à la carte de cet établissement. Il n’a pas été ajouté.",
     "NOTE_NON_VIDE": "Cette note contient des articles : elle ne peut pas être fermée ainsi.",
     "NOTE_ENTAMEE": "Un paiement a déjà été encaissé sur cette note : elle ne se modifie plus.",
-    "CAISSE_FERMEE": "La caisse de cette tablette n’est pas ouverte. Ouvrez-la avec son fond pour encaisser."
+    "CAISSE_FERMEE": "La caisse de cette tablette n’est pas ouverte. Ouvrez-la avec son fond pour encaisser.",
+    "REMBOURSEMENT_HORS_JOURNEE": "Seules les notes de la journée en cours se remboursent à la caisse."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Trop d’essais infructueux : le compte est verrouillé. Réessayez dans {{duree}}.",
@@ -1072,7 +1073,8 @@
       "APPORT_CAISSE": "<b>{{auteur}}</b> a ajouté des espèces à la caisse à {{etablissement}}",
       "CLOTURE_CAISSE": "<b>{{auteur}}</b> a clôturé la caisse à {{etablissement}} (<b>{{objet}}</b>)",
       "ECART_CAISSE": "<b>{{auteur}}</b> a clôturé la caisse avec un écart à {{etablissement}} (<b>{{objet}}</b>)",
-      "ECART_OUVERTURE_CAISSE": "<b>{{auteur}}</b> a ouvert la caisse avec un écart à {{etablissement}}"
+      "ECART_OUVERTURE_CAISSE": "<b>{{auteur}}</b> a ouvert la caisse avec un écart à {{etablissement}}",
+      "REMBOURSEMENT": "<b>{{auteur}}</b> a remboursé la note <b>{{objet}}</b> à {{etablissement}}"
     },
     "actions": {
       "LIGNE_ANNULER_APRES_ENVOI": "annuler des articles envoyés",
@@ -1100,7 +1102,9 @@
     "mouvementValide": "{{montant}}, motif : {{motif}}. Validé par {{validateur}}",
     "cloture": "Attendu {{attendu}}, compté {{compte}}",
     "clotureEcart": "Attendu {{attendu}}, compté {{compte}}, écart {{ecart}} : {{explication}}",
-    "ouvertureEcart": "Laissé {{attendu}}, compté {{compte}}, écart {{ecart}} : {{explication}}"
+    "ouvertureEcart": "Laissé {{attendu}}, compté {{compte}}, écart {{ecart}} : {{explication}}",
+    "remboursement": "−{{montant}} en {{mode}}, {{ou}}. Motif : {{motif}}.",
+    "remboursementValide": "−{{montant}} en {{mode}}, {{ou}}. Motif : {{motif}}. Validé par {{validateur}}"
   },
   "salles": {
     "titre": "Salles et tables de {{etablissement}}",
@@ -1282,7 +1286,9 @@
       "titre": "Ventes de la caisse",
       "notes_one": "{{count}} note encaissée",
       "notes_other": "{{count}} notes encaissées",
-      "total": "Total encaissé"
+      "total": "Total encaissé",
+      "remboursements": "Remboursements",
+      "nettes": "Ventes nettes"
     },
     "mouvements": {
       "titre": "Mouvements de caisse",
@@ -1309,7 +1315,8 @@
       "retraits": "Retraits",
       "depenses": "Dépenses",
       "attendu": "Attendu",
-      "reserve": "Le détail des espèces attendues est réservé au gérant : à la clôture, on compte le tiroir avant de voir l’attendu."
+      "reserve": "Le détail des espèces attendues est réservé au gérant : à la clôture, on compte le tiroir avant de voir l’attendu.",
+      "remboursements": "Remboursements en espèces"
     },
     "notesOuvertes_one": "{{count}} note encore ouverte dans l’établissement.",
     "notesOuvertes_other": "{{count}} notes encore ouvertes dans l’établissement.",
@@ -1326,6 +1333,11 @@
       "validationContexte": "Caisse « {{caisse}} », demandé par {{demandeur}}. Motif : {{motif}}.",
       "montantRequis": "Saisissez le montant.",
       "motifRequis": "Indiquez le motif."
+    },
+    "vues": {
+      "titre": "Vues de la caisse",
+      "situation": "Situation",
+      "notes": "Notes encaissées"
     }
   },
   "cloture": {
@@ -1366,8 +1378,73 @@
       "fige": "Figé : il ne changera plus. L’historique arrivera avec les rapports, l’impression avec les reçus.",
       "terminer": "Terminer",
       "ventes_one": "Ventes encaissées ({{count}} note)",
-      "ventes_other": "Ventes encaissées ({{count}} notes)"
+      "ventes_other": "Ventes encaissées ({{count}} notes)",
+      "sections": {
+        "ventes": "Ventes",
+        "information": "Pour information",
+        "tiroir": "Espèces du tiroir",
+        "comptage": "Comptage"
+      }
     },
     "comptage": "Comptage des espèces"
+  },
+  "remboursement": {
+    "titre": "Notes encaissées",
+    "chargement": "Chargement des notes encaissées…",
+    "chercher": "Chercher une note",
+    "chercherAide": "N° de note, table ou client",
+    "nombre_one": "{{count}} note encaissée aujourd’hui",
+    "nombre_other": "{{count}} notes encaissées aujourd’hui",
+    "vide": {
+      "titre": "Aucune note encaissée aujourd’hui",
+      "message": "Les notes apparaissent ici dès leur encaissement."
+    },
+    "canaux": {
+      "SUR_PLACE": "Sur place",
+      "COMPTOIR": "Comptoir",
+      "EMPORTER": "À emporter"
+    },
+    "rembourseeTotale": "Remboursée",
+    "rembourseePartielle": "Remboursée en partie",
+    "choisir": "Choisissez une note pour voir son détail ou la rembourser.",
+    "faits": "Remboursements",
+    "badge": "Remboursé",
+    "validePar": "Validé par {{nom}}",
+    "horsJournee": "Note d’une journée passée : son remboursement se fera depuis la gestion.",
+    "toutRembourse": "Tous les articles de cette note ont été remboursés.",
+    "rembourser": "Rembourser",
+    "retour": "Retour à la note",
+    "titreRembourser": "Rembourser {{note}}",
+    "articles": "Articles à rembourser",
+    "toutLaNote": "Toute la note",
+    "surLaNote_one": "{{count}} payé, {{rembourses}} remboursé",
+    "surLaNote_other": "{{count}} payés, {{rembourses}} remboursés",
+    "aRembourser": "À rembourser",
+    "mode": "Rendre l’argent en",
+    "aideEspeces": "Sort de la caisse, {{montant}} au plus",
+    "aidePaye": "Renvoyé au client, {{montant}} au plus",
+    "referenceRetour": "Référence du transfert de retour",
+    "referenceCarte": "Référence d’annulation sur le TPE (facultative)",
+    "motif": "Motif",
+    "motifs": {
+      "ERREUR_ENCAISSEMENT": "Erreur d’encaissement",
+      "ARTICLE_NON_CONFORME": "Article non conforme",
+      "ARTICLE_NON_SERVI": "Article non servi",
+      "AUTRE": "Autre"
+    },
+    "detail": "Précisez le motif",
+    "manques": {
+      "pour": "Pour rembourser : {{liste}}.",
+      "articles": "choisissez les articles",
+      "plafond": "au plus {{montant}} dans ce mode",
+      "motif": "choisissez le motif",
+      "detail": "précisez le motif",
+      "transfert": "opérateur et référence du transfert"
+    },
+    "trace": "Tracé dans l’activité comme action critique ; en espèces, il sort de l’attendu de la caisse.",
+    "valider": "Rembourser {{montant}} en {{mode}}",
+    "validationTitre": "Rembourser {{montant}} en {{mode}} ?",
+    "validationContexte": "{{note}}, demandé par {{demandeur}}. Motif : {{motif}}.",
+    "chargementNote": "Chargement de la note…"
   }
 }
