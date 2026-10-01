@@ -1478,7 +1478,6 @@
     "rechercher": "Search a product",
     "tableau": "Stock at {{etablissement}}",
     "plusDActions": "More actions for {{nom}}",
-    "politique": "Stock policy at {{etablissement}}: {{politique}}.",
     "politiques": {
       "SOUPLE": "lenient, selling even without stock",
       "AVERTISSEMENT": "warning, the till warns before selling",
@@ -1624,6 +1623,18 @@
       "premiers_other": "{{count}} first counts",
       "toutJuste": "no difference",
       "fait": "Stocktake saved: {{resume}}."
+    },
+    "politiqueTitre": "Stock policy",
+    "politiqueModifier": "Change",
+    "politiquesCourtes": {
+      "SOUPLE": "Lenient",
+      "AVERTISSEMENT": "Warning",
+      "STRICT": "Strict"
+    },
+    "politiquesEffets": {
+      "SOUPLE": "The till sells even without stock at {{etablissement}}: negative stock points to an unrecorded delivery.",
+      "AVERTISSEMENT": "At {{etablissement}}, the till warns when an item has no stock left, then sells once confirmed.",
+      "STRICT": "At {{etablissement}}, the till refuses to sell an item with no stock left."
     }
   }
 }

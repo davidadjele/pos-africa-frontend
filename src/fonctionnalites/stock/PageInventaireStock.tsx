@@ -20,13 +20,16 @@ import { useEtablissementDuStock } from './PageStock'
 import { quantiteSignee } from './presentation'
 import { requeteStock, requeteStockATraiter } from './requetes'
 
-const MOTIFS_ECART: MotifStock[] = [
+/** Les motifs plausibles selon le sens de l'écart : un manque ne vient pas d'une livraison oubliée. */
+const MOTIFS_MANQUE: MotifStock[] = [
   'CASSE',
+  'PERIME',
+  'CONSOMME_PERSONNEL',
   'VOL',
   'ERREUR_SAISIE',
-  'LIVRAISON_NON_SAISIE',
   'AUTRE',
 ]
+const MOTIFS_SURPLUS: MotifStock[] = ['LIVRAISON_NON_SAISIE', 'ERREUR_SAISIE', 'AUTRE']
 
 interface Justification {
   motif: MotifStock | ''
@@ -185,7 +188,7 @@ export function PageInventaireStock({ etablissementId }: Readonly<{ etablissemen
               libelleMasque
               options={[
                 { valeur: '', libelle: t('stock.inventaire.choisirMotif') },
-                ...MOTIFS_ECART.map((motif) => ({
+                ...((ecart.ecart ?? 0) < 0 ? MOTIFS_MANQUE : MOTIFS_SURPLUS).map((motif) => ({
                   valeur: motif,
                   libelle: t(`stock.motifs.${motif}`),
                 })),

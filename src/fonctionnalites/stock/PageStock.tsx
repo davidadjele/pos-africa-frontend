@@ -4,11 +4,16 @@ import { clsx } from 'clsx'
 import { ClipboardList, History, PackagePlus, RotateCw, SlidersHorizontal } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { EtablissementResume, EtatStock, LigneStock } from '../../partage/api/contrat'
+import type {
+  EtablissementResume,
+  EtatStock,
+  LigneStock,
+  PolitiqueStock,
+} from '../../partage/api/contrat'
 import { useSession } from '../../partage/auth/useSession'
 import { formaterDateHeure } from '../../partage/dates/formaterDate'
 import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
-import { BadgeStatut } from '../../partage/ui/BadgeStatut'
+import { BadgeStatut, type TonStatut } from '../../partage/ui/BadgeStatut'
 import { Bouton, classesBouton } from '../../partage/ui/Bouton'
 import { ChampSelection } from '../../partage/ui/ChampSaisie'
 import { Chargement } from '../../partage/ui/Chargement'
@@ -21,6 +26,13 @@ import { estATraiter, libelleMouvement, quantiteSignee, rangStock, TONS_ETAT } f
 import { requeteStock, requeteStockATraiter } from './requetes'
 
 type Filtre = 'tous' | 'aTraiter' | 'aCompter'
+
+/** La politique se voit d'un coup d'œil : plus elle bloque la vente, plus son badge est marqué. */
+const TONS_POLITIQUE: Record<PolitiqueStock, TonStatut> = {
+  SOUPLE: 'neutre',
+  AVERTISSEMENT: 'alerte',
+  STRICT: 'danger',
+}
 type Ouvert =
   | { type: 'perte' }
   | { type: 'seuil'; ligne: LigneStock }
@@ -224,35 +236,52 @@ export function PageStock({
         )}
       </div>
 
-      <div className="flex flex-wrap items-end gap-3">
-        {etablissements.data !== undefined && etablissements.data.elements.length > 1 && (
-          <div className="w-60">
-            <ChampSelection
-              libelle={t('stock.etablissement')}
-              options={etablissements.data.elements.map((candidat) => ({
-                valeur: candidat.id,
-                libelle: candidat.nom,
-              }))}
-              value={etablissement?.id ?? ''}
-              onChange={(evenement) => {
-                setConfirmation(null)
-                void naviguer({
-                  to: '/gestion/stock',
-                  search: { etablissement: evenement.target.value },
-                })
-              }}
-            />
-          </div>
-        )}
-        {stock.data !== undefined && etablissement !== undefined && (
-          <p className="m-0 text-legende text-attenue">
-            {t('stock.politique', {
-              etablissement: etablissement.nom,
-              politique: t(`stock.politiques.${stock.data.politique}`),
-            })}
-          </p>
-        )}
-      </div>
+      {etablissements.data !== undefined && etablissements.data.elements.length > 1 && (
+        <div className="w-60">
+          <ChampSelection
+            libelle={t('stock.etablissement')}
+            options={etablissements.data.elements.map((candidat) => ({
+              valeur: candidat.id,
+              libelle: candidat.nom,
+            }))}
+            value={etablissement?.id ?? ''}
+            onChange={(evenement) => {
+              setConfirmation(null)
+              void naviguer({
+                to: '/gestion/stock',
+                search: { etablissement: evenement.target.value },
+              })
+            }}
+          />
+        </div>
+      )}
+      {stock.data !== undefined && etablissement !== undefined && (
+        <section
+          aria-labelledby="titre-politique-stock"
+          className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-moyen border border-trait bg-surface px-4 py-3"
+        >
+          <span className="flex min-w-0 flex-1 flex-col gap-1">
+            <span className="flex flex-wrap items-center gap-2">
+              <h2 id="titre-politique-stock" className="m-0 text-corps-fort text-encre">
+                {t('stock.politiqueTitre')}
+              </h2>
+              <BadgeStatut ton={TONS_POLITIQUE[stock.data.politique]}>
+                {t(`stock.politiquesCourtes.${stock.data.politique}`)}
+              </BadgeStatut>
+            </span>
+            <span className="text-corps text-attenue">
+              {t(`stock.politiquesEffets.${stock.data.politique}`, {
+                etablissement: etablissement.nom,
+              })}
+            </span>
+          </span>
+          {aLaPermission('ETABLISSEMENT_GERER') && (
+            <Link to="/gestion/etablissements" className={classesBouton('secondaire')}>
+              {t('stock.politiqueModifier')}
+            </Link>
+          )}
+        </section>
+      )}
 
       {confirmation !== null && <Alerte ton="succes">{confirmation}</Alerte>}
       {(etablissements.isError || stock.isError) && (

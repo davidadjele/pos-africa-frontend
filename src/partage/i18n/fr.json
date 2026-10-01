@@ -1478,7 +1478,6 @@
     "rechercher": "Rechercher un produit",
     "tableau": "Stock de {{etablissement}}",
     "plusDActions": "Plus d’actions pour {{nom}}",
-    "politique": "Politique de stock à {{etablissement}} : {{politique}}.",
     "politiques": {
       "SOUPLE": "souple, on vend même sans stock",
       "AVERTISSEMENT": "avertissement, la caisse prévient avant de vendre",
@@ -1624,6 +1623,18 @@
       "premiers_other": "{{count}} premiers comptages",
       "toutJuste": "aucun écart",
       "fait": "Inventaire enregistré : {{resume}}."
+    },
+    "politiqueTitre": "Politique de stock",
+    "politiqueModifier": "Modifier",
+    "politiquesCourtes": {
+      "SOUPLE": "Souple",
+      "AVERTISSEMENT": "Avertissement",
+      "STRICT": "Stricte"
+    },
+    "politiquesEffets": {
+      "SOUPLE": "La caisse vend même sans stock à {{etablissement}} : un stock négatif signale une livraison non saisie.",
+      "AVERTISSEMENT": "À {{etablissement}}, la caisse prévient quand un article n’a plus de stock, puis vend si on le confirme.",
+      "STRICT": "À {{etablissement}}, la caisse refuse de vendre un article qui n’a plus de stock."
     }
   }
 }

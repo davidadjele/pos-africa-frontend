@@ -57,6 +57,15 @@ describe('PageInventaireStock', () => {
     const ecarts = await screen.findByRole('table', { name: 'Écarts de l’inventaire' })
     expect(ecarts).toHaveTextContent('Flag 65 cl31−2')
     expect(ecarts).toHaveTextContent('Premier comptage')
+    // Un manque ne s'explique pas par une livraison oubliée : seuls les motifs plausibles sont proposés.
+    const motifs = within(ecarts).getByRole('combobox', { name: 'Motif de l’écart : Flag 65 cl' })
+    expect(within(motifs).getByRole('option', { name: 'Casse' })).toBeInTheDocument()
+    expect(
+      within(motifs).getByRole('option', { name: 'Consommé par le personnel' }),
+    ).toBeInTheDocument()
+    expect(
+      within(motifs).queryByRole('option', { name: 'Livraison non saisie' }),
+    ).not.toBeInTheDocument()
     const valider = screen.getByRole('button', { name: 'Valider l’inventaire' })
     expect(valider).toBeDisabled()
     await userEvent.selectOptions(
