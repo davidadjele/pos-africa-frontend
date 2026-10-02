@@ -39,6 +39,7 @@ import { ChoixArticles, ChoixOperateur } from './ChoixArticles'
 import { ChoixClientArdoise, depassementPlafond } from './ChoixClientArdoise'
 import { EtapeComptage, ResultatEcart, useComptage } from './Comptage'
 import { requeteEncaissement, requeteOuvertureCaisse, requeteRecu } from './requetes'
+import { EnvoiWhatsApp } from './EnvoiWhatsApp'
 import { TicketRecu } from './TicketRecu'
 import { useImpression } from '../../partage/impression/useImpression'
 
@@ -71,6 +72,7 @@ function Encaissement({ commandeId }: Readonly<{ commandeId: string }>) {
   const caisse = useQuery(requeteOuvertureCaisse)
   const etat = useQuery(requeteEncaissement(commandeId))
   const [termine, setTermine] = useState<EtatEncaissement | null>(null)
+  const [telephoneClient, setTelephoneClient] = useState<string | undefined>(undefined)
 
   const chargement = note.isPending || caisse.isPending || etat.isPending
   const echec = note.error ?? caisse.error ?? etat.error
@@ -113,6 +115,8 @@ function Encaissement({ commandeId }: Readonly<{ commandeId: string }>) {
         devise={devise}
         fuseauHoraire={fuseauHoraire}
         operateurs={caisse.data.operateurs}
+        pays={caisse.data.pays}
+        telephoneClient={telephoneClient}
       />
     )
   }
@@ -158,8 +162,9 @@ function Encaissement({ commandeId }: Readonly<{ commandeId: string }>) {
             surPartage={(nouvel) => {
               clientRequetes.setQueryData(requeteEncaissement(commandeId).queryKey, nouvel)
             }}
-            surPaye={(nouvel) => {
+            surPaye={(nouvel, telephone) => {
               clientRequetes.setQueryData(requeteEncaissement(commandeId).queryKey, nouvel)
+              if (telephone !== undefined) setTelephoneClient(telephone)
               if (nouvel.payee) {
                 void clientRequetes.invalidateQueries({ queryKey: requetePlan.queryKey })
                 setTermine(nouvel)
@@ -389,7 +394,8 @@ function Paiement({
   couverts: number | undefined
   peutCrediter: boolean
   surPartage: (etat: EtatEncaissement) => void
-  surPaye: (etat: EtatEncaissement) => void
+  /** @param telephoneClient note mise sur l'ardoise : le numéro du client, pour lui envoyer le reçu */
+  surPaye: (etat: EtatEncaissement, telephoneClient?: string) => void
   surCaisseFermee: () => void
 }>) {
   const { t } = useTranslation()
@@ -509,7 +515,7 @@ function Paiement({
           contexte: t('encaissement.ardoise.validationContexte'),
         },
       )
-      if (paye !== undefined) surPaye(paye)
+      if (paye !== undefined) surPaye(paye, mode === 'ARDOISE' ? client?.telephone : undefined)
     } catch (echec) {
       setErreur(echec)
       if (echec instanceof ErreurApi && echec.code === 'CAISSE_FERMEE') {
@@ -1024,18 +1030,24 @@ function FinEncaissement({
   devise,
   fuseauHoraire,
   operateurs,
+  pays,
+  telephoneClient,
 }: Readonly<{
   etat: EtatEncaissement
   note: CommandeDetail
   devise: Devise
   fuseauHoraire: string
   operateurs: OperateurMobileMoney[]
+  pays: string
+  telephoneClient: string | undefined
 }>) {
   const { t } = useTranslation()
   const naviguer = useNavigate()
   const recu = useQuery(requeteRecu(etat.commandeId))
   const { imprimer, zone } = useImpression()
   const [imprime, setImprime] = useState(false)
+  // Le reçu parti par WhatsApp, « Sans reçu » ne veut plus rien dire.
+  const [envoye, setEnvoye] = useState(false)
   const [enCours, setEnCours] = useState(false)
   const [erreur, setErreur] = useState<unknown>(null)
   // L'impression d'office ne part qu'une fois, même si le reçu est relu.
@@ -1125,9 +1137,20 @@ function FinEncaissement({
               {t('recu.imprimer')}
             </Bouton>
             <Bouton className="min-h-bouton-encaisser text-titre-carte" onClick={retour}>
-              {t('recu.sansRecu')}
+              {envoye ? t('encaissement.fin.retour') : t('recu.sansRecu')}
             </Bouton>
           </div>
+        )}
+        {recu.data !== undefined && (
+          <EnvoiWhatsApp
+            commandeId={etat.commandeId}
+            recu={recu.data}
+            pays={pays}
+            telephoneClient={telephoneClient}
+            surEnvoye={() => {
+              setEnvoye(true)
+            }}
+          />
         )}
       </section>
       <aside className="flex shrink-0 flex-col items-center gap-2">

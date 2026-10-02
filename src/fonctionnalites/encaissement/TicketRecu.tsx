@@ -1,12 +1,15 @@
 import { clsx } from 'clsx'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { OperateurMobileMoney, RecuCaisse } from '../../partage/api/contrat'
-import { formaterDateHeure } from '../../partage/dates/formaterDate'
+import type { OperateurMobileMoney, RecuCaisse, RecuEnLigne } from '../../partage/api/contrat'
+import { formaterDate, formaterDateHeure, formaterHeure } from '../../partage/dates/formaterDate'
 import { formaterMontant, type Devise } from '../../partage/montants/formaterMontant'
 import { formaterTaux } from '../../partage/montants/taxes'
+import { CodeQr } from '../../partage/ui/CodeQr'
+import { lienRecu } from '../recu/liens'
 
 type PaiementRecu = RecuCaisse['paiements'][number]
+type RemboursementRecu = RecuEnLigne['remboursements'][number]
 
 /**
  * Le reçu tel qu'il sort de l'imprimante thermique, à la largeur du rouleau : noir sur blanc, sans couleur, lisible
@@ -17,11 +20,17 @@ export function TicketRecu({
   operateurs,
   devise,
   fuseauHoraire,
+  remboursements = [],
+  avecQr = true,
 }: Readonly<{
   recu: RecuCaisse
   operateurs: readonly OperateurMobileMoney[]
   devise: Devise
   fuseauHoraire: string
+  /** Reçu en ligne : l'argent rendu depuis, à côté du reçu qui, lui, ne change pas. */
+  remboursements?: readonly RemboursementRecu[]
+  /** Le QR code mène au reçu en ligne : inutile quand on y est déjà. */
+  avecQr?: boolean
 }>) {
   const { t } = useTranslation()
   const nombre = (valeur: number) =>
@@ -93,8 +102,31 @@ export function TicketRecu({
           nombre={nombre}
         />
       ))}
+      {remboursements.length > 0 && <Separateur />}
+      {remboursements.map((remboursement, rang) => (
+        <Ligne
+          key={`${remboursement.le}-${String(rang)}`}
+          gauche={t('recu.rembourse', {
+            date: formaterDate(remboursement.le, fuseauHoraire),
+            heure: formaterHeure(remboursement.le, fuseauHoraire),
+            mode: t(`recu.rembourseEn.${remboursement.mode}`),
+          })}
+        >
+          −{nombre(remboursement.montant)}
+        </Ligne>
+      ))}
       <Separateur />
       {etablissement.pied !== undefined && <p className="m-0 text-center">{etablissement.pied}</p>}
+      {avecQr && (
+        <div className="mt-2 flex flex-col items-center gap-1">
+          <CodeQr
+            texte={lienRecu(recu.jeton)}
+            libelle={t('recu.enLigne.qr')}
+            taille={recu.largeur === 58 ? 80 : 96}
+          />
+          <span>{t('recu.enLigne.legende')}</span>
+        </div>
+      )}
       <p className="m-0 mt-1 text-center">{t('recu.logiciel')}</p>
     </article>
   )

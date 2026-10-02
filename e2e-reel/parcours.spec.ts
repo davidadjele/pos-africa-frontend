@@ -12,16 +12,42 @@ const AFI = { telephone: '90 44 55 66', motDePasse: 'Afi-Bekpota-26' }
 const DOSSIER_CAPTURES = process.env.DOSSIER_CAPTURES ?? 'test-results/captures-1a'
 mkdirSync(DOSSIER_CAPTURES, { recursive: true })
 
-/** Remplace la boîte d'impression du navigateur, qui bloquerait le parcours, par un simple compteur. */
+/**
+ * Remplace la boîte d'impression du navigateur, qui bloquerait le parcours, par un simple compteur, et WhatsApp par
+ * le dernier lien qu'on lui aurait ouvert.
+ */
 async function simulerImpression(page: Page) {
   await page.evaluate(() => {
-    const fenetre = globalThis as typeof globalThis & { impressions?: number }
+    const fenetre = globalThis as typeof globalThis & { impressions?: number; dernierLien?: string }
     fenetre.impressions = 0
     fenetre.print = () => {
       fenetre.impressions = (fenetre.impressions ?? 0) + 1
       fenetre.dispatchEvent(new Event('afterprint'))
     }
+    fenetre.open = (lien) => {
+      fenetre.dernierLien = String(lien)
+      return null
+    }
   })
+}
+
+/** Le reçu en ligne, tiré du message WhatsApp préparé pour le client. */
+async function lienDuRecuEnvoye(page: Page): Promise<string> {
+  const lien = await page.evaluate(
+    () => (globalThis as typeof globalThis & { dernierLien?: string }).dernierLien ?? '',
+  )
+  const recu = /https?:\/\/\S+\/r\/[\w-]+/.exec(decodeURIComponent(lien))?.[0]
+  expect(lien).toMatch(/^https:\/\/wa\.me\/228\d{8}\?text=/)
+  if (recu === undefined) throw new Error(`Aucun reçu dans le message : ${lien}`)
+  return recu
+}
+
+async function envoyerParWhatsApp(page: Page, numero: string): Promise<string> {
+  const envoi = page.getByRole('group', { name: 'Envoyer par WhatsApp' })
+  await envoi.getByLabel('Numéro WhatsApp du client').fill(numero)
+  await envoi.getByRole('button', { name: 'Envoyer' }).click()
+  await expect(page.getByRole('status', { name: 'Envoi WhatsApp' })).toBeVisible()
+  return lienDuRecuEnvoye(page)
 }
 
 async function impressions(page: Page): Promise<number> {
@@ -878,6 +904,15 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await simulerImpression(tablette)
   await tablette.getByRole('button', { name: 'Imprimer le reçu' }).click()
   await expect.poll(() => impressions(tablette)).toBe(1)
+  // Le client veut aussi son reçu sur son téléphone : WhatsApp s'ouvre, message prêt, lien du reçu en ligne.
+  const recuN3 = await envoyerParWhatsApp(tablette, '90 11 23 45')
+  await capturer(tablette, '44-recu-whatsapp')
+  const telephoneClient = await browser.newContext({ viewport: { width: 390, height: 844 } })
+  const client = await telephoneClient.newPage()
+  await client.goto(recuN3)
+  await expect(client.getByRole('heading', { level: 1, name: 'Votre reçu' })).toBeVisible()
+  await expect(client.getByRole('article', { name: /^Reçu BE-/ })).toContainText('Poulet braisé')
+  await capturer(client, '45-recu-en-ligne')
   await tablette.getByRole('button', { name: 'Retour au plan de salle' }).click()
   await expect(resume).toContainText('0 note ouverte')
 
@@ -961,7 +996,8 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await tablette.setViewportSize({ width: 1280, height: 800 })
   await tablette.getByRole('button', { name: /^Valider 4\s500\sF en Mobile Money/ }).click()
   await expect(tablette.getByRole('heading', { name: 'T6 est libre' })).toBeVisible()
-  await tablette.getByRole('button', { name: 'Sans reçu' }).click()
+  const recuT6 = await envoyerParWhatsApp(tablette, '91 22 33 44')
+  await tablette.getByRole('button', { name: 'Retour au plan de salle' }).click()
 
   // Un poulet de T6 n'était pas bon : la gérante le rembourse, sur la carte qui l'a payé.
   await tablette.getByRole('button', { name: 'Caisse', exact: true }).click()
@@ -996,6 +1032,13 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     '1× Poulet braisé, carte',
   )
   await capturer(tablette, '59-note-remboursee')
+  // Le reçu en ligne de T6, rouvert par le client, mentionne le remboursement ; le reçu lui-même ne change pas.
+  await client.goto(recuT6)
+  await expect(client.getByRole('article', { name: /^Reçu BE-/ })).toContainText(
+    /Remboursé le .*, carte−4\s500/,
+  )
+  await capturer(client, '59-recu-en-ligne-rembourse')
+  await telephoneClient.close()
   await tablette.getByRole('tab', { name: 'Situation' }).click()
   await expect(tablette.getByRole('region', { name: 'Ventes de la caisse' })).toContainText(
     'Remboursements−4 500',

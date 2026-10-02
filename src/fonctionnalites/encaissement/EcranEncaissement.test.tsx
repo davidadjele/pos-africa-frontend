@@ -17,6 +17,7 @@ import { RECU } from './fixturesRecu'
 import type {
   ClientEnCaisse,
   DemandeClient,
+  DemandeEnvoiRecu,
   DemandeFondDeCaisse,
   DemandePaiement,
   DemandePartage,
@@ -446,6 +447,8 @@ describe('Encaisser sur l’ardoise', () => {
         clientId: KOMLAN_EN_CAISSE.id,
       },
     ])
+    // Le reçu partira au numéro du client, sans indicatif puisque c'est celui du pays.
+    expect(screen.getByLabelText('Numéro WhatsApp du client')).toHaveValue('90123456')
   })
 
   it('demande de confirmer le dépassement du plafond', async () => {
@@ -554,6 +557,17 @@ describe('Reçu de fin d’encaissement', () => {
     return impressions
   }
 
+  function envoisServis() {
+    const envois: DemandeEnvoiRecu[] = []
+    serveurMsw.use(
+      http.post(`${API}/caisse/commandes/${NOTE_T4.id}/recu/envois`, async ({ request }) => {
+        envois.push((await request.json()) as DemandeEnvoiRecu)
+        return HttpResponse.json({ telephone: '+22890112345' })
+      }),
+    )
+    return envois
+  }
+
   async function encaisser() {
     await userEvent.click(await screen.findByRole('radio', { name: /Carte/ }))
     await userEvent.click(screen.getByRole('button', { name: /^Valider 10\s200\sF en carte/ }))
@@ -597,6 +611,60 @@ describe('Reçu de fin d’encaissement', () => {
     })
     expect(impressions).toHaveLength(1)
     imprimer.mockRestore()
+  })
+
+  it('envoie le lien du reçu par WhatsApp au numéro saisi, lu dans le pays de l’entreprise', async () => {
+    const ouvrirFenetre = vi.spyOn(window, 'open').mockImplementation(() => null)
+    payerToutEnCarte()
+    const envois = envoisServis()
+
+    await encaisser()
+    const envoi = await screen.findByRole('group', { name: 'Envoyer par WhatsApp' })
+    expect(within(envoi).getByText('+228')).toBeVisible()
+    await userEvent.type(within(envoi).getByLabelText('Numéro WhatsApp du client'), '90 11 23 45')
+    await userEvent.click(within(envoi).getByRole('button', { name: 'Envoyer' }))
+
+    await vi.waitFor(() => {
+      expect(ouvrirFenetre).toHaveBeenCalledOnce()
+    })
+    expect(envois).toEqual([{ telephone: '90 11 23 45' }])
+    const [lien, cible] = ouvrirFenetre.mock.calls[0] ?? []
+    expect(cible).toBe('_blank')
+    expect(decodeURIComponent(String(lien))).toBe(
+      `https://wa.me/22890112345?text=Votre reçu BE-000127 de Maquis Chez Tanti : ${window.location.origin}/r/${RECU.jeton}`,
+    )
+    expect(screen.getByRole('status', { name: 'Envoi WhatsApp' })).toHaveTextContent(
+      'WhatsApp est ouvert : il reste à envoyer le message.',
+    )
+    ouvrirFenetre.mockRestore()
+  })
+
+  it('place sous le champ un numéro refusé, sans ouvrir WhatsApp', async () => {
+    const ouvrirFenetre = vi.spyOn(window, 'open').mockImplementation(() => null)
+    payerToutEnCarte()
+    serveurMsw.use(
+      http.post(`${API}/caisse/commandes/${NOTE_T4.id}/recu/envois`, () =>
+        HttpResponse.json(
+          {
+            statut: 400,
+            code: 'REQUETE_INVALIDE',
+            message: 'Requête invalide.',
+            traceId: 't',
+            champs: [{ champ: 'telephone', message: 'Ce numéro n’existe pas.' }],
+          },
+          { status: 400 },
+        ),
+      ),
+    )
+
+    await encaisser()
+    const envoi = await screen.findByRole('group', { name: 'Envoyer par WhatsApp' })
+    await userEvent.type(within(envoi).getByLabelText('Numéro WhatsApp du client'), '123')
+    await userEvent.click(within(envoi).getByRole('button', { name: 'Envoyer' }))
+
+    expect(await within(envoi).findByText('Ce numéro n’existe pas.')).toBeVisible()
+    expect(ouvrirFenetre).not.toHaveBeenCalled()
+    ouvrirFenetre.mockRestore()
   })
 
   it('repart au plan sans reçu', async () => {

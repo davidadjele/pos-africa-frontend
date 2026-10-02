@@ -1,4 +1,4 @@
-import type { RecuCaisse } from '../../partage/api/contrat'
+import type { RecuCaisse, RecuEnLigne } from '../../partage/api/contrat'
 
 export const RECU: RecuCaisse = {
   numero: 'BE-000127',
@@ -37,4 +37,15 @@ export const RECU: RecuCaisse = {
     },
     { mode: 'ESPECES', montant: 5200, montantRecu: 10_000, monnaieRendue: 4800 },
   ],
+}
+
+export const RECU_EN_LIGNE: RecuEnLigne = {
+  recu: RECU,
+  devise: 'XOF',
+  fuseauHoraire: 'Africa/Lome',
+  operateurs: [
+    { code: 'FLOOZ', libelle: 'Flooz (Moov Africa)' },
+    { code: 'TMONEY', libelle: 'T-Money (Yas)' },
+  ],
+  remboursements: [],
 }

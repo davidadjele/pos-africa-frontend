@@ -36,6 +36,31 @@ const ETABLISSEMENTS = {
   total: 1,
 }
 
+const RECU_EN_LIGNE = {
+  recu: {
+    numero: 'BE-000127',
+    duplicata: false,
+    jeton: 'abc',
+    emisLe: '2026-10-01T21:05:00Z',
+    entreprise: 'Maquis Chez Tanti',
+    etablissement: { nom: 'Bè Kpota', ville: 'Lomé' },
+    largeur: 80,
+    impressionAuto: false,
+    note: 'n°42, T4',
+    serveur: 'Kossi A.',
+    caissier: 'Yawa T.',
+    lignes: [{ quantite: 2, nom: 'Poulet braisé', montant: 9000, offert: false }],
+    remise: 0,
+    total: 9000,
+    taxes: [],
+    paiements: [{ mode: 'ESPECES', montant: 9000, montantRecu: 10_000, monnaieRendue: 1000 }],
+  },
+  devise: 'XOF',
+  fuseauHoraire: 'Africa/Lome',
+  operateurs: [],
+  remboursements: [],
+}
+
 async function simulerApi(page: Page, { connecte }: { connecte: boolean }) {
   let sessionOuverte = connecte
   await page.route('**/api/auth/rafraichir', (route) =>
@@ -163,10 +188,12 @@ test('la gestion présente sa navigation et mène à la caisse', async ({ page }
 
 test('un reçu public s’ouvre depuis son lien partagé, sans session', async ({ page }) => {
   const erreurs = surveillerErreursConsole(page)
+  await simulerApi(page, { connecte: false })
+  await page.route('**/api/public/recus/abc', (route) => route.fulfill({ json: RECU_EN_LIGNE }))
   await page.goto('/r/abc')
 
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
-  await expect(page.getByText('abc', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1, name: 'Votre reçu' })).toBeVisible()
+  await expect(page.getByRole('article', { name: 'Reçu BE-000127' })).toContainText('Poulet braisé')
   await verifierSansDefilementHorizontal(page)
   expect(erreurs).toEqual([])
 })

@@ -415,9 +415,6 @@
     }
   },
   "recu": {
-    "titre": "Reçu pas encore consultable",
-    "reference": "Référence",
-    "phrase": "L’affichage des reçus partagés arrive au prochain lot. Gardez ce lien : il restera valable.",
     "ticket": "Reçu {{numero}}",
     "duplicata": "DUPLICATA",
     "telephone": "Tél. {{telephone}}",
@@ -451,6 +448,31 @@
       "enTete": "Message en tête",
       "pied": "Message en pied",
       "fait": "Reçu de {{nom}} enregistré."
+    },
+    "enLigne": {
+      "titre": "Votre reçu",
+      "imprimer": "Imprimer ou enregistrer en PDF",
+      "chargement": "Ouverture du reçu…",
+      "introuvable": "Reçu introuvable",
+      "introuvablePhrase": "Ce lien ne mène à aucun reçu. Vérifiez que le lien est complet, ou demandez-le de nouveau à l’établissement.",
+      "qr": "QR code du reçu en ligne",
+      "legende": "Votre reçu en ligne"
+    },
+    "rembourse": "Remboursé le {{date}} à {{heure}}, {{mode}}",
+    "rembourseEn": {
+      "ESPECES": "espèces",
+      "MOBILE_MONEY": "Mobile Money",
+      "CARTE": "carte",
+      "ARDOISE": "sur l’ardoise"
+    },
+    "whatsapp": {
+      "titre": "Envoyer par WhatsApp",
+      "numero": "Numéro WhatsApp du client",
+      "envoyer": "Envoyer",
+      "aide": "Le client reçoit un lien vers son reçu. Le numéro n’est pas enregistré.",
+      "message": "Votre reçu {{numero}} de {{entreprise}} : {{lien}}",
+      "statut": "Envoi WhatsApp",
+      "ouvert": "WhatsApp est ouvert : il reste à envoyer le message."
     }
   },
   "introuvable": {

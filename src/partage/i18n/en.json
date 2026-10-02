@@ -415,9 +415,6 @@
     }
   },
   "recu": {
-    "titre": "Receipt not available yet",
-    "reference": "Reference",
-    "phrase": "Shared receipts arrive in the next release. Keep this link: it will remain valid.",
     "ticket": "Receipt {{numero}}",
     "duplicata": "DUPLICATE",
     "telephone": "Tel. {{telephone}}",
@@ -451,6 +448,31 @@
       "enTete": "Header message",
       "pied": "Footer message",
       "fait": "{{nom}} receipt saved."
+    },
+    "enLigne": {
+      "titre": "Your receipt",
+      "imprimer": "Print or save as PDF",
+      "chargement": "Opening the receipt…",
+      "introuvable": "Receipt not found",
+      "introuvablePhrase": "This link does not lead to any receipt. Check that the link is complete, or ask the venue for it again.",
+      "qr": "QR code of the online receipt",
+      "legende": "Your receipt online"
+    },
+    "rembourse": "Refunded on {{date}} at {{heure}}, {{mode}}",
+    "rembourseEn": {
+      "ESPECES": "cash",
+      "MOBILE_MONEY": "Mobile Money",
+      "CARTE": "card",
+      "ARDOISE": "to the tab"
+    },
+    "whatsapp": {
+      "titre": "Send by WhatsApp",
+      "numero": "Customer’s WhatsApp number",
+      "envoyer": "Send",
+      "aide": "The customer receives a link to the receipt. The number is not stored.",
+      "message": "Your receipt {{numero}} from {{entreprise}}: {{lien}}",
+      "statut": "WhatsApp sending",
+      "ouvert": "WhatsApp is open: just send the message."
     }
   },
   "introuvable": {
