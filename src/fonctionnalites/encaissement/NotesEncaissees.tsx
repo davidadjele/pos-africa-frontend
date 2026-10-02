@@ -12,6 +12,7 @@ import type {
   MotifRemboursement,
   NoteEncaissee,
   OperateurMobileMoney,
+  PartRemboursement,
 } from '../../partage/api/contrat'
 import { formaterHeure } from '../../partage/dates/formaterDate'
 import { formaterMontant, type Devise } from '../../partage/montants/formaterMontant'
@@ -27,6 +28,7 @@ import { useValidation } from '../commande/useValidation'
 import { ChoixRetourStock } from '../commande/DialoguesLigne'
 import { requeteStockCaisse, stockDuProduit } from '../commande/requetes'
 import { ChoixArticles, ChoixOperateur } from './ChoixArticles'
+import { ORDRE_REMBOURSEMENT, repartirRemboursement } from './repartition'
 import { requeteNotesEncaissees, requeteOuvertureCaisse, requeteRemboursement } from './requetes'
 
 const MOTIFS: MotifRemboursement[] = [
@@ -54,6 +56,14 @@ function nomDe(
  * Les notes encaissées de la journée : on retrouve une note (numéro, table, client), on voit ce qui en a été
  * remboursé, et on rembourse des articles dans le mode où le client a payé.
  */
+/** Ce que fait le remboursement dans chaque mode : en espèces il sort du tiroir, sur l'ardoise il réduit la dette. */
+const AIDES_REMBOURSEMENT: Record<ModePaiement, string> = {
+  ESPECES: 'remboursement.aideEspeces',
+  MOBILE_MONEY: 'remboursement.aidePaye',
+  CARTE: 'remboursement.aidePaye',
+  ARDOISE: 'remboursement.aideArdoise',
+}
+
 export function NotesEncaissees({
   devise,
   fuseauHoraire,
@@ -273,7 +283,7 @@ function DetailNote({
                   {remboursement.articles
                     .map((article) => `${String(article.quantite)}× ${article.nom}`)
                     .join(', ')}
-                  , {libelleMode(remboursement.mode, remboursement.operateur, operateurs, t)}
+                  , {libelleParts(remboursement.parts, operateurs, nombre, t)}
                 </span>
                 <span className="text-legende text-attenue">
                   {formaterHeure(remboursement.rembourseLe, fuseauHoraire)},{' '}
@@ -292,14 +302,14 @@ function DetailNote({
         </ul>
       )}
       <span className="mt-auto pt-4" />
-      {!note.remboursable ? (
-        <p className="m-0 text-legende text-attenue">{t('remboursement.horsJournee')}</p>
-      ) : resteARembourser ? (
+      {note.remboursable && resteARembourser ? (
         <Bouton className="min-h-cible-caisse" onClick={surRembourser}>
           {t('remboursement.rembourser')}
         </Bouton>
       ) : (
-        <p className="m-0 text-legende text-attenue">{t('remboursement.toutRembourse')}</p>
+        <p className="m-0 text-legende text-attenue">
+          {t(note.remboursable ? 'remboursement.toutRembourse' : 'remboursement.horsJournee')}
+        </p>
       )}
     </section>
   )
@@ -314,6 +324,27 @@ function libelleMode(
   return mode === 'MOBILE_MONEY'
     ? (operateurs.find((candidat) => candidat.code === operateur)?.libelle ?? operateur ?? '')
     : t(`encaissement.modesEn.${mode}`)
+}
+
+/** « espèces », ou « 500 sur ardoise, 600 en espèces » quand le remboursement s'est réparti. */
+function libelleParts(
+  parts: readonly PartRemboursement[],
+  operateurs: OperateurMobileMoney[],
+  nombre: (valeur: number) => string,
+  t: TFunction,
+) {
+  const [seule] = parts
+  if (parts.length === 1 && seule !== undefined) {
+    return libelleMode(seule.mode, seule.operateur, operateurs, t)
+  }
+  return parts
+    .map((part) =>
+      t('remboursement.partEn', {
+        montant: nombre(part.montant),
+        mode: libelleMode(part.mode, part.operateur, operateurs, t),
+      }),
+    )
+    .join(', ')
 }
 
 function Rembourser({
@@ -333,9 +364,11 @@ function Rembourser({
   const clientRequetes = useQueryClient()
   const validation = useValidation()
   const session = useSessionCaisse()
-  const disponibles = etat.modes.filter((candidat) => candidat.paye > candidat.rembourse)
+  // Dans l'ordre où le remboursement s'y répartit.
+  const disponibles = etat.modes
+    .filter((candidat) => candidat.remboursable > 0)
+    .sort((a, b) => ORDRE_REMBOURSEMENT.indexOf(a.mode) - ORDRE_REMBOURSEMENT.indexOf(b.mode))
   const [selection, setSelection] = useState<Record<string, number>>({})
-  const [mode, setMode] = useState<ModePaiement | null>(disponibles[0]?.mode ?? null)
   const [operateur, setOperateur] = useState<string | null>(
     etat.modes.find((candidat) => candidat.mode === 'MOBILE_MONEY')?.operateur ?? null,
   )
@@ -364,26 +397,33 @@ function Rembourser({
   )
   const [retour, setRetour] = useState<boolean | null>(null)
   const revient = retour ?? (motif === 'ERREUR_ENCAISSEMENT' || motif === 'ARTICLE_NON_SERVI')
-  const choisi = disponibles.find((candidat) => candidat.mode === mode)
+  // Le montant se répartit entre les modes de la note, comme le serveur le fera.
+  const parts = repartirRemboursement(montant, etat.modes)
+  const enMobile = parts?.some((part) => part.mode === 'MOBILE_MONEY') ?? false
+  const parCarte = parts?.some((part) => part.mode === 'CARTE') ?? false
+  const remboursable = disponibles.reduce((somme, candidat) => somme + candidat.remboursable, 0)
+  const libelleRepartition =
+    parts?.length === 1 && parts[0] !== undefined
+      ? libelleMode(parts[0].mode, operateur ?? undefined, operateurs, t)
+      : null
   const manques = [
     ...(montant === 0 ? [t('remboursement.manques.articles')] : []),
-    ...(choisi !== undefined && montant > choisi.paye - choisi.rembourse
-      ? [t('remboursement.manques.plafond', { montant: courte(choisi.paye - choisi.rembourse) })]
+    ...(parts === null
+      ? [t('remboursement.manques.plafond', { montant: courte(remboursable) })]
       : []),
     ...(motif === null ? [t('remboursement.manques.motif')] : []),
     ...(motif === 'AUTRE' && detail.trim() === '' ? [t('remboursement.manques.detail')] : []),
-    ...(mode === 'MOBILE_MONEY' && (operateur === null || reference.trim() === '')
+    ...(enMobile && (operateur === null || reference.trim() === '')
       ? [t('remboursement.manques.transfert')]
       : []),
   ]
 
   async function rembourser() {
-    if (mode === null || motif === null || manques.length > 0) return
+    if (motif === null || manques.length > 0) return
     setEnCours(true)
     setErreur(null)
     const demande: DemandeRemboursement = {
       id,
-      mode,
       montant,
       articles: Object.entries(selection)
         .filter(([, quantite]) => quantite > 0)
@@ -391,8 +431,8 @@ function Rembourser({
       motif,
       ...(motif === 'AUTRE' ? { detail: detail.trim() } : {}),
       ...(suiviEnStock ? { retourEnStock: revient } : {}),
-      ...(mode === 'MOBILE_MONEY' && operateur !== null ? { operateur } : {}),
-      ...(mode !== 'ESPECES' && reference.trim() !== '' ? { reference: reference.trim() } : {}),
+      ...(enMobile && operateur !== null ? { operateur } : {}),
+      ...((enMobile || parCarte) && reference.trim() !== '' ? { reference: reference.trim() } : {}),
     }
     try {
       const nouvel = await validation.executer(
@@ -404,10 +444,13 @@ function Rembourser({
         {
           permission: 'PAIEMENT_REMBOURSER',
           objetId: etat.commandeId,
-          titre: t('remboursement.validationTitre', {
-            montant: courte(montant),
-            mode: libelleMode(mode, operateur ?? undefined, operateurs, t),
-          }),
+          titre:
+            libelleRepartition === null
+              ? t('remboursement.validationTitreReparti', { montant: courte(montant) })
+              : t('remboursement.validationTitre', {
+                  montant: courte(montant),
+                  mode: libelleRepartition,
+                }),
           contexte: t('remboursement.validationContexte', {
             note: titre,
             demandeur: session?.nomCourt ?? '',
@@ -461,41 +504,41 @@ function Rembourser({
           surChanger={setSelection}
         />
         <div className="flex flex-col gap-4">
-          <div
-            role="radiogroup"
-            aria-label={t('remboursement.mode')}
-            className="grid grid-cols-1 gap-2 sm:grid-cols-2"
-          >
-            <span className="text-corps-fort text-encre sm:col-span-2">
-              {t('remboursement.mode')}
-            </span>
-            {disponibles.map((candidat) => (
-              <button
-                key={candidat.mode}
-                type="button"
-                role="radio"
-                aria-checked={mode === candidat.mode}
-                onClick={() => {
-                  setMode(candidat.mode)
-                }}
-                className={clsx(
-                  'flex min-h-16 flex-col items-start justify-center gap-0.5 rounded-moyen bg-surface px-3 py-1.5 text-left text-encre',
-                  mode === candidat.mode ? 'border-2 border-accent' : 'border border-trait',
-                )}
-              >
-                <span className="text-corps-fort">{t(`encaissement.modes.${candidat.mode}`)}</span>
-                <span className="text-legende text-attenue">
-                  {t(
-                    candidat.mode === 'ESPECES'
-                      ? 'remboursement.aideEspeces'
-                      : 'remboursement.aidePaye',
-                    { montant: courte(candidat.paye - candidat.rembourse) },
-                  )}
-                </span>
-              </button>
-            ))}
-          </div>
-          {mode === 'MOBILE_MONEY' && (
+          <section aria-label={t('remboursement.mode')} className="flex flex-col gap-2">
+            <h3 className="m-0 text-corps-fort text-encre">{t('remboursement.mode')}</h3>
+            <ul className="m-0 flex list-none flex-col overflow-hidden rounded-moyen border border-trait p-0">
+              {disponibles.map((candidat) => {
+                const part = parts?.find((rendue) => rendue.mode === candidat.mode)
+                return (
+                  <li
+                    key={candidat.mode}
+                    className={clsx(
+                      'flex items-center gap-3 border-b border-trait px-3 py-2.5 last:border-b-0',
+                      part === undefined ? 'bg-surface' : 'bg-fond',
+                    )}
+                  >
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="text-corps-fort text-encre">
+                        {t(`encaissement.modes.${candidat.mode}`)}
+                      </span>
+                      <span className="text-legende text-attenue">
+                        {t(AIDES_REMBOURSEMENT[candidat.mode], {
+                          montant: courte(candidat.remboursable),
+                        })}
+                      </span>
+                    </span>
+                    <span className="chiffres text-montant-ligne text-encre">
+                      {part === undefined ? '—' : courte(part.montant)}
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
+            {disponibles.length > 1 && (
+              <p className="m-0 text-legende text-attenue">{t('remboursement.ordre')}</p>
+            )}
+          </section>
+          {enMobile && (
             <>
               <ChoixOperateur
                 operateurs={operateurs}
@@ -513,7 +556,7 @@ function Rembourser({
               />
             </>
           )}
-          {mode === 'CARTE' && (
+          {parCarte && !enMobile && (
             <ChampSaisie
               libelle={t('remboursement.referenceCarte')}
               maxLength={60}
@@ -578,14 +621,13 @@ function Rembourser({
         <Bouton
           variante="principal"
           className="min-h-bouton-encaisser w-full px-6 text-titre-carte sm:w-auto"
-          disabled={mode === null || manques.length > 0}
+          disabled={manques.length > 0}
           enCours={enCours}
           onClick={() => void rembourser()}
         >
-          {t('remboursement.valider', {
-            montant: courte(montant),
-            mode: mode === null ? '' : libelleMode(mode, operateur ?? undefined, operateurs, t),
-          })}
+          {libelleRepartition === null
+            ? t('remboursement.validerSeul', { montant: courte(montant) })
+            : t('remboursement.valider', { montant: courte(montant), mode: libelleRepartition })}
         </Bouton>
       </div>
       {validation.dialogue}

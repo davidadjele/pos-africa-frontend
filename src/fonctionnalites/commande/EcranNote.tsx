@@ -167,7 +167,7 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
       retenir(reponse)
       const derniers = reponse.lignes
         .map((ligne) => ligne.envoyeeLe ?? '')
-        .sort()
+        .sort((a, b) => a.localeCompare(b))
         .at(-1)
       setConfirmation(
         t('caisse.note.envoye', {

@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next'
 import { appelerCaisse } from '../../partage/api/appelerCaisse'
 import { ErreurApi } from '../../partage/api/ErreurApi'
 import type {
+  ClientEnCaisse,
   CommandeDetail,
   DemandeFondDeCaisse,
   DemandePaiement,
@@ -31,12 +32,14 @@ import { Chargement } from '../../partage/ui/Chargement'
 import { Compteur } from '../../partage/ui/Compteur'
 import { useSessionCaisse } from '../caisse/requetes'
 import { requeteCommande, requetePlan } from '../commande/requetes'
+import { useValidation } from '../commande/useValidation'
 import { requeteAppareil } from '../tablette/requetes'
 import { ChoixArticles, ChoixOperateur } from './ChoixArticles'
+import { ChoixClientArdoise, depassementPlafond } from './ChoixClientArdoise'
 import { EtapeComptage, ResultatEcart, useComptage } from './Comptage'
 import { requeteEncaissement, requeteOuvertureCaisse } from './requetes'
 
-const MODES: ModePaiement[] = ['ESPECES', 'MOBILE_MONEY', 'CARTE']
+const MODES: ModePaiement[] = ['ESPECES', 'MOBILE_MONEY', 'CARTE', 'ARDOISE']
 /** Billets courants : les montants rapides arrondissent au billet supérieur. */
 const PALIERS = [1000, 2000, 5000, 10_000, 20_000]
 
@@ -96,6 +99,8 @@ function Encaissement({ commandeId }: Readonly<{ commandeId: string }>) {
     return <Chargement texte={t('encaissement.chargement')} />
   }
   const ou = note.data.table?.nom ?? t('caisse.note.numero', { numero: note.data.numero })
+  const dernierFond =
+    caisse.data.dernierFond === undefined ? {} : { dernierFond: caisse.data.dernierFond }
 
   if (termine !== null) {
     return <FinEncaissement etat={termine} note={note.data} devise={devise} />
@@ -117,9 +122,7 @@ function Encaissement({ commandeId }: Readonly<{ commandeId: string }>) {
           key={caisse.data.dernierFond ?? 'sans-fond'}
           devise={devise}
           peutOuvrir={session?.permissions.includes('CAISSE_OUVRIR') ?? false}
-          {...(caisse.data.dernierFond === undefined
-            ? {}
-            : { dernierFond: caisse.data.dernierFond })}
+          {...dernierFond}
           surOuverte={(ouverte) => {
             clientRequetes.setQueryData(requeteOuvertureCaisse.queryKey, ouverte)
           }}
@@ -137,8 +140,10 @@ function Encaissement({ commandeId }: Readonly<{ commandeId: string }>) {
             key={etat.data.paiements.length}
             etat={etat.data}
             operateurs={caisse.data.operateurs}
+            pays={caisse.data.pays}
             devise={devise}
             couverts={note.data.couverts}
+            peutCrediter={session?.permissions.includes('CLIENT_CREDIT') ?? false}
             surPartage={(nouvel) => {
               clientRequetes.setQueryData(requeteEncaissement(commandeId).queryKey, nouvel)
             }}
@@ -254,16 +259,13 @@ function libellePaiement(
   operateurs: OperateurMobileMoney[],
   t: TFunction,
 ): string {
-  const { mode, operateur, reference } = paiement
+  const { reference } = paiement
   const quoi = paiement.part
     ? t('encaissement.partage.part', {
         numero: paiements.filter((autre) => autre.part).indexOf(paiement) + 1,
       })
     : paiement.articles.map((article) => `${String(article.quantite)}× ${article.nom}`).join(', ')
-  const moyen =
-    mode === 'MOBILE_MONEY'
-      ? (operateurs.find((candidat) => candidat.code === operateur)?.libelle ?? operateur ?? '')
-      : t(quoi === '' ? `encaissement.modes.${mode}` : `encaissement.modesEn.${mode}`)
+  const moyen = moyenDe(paiement, operateurs, quoi === '', t)
   const nom = quoi === '' ? moyen : `${quoi}, ${moyen}`
   return reference === undefined
     ? nom
@@ -271,6 +273,66 @@ function libellePaiement(
         mode: nom,
         detail: t('encaissement.referenceCourte', { reference }),
       })
+}
+
+/** « Flooz (Moov Africa) », « Ardoise, Komlan D. », « Espèces » seul ou « espèces » après les articles. */
+function moyenDe(
+  { mode, operateur, client }: PaiementResume,
+  operateurs: OperateurMobileMoney[],
+  seul: boolean,
+  t: TFunction,
+): string {
+  switch (mode) {
+    case 'MOBILE_MONEY':
+      return operateurs.find((candidat) => candidat.code === operateur)?.libelle ?? operateur ?? ''
+    case 'ARDOISE':
+      return t('encaissement.ardoise.de', { nom: client ?? '' })
+    default:
+      return t(seul ? `encaissement.modes.${mode}` : `encaissement.modesEn.${mode}`)
+  }
+}
+
+interface SaisieMode {
+  mode: ModePaiement
+  montant: number
+  recu: number | null
+  operateur: string | null
+  reference: string
+  client: ClientEnCaisse | null
+  depassement: number
+}
+
+/** Ce qui manque au mode choisi pour valider : l'opérateur et la référence, ou le client. */
+function manquesDe({ mode, operateur, reference, client }: SaisieMode, t: TFunction): string[] {
+  switch (mode) {
+    case 'MOBILE_MONEY':
+      return [
+        ...(operateur === null ? [t('encaissement.manques.operateur')] : []),
+        ...(reference.trim() === '' ? [t('encaissement.manques.reference')] : []),
+      ]
+    case 'ARDOISE':
+      return client === null ? [t('encaissement.manques.client')] : []
+    default:
+      return []
+  }
+}
+
+/** Ce que le paiement envoie en plus selon son mode. */
+function propreAuMode(saisie: SaisieMode): Partial<DemandePaiement> {
+  const reference = saisie.reference.trim() === '' ? {} : { reference: saisie.reference.trim() }
+  switch (saisie.mode) {
+    case 'ESPECES':
+      return { montantRecu: saisie.recu ?? saisie.montant }
+    case 'MOBILE_MONEY':
+      return { ...(saisie.operateur === null ? {} : { operateur: saisie.operateur }), ...reference }
+    case 'CARTE':
+      return reference
+    case 'ARDOISE':
+      return {
+        ...(saisie.client === null ? {} : { clientId: saisie.client.id }),
+        ...(saisie.depassement > 0 ? { depasserPlafond: true } : {}),
+      }
+  }
 }
 
 /** Montants rapides en espèces : l'exact, puis les billets supérieurs courants. */
@@ -284,22 +346,37 @@ function montantsRapides(du: number): number[] {
 }
 
 type Partage = 'libre' | 'parts' | 'articles'
+
+/** En parts égales ou par articles, le montant ne se saisit pas : il se calcule comme le serveur. */
+function montantSelonPartage(
+  partage: Partage,
+  etat: EtatEncaissement,
+  selection: Record<string, number>,
+  saisi: number | null,
+): number | null {
+  if (partage === 'parts') return etat.montantPart ?? null
+  return partage === 'articles' ? totalSelection(etat.articles, selection) : saisi
+}
 const PARTAGES: Partage[] = ['libre', 'parts', 'articles']
 const PARTS_MAX = 20
 
 function Paiement({
   etat,
   operateurs,
+  pays,
   devise,
   couverts,
+  peutCrediter,
   surPartage,
   surPaye,
   surCaisseFermee,
 }: Readonly<{
   etat: EtatEncaissement
   operateurs: OperateurMobileMoney[]
+  pays: string
   devise: Devise
   couverts: number | undefined
+  peutCrediter: boolean
   surPartage: (etat: EtatEncaissement) => void
   surPaye: (etat: EtatEncaissement) => void
   surCaisseFermee: () => void
@@ -319,6 +396,8 @@ function Paiement({
     operateurs.length === 1 ? (operateurs[0]?.code ?? null) : null,
   )
   const [reference, setReference] = useState('')
+  const [client, setClient] = useState<ClientEnCaisse | null>(null)
+  const validation = useValidation()
   // Tiré une fois par paiement : un nouvel essai après une coupure réseau garde le même.
   const [id] = useState(() => globalThis.crypto.randomUUID())
   const [enCours, setEnCours] = useState(false)
@@ -327,26 +406,27 @@ function Paiement({
     formaterMontant({ unitesMineures: valeur, devise }, { forme: 'courte' })
 
   const montantSaisi = lireMontant(montant, devise)
-  // En parts égales ou par articles, le montant ne se saisit pas : il se calcule comme le serveur.
-  const montantLu =
-    partage === 'parts'
-      ? (etat.montantPart ?? null)
-      : partage === 'articles'
-        ? totalSelection(etat.articles, selection)
-        : montantSaisi
+  const montantLu = montantSelonPartage(partage, etat, selection, montantSaisi)
   const recuLu = recu === null ? montantLu : lireMontant(recu, devise)
   const montantValide = montantLu !== null && montantLu > 0 && montantLu <= etat.reste
   const manque =
     mode === 'ESPECES' && montantLu !== null && (recuLu ?? 0) < montantLu
       ? montantLu - (recuLu ?? 0)
       : 0
-  const aCompleter =
-    mode === 'MOBILE_MONEY'
-      ? [
-          ...(operateur === null ? [t('encaissement.manques.operateur')] : []),
-          ...(reference.trim() === '' ? [t('encaissement.manques.reference')] : []),
-        ]
-      : []
+  const depassement =
+    mode === 'ARDOISE' && client !== null ? depassementPlafond(client, montantLu ?? 0) : 0
+  const saisie: SaisieMode = {
+    mode,
+    montant: montantLu ?? 0,
+    recu: recuLu,
+    operateur,
+    reference,
+    client,
+    depassement,
+  }
+  const aCompleter = manquesDe(saisie, t)
+  const aide =
+    partage === 'libre' ? 'encaissement.aide' : `encaissement.partage.aidesPaiement.${partage}`
   const valide = montantValide && manque === 0 && aCompleter.length === 0
 
   function toucher(touche: string) {
@@ -397,21 +477,28 @@ function Paiement({
       id,
       mode,
       montant: montantLu,
-      ...(mode === 'ESPECES' ? { montantRecu: recuLu ?? montantLu } : {}),
-      ...(mode === 'MOBILE_MONEY' && operateur !== null ? { operateur } : {}),
-      ...(mode !== 'ESPECES' && reference.trim() !== '' ? { reference: reference.trim() } : {}),
+      ...propreAuMode(saisie),
       ...(partage === 'parts' ? { part: true } : {}),
       ...(partage === 'articles'
         ? { articles: choisis.map(([ligneId, quantite]) => ({ ligneId, quantite })) }
         : {}),
     }
     try {
-      surPaye(
-        await appelerCaisse<EtatEncaissement>(`/caisse/commandes/${etat.commandeId}/paiements`, {
-          methode: 'POST',
-          corps: demande,
-        }),
+      // Sans le droit de vendre à crédit, un gérant valide avec son code ; le même paiement repart.
+      const paye = await validation.executer(
+        (validationId) =>
+          appelerCaisse<EtatEncaissement>(`/caisse/commandes/${etat.commandeId}/paiements`, {
+            methode: 'POST',
+            corps: validationId === undefined ? demande : { ...demande, validationId },
+          }),
+        {
+          permission: 'CLIENT_CREDIT',
+          objetId: etat.commandeId,
+          titre: libelleValider(),
+          contexte: t('encaissement.ardoise.validationContexte'),
+        },
       )
+      if (paye !== undefined) surPaye(paye)
     } catch (echec) {
       setErreur(echec)
       if (echec instanceof ErreurApi && echec.code === 'CAISSE_FERMEE') {
@@ -422,8 +509,21 @@ function Paiement({
     }
   }
 
+  function libelleValider(): string {
+    const valeurs = { montant: courte(montantLu ?? 0) }
+    if (mode !== 'ARDOISE') {
+      return t('encaissement.valider', { ...valeurs, mode: t(`encaissement.modesEn.${mode}`) })
+    }
+    if (client === null) return t('encaissement.ardoise.validerSans', valeurs)
+    return t(
+      depassement > 0 ? 'encaissement.ardoise.validerDepassement' : 'encaissement.ardoise.valider',
+      { ...valeurs, nom: client.nom },
+    )
+  }
+
   return (
     <>
+      {validation.dialogue}
       <section className="flex min-w-0 flex-1 flex-col gap-3 rounded-moyen border border-trait bg-surface p-4">
         {erreur !== null && <AlerteErreur erreur={erreur} />}
         <div
@@ -489,23 +589,19 @@ function Paiement({
           aria-label={t('encaissement.modes.titre')}
           className="grid grid-cols-2 gap-2 sm:grid-cols-4"
         >
-          {[...MODES, 'ARDOISE' as const].map((candidat) => (
+          {MODES.map((candidat) => (
             <button
               key={candidat}
               type="button"
               role="radio"
               aria-checked={mode === candidat}
-              disabled={candidat === 'ARDOISE'}
               onClick={() => {
-                if (candidat !== 'ARDOISE') {
-                  setMode(candidat)
-                  setActif(candidat === 'ESPECES' ? 'recu' : 'montant')
-                }
+                setMode(candidat)
+                setActif(candidat === 'ESPECES' ? 'recu' : 'montant')
               }}
               className={clsx(
-                'flex min-h-16 flex-col items-start justify-center gap-0.5 rounded-moyen px-3 py-1.5 text-left text-encre',
+                'flex min-h-16 flex-col items-start justify-center gap-0.5 rounded-moyen bg-surface px-3 py-1.5 text-left text-encre',
                 mode === candidat ? 'border-2 border-accent' : 'border border-trait',
-                candidat === 'ARDOISE' ? 'bg-fond opacity-50' : 'bg-surface',
               )}
             >
               <span className="text-corps-fort">{t(`encaissement.modes.${candidat}`)}</span>
@@ -613,15 +709,21 @@ function Paiement({
             }}
           />
         )}
+        {mode === 'ARDOISE' && (
+          <ChoixClientArdoise
+            client={client}
+            montant={montantLu ?? 0}
+            devise={devise}
+            pays={pays}
+            peutCreer={peutCrediter}
+            surChoisir={setClient}
+          />
+        )}
         <div className="mt-auto flex flex-wrap items-center justify-end gap-3 pt-2">
-          <span className="flex-1 text-legende text-attenue">
+          <span className="min-w-48 flex-1 text-legende text-attenue">
             {aCompleter.length > 0
               ? t('encaissement.manques.pourValider', { liste: aCompleter.join(', ') })
-              : t(
-                  partage === 'libre'
-                    ? 'encaissement.aide'
-                    : `encaissement.partage.aidesPaiement.${partage}`,
-                )}
+              : t(aide)}
           </span>
           <Bouton
             variante="principal"
@@ -630,15 +732,14 @@ function Paiement({
             className="min-h-bouton-encaisser px-6 text-titre-carte"
             onClick={() => void valider()}
           >
-            {t('encaissement.valider', {
-              montant: courte(montantLu ?? 0),
-              mode: t(`encaissement.modesEn.${mode}`),
-            })}
+            {libelleValider()}
           </Bouton>
         </div>
       </section>
-      {/* Le clavier ne sert qu'à saisir un montant libre ou les espèces reçues. */}
-      {(partage === 'libre' || mode === 'ESPECES') && <ClavierMontant surToucher={toucher} />}
+      {/* Le clavier sert au montant libre et aux espèces reçues ; sur l'ardoise, la place va au choix du client. */}
+      {(partage === 'libre' || mode === 'ESPECES') && mode !== 'ARDOISE' && (
+        <ClavierMontant surToucher={toucher} />
+      )}
     </>
   )
 }

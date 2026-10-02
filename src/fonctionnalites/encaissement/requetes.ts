@@ -5,6 +5,7 @@ import type {
   EtatEncaissement,
   EtatRemboursement,
   NoteEncaissee,
+  SituationCaisse,
 } from '../../partage/api/contrat'
 
 /** La caisse de cette tablette : ouverte ou non, et les opérateurs Mobile Money du pays. */
@@ -33,4 +34,12 @@ export function requeteRemboursement(commandeId: string) {
     queryFn: ({ signal }) =>
       appelerCaisse<EtatRemboursement>(`/caisse/commandes/${commandeId}/remboursement`, { signal }),
   })
+}
+
+/** La caisse en cours (rapport X) ; une caisse fermée répond une erreur, sans relance. */
+export const requeteSituation = {
+  queryKey: ['caisse', 'situation'],
+  queryFn: ({ signal }: { signal: AbortSignal }) =>
+    appelerCaisse<SituationCaisse>('/caisse/situation', { signal }),
+  retry: false,
 }

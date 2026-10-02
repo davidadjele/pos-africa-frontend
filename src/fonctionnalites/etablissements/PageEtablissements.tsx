@@ -1,15 +1,15 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Pencil, Plus, RotateCw } from 'lucide-react'
+import { Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { EtablissementResume } from '../../partage/api/contrat'
 import { useSession } from '../../partage/auth/useSession'
 import { optionsFuseaux } from '../../partage/referentiel/pays'
-import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
+import { Alerte } from '../../partage/ui/Alerte'
 import { Bouton } from '../../partage/ui/Bouton'
-import { Chargement } from '../../partage/ui/Chargement'
 import { EtatVide } from '../../partage/ui/EtatVide'
-import { Pagination, Tableau, type ColonneTableau } from '../../partage/ui/Tableau'
+import { ListePaginee } from '../../partage/ui/ListePaginee'
+import { type ColonneTableau } from '../../partage/ui/Tableau'
 import { FormulaireEtablissement } from './FormulaireEtablissement'
 import { requeteEtablissements, TAILLE_PAGE } from './requetes'
 
@@ -94,23 +94,35 @@ export function PageEtablissements() {
     })
   }
 
-  const liste = requete.data
-  const vide = liste?.total === 0
+  const vide = requete.data?.total === 0
+  const boutonAjouter = (
+    <Bouton
+      variante="principal"
+      icone={Plus}
+      onClick={() => {
+        ouvrir({ mode: 'creation' })
+      }}
+    >
+      {t('etablissements.ajouter')}
+    </Bouton>
+  )
+  const etatVide = peutGerer ? (
+    <EtatVide
+      titre={t('etablissements.vide.titre')}
+      phrase={t('etablissements.vide.phrase')}
+      action={boutonAjouter}
+    />
+  ) : (
+    <EtatVide
+      titre={t('etablissements.vide.titre')}
+      phrase={t('etablissements.vide.phraseSansDroit')}
+    />
+  )
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="m-0 text-titre-page text-encre">{t('etablissements.titre')}</h1>
-        {peutGerer && edition === null && liste !== undefined && !vide && (
-          <Bouton
-            variante="principal"
-            icone={Plus}
-            onClick={() => {
-              ouvrir({ mode: 'creation' })
-            }}
-          >
-            {t('etablissements.ajouter')}
-          </Bouton>
-        )}
+        {peutGerer && edition === null && requete.data !== undefined && !vide && boutonAjouter}
       </div>
 
       {confirmation !== null && <Alerte ton="succes">{confirmation}</Alerte>}
@@ -128,61 +140,17 @@ export function PageEtablissements() {
         />
       )}
 
-      {requete.isPending && <Chargement texte={t('etablissements.chargement')} />}
-
-      {requete.isError && (
-        <AlerteErreur
-          erreur={requete.error}
-          action={
-            <Bouton icone={RotateCw} onClick={() => void requete.refetch()}>
-              {t('commun.reessayer')}
-            </Bouton>
-          }
-        />
-      )}
-
-      {vide && edition === null && (
-        <section className="rounded-moyen border border-trait bg-surface p-6">
-          <EtatVide
-            titre={t('etablissements.vide.titre')}
-            phrase={
-              peutGerer ? t('etablissements.vide.phrase') : t('etablissements.vide.phraseSansDroit')
-            }
-            {...(peutGerer
-              ? {
-                  action: (
-                    <Bouton
-                      variante="principal"
-                      icone={Plus}
-                      onClick={() => {
-                        ouvrir({ mode: 'creation' })
-                      }}
-                    >
-                      {t('etablissements.ajouter')}
-                    </Bouton>
-                  ),
-                }
-              : {})}
-          />
-        </section>
-      )}
-
-      {liste !== undefined && !vide && (
-        <>
-          <Tableau
-            libelle={t('etablissements.tableau')}
-            colonnes={colonnes}
-            lignes={liste.elements}
-            cleLigne={(e) => e.id}
-          />
-          <Pagination
-            page={page}
-            taille={TAILLE_PAGE}
-            total={liste.total}
-            surChangerPage={setPage}
-          />
-        </>
-      )}
+      <ListePaginee
+        requete={requete}
+        chargement={t('etablissements.chargement')}
+        vide={edition === null ? etatVide : null}
+        libelle={t('etablissements.tableau')}
+        colonnes={colonnes}
+        cleLigne={(e) => e.id}
+        page={page}
+        taille={TAILLE_PAGE}
+        surChangerPage={setPage}
+      />
     </div>
   )
 }

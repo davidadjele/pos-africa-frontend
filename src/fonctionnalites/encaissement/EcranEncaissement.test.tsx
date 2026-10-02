@@ -12,7 +12,10 @@ import {
   POULET_A_ENVOYER,
 } from '../../../tests/commandes'
 import { serveurMsw } from '../../../tests/serveurMsw'
+import { KOMLAN_EN_CAISSE, YAO_EN_CAISSE } from '../ardoise/fixtures'
 import type {
+  ClientEnCaisse,
+  DemandeClient,
   DemandeFondDeCaisse,
   DemandePaiement,
   DemandePartage,
@@ -33,6 +36,7 @@ const CAISSE_OUVERTE: EtatCaisse = {
     ouvertePar: 'Yawa T.',
     ouverteLe: '2026-09-29T07:02:00Z',
   },
+  pays: 'TG',
   operateurs: OPERATEURS,
 }
 const A_PAYER: EtatEncaissement = {
@@ -117,7 +121,7 @@ describe('EcranEncaissement', () => {
         return HttpResponse.json(CAISSE_OUVERTE)
       }),
     )
-    encaissementServi({ operateurs: OPERATEURS })
+    encaissementServi({ pays: 'TG', operateurs: OPERATEURS })
 
     expect(
       await screen.findByRole('heading', { name: 'La caisse de cette tablette n’est pas ouverte' }),
@@ -156,7 +160,7 @@ describe('EcranEncaissement', () => {
     encaissementServi()
 
     const modes = await screen.findByRole('radiogroup', { name: 'Mode de paiement' })
-    expect(within(modes).getByRole('radio', { name: /Ardoise/ })).toBeDisabled()
+    expect(within(modes).getAllByRole('radio')).toHaveLength(4)
     await userEvent.click(within(modes).getByRole('radio', { name: /Mobile Money/ }))
     await userEvent.click(screen.getByRole('radio', { name: 'Flooz (Moov Africa)' }))
     await remplacer(screen.getByRole('textbox', { name: /^Montant payé/ }), '5000')
@@ -355,11 +359,177 @@ describe('EcranEncaissement', () => {
   })
 
   it('ne propose pas d’ouvrir la caisse à qui n’en a pas le droit', async () => {
-    encaissementServi({ operateurs: OPERATEURS }, ['COMMANDE_CREER', 'PAIEMENT_ENCAISSER'])
+    encaissementServi({ pays: 'TG', operateurs: OPERATEURS }, [
+      'COMMANDE_CREER',
+      'PAIEMENT_ENCAISSER',
+    ])
 
     expect(
       await screen.findByText('Un caissier ou un gérant ouvre la caisse avec son code.'),
     ).toBeVisible()
     expect(screen.queryByRole('button', { name: /^Ouvrir la caisse/ })).not.toBeInTheDocument()
+  })
+})
+
+describe('Encaisser sur l’ardoise', () => {
+  const GERANT = [...CAISSIER, 'CLIENT_CREDIT']
+  const SUR_ARDOISE: EtatEncaissement = {
+    ...A_PAYER,
+    paye: 10_200,
+    reste: 0,
+    payee: true,
+    paiements: [
+      {
+        id: 'fa000000-0000-4000-8000-000000000009',
+        mode: 'ARDOISE',
+        montant: 10_200,
+        monnaieRendue: 0,
+        encaissePar: 'Afi M.',
+        encaisseLe: '2026-09-29T21:05:00Z',
+        part: false,
+        articles: [],
+        client: 'Komlan D.',
+      },
+    ],
+  }
+
+  function clientsServis(clients: ClientEnCaisse[] = [KOMLAN_EN_CAISSE, YAO_EN_CAISSE]) {
+    const crees: DemandeClient[] = []
+    serveurMsw.use(
+      http.get(`${API}/caisse/clients`, () => HttpResponse.json(clients)),
+      http.post(`${API}/caisse/clients`, async ({ request }) => {
+        const demande = (await request.json()) as DemandeClient
+        crees.push(demande)
+        return HttpResponse.json(
+          { id: 'c0000000-0000-4000-8000-000000000099', nom: demande.nom, solde: 0 },
+          { status: 201 },
+        )
+      }),
+    )
+    return crees
+  }
+
+  async function choisirArdoise() {
+    await userEvent.click(await screen.findByRole('radio', { name: /Ardoise/ }))
+    return screen.findByRole('radiogroup', { name: 'Client' })
+  }
+
+  it('met la note sur l’ardoise d’un client et montre ce qu’il devra', async () => {
+    clientsServis()
+    encaissementServi(CAISSE_OUVERTE, GERANT)
+    const recus = paiements(SUR_ARDOISE)
+
+    const clients = await choisirArdoise()
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Chercher un client' }), 'kom')
+    expect(within(clients).queryByRole('radio', { name: /Yao S\./ })).not.toBeInTheDocument()
+    await userEvent.click(within(clients).getByRole('radio', { name: /Komlan D\./ }))
+
+    const resume = screen.getByRole('region', { name: 'Ardoise de Komlan D.' })
+    expect(resume).toHaveTextContent(/Doit déjà4\s500/)
+    expect(resume).toHaveTextContent(/Cette note\+\s?10\s200/)
+    expect(resume).toHaveTextContent(/Doit après14\s700\sF/)
+    expect(resume).toHaveTextContent(/14\s700 sur un plafond de 25\s000\sF/)
+    await userEvent.click(
+      screen.getByRole('button', { name: /^Mettre 10\s200\sF sur l’ardoise de Komlan D\./ }),
+    )
+
+    expect(await screen.findByText('Note encaissée')).toBeInTheDocument()
+    expect(recus).toEqual([
+      {
+        id: expect.any(String) as string,
+        mode: 'ARDOISE',
+        montant: 10_200,
+        clientId: KOMLAN_EN_CAISSE.id,
+      },
+    ])
+  })
+
+  it('demande de confirmer le dépassement du plafond', async () => {
+    clientsServis([{ ...KOMLAN_EN_CAISSE, solde: 20_000 }])
+    encaissementServi(CAISSE_OUVERTE, GERANT)
+    const recus = paiements(SUR_ARDOISE)
+
+    const clients = await choisirArdoise()
+    await userEvent.click(within(clients).getByRole('radio', { name: /Komlan D\./ }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/Plafond dépassé de 5\s200\sF/)
+    await userEvent.click(
+      screen.getByRole('button', { name: /^Dépasser le plafond : 10\s200\sF sur l’ardoise/ }),
+    )
+
+    await screen.findByText('Note encaissée')
+    expect(recus[0]).toMatchObject({ mode: 'ARDOISE', depasserPlafond: true })
+  })
+
+  it('fait valider par un gérant l’ardoise d’un caissier', async () => {
+    clientsServis()
+    encaissementServi()
+    const recus: DemandePaiement[] = []
+    serveurMsw.use(
+      http.post(`${API}/caisse/commandes/${NOTE_T4.id}/paiements`, async ({ request }) => {
+        const demande = (await request.json()) as DemandePaiement
+        recus.push(demande)
+        return demande.validationId === undefined
+          ? HttpResponse.json(
+              { statut: 403, code: 'VALIDATION_REQUISE', message: 'x' },
+              { status: 403 },
+            )
+          : HttpResponse.json(SUR_ARDOISE)
+      }),
+      http.get(`${API}/caisse/validateurs`, () =>
+        HttpResponse.json([
+          {
+            utilisateurId: '0d6a8f3e-0000-4c1b-9a51-5d7b9b0e0301',
+            prenom: 'Afi',
+            nomCourt: 'Afi M.',
+            role: 'GERANT',
+            bloque: false,
+          },
+        ]),
+      ),
+      http.post(`${API}/caisse/validations`, () =>
+        HttpResponse.json(
+          { id: 'a1b20000-0000-4000-8000-000000000009', expireLe: '2026-09-29T21:30:00Z' },
+          { status: 201 },
+        ),
+      ),
+    )
+
+    const clients = await choisirArdoise()
+    // Seul qui peut vendre à crédit ouvre une ardoise depuis la caisse.
+    expect(screen.queryByRole('button', { name: 'Nouveau client' })).not.toBeInTheDocument()
+    await userEvent.click(within(clients).getByRole('radio', { name: /Yao S\./ }))
+    await userEvent.click(screen.getByRole('button', { name: /^Mettre 10\s200\sF sur l’ardoise/ }))
+
+    const validation = await screen.findByRole('dialog', { name: /ardoise de Yao S\./ })
+    await userEvent.click(await within(validation).findByRole('button', { name: /Afi M\./ }))
+    for (const chiffre of '5937') {
+      await userEvent.click(within(validation).getByRole('button', { name: chiffre }))
+    }
+    await userEvent.click(within(validation).getByRole('button', { name: 'Valider' }))
+
+    await screen.findByText('Note encaissée')
+    expect(recus[1]).toMatchObject({
+      clientId: YAO_EN_CAISSE.id,
+      validationId: 'a1b20000-0000-4000-8000-000000000009',
+    })
+    // Le même paiement repart : un réseau lent ne le compte pas deux fois.
+    expect(recus[1]?.id).toBe(recus[0]?.id)
+  })
+
+  it('ouvre une ardoise à un nouveau client sans quitter l’encaissement', async () => {
+    const crees = clientsServis()
+    encaissementServi(CAISSE_OUVERTE, GERANT)
+
+    await choisirArdoise()
+    await userEvent.click(screen.getByRole('button', { name: 'Nouveau client' }))
+    const dialogue = screen.getByRole('dialog', { name: 'Nouveau client' })
+    expect(within(dialogue).queryByLabelText(/Note interne/)).not.toBeInTheDocument()
+    expect(within(dialogue).getByText('+228')).toBeVisible()
+    await userEvent.type(within(dialogue).getByLabelText(/^Nom/), 'Akossiwa M.')
+    await userEvent.click(within(dialogue).getByRole('button', { name: 'Ouvrir l’ardoise' }))
+
+    expect(await screen.findByRole('region', { name: 'Ardoise de Akossiwa M.' })).toBeVisible()
+    expect(crees).toEqual([{ nom: 'Akossiwa M.' }])
   })
 })

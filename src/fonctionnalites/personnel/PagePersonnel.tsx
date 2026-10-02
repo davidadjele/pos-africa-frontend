@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { KeyRound, Pencil, Plus, RotateCw, UserX } from 'lucide-react'
+import { KeyRound, Pencil, Plus, UserX } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appelerApi } from '../../partage/api/appelerApi'
@@ -8,12 +8,12 @@ import { useSession } from '../../partage/auth/useSession'
 import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
 import { BadgeStatut } from '../../partage/ui/BadgeStatut'
 import { Bouton } from '../../partage/ui/Bouton'
-import { Chargement } from '../../partage/ui/Chargement'
 import { CodeSecret } from '../../partage/ui/CodeSecret'
 import { Dialogue } from '../../partage/ui/Dialogue'
 import { EtatVide } from '../../partage/ui/EtatVide'
 import { MenuActions } from '../../partage/ui/MenuActions'
-import { Pagination, Tableau, type ColonneTableau } from '../../partage/ui/Tableau'
+import { ListePaginee } from '../../partage/ui/ListePaginee'
+import { type ColonneTableau } from '../../partage/ui/Tableau'
 import { requeteEtablissements } from '../etablissements/requetes'
 import { FormulaireEmploye } from './FormulaireEmploye'
 import { requetePersonnel, requeteRoles, TAILLE_PAGE } from './requetes'
@@ -297,10 +297,28 @@ export function PagePersonnel() {
     })
   }
 
-  const liste = requete.data
-  const vide = liste?.total === 0
+  const vide = requete.data?.total === 0
+  const boutonAjouter = (
+    <Bouton
+      variante="principal"
+      icone={Plus}
+      onClick={() => {
+        ouvrir({ mode: 'creation' })
+      }}
+    >
+      {t('personnel.ajouter')}
+    </Bouton>
+  )
   const referentielsPrets = roles.data !== undefined && etablissements.data !== undefined
 
+  const actionVide = peutGerer && referentielsPrets ? { action: boutonAjouter } : {}
+  const etatVide = (
+    <EtatVide
+      titre={t('personnel.vide.titre')}
+      phrase={t('personnel.vide.phrase')}
+      {...actionVide}
+    />
+  )
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -308,17 +326,7 @@ export function PagePersonnel() {
           <h1 className="m-0 text-titre-page text-encre">{t('personnel.titre')}</h1>
           <p className="m-0 mt-1 text-corps text-attenue">{t('personnel.phrase')}</p>
         </div>
-        {peutGerer && edition === null && referentielsPrets && !vide && (
-          <Bouton
-            variante="principal"
-            icone={Plus}
-            onClick={() => {
-              ouvrir({ mode: 'creation' })
-            }}
-          >
-            {t('personnel.ajouter')}
-          </Bouton>
-        )}
+        {peutGerer && edition === null && referentielsPrets && !vide && boutonAjouter}
       </div>
 
       {confirmation !== null && <Alerte ton="succes">{confirmation}</Alerte>}
@@ -341,59 +349,17 @@ export function PagePersonnel() {
         />
       )}
 
-      {requete.isPending && <Chargement texte={t('personnel.chargement')} />}
-
-      {requete.isError && (
-        <AlerteErreur
-          erreur={requete.error}
-          action={
-            <Bouton icone={RotateCw} onClick={() => void requete.refetch()}>
-              {t('commun.reessayer')}
-            </Bouton>
-          }
-        />
-      )}
-
-      {vide && edition === null && (
-        <section className="rounded-moyen border border-trait bg-surface p-6">
-          <EtatVide
-            titre={t('personnel.vide.titre')}
-            phrase={t('personnel.vide.phrase')}
-            {...(peutGerer && referentielsPrets
-              ? {
-                  action: (
-                    <Bouton
-                      variante="principal"
-                      icone={Plus}
-                      onClick={() => {
-                        ouvrir({ mode: 'creation' })
-                      }}
-                    >
-                      {t('personnel.ajouter')}
-                    </Bouton>
-                  ),
-                }
-              : {})}
-          />
-        </section>
-      )}
-
-      {liste !== undefined && !vide && (
-        <>
-          <Tableau
-            libelle={t('personnel.tableau')}
-            colonnes={colonnes}
-            lignes={liste.elements}
-            cleLigne={(e) => e.id}
-          />
-          <Pagination
-            page={page}
-            taille={TAILLE_PAGE}
-            total={liste.total}
-            surChangerPage={setPage}
-          />
-        </>
-      )}
+      <ListePaginee
+        requete={requete}
+        chargement={t('personnel.chargement')}
+        vide={edition === null ? etatVide : null}
+        libelle={t('personnel.tableau')}
+        colonnes={colonnes}
+        cleLigne={(e) => e.id}
+        page={page}
+        taille={TAILLE_PAGE}
+        surChangerPage={setPage}
+      />
 
       {changement !== null && (
         <Dialogue

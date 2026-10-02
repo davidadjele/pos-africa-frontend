@@ -30,7 +30,10 @@
     "NOTE_NON_VIDE": "Cette note contient des articles : elle ne peut pas être fermée ainsi.",
     "NOTE_ENTAMEE": "Un paiement a déjà été encaissé sur cette note : elle ne se modifie plus.",
     "CAISSE_FERMEE": "La caisse de cette tablette n’est pas ouverte. Ouvrez-la avec son fond pour encaisser.",
-    "REMBOURSEMENT_HORS_JOURNEE": "Seules les notes de la journée en cours se remboursent à la caisse."
+    "REMBOURSEMENT_HORS_JOURNEE": "Seules les notes de la journée en cours se remboursent à la caisse.",
+    "PLAFOND_ARDOISE_DEPASSE": "Cette note ferait dépasser le plafond de l’ardoise du client. Confirmez le dépassement ou faites payer une partie maintenant.",
+    "ARDOISE_NON_SOLDEE": "Ce client doit encore de l’argent : son ardoise reste ouverte tant qu’elle n’est pas soldée.",
+    "TABLE_INDISPONIBLE": "Cette table vient d’être retirée du plan (désactivée par un gérant). Le plan est à jour : choisissez une autre table."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Trop d’essais infructueux : le compte est verrouillé. Réessayez dans {{duree}}.",
@@ -399,7 +402,8 @@
       "salles": "Salles et tables",
       "stock": "Stock",
       "aTraiter_one": "{{count}} produit à traiter",
-      "aTraiter_other": "{{count}} produits à traiter"
+      "aTraiter_other": "{{count}} produits à traiter",
+      "ardoises": "Ardoises"
     },
     "tableauDeBord": {
       "titre": "Tableau de bord",
@@ -1042,7 +1046,8 @@
       "PERSONNEL": "Personnel",
       "TABLETTES": "Tablettes",
       "CAISSE": "Caisse",
-      "STOCK": "Stock"
+      "STOCK": "Stock",
+      "ARDOISE": "Ardoises"
     },
     "critiquesSeulement": "Critiques seulement",
     "tout": "Tout",
@@ -1103,7 +1108,13 @@
       "PERTE_STOCK": "<b>{{auteur}}</b> a déclaré une perte de <b>{{objet}}</b> à {{etablissement}}",
       "ECART_INVENTAIRE": "<b>{{auteur}}</b> a corrigé le stock de <b>{{objet}}</b> par inventaire à {{etablissement}}",
       "POLITIQUE_STOCK_MODIFIEE": "<b>{{auteur}}</b> a changé la politique de stock de <b>{{objet}}</b>",
-      "VENTE_SANS_STOCK": "<b>{{auteur}}</b> a vendu <b>{{objet}}</b> sans stock enregistré à {{etablissement}}"
+      "VENTE_SANS_STOCK": "<b>{{auteur}}</b> a vendu <b>{{objet}}</b> sans stock enregistré à {{etablissement}}",
+      "VENTE_ARDOISE": "<b>{{auteur}}</b> a mis une note sur l’ardoise de <b>{{objet}}</b> à {{etablissement}}",
+      "PLAFOND_ARDOISE_DEPASSE": "<b>{{auteur}}</b> a dépassé le plafond de l’ardoise de <b>{{objet}}</b> à {{etablissement}}",
+      "PLAFOND_ARDOISE_MODIFIE": "<b>{{auteur}}</b> a changé le plafond de l’ardoise de <b>{{objet}}</b>",
+      "CLIENT_ARDOISE_DESACTIVE": "<b>{{auteur}}</b> a fermé l’ardoise de <b>{{objet}}</b>",
+      "CLIENT_ARDOISE_REACTIVE": "<b>{{auteur}}</b> a rouvert l’ardoise de <b>{{objet}}</b>",
+      "REGLEMENT_ARDOISE": "<b>{{auteur}}</b> a encaissé un règlement de l’ardoise de <b>{{objet}}</b> à {{etablissement}}"
     },
     "actions": {
       "LIGNE_ANNULER_APRES_ENVOI": "annuler des articles envoyés",
@@ -1113,7 +1124,8 @@
       "ARTICLE_OFFRIR": "offrir un article",
       "PAIEMENT_REMBOURSER": "rembourser un paiement",
       "CAISSE_MOUVEMENT": "un mouvement de caisse",
-      "autre": "une action protégée"
+      "autre": "une action protégée",
+      "CLIENT_CREDIT": "mettre une note sur l’ardoise"
     },
     "annulation": "{{quantite}} × {{montant}}, {{ou}}. Motif : {{motif}}.",
     "annulationValidee": "{{quantite}} × {{montant}}, {{ou}}. Motif : {{motif}}. Validé par {{validateur}}",
@@ -1144,7 +1156,16 @@
       "AVERTISSEMENT": "Avertissement",
       "STRICT": "Stricte"
     },
-    "venteSansStock": "−{{quantite}}, {{apres}} en stock, {{detail}}"
+    "venteSansStock": "−{{quantite}}, {{apres}} en stock, {{detail}}",
+    "venteArdoise": "+{{montant}}, {{note}}. Doit {{solde}}.",
+    "venteArdoiseValidee": "+{{montant}}, {{note}}. Doit {{solde}}. Validé par {{validateur}}",
+    "depassementArdoise": "+{{montant}}, {{note}}. Doit {{solde}}, plafond {{plafond}} dépassé de {{depassement}}.",
+    "depassementArdoiseValide": "+{{montant}}, {{note}}. Doit {{solde}}, plafond {{plafond}} dépassé de {{depassement}}. Validé par {{validateur}}",
+    "plafondArdoise": "{{avant}} → {{apres}}",
+    "sansPlafond": "Sans plafond",
+    "reglementArdoise": "−{{montant}} en {{mode}}. Doit encore {{solde}}.",
+    "remboursementReparti": "−{{montant}} ({{repartition}}), {{ou}}. Motif : {{motif}}.",
+    "remboursementRepartiValide": "−{{montant}} ({{repartition}}), {{ou}}. Motif : {{motif}}. Validé par {{validateur}}"
   },
   "salles": {
     "titre": "Salles et tables de {{etablissement}}",
@@ -1234,7 +1255,7 @@
       "ESPECES": "Rendu calculé",
       "MOBILE_MONEY": "Opérateur et référence",
       "CARTE": "TPE de la banque",
-      "ARDOISE": "Bientôt disponible"
+      "ARDOISE": "Le client paiera plus tard"
     },
     "montant": "Montant payé",
     "recu": "Espèces reçues",
@@ -1272,12 +1293,14 @@
     "modesEn": {
       "ESPECES": "espèces",
       "MOBILE_MONEY": "Mobile Money",
-      "CARTE": "carte"
+      "CARTE": "carte",
+      "ARDOISE": "ardoise"
     },
     "manques": {
       "pourValider": "Pour valider : {{liste}}.",
       "operateur": "choisissez l’opérateur",
-      "reference": "recopiez la référence"
+      "reference": "recopiez la référence",
+      "client": "choisissez le client"
     },
     "partage": {
       "titre": "Partager l’addition",
@@ -1312,6 +1335,28 @@
         "parts": "Chaque part est un paiement : la note se clôt avec la dernière.",
         "articles": "Le montant vient des articles choisis, remises comprises."
       }
+    },
+    "ardoise": {
+      "de": "Ardoise, {{nom}}",
+      "chercher": "Chercher un client",
+      "chargement": "Chargement des clients…",
+      "client": "Client",
+      "aucun": "Aucun client n’a d’ardoise ici. Un gérant peut en ouvrir une.",
+      "aucunCreer": "Aucun client n’a d’ardoise ici : ouvrez-en une avec « Nouveau client ».",
+      "introuvable": "Aucun client ne correspond à cette recherche.",
+      "plafond": "plafond {{plafond}}",
+      "choisir": "Choisissez le client qui paiera plus tard.",
+      "resume": "Ardoise de {{nom}}",
+      "dejaDu": "Doit déjà",
+      "cetteNote": "Cette note",
+      "apres": "Doit après",
+      "surPlafond": "{{apres}} sur un plafond de {{plafond}}",
+      "depasse": "Plafond dépassé de {{montant}}",
+      "depassePhrase": "Le dépassement sera enregistré et visible du propriétaire. Sinon, faites payer une partie maintenant.",
+      "valider": "Mettre {{montant}} sur l’ardoise de {{nom}}",
+      "validerSans": "Mettre {{montant}} sur l’ardoise",
+      "validerDepassement": "Dépasser le plafond : {{montant}} sur l’ardoise de {{nom}}",
+      "validationContexte": "Mettre une note sur l’ardoise demande l’accord d’un gérant."
     }
   },
   "tiroir": {
@@ -1328,7 +1373,8 @@
       "notes_other": "{{count}} notes encaissées",
       "total": "Total encaissé",
       "remboursements": "Remboursements",
-      "nettes": "Ventes nettes"
+      "nettes": "Ventes nettes",
+      "totalVendu": "Total vendu"
     },
     "mouvements": {
       "titre": "Mouvements de caisse",
@@ -1356,10 +1402,11 @@
       "depenses": "Dépenses",
       "attendu": "Attendu",
       "reserve": "Le détail des espèces attendues est réservé au gérant : à la clôture, on compte le tiroir avant de voir l’attendu.",
-      "remboursements": "Remboursements en espèces"
+      "remboursements": "Remboursements en espèces",
+      "reglements": "Règlements d’ardoise en espèces"
     },
-    "notesOuvertes_one": "{{count}} note encore ouverte dans l’établissement.",
-    "notesOuvertes_other": "{{count}} notes encore ouvertes dans l’établissement.",
+    "notesOuvertes_one": "{{count}} note encore ouverte dans l’établissement",
+    "notesOuvertes_other": "{{count}} notes encore ouvertes dans l’établissement",
     "dialogue": {
       "titre": "Mouvement de caisse",
       "phrase": "Des espèces entrent dans le tiroir ou en sortent sans vente. Elles comptent dans l’attendu de la clôture.",
@@ -1377,7 +1424,15 @@
     "vues": {
       "titre": "Vues de la caisse",
       "situation": "Situation",
-      "notes": "Notes encaissées"
+      "notes": "Notes encaissées",
+      "ardoises": "Ardoises"
+    },
+    "reglements": {
+      "titre": "Règlements d’ardoise"
+    },
+    "ouvertes": {
+      "titre": "Notes non encaissées",
+      "phrase": "Elles restent ouvertes : encaissées sur une prochaine caisse, elles compteront dans sa journée."
     }
   },
   "cloture": {
@@ -1424,7 +1479,9 @@
         "information": "Pour information",
         "tiroir": "Espèces du tiroir",
         "comptage": "Comptage"
-      }
+      },
+      "ventesAvecArdoise_one": "Ventes ({{count}} note)",
+      "ventesAvecArdoise_other": "Ventes ({{count}} notes)"
     },
     "comptage": "Comptage des espèces"
   },
@@ -1485,7 +1542,12 @@
     "valider": "Rembourser {{montant}} en {{mode}}",
     "validationTitre": "Rembourser {{montant}} en {{mode}} ?",
     "validationContexte": "{{note}}, demandé par {{demandeur}}. Motif : {{motif}}.",
-    "chargementNote": "Chargement de la note…"
+    "chargementNote": "Chargement de la note…",
+    "aideArdoise": "Diminue ce que doit le client, au plus {{montant}}",
+    "partEn": "{{mode}} {{montant}}",
+    "validerSeul": "Rembourser {{montant}}",
+    "validationTitreReparti": "Rembourser {{montant}}",
+    "ordre": "Réparti entre les modes de la note : l’ardoise d’abord, puis la carte et le Mobile Money, les espèces en dernier."
   },
   "stock": {
     "titre": "Stock",
@@ -1654,6 +1716,116 @@
       "SOUPLE": "La caisse vend même sans stock à {{etablissement}} : un stock négatif signale une livraison non saisie.",
       "AVERTISSEMENT": "À {{etablissement}}, la caisse prévient quand un article n’a plus de stock, puis vend si on le confirme.",
       "STRICT": "À {{etablissement}}, la caisse refuse de vendre un article qui n’a plus de stock."
+    }
+  },
+  "ardoise": {
+    "titre": "Ardoises",
+    "phrase": "Les clients autorisés à payer plus tard. Une note se met sur l’ardoise à l’encaissement.",
+    "etablissement": "Établissement",
+    "chargement": "Chargement des ardoises…",
+    "resume": "Résumé des ardoises",
+    "aRecevoir": "À recevoir",
+    "clients_one": "{{count}} client",
+    "clients_other": "{{count}} clients",
+    "aRelancer": "À relancer",
+    "aRelancerSous_one": "{{count}} client, dette de plus de {{jours}} jours",
+    "aRelancerSous_other": "{{count}} clients, dette de plus de {{jours}} jours",
+    "filtres": {
+      "doivent": "Doivent",
+      "aRelancer": "À relancer",
+      "tous": "Tous les clients"
+    },
+    "rechercher": "Nom ou téléphone",
+    "tableau": "Ardoises de {{etablissement}}",
+    "colonnes": {
+      "client": "Client",
+      "doit": "Doit",
+      "plafond": "Plafond",
+      "anciennete": "Plus ancienne dette",
+      "mouvement": "Dernier mouvement",
+      "actions": "Actions"
+    },
+    "sansPlafond": "Sans plafond",
+    "rienAPayer": "Rien à payer",
+    "depuis_zero": "Aujourd’hui",
+    "depuis_one": "Depuis hier",
+    "depuis_other": "Depuis {{count}} jours",
+    "aucunMouvement": "Aucun mouvement",
+    "voirFiche": "Voir la fiche",
+    "plusDActions": "Plus d’actions pour {{nom}}",
+    "fermer": "Fermer l’ardoise",
+    "fermerTitre": "Fermer l’ardoise de {{nom}} ?",
+    "fermerPhrase": "Le client ne pourra plus rien mettre sur l’ardoise. Son historique reste consultable, et l’ardoise peut être rouverte.",
+    "fermee": "Ardoise de {{nom}} fermée",
+    "fermeeBadge": "Ardoise fermée",
+    "rouvrir": "Rouvrir l’ardoise",
+    "rouverte": "Ardoise de {{nom}} rouverte",
+    "vide": {
+      "titre": "Aucune ardoise pour l’instant",
+      "phrase": "Ouvrez une ardoise aux clients de confiance : ils pourront payer plus tard, dans la limite de leur plafond."
+    },
+    "aucun": {
+      "titre": "Aucun client ici",
+      "phrase": "Aucun client ne correspond à ce filtre ou à cette recherche."
+    },
+    "validePar": "{{par}}, validé par {{validateur}}",
+    "ecritures": {
+      "VENTE_A_CREDIT": "Vente à crédit",
+      "REGLEMENT": "Règlement",
+      "CORRECTION": "Correction"
+    },
+    "client": {
+      "nouveau": "Nouveau client",
+      "modifier": "Modifier",
+      "phrase": "Le client pourra mettre ses notes sur l’ardoise et payer plus tard, à la caisse.",
+      "ouvrir": "Ouvrir l’ardoise",
+      "nom": "Nom",
+      "nomManquant": "Indiquez le nom du client.",
+      "telephone": "Téléphone",
+      "telephoneAide": "Numéro local ({{pays}}), espaces facultatifs. Autre pays : commencez par « + » et son indicatif.",
+      "plafond": "Plafond",
+      "plafondAide": "Ce qu’il peut devoir au plus. Vide : sans plafond.",
+      "plafondInvalide": "Indiquez un montant, ou laissez vide.",
+      "note": "Note interne",
+      "noteAide": "Jamais montrée au client.",
+      "ouvert": "Ardoise ouverte pour {{nom}}",
+      "modifie": "{{nom}} modifié"
+    },
+    "fiche": {
+      "resume": "Ce que doit {{nom}}",
+      "doit": "Doit",
+      "surPlafond": "sur un plafond de {{plafond}}",
+      "plusAncienne": "Plus ancienne dette",
+      "sansNote": "Aucune note.",
+      "mouvements": "Mouvements de l’ardoise",
+      "aucun": "Aucun mouvement pour l’instant.",
+      "definitif": "Chaque mouvement est définitif. Une erreur se corrige par un remboursement de la note, jamais en modifiant ce que doit le client.",
+      "colonnes": {
+        "date": "Date",
+        "mouvement": "Mouvement",
+        "montant": "Montant",
+        "apres": "Doit après"
+      }
+    },
+    "caisse": {
+      "doivent_one": "{{count}} client doit {{montant}}",
+      "doivent_other": "{{count}} clients doivent {{montant}}",
+      "liste": "Clients qui doivent",
+      "aucun": "Aucun client ne doit rien pour l’instant.",
+      "choisir": "Choisissez le client qui vient régler son ardoise.",
+      "reglementDe": "Règlement de {{nom}}",
+      "doit": "Doit {{montant}}",
+      "mode": "Mode de règlement",
+      "montant": "Montant réglé",
+      "tout": "Tout : {{montant}}",
+      "auPlus": "Au plus {{montant}} : ce que doit le client.",
+      "rendu": "Monnaie à rendre : {{montant}}",
+      "manques": {
+        "recu": "les espèces reçues couvrent le montant"
+      },
+      "encaisser": "Encaisser {{montant}} en {{mode}}",
+      "regle": "Règlement de {{montant}} encaissé. {{nom}} doit encore {{reste}}.",
+      "solde": "Règlement de {{montant}} encaissé. L’ardoise de {{nom}} est soldée."
     }
   }
 }

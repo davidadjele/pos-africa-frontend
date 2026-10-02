@@ -277,6 +277,27 @@ describe('EcranPlan', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
+  it('dit qu’une table vient d’être désactivée et relit le plan', async () => {
+    planServi()
+    serveurMsw.use(
+      http.post(`${API}/caisse/commandes`, () =>
+        HttpResponse.json(
+          { statut: 409, code: 'TABLE_INDISPONIBLE', message: 'x' },
+          { status: 409 },
+        ),
+      ),
+    )
+    caisseOuverte('/caisse')
+
+    await userEvent.click(await screen.findByRole('button', { name: /T1, libre/ }))
+    await userEvent.click(screen.getByRole('button', { name: 'Ouvrir la note' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Cette table vient d’être retirée du plan',
+    )
+    expect(screen.queryByText('Corrigez les champs indiqués')).not.toBeInTheDocument()
+  })
+
   it('ouvre une vente au comptoir sans rien demander', async () => {
     planServi()
     const recues = ouvertures()

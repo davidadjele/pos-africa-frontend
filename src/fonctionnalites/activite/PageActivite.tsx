@@ -30,7 +30,14 @@ import { auteurDe, detailActivite, PhraseActivite, type ContexteActivite } from 
 const TAILLE_PAGE = 50
 const JOUR = 24 * 60 * 60 * 1000
 type Periode = 'jour' | 'semaine' | 'mois'
-const DOMAINES: DomaineActivite[] = ['CARTE', 'PERSONNEL', 'TABLETTES', 'CAISSE', 'STOCK']
+const DOMAINES: DomaineActivite[] = [
+  'CARTE',
+  'PERSONNEL',
+  'TABLETTES',
+  'CAISSE',
+  'STOCK',
+  'ARDOISE',
+]
 
 interface Filtres {
   periode: Periode
@@ -245,13 +252,10 @@ function LigneActivite({
         .map((id) => (typeof id === 'string' ? contexte.etablissements.get(id) : undefined))
         .filter((nom): nom is string => nom !== undefined)
     : []
-  const ou =
-    evenement.etablissementNom ??
-    (siens.length > 0
-      ? siens.join(', ')
-      : evenement.domaine === 'CARTE'
-        ? t('activite.touteLaCarte')
-        : t('activite.touteLEntreprise'))
+  // Sans établissement : ceux des rôles cités, sinon toute la carte ou toute l'entreprise.
+  const portee =
+    evenement.domaine === 'CARTE' ? t('activite.touteLaCarte') : t('activite.touteLEntreprise')
+  const ou = evenement.etablissementNom ?? (siens.length > 0 ? siens.join(', ') : portee)
   return (
     <li className="grid grid-cols-[56px_1fr] items-start gap-x-4 gap-y-1 border-b border-trait px-4 py-3 last:border-b-0 md:grid-cols-[64px_1fr_170px_110px] md:items-center">
       <span className="chiffres text-montant-ligne text-encre">

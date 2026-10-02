@@ -17,6 +17,7 @@ const POULETS = '1e000000-0000-4000-8000-000000000001'
 const FLAGS = '1e000000-0000-4000-8000-000000000002'
 const FLAG_PRODUIT = 'b0000000-0000-4000-8000-000000000002'
 const SITUATION: SituationCaisse = {
+  reglementsArdoise: { total: 0, especes: 0, mobileMoney: 0, carte: 0 },
   ouverture: {
     id: 'ca155e00-0000-4000-8000-000000000001',
     fondInitial: 20_000,
@@ -28,11 +29,12 @@ const SITUATION: SituationCaisse = {
     especes: 9000,
     mobileMoney: 9000,
     carte: 0,
+    ardoise: 0,
     total: 18_000,
-    remboursements: { total: 0, especes: 0, mobileMoney: 0, carte: 0 },
+    remboursements: { total: 0, especes: 0, mobileMoney: 0, carte: 0, ardoise: 0 },
   },
   mouvements: [],
-  notesOuvertes: 0,
+  notesOuvertes: [],
 }
 const NOTES: NoteEncaissee[] = [
   {
@@ -85,10 +87,14 @@ const A_REMBOURSER: EtatRemboursement = {
     },
   ],
   modes: [
-    { mode: 'ESPECES', paye: 9000, rembourse: 0 },
-    { mode: 'MOBILE_MONEY', operateur: 'FLOOZ', paye: 4500, rembourse: 0 },
+    { mode: 'ESPECES', paye: 9000, rembourse: 0, remboursable: 9000 },
+    { mode: 'MOBILE_MONEY', operateur: 'FLOOZ', paye: 4500, rembourse: 0, remboursable: 4500 },
   ],
   remboursements: [],
+}
+const EN_ESPECES: EtatRemboursement = {
+  ...A_REMBOURSER,
+  modes: [{ mode: 'ESPECES', paye: 13_500, rembourse: 0, remboursable: 13_500 }],
 }
 const REMBOURSEE: EtatRemboursement = {
   ...A_REMBOURSER,
@@ -96,8 +102,8 @@ const REMBOURSEE: EtatRemboursement = {
   remboursements: [
     {
       id: 'b0000000-0000-4000-8000-000000000001',
-      mode: 'ESPECES',
       montant: 4500,
+      parts: [{ mode: 'ESPECES', montant: 4500 }],
       motif: 'ARTICLE_NON_CONFORME',
       articles: [{ nom: 'Poulet braisé', quantite: 1 }],
       remboursePar: 'Yawa T.',
@@ -107,9 +113,9 @@ const REMBOURSEE: EtatRemboursement = {
   ],
 }
 
-function notesServies() {
+function notesServies(initial: EtatRemboursement = A_REMBOURSER) {
   const recus: DemandeRemboursement[] = []
-  let etat = A_REMBOURSER
+  let etat = initial
   serveurMsw.use(
     http.get(`${API}/caisse/situation`, () => HttpResponse.json(SITUATION)),
     http.get(`${API}/caisse/ouverture`, () =>
@@ -167,7 +173,7 @@ describe('Notes encaissées', () => {
   })
 
   it('rembourse un article dans le mode d’origine, validé par un gérant', async () => {
-    const recus = notesServies()
+    const recus = notesServies(EN_ESPECES)
     caisseOuverte('/caisse/tiroir', { permissions: CAISSIER })
 
     await userEvent.click(await screen.findByRole('tab', { name: 'Notes encaissées' }))
@@ -179,8 +185,9 @@ describe('Notes encaissées', () => {
       within(articles).getByRole('button', { name: 'Un Poulet braisé de plus' }),
     )
     expect(screen.getByRole('status', { name: 'À rembourser' })).toHaveTextContent('4 500 F')
-    const modes = screen.getByRole('radiogroup', { name: 'Rendre l’argent en' })
-    expect(within(modes).getByRole('radio', { name: /Espèces/ })).toBeChecked()
+    expect(screen.getByRole('region', { name: 'Rendre l’argent en' })).toHaveTextContent(
+      /Espèces.*4\s500\sF/,
+    )
     await userEvent.click(screen.getByRole('radio', { name: 'Article non conforme' }))
     await userEvent.click(screen.getByRole('button', { name: /^Rembourser 4\s500\sF en espèces/ }))
 
@@ -197,14 +204,12 @@ describe('Notes encaissées', () => {
     expect(recus).toEqual([
       {
         id: expect.any(String) as string,
-        mode: 'ESPECES',
         montant: 4500,
         articles: [{ ligneId: POULETS, quantite: 1 }],
         motif: 'ARTICLE_NON_CONFORME',
       },
       {
         id: recus[0]?.id,
-        mode: 'ESPECES',
         montant: 4500,
         articles: [{ ligneId: POULETS, quantite: 1 }],
         motif: 'ARTICLE_NON_CONFORME',
@@ -214,7 +219,7 @@ describe('Notes encaissées', () => {
   })
 
   it('demande si un article suivi remboursé revient en stock', async () => {
-    const recus = notesServies()
+    const recus = notesServies(EN_ESPECES)
     caisseOuverte('/caisse/tiroir', {
       permissions: CAISSIER,
       stock: {
@@ -236,5 +241,48 @@ describe('Notes encaissées', () => {
 
     await screen.findByRole('dialog', { name: /^Rembourser 1\s200\sF/ })
     expect(recus[0]).toMatchObject({ motif: 'ARTICLE_NON_CONFORME', retourEnStock: true })
+  })
+
+  it('rembourse une vente sur l’ardoise en diminuant ce que doit le client', async () => {
+    notesServies({
+      ...A_REMBOURSER,
+      modes: [{ mode: 'ARDOISE', paye: 13_500, rembourse: 0, remboursable: 13_500 }],
+    })
+    caisseOuverte('/caisse/tiroir', { permissions: CAISSIER })
+
+    await userEvent.click(await screen.findByRole('tab', { name: 'Notes encaissées' }))
+    await userEvent.click(await screen.findByRole('button', { name: /n°42, T4/ }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Rembourser' }))
+
+    expect(screen.getByRole('region', { name: 'Rendre l’argent en' })).toHaveTextContent(
+      'Diminue ce que doit le client',
+    )
+  })
+
+  it('répartit le remboursement entre l’ardoise et les espèces', async () => {
+    const recus = notesServies({
+      ...A_REMBOURSER,
+      modes: [
+        { mode: 'ESPECES', paye: 13_000, rembourse: 0, remboursable: 13_000 },
+        { mode: 'ARDOISE', paye: 500, rembourse: 0, remboursable: 500 },
+      ],
+    })
+    caisseOuverte('/caisse/tiroir', { permissions: CAISSIER })
+
+    await userEvent.click(await screen.findByRole('tab', { name: 'Notes encaissées' }))
+    await userEvent.click(await screen.findByRole('button', { name: /n°42, T4/ }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Rembourser' }))
+    const articles = screen.getByRole('list', { name: 'Articles à rembourser' })
+    await userEvent.click(within(articles).getByRole('button', { name: 'Un Flag 65 cl de plus' }))
+    await userEvent.click(screen.getByRole('radio', { name: 'Article non conforme' }))
+
+    const repartition = screen.getByRole('region', { name: 'Rendre l’argent en' })
+    expect(repartition).toHaveTextContent(/Espèces.*700\sF/)
+    expect(repartition).toHaveTextContent(/Ardoise.*500\sF/)
+    await userEvent.click(screen.getByRole('button', { name: /^Rembourser 1\s200\sF$/ }))
+
+    await screen.findByRole('dialog', { name: /^Rembourser 1\s200\sF/ })
+    expect(recus[0]).toMatchObject({ montant: 1200 })
+    expect(recus[0]).not.toHaveProperty('mode')
   })
 })

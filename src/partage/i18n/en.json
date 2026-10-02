@@ -30,7 +30,10 @@
     "NOTE_NON_VIDE": "This tab has items: it cannot be closed this way.",
     "NOTE_ENTAMEE": "A payment has already been taken on this tab: it can no longer be changed.",
     "CAISSE_FERMEE": "The till on this tablet is not open. Open it with its float to take payments.",
-    "REMBOURSEMENT_HORS_JOURNEE": "Only today’s bills can be refunded at the till."
+    "REMBOURSEMENT_HORS_JOURNEE": "Only today’s bills can be refunded at the till.",
+    "PLAFOND_ARDOISE_DEPASSE": "This bill would take the customer over their tab limit. Confirm going over, or have part of it paid now.",
+    "ARDOISE_NON_SOLDEE": "This customer still owes money: the tab stays open until it is settled.",
+    "TABLE_INDISPONIBLE": "This table was just removed from the floor plan (deactivated by a manager). The plan is up to date: choose another table."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Too many failed attempts: the account is locked. Try again in {{duree}}.",
@@ -399,7 +402,8 @@
       "salles": "Areas and tables",
       "stock": "Stock",
       "aTraiter_one": "{{count}} product to handle",
-      "aTraiter_other": "{{count}} products to handle"
+      "aTraiter_other": "{{count}} products to handle",
+      "ardoises": "Tabs"
     },
     "tableauDeBord": {
       "titre": "Dashboard",
@@ -1042,7 +1046,8 @@
       "PERSONNEL": "Staff",
       "TABLETTES": "Tablets",
       "CAISSE": "Till",
-      "STOCK": "Stock"
+      "STOCK": "Stock",
+      "ARDOISE": "Tabs"
     },
     "critiquesSeulement": "Critical only",
     "tout": "All",
@@ -1103,7 +1108,13 @@
       "PERTE_STOCK": "<b>{{auteur}}</b> recorded a loss of <b>{{objet}}</b> at {{etablissement}}",
       "ECART_INVENTAIRE": "<b>{{auteur}}</b> corrected the stock of <b>{{objet}}</b> by stocktake at {{etablissement}}",
       "POLITIQUE_STOCK_MODIFIEE": "<b>{{auteur}}</b> changed the stock policy of <b>{{objet}}</b>",
-      "VENTE_SANS_STOCK": "<b>{{auteur}}</b> sold <b>{{objet}}</b> without recorded stock at {{etablissement}}"
+      "VENTE_SANS_STOCK": "<b>{{auteur}}</b> sold <b>{{objet}}</b> without recorded stock at {{etablissement}}",
+      "VENTE_ARDOISE": "<b>{{auteur}}</b> put a bill on <b>{{objet}}</b>’s tab at {{etablissement}}",
+      "PLAFOND_ARDOISE_DEPASSE": "<b>{{auteur}}</b> went over <b>{{objet}}</b>’s tab limit at {{etablissement}}",
+      "PLAFOND_ARDOISE_MODIFIE": "<b>{{auteur}}</b> changed <b>{{objet}}</b>’s tab limit",
+      "CLIENT_ARDOISE_DESACTIVE": "<b>{{auteur}}</b> closed <b>{{objet}}</b>’s tab",
+      "CLIENT_ARDOISE_REACTIVE": "<b>{{auteur}}</b> reopened <b>{{objet}}</b>’s tab",
+      "REGLEMENT_ARDOISE": "<b>{{auteur}}</b> took a payment on <b>{{objet}}</b>’s tab at {{etablissement}}"
     },
     "actions": {
       "LIGNE_ANNULER_APRES_ENVOI": "cancel items already sent",
@@ -1113,7 +1124,8 @@
       "ARTICLE_OFFRIR": "give an item for free",
       "PAIEMENT_REMBOURSER": "refund a payment",
       "CAISSE_MOUVEMENT": "make a till movement",
-      "autre": "a protected action"
+      "autre": "a protected action",
+      "CLIENT_CREDIT": "putting a bill on a tab"
     },
     "annulation": "{{quantite}} × {{montant}}, {{ou}}. Reason: {{motif}}.",
     "annulationValidee": "{{quantite}} × {{montant}}, {{ou}}. Reason: {{motif}}. Approved by {{validateur}}",
@@ -1144,7 +1156,16 @@
       "AVERTISSEMENT": "Warning",
       "STRICT": "Strict"
     },
-    "venteSansStock": "−{{quantite}}, {{apres}} in stock, {{detail}}"
+    "venteSansStock": "−{{quantite}}, {{apres}} in stock, {{detail}}",
+    "venteArdoise": "+{{montant}}, {{note}}. Owes {{solde}}.",
+    "venteArdoiseValidee": "+{{montant}}, {{note}}. Owes {{solde}}. Approved by {{validateur}}",
+    "depassementArdoise": "+{{montant}}, {{note}}. Owes {{solde}}, {{plafond}} limit exceeded by {{depassement}}.",
+    "depassementArdoiseValide": "+{{montant}}, {{note}}. Owes {{solde}}, {{plafond}} limit exceeded by {{depassement}}. Approved by {{validateur}}",
+    "plafondArdoise": "{{avant}} → {{apres}}",
+    "sansPlafond": "No limit",
+    "reglementArdoise": "−{{montant}} in {{mode}}. Still owes {{solde}}.",
+    "remboursementReparti": "−{{montant}} ({{repartition}}), {{ou}}. Reason: {{motif}}.",
+    "remboursementRepartiValide": "−{{montant}} ({{repartition}}), {{ou}}. Reason: {{motif}}. Approved by {{validateur}}"
   },
   "salles": {
     "titre": "{{etablissement}} areas and tables",
@@ -1234,7 +1255,7 @@
       "ESPECES": "Change computed",
       "MOBILE_MONEY": "Operator and reference",
       "CARTE": "Bank terminal",
-      "ARDOISE": "Coming soon"
+      "ARDOISE": "The customer pays later"
     },
     "montant": "Amount paid",
     "recu": "Cash received",
@@ -1272,12 +1293,14 @@
     "modesEn": {
       "ESPECES": "cash",
       "MOBILE_MONEY": "Mobile Money",
-      "CARTE": "card"
+      "CARTE": "card",
+      "ARDOISE": "tab"
     },
     "manques": {
       "pourValider": "To confirm: {{liste}}.",
       "operateur": "choose the operator",
-      "reference": "copy the reference"
+      "reference": "copy the reference",
+      "client": "choose the customer"
     },
     "partage": {
       "titre": "Split the bill",
@@ -1312,6 +1335,28 @@
         "parts": "Each share is a payment: the bill closes with the last one.",
         "articles": "The amount comes from the chosen items, discounts included."
       }
+    },
+    "ardoise": {
+      "de": "Tab, {{nom}}",
+      "chercher": "Find a customer",
+      "chargement": "Loading customers…",
+      "client": "Customer",
+      "aucun": "No customer has a tab here. A manager can open one.",
+      "aucunCreer": "No customer has a tab here: open one with “New customer”.",
+      "introuvable": "No customer matches this search.",
+      "plafond": "limit {{plafond}}",
+      "choisir": "Choose the customer who will pay later.",
+      "resume": "{{nom}}’s tab",
+      "dejaDu": "Already owes",
+      "cetteNote": "This bill",
+      "apres": "Owes after",
+      "surPlafond": "{{apres}} out of a {{plafond}} limit",
+      "depasse": "Limit exceeded by {{montant}}",
+      "depassePhrase": "Going over is recorded and visible to the owner. Otherwise, have part of it paid now.",
+      "valider": "Put {{montant}} on {{nom}}’s tab",
+      "validerSans": "Put {{montant}} on the tab",
+      "validerDepassement": "Go over the limit: {{montant}} on {{nom}}’s tab",
+      "validationContexte": "Putting a bill on a tab needs a manager’s approval."
     }
   },
   "tiroir": {
@@ -1328,7 +1373,8 @@
       "notes_other": "{{count}} tabs paid",
       "total": "Total taken",
       "remboursements": "Refunds",
-      "nettes": "Net sales"
+      "nettes": "Net sales",
+      "totalVendu": "Total sold"
     },
     "mouvements": {
       "titre": "Cash movements",
@@ -1356,10 +1402,11 @@
       "depenses": "Expenses",
       "attendu": "Expected",
       "reserve": "The expected cash is shown to managers only: at closing, the drawer is counted before seeing what is expected.",
-      "remboursements": "Cash refunds"
+      "remboursements": "Cash refunds",
+      "reglements": "Tab payments in cash"
     },
-    "notesOuvertes_one": "{{count}} tab still open at this location.",
-    "notesOuvertes_other": "{{count}} tabs still open at this location.",
+    "notesOuvertes_one": "{{count}} bill still open at this location",
+    "notesOuvertes_other": "{{count}} bills still open at this location",
     "dialogue": {
       "titre": "Cash movement",
       "phrase": "Cash goes in or out of the drawer without a sale. It counts in the expected cash at closing.",
@@ -1377,7 +1424,15 @@
     "vues": {
       "titre": "Till views",
       "situation": "Status",
-      "notes": "Paid bills"
+      "notes": "Paid bills",
+      "ardoises": "Tabs"
+    },
+    "reglements": {
+      "titre": "Tab payments"
+    },
+    "ouvertes": {
+      "titre": "Unpaid bills",
+      "phrase": "They stay open: paid on a later till session, they will count on its day."
     }
   },
   "cloture": {
@@ -1424,7 +1479,9 @@
         "information": "For information",
         "tiroir": "Cash in the drawer",
         "comptage": "Count"
-      }
+      },
+      "ventesAvecArdoise_one": "Sales ({{count}} bill)",
+      "ventesAvecArdoise_other": "Sales ({{count}} bills)"
     },
     "comptage": "Cash count"
   },
@@ -1485,7 +1542,12 @@
     "valider": "Refund {{montant}} in {{mode}}",
     "validationTitre": "Refund {{montant}} in {{mode}}?",
     "validationContexte": "{{note}}, requested by {{demandeur}}. Reason: {{motif}}.",
-    "chargementNote": "Loading the bill…"
+    "chargementNote": "Loading the bill…",
+    "aideArdoise": "Reduces what the customer owes, up to {{montant}}",
+    "partEn": "{{mode}} {{montant}}",
+    "validerSeul": "Refund {{montant}}",
+    "validationTitreReparti": "Refund {{montant}}",
+    "ordre": "Split across the bill’s payment methods: tab first, then card and Mobile Money, cash last."
   },
   "stock": {
     "titre": "Stock",
@@ -1654,6 +1716,116 @@
       "SOUPLE": "The till sells even without stock at {{etablissement}}: negative stock points to an unrecorded delivery.",
       "AVERTISSEMENT": "At {{etablissement}}, the till warns when an item has no stock left, then sells once confirmed.",
       "STRICT": "At {{etablissement}}, the till refuses to sell an item with no stock left."
+    }
+  },
+  "ardoise": {
+    "titre": "Tabs",
+    "phrase": "Customers allowed to pay later. A bill goes on the tab at checkout.",
+    "etablissement": "Location",
+    "chargement": "Loading tabs…",
+    "resume": "Tabs summary",
+    "aRecevoir": "Owed to you",
+    "clients_one": "{{count}} customer",
+    "clients_other": "{{count}} customers",
+    "aRelancer": "To chase",
+    "aRelancerSous_one": "{{count}} customer, debt older than {{jours}} days",
+    "aRelancerSous_other": "{{count}} customers, debt older than {{jours}} days",
+    "filtres": {
+      "doivent": "Owing",
+      "aRelancer": "To chase",
+      "tous": "All customers"
+    },
+    "rechercher": "Name or phone",
+    "tableau": "Tabs at {{etablissement}}",
+    "colonnes": {
+      "client": "Customer",
+      "doit": "Owes",
+      "plafond": "Limit",
+      "anciennete": "Oldest debt",
+      "mouvement": "Last entry",
+      "actions": "Actions"
+    },
+    "sansPlafond": "No limit",
+    "rienAPayer": "Nothing owed",
+    "depuis_zero": "Today",
+    "depuis_one": "Since yesterday",
+    "depuis_other": "For {{count}} days",
+    "aucunMouvement": "No entries",
+    "voirFiche": "View details",
+    "plusDActions": "More actions for {{nom}}",
+    "fermer": "Close the tab",
+    "fermerTitre": "Close {{nom}}’s tab?",
+    "fermerPhrase": "The customer will no longer be able to put anything on the tab. Their history stays available, and the tab can be reopened.",
+    "fermee": "{{nom}}’s tab closed",
+    "fermeeBadge": "Tab closed",
+    "rouvrir": "Reopen the tab",
+    "rouverte": "{{nom}}’s tab reopened",
+    "vide": {
+      "titre": "No tabs yet",
+      "phrase": "Open a tab for trusted customers: they can pay later, up to their limit."
+    },
+    "aucun": {
+      "titre": "No customers here",
+      "phrase": "No customer matches this filter or search."
+    },
+    "validePar": "{{par}}, approved by {{validateur}}",
+    "ecritures": {
+      "VENTE_A_CREDIT": "Sale on credit",
+      "REGLEMENT": "Payment",
+      "CORRECTION": "Correction"
+    },
+    "client": {
+      "nouveau": "New customer",
+      "modifier": "Edit",
+      "phrase": "The customer will be able to put bills on the tab and pay later, at the till.",
+      "ouvrir": "Open the tab",
+      "nom": "Name",
+      "nomManquant": "Enter the customer’s name.",
+      "telephone": "Phone",
+      "telephoneAide": "Local number ({{pays}}), spaces optional. Other country: start with “+” and its code.",
+      "plafond": "Limit",
+      "plafondAide": "The most they can owe. Empty: no limit.",
+      "plafondInvalide": "Enter an amount, or leave empty.",
+      "note": "Internal note",
+      "noteAide": "Never shown to the customer.",
+      "ouvert": "Tab opened for {{nom}}",
+      "modifie": "{{nom}} updated"
+    },
+    "fiche": {
+      "resume": "What {{nom}} owes",
+      "doit": "Owes",
+      "surPlafond": "out of a {{plafond}} limit",
+      "plusAncienne": "Oldest debt",
+      "sansNote": "No note.",
+      "mouvements": "Tab entries",
+      "aucun": "No entries yet.",
+      "definitif": "Every entry is final. A mistake is fixed by refunding the bill, never by editing what the customer owes.",
+      "colonnes": {
+        "date": "Date",
+        "mouvement": "Entry",
+        "montant": "Amount",
+        "apres": "Owes after"
+      }
+    },
+    "caisse": {
+      "doivent_one": "{{count}} customer owes {{montant}}",
+      "doivent_other": "{{count}} customers owe {{montant}}",
+      "liste": "Customers who owe",
+      "aucun": "No customer owes anything for now.",
+      "choisir": "Choose the customer paying their tab.",
+      "reglementDe": "Payment from {{nom}}",
+      "doit": "Owes {{montant}}",
+      "mode": "Payment method",
+      "montant": "Amount paid",
+      "tout": "All: {{montant}}",
+      "auPlus": "At most {{montant}}: what the customer owes.",
+      "rendu": "Change to give: {{montant}}",
+      "manques": {
+        "recu": "the cash received covers the amount"
+      },
+      "encaisser": "Take {{montant}} in {{mode}}",
+      "regle": "Payment of {{montant}} taken. {{nom}} still owes {{reste}}.",
+      "solde": "Payment of {{montant}} taken. {{nom}}’s tab is settled."
     }
   }
 }

@@ -14,7 +14,7 @@ import { formaterMontant, symboleDe, type Devise } from '../../partage/montants/
 import { lireMontant } from '../../partage/montants/lireMontant'
 import { taxeIncluse } from '../../partage/montants/taxes'
 import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
-import { BadgeStatut } from '../../partage/ui/BadgeStatut'
+import { BadgeStatut, type TonStatut } from '../../partage/ui/BadgeStatut'
 import { Bouton } from '../../partage/ui/Bouton'
 import { ChampSaisie, ChampSelection } from '../../partage/ui/ChampSaisie'
 import { Chargement } from '../../partage/ui/Chargement'
@@ -45,6 +45,21 @@ function rang(ligne: LigneCarteEtablissement): number {
  * Carte d'un établissement : prix propre (propriétaire, administrateur), produit non proposé ici, et
  * rupture du jour, que le gérant déclare sur place.
  */
+type Disponibilite = 'nonPropose' | 'epuise' | 'disponible'
+
+const TONS_DISPONIBILITE: Record<Disponibilite, TonStatut> = {
+  nonPropose: 'neutre',
+  epuise: 'alerte',
+  disponible: 'succes',
+}
+
+function etatDisponibilite(
+  ligne: Pick<LigneCarteEtablissement, 'propose' | 'epuise'>,
+): Disponibilite {
+  if (!ligne.propose) return 'nonPropose'
+  return ligne.epuise ? 'epuise' : 'disponible'
+}
+
 export function PageCarteEtablissement() {
   const { t } = useTranslation()
   const clientRequetes = useQueryClient()
@@ -157,13 +172,9 @@ export function PageCarteEtablissement() {
   function disponibilite(ligne: LigneCarteEtablissement) {
     return (
       <span className="flex flex-col items-start gap-1">
-        {!ligne.propose ? (
-          <BadgeStatut ton="neutre">{t('carteEtablissement.nonPropose')}</BadgeStatut>
-        ) : ligne.epuise ? (
-          <BadgeStatut ton="alerte">{t('carteEtablissement.epuise')}</BadgeStatut>
-        ) : (
-          <BadgeStatut ton="succes">{t('carteEtablissement.disponible')}</BadgeStatut>
-        )}
+        <BadgeStatut ton={TONS_DISPONIBILITE[etatDisponibilite(ligne)]}>
+          {t(`carteEtablissement.${etatDisponibilite(ligne)}`)}
+        </BadgeStatut>
         {ligne.epuise && ligne.epuiseLe !== undefined && etablissement !== undefined && (
           <span className="whitespace-normal text-legende text-attenue">
             {t('carteEtablissement.epuiseDetail', {

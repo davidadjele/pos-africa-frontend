@@ -15,6 +15,12 @@ const ETAPES = ['etape1', 'etape2', 'etape3'] as const
  * Premier écran d'une tablette : le gérant génère un code dans la gestion (Tablettes), on le tape ici.
  * Son mot de passe n'est jamais saisi sur l'appareil partagé.
  */
+/** Case remplie, case à remplir (le focus), ou case à venir. */
+function bordureDeCase(rang: number, saisis: number): string {
+  if (rang < saisis) return 'border-accent'
+  return rang === saisis ? 'border-accent-vif' : 'border-trait'
+}
+
 export function PageEnregistrementTablette() {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -78,13 +84,7 @@ export function PageEnregistrementTablette() {
               <span
                 key={rang}
                 aria-hidden="true"
-                className={`chiffres flex h-16 items-center justify-center rounded-normal border-2 text-montant-total text-encre ${
-                  rang < code.length
-                    ? 'border-accent'
-                    : rang === code.length
-                      ? 'border-accent-vif'
-                      : 'border-trait'
-                }`}
+                className={`chiffres flex h-16 items-center justify-center rounded-normal border-2 text-montant-total text-encre ${bordureDeCase(rang, code.length)}`}
               >
                 {code[rang] ?? ''}
               </span>

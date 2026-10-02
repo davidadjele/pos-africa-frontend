@@ -27,24 +27,28 @@ const OUVERTURE = {
   ouvertePar: 'Afi M.',
   ouverteLe: '2026-09-29T07:02:00Z',
 }
-const AUCUN_REMBOURSEMENT = { total: 0, especes: 0, mobileMoney: 0, carte: 0 }
+const AUCUN_REMBOURSEMENT = { total: 0, especes: 0, mobileMoney: 0, carte: 0, ardoise: 0 }
 const ESPECES = {
   fond: 20_000,
   recues: 10_000,
   rendues: 4300,
   remboursements: 0,
+  reglementsArdoise: 0,
   apports: 0,
   retraits: 10_000,
   depenses: 0,
   attendu: 15_700,
 }
+const AUCUN_REGLEMENT = { total: 0, especes: 0, mobileMoney: 0, carte: 0 }
 const SITUATION: SituationCaisse = {
   ouverture: OUVERTURE,
+  reglementsArdoise: AUCUN_REGLEMENT,
   ventes: {
     notes: 2,
     especes: 5700,
     mobileMoney: 2400,
     carte: 0,
+    ardoise: 0,
     total: 8100,
     remboursements: AUCUN_REMBOURSEMENT,
   },
@@ -60,16 +64,28 @@ const SITUATION: SituationCaisse = {
   ],
   especes: ESPECES,
 
-  notesOuvertes: 1,
+  notesOuvertes: [
+    {
+      id: 'c0000000-0000-4000-8000-0000000000aa',
+      numero: 12,
+      canal: 'SUR_PLACE',
+      table: 'T4',
+      total: 13_500,
+      serveur: 'Kossi A.',
+    },
+  ],
 }
 const Z: RapportZ = {
   numero: 12,
   ouverteLe: '2026-09-29T07:02:00Z',
   clotureeLe: '2026-09-29T23:14:00Z',
   clotureePar: 'Yawa T.',
+  reglementsArdoise: { total: 5000, especes: 5000, mobileMoney: 0, carte: 0 },
   ventes: {
     ...SITUATION.ventes,
-    remboursements: { total: 2600, especes: 1100, mobileMoney: 1500, carte: 0 },
+    ardoise: 2000,
+    total: 10_100,
+    remboursements: { total: 2600, especes: 1100, mobileMoney: 1500, carte: 0, ardoise: 0 },
   },
   remises: 0,
   annulations: 0,
@@ -80,6 +96,7 @@ const Z: RapportZ = {
     recues: 10_000,
     rendues: 4300,
     remboursements: 0,
+    reglementsArdoise: 0,
     apports: 0,
     retraits: 10_000,
     depenses: 0,
@@ -135,7 +152,40 @@ describe('Caisse de la tablette', () => {
     expect(ventes).toHaveTextContent('RetraitVers le coffre')
     const especes = screen.getByRole('region', { name: 'Espèces dans le tiroir' })
     expect(especes).toHaveTextContent('Attendu15 700 F')
-    expect(screen.getByText('1 note encore ouverte dans l’établissement.')).toBeVisible()
+    const ouvertes = screen.getByRole('region', { name: 'Notes non encaissées' })
+    expect(ouvertes).toHaveTextContent('1 note encore ouverte dans l’établissement')
+    expect(ouvertes).toHaveTextContent(/T4, n°12, Kossi A\.13\s500/)
+  })
+
+  it('compte l’ardoise dans les ventes, sans rien attendre dans le tiroir', async () => {
+    tiroirServi({ ...SITUATION, ventes: { ...SITUATION.ventes, ardoise: 13_500, total: 21_600 } })
+    caisseOuverte('/caisse/tiroir', { permissions: GERANT })
+
+    const ventes = await screen.findByRole('region', { name: 'Ventes de la caisse' })
+    expect(ventes).toHaveTextContent('Ardoise13 500')
+    expect(ventes).toHaveTextContent('Total vendu21 600 F')
+    expect(screen.getByRole('region', { name: 'Espèces dans le tiroir' })).toHaveTextContent(
+      'Attendu15 700 F',
+    )
+  })
+
+  it('montre les règlements d’ardoise à part des ventes, et leurs espèces dans le tiroir', async () => {
+    tiroirServi({
+      ...SITUATION,
+      reglementsArdoise: { total: 12_000, especes: 10_000, mobileMoney: 0, carte: 2000 },
+      especes: { ...ESPECES, reglementsArdoise: 10_000, attendu: 25_700 },
+    })
+    caisseOuverte('/caisse/tiroir', { permissions: GERANT })
+
+    const ventes = await screen.findByRole('region', { name: 'Ventes de la caisse' })
+    expect(ventes).toHaveTextContent('Total encaissé8 100 F')
+    const reglements = screen.getByRole('region', { name: 'Règlements d’ardoise' })
+    expect(reglements).toHaveTextContent('Règlements d’ardoise12 000')
+    expect(reglements).toHaveTextContent('dont espèces10 000')
+    expect(reglements).toHaveTextContent('dont carte2 000')
+    const especes = screen.getByRole('region', { name: 'Espèces dans le tiroir' })
+    expect(especes).toHaveTextContent('Règlements d’ardoise en espèces+10 000')
+    expect(especes).toHaveTextContent('Attendu25 700 F')
   })
 
   it('déduit les remboursements des ventes et, en espèces, de l’attendu', async () => {
@@ -143,9 +193,9 @@ describe('Caisse de la tablette', () => {
       ...SITUATION,
       ventes: {
         ...SITUATION.ventes,
-        remboursements: { total: 4500, especes: 4500, mobileMoney: 0, carte: 0 },
+        remboursements: { total: 4500, especes: 4500, mobileMoney: 0, carte: 0, ardoise: 0 },
       },
-      especes: { ...ESPECES, remboursements: 4500, attendu: 11_200 },
+      especes: { ...ESPECES, remboursements: 4500, reglementsArdoise: 0, attendu: 11_200 },
     })
     caisseOuverte('/caisse/tiroir', { permissions: GERANT })
 
@@ -170,6 +220,7 @@ describe('Caisse de la tablette', () => {
     const sansEspeces: SituationCaisse = {
       ouverture: SITUATION.ouverture,
       ventes: SITUATION.ventes,
+      reglementsArdoise: AUCUN_REGLEMENT,
       mouvements: SITUATION.mouvements,
       notesOuvertes: SITUATION.notesOuvertes,
     }
@@ -231,7 +282,21 @@ describe('Caisse de la tablette', () => {
     const clotures: DemandeCloture[] = []
     serveurMsw.use(
       http.post(`${API}/caisse/cloture/comptage`, () =>
-        HttpResponse.json({ compte: 15_000, attendu: 15_700, ecart: -700, notesOuvertes: 1 }),
+        HttpResponse.json({
+          compte: 15_000,
+          attendu: 15_700,
+          ecart: -700,
+          notesOuvertes: [
+            {
+              id: 'c0000000-0000-4000-8000-0000000000aa',
+              numero: 12,
+              canal: 'SUR_PLACE',
+              table: 'T4',
+              total: 13_500,
+              serveur: 'Kossi A.',
+            },
+          ],
+        }),
       ),
       http.post(`${API}/caisse/cloture`, async ({ request }) => {
         clotures.push((await request.json()) as DemandeCloture)
@@ -266,7 +331,13 @@ describe('Caisse de la tablette', () => {
     expect(z).toHaveTextContent('Remboursements−2 600')
     expect(z).toHaveTextContent('dont espèces1 100')
     expect(z).toHaveTextContent('dont Mobile Money1 500')
-    expect(z).toHaveTextContent('Ventes nettes5 500')
+    // Une note sur l'ardoise est vendue, pas encaissée.
+    expect(z).toHaveTextContent('Ventes (2 notes)10 100')
+    expect(z).toHaveTextContent('dont ardoise2 000')
+    // Un règlement d'ardoise n'est pas une vente : il a sa propre section.
+    expect(within(z).getByRole('heading', { name: 'Règlements d’ardoise' })).toBeVisible()
+    expect(z).toHaveTextContent('Règlements d’ardoise5 000')
+    expect(z).toHaveTextContent('Ventes nettes7 500')
     // L'attendu s'explique sur le Z lui-même : fond, espèces reçues et rendues, mouvements.
     expect(z).toHaveTextContent('Fond de caisse20 000')
     expect(z).toHaveTextContent('Monnaie rendue−4 300')

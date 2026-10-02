@@ -284,4 +284,96 @@ describe('description de l’activité', () => {
       ),
     ).toBe('−2, −1 en stock, n°42, T4')
   })
+  it('détaille une note mise sur l’ardoise, et le dépassement du plafond validé', () => {
+    expect(
+      detailActivite(
+        evenement({
+          type: 'VENTE_ARDOISE',
+          domaine: 'ARDOISE',
+          objetType: 'CLIENT',
+          objetLibelle: 'Komlan D.',
+          details: { montant: 13500, solde: 18000, note: 'n°42, T4' },
+        }),
+        t,
+        CONTEXTE,
+      ),
+    ).toBe(`+13${FINE}500${INSEC}F, n°42, T4. Doit 18${FINE}000${INSEC}F.`)
+    expect(
+      detailActivite(
+        evenement({
+          type: 'PLAFOND_ARDOISE_DEPASSE',
+          domaine: 'ARDOISE',
+          objetType: 'CLIENT',
+          objetLibelle: 'Komlan D.',
+          details: {
+            montant: 13500,
+            solde: 33500,
+            note: 'n°42, T4',
+            plafond: 25000,
+            depassement: 8500,
+            validateurId: 'u-afi',
+          },
+          detailsNoms: { validateurId: 'Afi M.' },
+        }),
+        t,
+        CONTEXTE,
+      ),
+    ).toBe(
+      `+13${FINE}500${INSEC}F, n°42, T4. Doit 33${FINE}500${INSEC}F, plafond 25${FINE}000${INSEC}F dépassé de 8${FINE}500${INSEC}F. Validé par Afi M.`,
+    )
+  })
+
+  it('montre le plafond d’ardoise avant et après', () => {
+    expect(
+      detailActivite(
+        evenement({
+          type: 'PLAFOND_ARDOISE_MODIFIE',
+          domaine: 'ARDOISE',
+          details: { avant: 'aucun', apres: 40000 },
+        }),
+        t,
+        CONTEXTE,
+      ),
+    ).toBe(`Sans plafond → 40${FINE}000${INSEC}F`)
+  })
+
+  it('détaille un règlement d’ardoise', () => {
+    expect(
+      detailActivite(
+        evenement({
+          type: 'REGLEMENT_ARDOISE',
+          domaine: 'ARDOISE',
+          details: { montant: 10000, mode: 'ESPECES', solde: 8000 },
+        }),
+        t,
+        CONTEXTE,
+      ),
+    ).toBe(`−10${FINE}000${INSEC}F en espèces. Doit encore 8${FINE}000${INSEC}F.`)
+  })
+
+  it('détaille un remboursement réparti entre plusieurs modes', () => {
+    expect(
+      detailActivite(
+        evenement({
+          type: 'REMBOURSEMENT',
+          domaine: 'CAISSE',
+          details: {
+            montant: 1100,
+            mode: 'ARDOISE',
+            parts: [
+              { mode: 'ARDOISE', montant: 500 },
+              { mode: 'ESPECES', montant: 600 },
+            ],
+            motif: 'ARTICLE_NON_CONFORME',
+            numero: 1,
+            table: 'T2',
+          },
+        }),
+        t,
+        CONTEXTE,
+      ),
+    ).toBe(
+      `−1${FINE}100${INSEC}F (ardoise 500${INSEC}F, espèces 600${INSEC}F), T2, n°1. Motif : Article non conforme.`,
+    )
+  })
 })

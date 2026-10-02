@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { clsx } from 'clsx'
-import { useId, useRef, useState } from 'react'
+import { useId, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appelerCaisse } from '../../partage/api/appelerCaisse'
 import type {
@@ -92,6 +92,45 @@ export function DialogueValidationGerant({
     }
   }
 
+  let listeValidateurs: ReactNode
+  if (validateurs.isPending) {
+    listeValidateurs = <Chargement texte={t('validation.chargement')} />
+  } else if (validateurs.isError) {
+    listeValidateurs = <AlerteErreur erreur={validateurs.error} />
+  } else if (validateurs.data.length === 0) {
+    listeValidateurs = <p className="m-0 text-corps text-attenue">{t('validation.aucun')}</p>
+  } else {
+    listeValidateurs = validateurs.data.map((validateur) => (
+      <button
+        key={validateur.utilisateurId}
+        type="button"
+        disabled={validateur.bloque}
+        aria-pressed={validateur.utilisateurId === choisi?.utilisateurId}
+        onClick={() => {
+          setChoisi(validateur)
+          setCode('')
+          setErreur(null)
+        }}
+        className={clsx(
+          'flex min-h-cible-caisse w-full items-center gap-3 rounded-moyen bg-surface px-3 text-left text-encre disabled:text-attenue',
+          validateur.utilisateurId === choisi?.utilisateurId
+            ? 'border-2 border-accent'
+            : 'border border-trait',
+        )}
+      >
+        <Pastille nomCourt={validateur.nomCourt} />
+        <span className="flex flex-col items-start gap-0.5">
+          <span className="text-corps-fort">{validateur.nomCourt}</span>
+          {validateur.bloque ? (
+            <BadgeStatut ton="danger">{t('caisse.prise.bloque')}</BadgeStatut>
+          ) : (
+            <span className="text-legende text-attenue">{t(`roles.${validateur.role}`)}</span>
+          )}
+        </span>
+      </button>
+    ))
+  }
+
   return (
     <div className="fixed inset-0 z-10 flex items-end justify-center bg-voile sm:items-center sm:p-4">
       <section
@@ -114,45 +153,7 @@ export function DialogueValidationGerant({
           </div>
           <div className="flex flex-col gap-2">
             <span className="text-libelle font-semibold text-attenue">{t('validation.qui')}</span>
-            {validateurs.isPending ? (
-              <Chargement texte={t('validation.chargement')} />
-            ) : validateurs.isError ? (
-              <AlerteErreur erreur={validateurs.error} />
-            ) : validateurs.data.length === 0 ? (
-              <p className="m-0 text-corps text-attenue">{t('validation.aucun')}</p>
-            ) : (
-              validateurs.data.map((validateur) => (
-                <button
-                  key={validateur.utilisateurId}
-                  type="button"
-                  disabled={validateur.bloque}
-                  aria-pressed={validateur.utilisateurId === choisi?.utilisateurId}
-                  onClick={() => {
-                    setChoisi(validateur)
-                    setCode('')
-                    setErreur(null)
-                  }}
-                  className={clsx(
-                    'flex min-h-cible-caisse w-full items-center gap-3 rounded-moyen bg-surface px-3 text-left text-encre disabled:text-attenue',
-                    validateur.utilisateurId === choisi?.utilisateurId
-                      ? 'border-2 border-accent'
-                      : 'border border-trait',
-                  )}
-                >
-                  <Pastille nomCourt={validateur.nomCourt} />
-                  <span className="flex flex-col items-start gap-0.5">
-                    <span className="text-corps-fort">{validateur.nomCourt}</span>
-                    {validateur.bloque ? (
-                      <BadgeStatut ton="danger">{t('caisse.prise.bloque')}</BadgeStatut>
-                    ) : (
-                      <span className="text-legende text-attenue">
-                        {t(`roles.${validateur.role}`)}
-                      </span>
-                    )}
-                  </span>
-                </button>
-              ))
-            )}
+            {listeValidateurs}
           </div>
           <p className="m-0 text-legende text-attenue">{t('validation.note')}</p>
           <Bouton ref={boutonAnnuler} className="mt-auto" onClick={surAnnuler}>

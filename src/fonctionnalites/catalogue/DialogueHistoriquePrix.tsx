@@ -3,8 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { appelerApi } from '../../partage/api/appelerApi'
 import type { EvenementActivite } from '../../partage/api/contrat'
 import { formaterDateHeure } from '../../partage/dates/formaterDate'
-import { AlerteErreur } from '../../partage/ui/Alerte'
-import { Chargement } from '../../partage/ui/Chargement'
+import { EtatsListe } from '../../partage/ui/EtatsListe'
 import { Dialogue } from '../../partage/ui/Dialogue'
 import { auteurDe, detailActivite, type ContexteActivite } from '../activite/description'
 
@@ -33,11 +32,11 @@ export function DialogueHistoriquePrix({
       libelleConfirmer={t('produits.historique.fermer')}
       surConfirmer={surFermer}
     >
-      {historique.isPending && <Chargement texte={t('produits.chargement')} />}
-      {historique.isError && <AlerteErreur erreur={historique.error} />}
-      {historique.data?.length === 0 && (
-        <p className="m-0 text-corps text-attenue">{t('produits.historique.vide')}</p>
-      )}
+      <EtatsListe
+        requete={historique}
+        chargement={t('produits.chargement')}
+        vide={t('produits.historique.vide')}
+      />
       {historique.data !== undefined && historique.data.length > 0 && (
         <ul
           aria-label={t('produits.historique.liste')}

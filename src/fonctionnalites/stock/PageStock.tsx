@@ -4,23 +4,19 @@ import { clsx } from 'clsx'
 import { ClipboardList, History, PackagePlus, RotateCw, SlidersHorizontal } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type {
-  EtablissementResume,
-  EtatStock,
-  LigneStock,
-  PolitiqueStock,
-} from '../../partage/api/contrat'
+import type { EtatStock, LigneStock, PolitiqueStock } from '../../partage/api/contrat'
 import { useSession } from '../../partage/auth/useSession'
 import { formaterDateHeure } from '../../partage/dates/formaterDate'
 import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
 import { BadgeStatut, type TonStatut } from '../../partage/ui/BadgeStatut'
+import { BarreFiltres } from '../../partage/ui/BarreFiltres'
 import { Bouton, classesBouton } from '../../partage/ui/Bouton'
-import { ChampSelection } from '../../partage/ui/ChampSaisie'
 import { Chargement } from '../../partage/ui/Chargement'
 import { EtatVide } from '../../partage/ui/EtatVide'
 import { MenuActions, type ActionMenu } from '../../partage/ui/MenuActions'
 import { Tableau, type ColonneTableau } from '../../partage/ui/Tableau'
-import { requeteEtablissements } from '../etablissements/requetes'
+import { SelecteurEtablissement } from '../etablissements/SelecteurEtablissement'
+import { useEtablissementChoisi } from '../etablissements/useEtablissementChoisi'
 import { DialogueHistorique, DialoguePerte, DialogueSeuil } from './DialoguesStock'
 import { estATraiter, libelleMouvement, quantiteSignee, rangStock, TONS_ETAT } from './presentation'
 import { requeteStock, requeteStockATraiter } from './requetes'
@@ -39,15 +35,6 @@ type Ouvert =
   | { type: 'historique'; ligne: LigneStock }
   | null
 
-/** L'établissement choisi : celui de l'adresse, sinon le premier visible. */
-export function useEtablissementDuStock(etablissementId: string | undefined) {
-  const etablissements = useQuery(requeteEtablissements(0))
-  const etablissement: EtablissementResume | undefined =
-    etablissements.data?.elements.find((candidat) => candidat.id === etablissementId) ??
-    etablissements.data?.elements[0]
-  return { etablissements, etablissement }
-}
-
 /**
  * Le stock d'un établissement : ce qui est à traiter d'abord (négatif, rupture, sous le seuil), puis ce qui reste à
  * compter. Réception, perte et inventaire selon les droits de chacun.
@@ -60,7 +47,7 @@ export function PageStock({
   const clientRequetes = useQueryClient()
   const naviguer = useNavigate()
   const { aLaPermission } = useSession()
-  const { etablissements, etablissement } = useEtablissementDuStock(etablissementId)
+  const { etablissements, etablissement } = useEtablissementChoisi(etablissementId)
   const stock = useQuery({
     ...requeteStock(etablissement?.id ?? ''),
     enabled: etablissement !== undefined,
@@ -236,25 +223,15 @@ export function PageStock({
         )}
       </div>
 
-      {etablissements.data !== undefined && etablissements.data.elements.length > 1 && (
-        <div className="w-60">
-          <ChampSelection
-            libelle={t('stock.etablissement')}
-            options={etablissements.data.elements.map((candidat) => ({
-              valeur: candidat.id,
-              libelle: candidat.nom,
-            }))}
-            value={etablissement?.id ?? ''}
-            onChange={(evenement) => {
-              setConfirmation(null)
-              void naviguer({
-                to: '/gestion/stock',
-                search: { etablissement: evenement.target.value },
-              })
-            }}
-          />
-        </div>
-      )}
+      <SelecteurEtablissement
+        etablissements={etablissements.data?.elements}
+        valeur={etablissement?.id ?? ''}
+        libelle={t('stock.etablissement')}
+        surChoisir={(id) => {
+          setConfirmation(null)
+          void naviguer({ to: '/gestion/stock', search: { etablissement: id } })
+        }}
+      />
       {stock.data !== undefined && etablissement !== undefined && (
         <section
           aria-labelledby="titre-politique-stock"
@@ -310,38 +287,20 @@ export function PageStock({
       )}
       {stock.data !== undefined && stock.data.lignes.length > 0 && etablissement !== undefined && (
         <>
-          <div className="flex flex-wrap items-center gap-2">
-            {(['tous', 'aTraiter', 'aCompter'] as const).map((candidat) => (
-              <button
-                key={candidat}
-                type="button"
-                aria-pressed={filtre === candidat}
-                onClick={() => {
-                  setFiltre(candidat)
-                }}
-                className={clsx(
-                  'flex min-h-cible-min items-center gap-1.5 rounded-normal px-3 text-libelle font-bold',
-                  filtre === candidat
-                    ? 'border border-accent bg-accent text-accent-texte'
-                    : 'border border-trait bg-surface text-encre',
-                )}
-              >
-                {t(`stock.filtres.${candidat}`)}
-                <span className="chiffres opacity-70">{nombres[candidat]}</span>
-              </button>
-            ))}
-            <span className="flex-1" />
-            <input
-              type="search"
-              aria-label={t('stock.rechercher')}
-              placeholder={t('stock.rechercher')}
-              value={recherche}
-              onChange={(evenement) => {
-                setRecherche(evenement.target.value)
-              }}
-              className="min-h-cible-min w-full rounded-normal border border-bordure-controle bg-surface px-3 text-corps text-encre sm:w-64"
-            />
-          </div>
+          <BarreFiltres
+            filtres={(['tous', 'aTraiter', 'aCompter'] as const).map((cle) => ({
+              cle,
+              libelle: t(`stock.filtres.${cle}`),
+              nombre: nombres[cle],
+            }))}
+            actif={filtre}
+            surChoisir={setFiltre}
+            recherche={{
+              libelle: t('stock.rechercher'),
+              valeur: recherche,
+              surChanger: setRecherche,
+            }}
+          />
           <Tableau
             libelle={t('stock.tableau', { etablissement: etablissement.nom })}
             colonnes={colonnes}
