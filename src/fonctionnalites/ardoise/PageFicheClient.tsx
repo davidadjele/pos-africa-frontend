@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { ArrowLeft, Pencil, RotateCw } from 'lucide-react'
 import { useState } from 'react'
@@ -8,6 +8,7 @@ import type { EcritureArdoise } from '../../partage/api/contrat'
 import { useSession } from '../../partage/auth/useSession'
 import { formaterDateHeure } from '../../partage/dates/formaterDate'
 import { formaterMontant, type Devise } from '../../partage/montants/formaterMontant'
+import { PAYS_PAR_DEFAUT } from '../../partage/referentiel/pays'
 import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
 import { BadgeStatut } from '../../partage/ui/BadgeStatut'
 import { Bouton } from '../../partage/ui/Bouton'
@@ -20,6 +21,7 @@ import { DialogueClient } from './DialogueClient'
 import { Anciennete } from './PageArdoises'
 import { auteurEcriture, TONS_ECRITURE } from './presentation'
 import { requeteFicheClient } from './requetes'
+import { useActionsArdoise } from './useActionsArdoise'
 
 /** Un client, ce qu'il doit et chaque mouvement de son ardoise, jamais modifié. */
 export function PageFicheClient({
@@ -27,44 +29,23 @@ export function PageFicheClient({
   etablissement: etablissementId,
 }: Readonly<{ clientId: string; etablissement?: string }>) {
   const { t } = useTranslation()
-  const clientRequetes = useQueryClient()
   const { moi } = useSession()
   const devise = (moi?.entrepriseCourante?.devise ?? 'XOF') as Devise
+  const pays = moi?.entrepriseCourante?.pays ?? PAYS_PAR_DEFAUT.pays
   const { etablissements, etablissement } = useEtablissementChoisi(etablissementId)
   const fiche = useQuery({
     ...requeteFicheClient(etablissement?.id ?? '', clientId),
     enabled: etablissement !== undefined,
   })
   const [ouvert, setOuvert] = useState<'modifier' | 'fermer' | null>(null)
-  const [confirmation, setConfirmation] = useState<string | null>(null)
-  const [enCours, setEnCours] = useState(false)
-  const [erreur, setErreur] = useState<unknown>(null)
+  const { confirmation, enCours, erreur, apres, basculer } = useActionsArdoise(
+    etablissement?.id,
+    () => {
+      setOuvert(null)
+    },
+  )
   const courte = (montant: number) =>
     formaterMontant({ unitesMineures: montant, devise }, { forme: 'courte' })
-
-  async function apres(message: string) {
-    if (etablissement === undefined) return
-    await clientRequetes.invalidateQueries({ queryKey: ['ardoises', etablissement.id] })
-    setOuvert(null)
-    setConfirmation(message)
-  }
-
-  async function basculer(action: 'desactivation' | 'reactivation', message: string) {
-    if (etablissement === undefined) return
-    setEnCours(true)
-    setErreur(null)
-    try {
-      await appelerApi(`/etablissements/${etablissement.id}/clients/${clientId}/${action}`, {
-        methode: 'POST',
-      })
-      await apres(message)
-    } catch (echec) {
-      setErreur(echec)
-      setOuvert(null)
-    } finally {
-      setEnCours(false)
-    }
-  }
 
   if (etablissements.isPending || (etablissement !== undefined && fiche.isPending)) {
     return <Chargement texte={t('ardoise.chargement')} />
@@ -171,7 +152,7 @@ export function PageFicheClient({
             <Bouton
               enCours={enCours}
               onClick={() =>
-                void basculer('reactivation', t('ardoise.rouverte', { nom: client.nom }))
+                void basculer(clientId, 'reactivation', t('ardoise.rouverte', { nom: client.nom }))
               }
             >
               {t('ardoise.rouvrir')}
@@ -234,6 +215,7 @@ export function PageFicheClient({
       {ouvert === 'modifier' && (
         <DialogueClient
           devise={devise}
+          pays={pays}
           client={{
             nom: client.nom,
             telephone: client.telephone,
@@ -264,7 +246,7 @@ export function PageFicheClient({
             setOuvert(null)
           }}
           surConfirmer={() =>
-            void basculer('desactivation', t('ardoise.fermee', { nom: client.nom }))
+            void basculer(clientId, 'desactivation', t('ardoise.fermee', { nom: client.nom }))
           }
         />
       )}

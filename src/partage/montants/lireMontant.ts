@@ -6,9 +6,12 @@ import { decimalesDe, type Devise } from './formaterMontant'
  */
 export function lireMontant(saisie: string, devise: Devise): number | null {
   const decimales = decimalesDe(devise)
-  const nettoyee = saisie.replace(/[\s  ]/g, '')
+  // \s couvre aussi les espaces insécables, fines ou non, que colle un montant déjà formaté.
+  const nettoyee = saisie.replace(/\s/g, '')
   const motif =
-    decimales === 0 ? /^(\d+)$/ : new RegExp(`^(\\d+)(?:[.,](\\d{1,${String(decimales)}}))?$`)
+    decimales === 0
+      ? /^(\d+)$/
+      : new RegExp(String.raw`^(\d+)(?:[.,](\d{1,${String(decimales)}}))?$`)
   const correspondance = motif.exec(nettoyee)
   if (correspondance === null) return null
   const [, entier = '', fraction = ''] = correspondance

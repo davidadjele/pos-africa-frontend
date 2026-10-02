@@ -1021,7 +1021,8 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await page.getByRole('button', { name: 'Nouveau client' }).click()
   const nouveauClient = page.getByRole('dialog', { name: 'Nouveau client' })
   await nouveauClient.getByLabel(/^Nom/).fill('Komlan D.')
-  await nouveauClient.getByLabel(/^Téléphone/).fill('+22890123456')
+  // Sans indicatif : le numéro se lit au Togo, le pays de l'entreprise.
+  await nouveauClient.getByLabel(/^Téléphone/).fill('90 12 34 56')
   await nouveauClient.getByLabel(/^Plafond/).fill('1000')
   await nouveauClient.getByLabel(/^Note interne/).fill('Paie chaque fin de mois.')
   await capturer(page, '70-ardoise-nouveau-client')
@@ -1049,6 +1050,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await page.getByRole('link', { name: 'Komlan D.' }).click()
   const ficheKomlan = page.getByRole('region', { name: 'Ce que doit Komlan D.' })
   await expect(ficheKomlan).toContainText('1 200 F')
+  await expect(page.getByText('+22890123456, Bè Kpota')).toBeVisible()
   await expect(page.getByRole('table', { name: 'Mouvements de l’ardoise' })).toContainText(
     'Vente à crédit',
   )

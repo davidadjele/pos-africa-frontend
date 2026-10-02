@@ -1,6 +1,5 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { clsx } from 'clsx'
 import { Eye, Pencil, RotateCw, Undo2, UserPlus, XCircle } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -9,20 +8,23 @@ import type { ClientArdoise } from '../../partage/api/contrat'
 import { useSession } from '../../partage/auth/useSession'
 import { formaterDateHeure } from '../../partage/dates/formaterDate'
 import { formaterMontant, type Devise } from '../../partage/montants/formaterMontant'
+import { PAYS_PAR_DEFAUT } from '../../partage/referentiel/pays'
 import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
 import { BadgeStatut } from '../../partage/ui/BadgeStatut'
+import { BarreFiltres } from '../../partage/ui/BarreFiltres'
 import { Bouton } from '../../partage/ui/Bouton'
-import { ChampSelection } from '../../partage/ui/ChampSaisie'
 import { Chargement } from '../../partage/ui/Chargement'
 import { Dialogue } from '../../partage/ui/Dialogue'
 import { EtatVide } from '../../partage/ui/EtatVide'
 import { MenuActions, type ActionMenu } from '../../partage/ui/MenuActions'
 import { Tableau, type ColonneTableau } from '../../partage/ui/Tableau'
+import { SelecteurEtablissement } from '../etablissements/SelecteurEtablissement'
 import { useEtablissementChoisi } from '../etablissements/useEtablissementChoisi'
 import { Chiffre } from './Chiffre'
 import { DialogueClient } from './DialogueClient'
 import { JOURS_RELANCE, joursDepuis, libelleEcriture } from './presentation'
 import { requeteArdoises } from './requetes'
+import { useActionsArdoise } from './useActionsArdoise'
 
 type Filtre = 'doivent' | 'aRelancer' | 'tous'
 const FILTRES: Filtre[] = ['doivent', 'aRelancer', 'tous']
@@ -48,10 +50,10 @@ export function PageArdoises({
   etablissement: etablissementId,
 }: Readonly<{ etablissement?: string }>) {
   const { t } = useTranslation()
-  const clientRequetes = useQueryClient()
   const naviguer = useNavigate()
   const { moi } = useSession()
   const devise = (moi?.entrepriseCourante?.devise ?? 'XOF') as Devise
+  const pays = moi?.entrepriseCourante?.pays ?? PAYS_PAR_DEFAUT.pays
   const { etablissements, etablissement } = useEtablissementChoisi(etablissementId)
   const ardoises = useQuery({
     ...requeteArdoises(etablissement?.id ?? ''),
@@ -60,48 +62,19 @@ export function PageArdoises({
   const [filtre, setFiltre] = useState<Filtre>('doivent')
   const [recherche, setRecherche] = useState('')
   const [ouvert, setOuvert] = useState<Ouvert>(null)
-  const [confirmation, setConfirmation] = useState<string | null>(null)
-  const [enCours, setEnCours] = useState(false)
-  const [erreur, setErreur] = useState<unknown>(null)
+  const { confirmation, setConfirmation, enCours, erreur, apres, basculer } = useActionsArdoise(
+    etablissement?.id,
+    () => {
+      setOuvert(null)
+    },
+  )
   const courte = (montant: number) =>
     formaterMontant({ unitesMineures: montant, devise }, { forme: 'courte' })
 
-  async function apres(message: string) {
-    if (etablissement === undefined) return
-    await clientRequetes.invalidateQueries({ queryKey: ['ardoises', etablissement.id] })
-    setOuvert(null)
-    setConfirmation(message)
-  }
-
-  async function fermer(client: ClientArdoise) {
-    if (etablissement === undefined) return
-    setEnCours(true)
-    setErreur(null)
-    try {
-      await appelerApi(`/etablissements/${etablissement.id}/clients/${client.id}/desactivation`, {
-        methode: 'POST',
-      })
-      await apres(t('ardoise.fermee', { nom: client.nom }))
-    } catch (echec) {
-      setErreur(echec)
-      setOuvert(null)
-    } finally {
-      setEnCours(false)
-    }
-  }
-
-  async function rouvrir(client: ClientArdoise) {
-    if (etablissement === undefined) return
-    setErreur(null)
-    try {
-      await appelerApi(`/etablissements/${etablissement.id}/clients/${client.id}/reactivation`, {
-        methode: 'POST',
-      })
-      await apres(t('ardoise.rouverte', { nom: client.nom }))
-    } catch (echec) {
-      setErreur(echec)
-    }
-  }
+  const fermer = (client: ClientArdoise) =>
+    basculer(client.id, 'desactivation', t('ardoise.fermee', { nom: client.nom }))
+  const rouvrir = (client: ClientArdoise) =>
+    basculer(client.id, 'reactivation', t('ardoise.rouverte', { nom: client.nom }))
 
   const colonnes: ColonneTableau<ClientArdoise>[] = [
     {
@@ -272,25 +245,15 @@ export function PageArdoises({
         )}
       </div>
 
-      {etablissements.data !== undefined && etablissements.data.elements.length > 1 && (
-        <div className="w-60">
-          <ChampSelection
-            libelle={t('ardoise.etablissement')}
-            options={etablissements.data.elements.map((candidat) => ({
-              valeur: candidat.id,
-              libelle: candidat.nom,
-            }))}
-            value={etablissement?.id ?? ''}
-            onChange={(evenement) => {
-              setConfirmation(null)
-              void naviguer({
-                to: '/gestion/ardoises',
-                search: { etablissement: evenement.target.value },
-              })
-            }}
-          />
-        </div>
-      )}
+      <SelecteurEtablissement
+        etablissements={etablissements.data?.elements}
+        valeur={etablissement?.id ?? ''}
+        libelle={t('ardoise.etablissement')}
+        surChoisir={(id) => {
+          setConfirmation(null)
+          void naviguer({ to: '/gestion/ardoises', search: { etablissement: id } })
+        }}
+      />
 
       {confirmation !== null && <Alerte ton="succes">{confirmation}</Alerte>}
       {erreur !== null && <AlerteErreur erreur={erreur} />}
@@ -337,38 +300,20 @@ export function PageArdoises({
             </section>
           ) : (
             <>
-              <div className="flex flex-wrap items-center gap-2">
-                {FILTRES.map((candidat) => (
-                  <button
-                    key={candidat}
-                    type="button"
-                    aria-pressed={filtre === candidat}
-                    onClick={() => {
-                      setFiltre(candidat)
-                    }}
-                    className={clsx(
-                      'flex min-h-cible-min items-center gap-1.5 rounded-normal px-3 text-libelle font-bold',
-                      filtre === candidat
-                        ? 'border border-accent bg-accent text-accent-texte'
-                        : 'border border-trait bg-surface text-encre',
-                    )}
-                  >
-                    {t(`ardoise.filtres.${candidat}`)}
-                    <span className="chiffres opacity-70">{nombres[candidat]}</span>
-                  </button>
-                ))}
-                <span className="flex-1" />
-                <input
-                  type="search"
-                  aria-label={t('ardoise.rechercher')}
-                  placeholder={t('ardoise.rechercher')}
-                  value={recherche}
-                  onChange={(evenement) => {
-                    setRecherche(evenement.target.value)
-                  }}
-                  className="min-h-cible-min w-full rounded-normal border border-bordure-controle bg-surface px-3 text-corps text-encre sm:w-64"
-                />
-              </div>
+              <BarreFiltres
+                filtres={FILTRES.map((cle) => ({
+                  cle,
+                  libelle: t(`ardoise.filtres.${cle}`),
+                  nombre: nombres[cle],
+                }))}
+                actif={filtre}
+                surChoisir={setFiltre}
+                recherche={{
+                  libelle: t('ardoise.rechercher'),
+                  valeur: recherche,
+                  surChanger: setRecherche,
+                }}
+              />
               {visibles.length === 0 ? (
                 <section className="rounded-moyen border border-trait bg-surface p-6">
                   <EtatVide titre={t('ardoise.aucun.titre')} phrase={t('ardoise.aucun.phrase')} />
@@ -390,6 +335,7 @@ export function PageArdoises({
         (ouvert?.type === 'nouveau' || ouvert?.type === 'modifier') && (
           <DialogueClient
             devise={devise}
+            pays={pays}
             {...(ouvert.type === 'modifier'
               ? {
                   client: {

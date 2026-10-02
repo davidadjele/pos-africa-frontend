@@ -20,6 +20,20 @@ import { lireQuantite } from './DialoguesStock'
 import { quantiteSignee } from './presentation'
 import { requeteStock, requeteStockATraiter } from './requetes'
 
+/** Un premier comptage, un compte juste, ou l'écart signé : un manque en rouge. */
+function BadgeEcart({ ecart }: Readonly<{ ecart: number | undefined }>) {
+  const { t } = useTranslation()
+  if (ecart === undefined) {
+    return <BadgeStatut ton="info">{t('stock.inventaire.premier')}</BadgeStatut>
+  }
+  if (ecart === 0) {
+    return <BadgeStatut ton="succes">{t('stock.inventaire.juste')}</BadgeStatut>
+  }
+  return (
+    <BadgeStatut ton={ecart < 0 ? 'danger' : 'info'}>{quantiteSignee(ecart, true)}</BadgeStatut>
+  )
+}
+
 /** Les motifs plausibles selon le sens de l'écart : un manque ne vient pas d'une livraison oubliée. */
 const MOTIFS_MANQUE: MotifStock[] = [
   'CASSE',
@@ -156,16 +170,7 @@ export function PageInventaireStock({ etablissementId }: Readonly<{ etablissemen
     {
       cle: 'ecart',
       entete: t('stock.inventaire.ecart'),
-      rendu: (ecart) =>
-        ecart.ecart === undefined ? (
-          <BadgeStatut ton="info">{t('stock.inventaire.premier')}</BadgeStatut>
-        ) : ecart.ecart === 0 ? (
-          <BadgeStatut ton="succes">{t('stock.inventaire.juste')}</BadgeStatut>
-        ) : (
-          <BadgeStatut ton={ecart.ecart < 0 ? 'danger' : 'info'}>
-            {quantiteSignee(ecart.ecart, true)}
-          </BadgeStatut>
-        ),
+      rendu: (ecart) => <BadgeEcart ecart={ecart.ecart} />,
     },
     {
       cle: 'motif',

@@ -7,7 +7,7 @@ export function codePinTropSimple(code: string): boolean {
   let croissant = true
   let decroissant = true
   for (let rang = 1; rang < code.length; rang++) {
-    const ecart = code.charCodeAt(rang) - code.charCodeAt(rang - 1)
+    const ecart = (code.codePointAt(rang) ?? 0) - (code.codePointAt(rang - 1) ?? 0)
     identiques &&= ecart === 0
     croissant &&= ecart === 1
     decroissant &&= ecart === -1

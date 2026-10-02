@@ -17,7 +17,8 @@ export function formaterTaux(pointsDeBase: number): string {
   const decimales = String(pointsDeBase % 100)
     .padStart(2, '0')
     .replace(/0+$/, '')
-  return `${String(entier)}${decimales === '' ? '' : `,${decimales}`}${ESPACE_INSECABLE}%`
+  const virgule = decimales === '' ? '' : ',' + decimales
+  return `${String(entier)}${virgule}${ESPACE_INSECABLE}%`
 }
 
 /** Pourcentage saisi (« 18 », « 19,25 ») en points de base, ou null s'il n'est pas lisible. */

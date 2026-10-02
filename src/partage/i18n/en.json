@@ -32,7 +32,8 @@
     "CAISSE_FERMEE": "The till on this tablet is not open. Open it with its float to take payments.",
     "REMBOURSEMENT_HORS_JOURNEE": "Only today’s bills can be refunded at the till.",
     "PLAFOND_ARDOISE_DEPASSE": "This bill would take the customer over their tab limit. Confirm going over, or have part of it paid now.",
-    "ARDOISE_NON_SOLDEE": "This customer still owes money: the tab stays open until it is settled."
+    "ARDOISE_NON_SOLDEE": "This customer still owes money: the tab stays open until it is settled.",
+    "TABLE_INDISPONIBLE": "This table was just removed from the floor plan (deactivated by a manager). The plan is up to date: choose another table."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Too many failed attempts: the account is locked. Try again in {{duree}}.",
@@ -1763,7 +1764,7 @@
       "nom": "Name",
       "nomManquant": "Enter the customer’s name.",
       "telephone": "Phone",
-      "telephoneAide": "To find and remind them.",
+      "telephoneAide": "Local number ({{pays}}), spaces optional. Other country: start with “+” and its code.",
       "plafond": "Limit",
       "plafondAide": "The most they can owe. Empty: no limit.",
       "plafondInvalide": "Enter an amount, or leave empty.",

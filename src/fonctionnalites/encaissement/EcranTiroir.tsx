@@ -29,7 +29,7 @@ import { Dialogue } from '../../partage/ui/Dialogue'
 import { useSessionCaisse } from '../caisse/requetes'
 import { useValidation } from '../commande/useValidation'
 import { requeteAppareil } from '../tablette/requetes'
-import { EtapeComptage, ResultatEcart, useComptage } from './Comptage'
+import { EtapeComptage, ResultatEcart, SIGNES_ECART, sensEcart, useComptage } from './Comptage'
 import { OuvertureCaisse } from './EcranEncaissement'
 import { NotesEncaissees } from './NotesEncaissees'
 import { requeteOuvertureCaisse } from './requetes'
@@ -65,6 +65,37 @@ export function EcranTiroir() {
   return <Tiroir />
 }
 
+/** La caisse de la tablette est fermée : on l'ouvre ici, avec le fond laissé à la dernière clôture. */
+function CaisseAOuvrir({
+  retour,
+  devise,
+  peutOuvrir,
+  surOuverte,
+}: Readonly<{ retour: ReactNode; devise: Devise; peutOuvrir: boolean; surOuverte: () => void }>) {
+  const { t } = useTranslation()
+  const clientRequetes = useQueryClient()
+  const caisse = useQuery(requeteOuvertureCaisse)
+  // Le fond se préremplit à la création du champ : on attend l'état à jour de la caisse.
+  if (caisse.isPending || caisse.isFetching) {
+    return <Chargement texte={t('tiroir.chargement')} />
+  }
+  const dernierFond = caisse.data?.dernierFond
+  return (
+    <div className="flex flex-col gap-3 lg:min-h-0 lg:flex-1">
+      <div className="flex">{retour}</div>
+      <OuvertureCaisse
+        devise={devise}
+        peutOuvrir={peutOuvrir}
+        {...(dernierFond === undefined ? {} : { dernierFond })}
+        surOuverte={(etat) => {
+          clientRequetes.setQueryData(requeteOuvertureCaisse.queryKey, etat)
+          surOuverte()
+        }}
+      />
+    </div>
+  )
+}
+
 function Tiroir() {
   const { t } = useTranslation()
   const naviguer = useNavigate()
@@ -75,7 +106,6 @@ function Tiroir() {
   const session = useSessionCaisse()
   const permissions = session?.permissions ?? []
   const situation = useQuery(requeteSituation)
-  const caisse = useQuery(requeteOuvertureCaisse)
   const [etape, setEtape] = useState<'situation' | 'mouvement' | 'cloture'>('situation')
   const [vue, setVue] = useState<'situation' | 'notes'>('situation')
   const nomCaisse = appareil?.nom ?? ''
@@ -88,25 +118,13 @@ function Tiroir() {
   if (situation.isPending) return <Chargement texte={t('tiroir.chargement')} />
   if (situation.isError) {
     if (situation.error instanceof ErreurApi && situation.error.code === 'CAISSE_FERMEE') {
-      // Le fond se préremplit à la création du champ : on attend l'état à jour de la caisse.
-      if (caisse.isPending || caisse.isFetching) {
-        return <Chargement texte={t('tiroir.chargement')} />
-      }
       return (
-        <div className="flex flex-col gap-3 lg:min-h-0 lg:flex-1">
-          <div className="flex">{retour}</div>
-          <OuvertureCaisse
-            devise={devise}
-            peutOuvrir={permissions.includes('CAISSE_OUVRIR')}
-            {...(caisse.data?.dernierFond === undefined
-              ? {}
-              : { dernierFond: caisse.data.dernierFond })}
-            surOuverte={(etat) => {
-              clientRequetes.setQueryData(requeteOuvertureCaisse.queryKey, etat)
-              void situation.refetch()
-            }}
-          />
-        </div>
+        <CaisseAOuvrir
+          retour={retour}
+          devise={devise}
+          peutOuvrir={permissions.includes('CAISSE_OUVRIR')}
+          surOuverte={() => void situation.refetch()}
+        />
       )
     }
     return (
@@ -496,6 +514,7 @@ function DialogueMouvement({
   }
 
   if (validation.dialogue !== null) return validation.dialogue
+  const cleConfirmer = type === 'APPORT' ? 'tiroir.dialogue.ajouter' : 'tiroir.dialogue.sortir'
   return (
     <Dialogue
       titre={t('tiroir.dialogue.titre')}
@@ -504,9 +523,7 @@ function DialogueMouvement({
       libelleConfirmer={
         montantLu === null
           ? t('tiroir.dialogue.valider')
-          : t(type === 'APPORT' ? 'tiroir.dialogue.ajouter' : 'tiroir.dialogue.sortir', {
-              montant: courte(montantLu),
-            })
+          : t(cleConfirmer, { montant: courte(montantLu) })
       }
       enCours={enCours}
       surAnnuler={surFermer}
@@ -814,7 +831,7 @@ function RapportDeCloture({
         <Montant libelle={t('cloture.z.compte')} valeur={nombre(rapport.compte)} />
         <Montant
           libelle={t('cloture.z.ecart')}
-          valeur={`${rapport.ecart > 0 ? '+' : rapport.ecart < 0 ? '−' : ''}${nombre(Math.abs(rapport.ecart))}`}
+          valeur={`${SIGNES_ECART[sensEcart(rapport.ecart)]}${nombre(Math.abs(rapport.ecart))}`}
         />
         <Montant libelle={t('cloture.z.fondLaisse')} valeur={nombre(rapport.fondLaisse)} />
       </SectionZ>

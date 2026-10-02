@@ -4,6 +4,7 @@ import { ErreurApi } from '../../partage/api/ErreurApi'
 import type { DemandeClient } from '../../partage/api/contrat'
 import { symboleDe, type Devise } from '../../partage/montants/formaterMontant'
 import { lireMontant } from '../../partage/montants/lireMontant'
+import { nomPays, telephoneDuPays } from '../../partage/referentiel/pays'
 import { AlerteErreur } from '../../partage/ui/Alerte'
 import { ChampSaisie } from '../../partage/ui/ChampSaisie'
 import { Dialogue } from '../../partage/ui/Dialogue'
@@ -22,18 +23,22 @@ export interface ClientSaisi {
 export function DialogueClient({
   client,
   devise,
+  pays,
   avecNote = true,
   surFermer,
   surEnregistrer,
 }: Readonly<{
   client?: ClientSaisi
   devise: Devise
+  /** Pays de l'entreprise : un numéro saisi sans indicatif y est lu. */
+  pays: string
   /** La note interne ne se saisit qu'en gestion, loin du regard du client. */
   avecNote?: boolean
   surFermer: () => void
   surEnregistrer: (demande: DemandeClient) => Promise<void>
 }>) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const telephonePays = telephoneDuPays(pays)
   const [nom, setNom] = useState(client?.nom ?? '')
   const [telephone, setTelephone] = useState(client?.telephone ?? '')
   const [plafond, setPlafond] = useState(
@@ -94,9 +99,12 @@ export function DialogueClient({
         libelle={t('ardoise.client.telephone')}
         type="tel"
         inputMode="tel"
-        maxLength={20}
+        autoComplete="off"
+        maxLength={32}
+        prefixe={telephone.trim().startsWith('+') ? undefined : telephonePays?.indicatif}
+        placeholder={telephonePays?.exemple}
         value={telephone}
-        aide={t('ardoise.client.telephoneAide')}
+        aide={t('ardoise.client.telephoneAide', { pays: nomPays(pays, i18n.language) })}
         erreur={erreurTelephone}
         onChange={(evenement) => {
           setTelephone(evenement.target.value)

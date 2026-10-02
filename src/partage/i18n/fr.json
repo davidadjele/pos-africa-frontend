@@ -32,7 +32,8 @@
     "CAISSE_FERMEE": "La caisse de cette tablette n’est pas ouverte. Ouvrez-la avec son fond pour encaisser.",
     "REMBOURSEMENT_HORS_JOURNEE": "Seules les notes de la journée en cours se remboursent à la caisse.",
     "PLAFOND_ARDOISE_DEPASSE": "Cette note ferait dépasser le plafond de l’ardoise du client. Confirmez le dépassement ou faites payer une partie maintenant.",
-    "ARDOISE_NON_SOLDEE": "Ce client doit encore de l’argent : son ardoise reste ouverte tant qu’elle n’est pas soldée."
+    "ARDOISE_NON_SOLDEE": "Ce client doit encore de l’argent : son ardoise reste ouverte tant qu’elle n’est pas soldée.",
+    "TABLE_INDISPONIBLE": "Cette table vient d’être retirée du plan (désactivée par un gérant). Le plan est à jour : choisissez une autre table."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Trop d’essais infructueux : le compte est verrouillé. Réessayez dans {{duree}}.",
@@ -1763,7 +1764,7 @@
       "nom": "Nom",
       "nomManquant": "Indiquez le nom du client.",
       "telephone": "Téléphone",
-      "telephoneAide": "Pour le retrouver et le relancer.",
+      "telephoneAide": "Numéro local ({{pays}}), espaces facultatifs. Autre pays : commencez par « + » et son indicatif.",
       "plafond": "Plafond",
       "plafondAide": "Ce qu’il peut devoir au plus. Vide : sans plafond.",
       "plafondInvalide": "Indiquez un montant, ou laissez vide.",

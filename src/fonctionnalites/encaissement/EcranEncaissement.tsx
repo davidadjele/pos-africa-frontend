@@ -99,6 +99,8 @@ function Encaissement({ commandeId }: Readonly<{ commandeId: string }>) {
     return <Chargement texte={t('encaissement.chargement')} />
   }
   const ou = note.data.table?.nom ?? t('caisse.note.numero', { numero: note.data.numero })
+  const dernierFond =
+    caisse.data.dernierFond === undefined ? {} : { dernierFond: caisse.data.dernierFond }
 
   if (termine !== null) {
     return <FinEncaissement etat={termine} note={note.data} devise={devise} />
@@ -120,9 +122,7 @@ function Encaissement({ commandeId }: Readonly<{ commandeId: string }>) {
           key={caisse.data.dernierFond ?? 'sans-fond'}
           devise={devise}
           peutOuvrir={session?.permissions.includes('CAISSE_OUVRIR') ?? false}
-          {...(caisse.data.dernierFond === undefined
-            ? {}
-            : { dernierFond: caisse.data.dernierFond })}
+          {...dernierFond}
           surOuverte={(ouverte) => {
             clientRequetes.setQueryData(requeteOuvertureCaisse.queryKey, ouverte)
           }}
@@ -140,6 +140,7 @@ function Encaissement({ commandeId }: Readonly<{ commandeId: string }>) {
             key={etat.data.paiements.length}
             etat={etat.data}
             operateurs={caisse.data.operateurs}
+            pays={caisse.data.pays}
             devise={devise}
             couverts={note.data.couverts}
             peutCrediter={session?.permissions.includes('CLIENT_CREDIT') ?? false}
@@ -345,12 +346,24 @@ function montantsRapides(du: number): number[] {
 }
 
 type Partage = 'libre' | 'parts' | 'articles'
+
+/** En parts égales ou par articles, le montant ne se saisit pas : il se calcule comme le serveur. */
+function montantSelonPartage(
+  partage: Partage,
+  etat: EtatEncaissement,
+  selection: Record<string, number>,
+  saisi: number | null,
+): number | null {
+  if (partage === 'parts') return etat.montantPart ?? null
+  return partage === 'articles' ? totalSelection(etat.articles, selection) : saisi
+}
 const PARTAGES: Partage[] = ['libre', 'parts', 'articles']
 const PARTS_MAX = 20
 
 function Paiement({
   etat,
   operateurs,
+  pays,
   devise,
   couverts,
   peutCrediter,
@@ -360,6 +373,7 @@ function Paiement({
 }: Readonly<{
   etat: EtatEncaissement
   operateurs: OperateurMobileMoney[]
+  pays: string
   devise: Devise
   couverts: number | undefined
   peutCrediter: boolean
@@ -392,13 +406,7 @@ function Paiement({
     formaterMontant({ unitesMineures: valeur, devise }, { forme: 'courte' })
 
   const montantSaisi = lireMontant(montant, devise)
-  // En parts égales ou par articles, le montant ne se saisit pas : il se calcule comme le serveur.
-  const montantLu =
-    partage === 'parts'
-      ? (etat.montantPart ?? null)
-      : partage === 'articles'
-        ? totalSelection(etat.articles, selection)
-        : montantSaisi
+  const montantLu = montantSelonPartage(partage, etat, selection, montantSaisi)
   const recuLu = recu === null ? montantLu : lireMontant(recu, devise)
   const montantValide = montantLu !== null && montantLu > 0 && montantLu <= etat.reste
   const manque =
@@ -417,6 +425,8 @@ function Paiement({
     depassement,
   }
   const aCompleter = manquesDe(saisie, t)
+  const aide =
+    partage === 'libre' ? 'encaissement.aide' : `encaissement.partage.aidesPaiement.${partage}`
   const valide = montantValide && manque === 0 && aCompleter.length === 0
 
   function toucher(touche: string) {
@@ -704,6 +714,7 @@ function Paiement({
             client={client}
             montant={montantLu ?? 0}
             devise={devise}
+            pays={pays}
             peutCreer={peutCrediter}
             surChoisir={setClient}
           />
@@ -712,11 +723,7 @@ function Paiement({
           <span className="min-w-48 flex-1 text-legende text-attenue">
             {aCompleter.length > 0
               ? t('encaissement.manques.pourValider', { liste: aCompleter.join(', ') })
-              : t(
-                  partage === 'libre'
-                    ? 'encaissement.aide'
-                    : `encaissement.partage.aidesPaiement.${partage}`,
-                )}
+              : t(aide)}
           </span>
           <Bouton
             variante="principal"

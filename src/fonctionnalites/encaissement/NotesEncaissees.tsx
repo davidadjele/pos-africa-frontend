@@ -292,14 +292,14 @@ function DetailNote({
         </ul>
       )}
       <span className="mt-auto pt-4" />
-      {!note.remboursable ? (
-        <p className="m-0 text-legende text-attenue">{t('remboursement.horsJournee')}</p>
-      ) : resteARembourser ? (
+      {note.remboursable && resteARembourser ? (
         <Bouton className="min-h-cible-caisse" onClick={surRembourser}>
           {t('remboursement.rembourser')}
         </Bouton>
       ) : (
-        <p className="m-0 text-legende text-attenue">{t('remboursement.toutRembourse')}</p>
+        <p className="m-0 text-legende text-attenue">
+          {t(note.remboursable ? 'remboursement.toutRembourse' : 'remboursement.horsJournee')}
+        </p>
       )}
     </section>
   )

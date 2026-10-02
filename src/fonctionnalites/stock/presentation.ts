@@ -60,7 +60,9 @@ export function libelleMouvement(mouvement: MouvementStockResume, t: TFunction):
   if (mouvement.type === 'INVENTAIRE')
     return `${type} (${quantiteSignee(mouvement.quantite, true)})`
   const detail = detailMouvement(mouvement, t)
-  return detail === ''
-    ? type
-    : `${type}, ${mouvement.motif === undefined ? detail : detail.charAt(0).toLowerCase() + detail.slice(1)}`
+  if (detail === '') return type
+  // Un motif traduit commence par une majuscule : il suit le type en minuscule.
+  const suite =
+    mouvement.motif === undefined ? detail : detail.charAt(0).toLowerCase() + detail.slice(1)
+  return `${type}, ${suite}`
 }

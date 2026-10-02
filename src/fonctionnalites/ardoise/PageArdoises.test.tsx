@@ -76,12 +76,16 @@ describe('PageArdoises', () => {
     await userEvent.click(within(dialogue).getByRole('button', { name: 'Ouvrir l’ardoise' }))
     expect(within(dialogue).getByText('Indiquez le nom du client.')).toBeInTheDocument()
     await userEvent.type(within(dialogue).getByLabelText(/^Nom/), 'Akossiwa M.')
-    await userEvent.type(within(dialogue).getByLabelText(/^Téléphone/), '+22899017723')
+    // Sans indicatif, le numéro se lit dans le pays de l'entreprise, rappelé devant la saisie.
+    const telephone = within(dialogue).getByLabelText(/^Téléphone/)
+    expect(within(dialogue).getByText('+228')).toBeVisible()
+    expect(telephone).toHaveAttribute('placeholder', '90 11 23 45')
+    await userEvent.type(telephone, '99 01 77 23')
     await userEvent.type(within(dialogue).getByLabelText(/^Plafond/), '5000')
     await userEvent.click(within(dialogue).getByRole('button', { name: 'Ouvrir l’ardoise' }))
 
     expect(await screen.findByText('Ardoise ouverte pour Akossiwa M.')).toBeInTheDocument()
-    expect(crees).toEqual([{ nom: 'Akossiwa M.', telephone: '+22899017723', plafond: 5000 }])
+    expect(crees).toEqual([{ nom: 'Akossiwa M.', telephone: '99 01 77 23', plafond: 5000 }])
   })
 
   it('montre la fiche d’un client et les mouvements de son ardoise', async () => {

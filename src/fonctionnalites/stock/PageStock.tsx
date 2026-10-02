@@ -9,12 +9,13 @@ import { useSession } from '../../partage/auth/useSession'
 import { formaterDateHeure } from '../../partage/dates/formaterDate'
 import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
 import { BadgeStatut, type TonStatut } from '../../partage/ui/BadgeStatut'
+import { BarreFiltres } from '../../partage/ui/BarreFiltres'
 import { Bouton, classesBouton } from '../../partage/ui/Bouton'
-import { ChampSelection } from '../../partage/ui/ChampSaisie'
 import { Chargement } from '../../partage/ui/Chargement'
 import { EtatVide } from '../../partage/ui/EtatVide'
 import { MenuActions, type ActionMenu } from '../../partage/ui/MenuActions'
 import { Tableau, type ColonneTableau } from '../../partage/ui/Tableau'
+import { SelecteurEtablissement } from '../etablissements/SelecteurEtablissement'
 import { useEtablissementChoisi } from '../etablissements/useEtablissementChoisi'
 import { DialogueHistorique, DialoguePerte, DialogueSeuil } from './DialoguesStock'
 import { estATraiter, libelleMouvement, quantiteSignee, rangStock, TONS_ETAT } from './presentation'
@@ -222,25 +223,15 @@ export function PageStock({
         )}
       </div>
 
-      {etablissements.data !== undefined && etablissements.data.elements.length > 1 && (
-        <div className="w-60">
-          <ChampSelection
-            libelle={t('stock.etablissement')}
-            options={etablissements.data.elements.map((candidat) => ({
-              valeur: candidat.id,
-              libelle: candidat.nom,
-            }))}
-            value={etablissement?.id ?? ''}
-            onChange={(evenement) => {
-              setConfirmation(null)
-              void naviguer({
-                to: '/gestion/stock',
-                search: { etablissement: evenement.target.value },
-              })
-            }}
-          />
-        </div>
-      )}
+      <SelecteurEtablissement
+        etablissements={etablissements.data?.elements}
+        valeur={etablissement?.id ?? ''}
+        libelle={t('stock.etablissement')}
+        surChoisir={(id) => {
+          setConfirmation(null)
+          void naviguer({ to: '/gestion/stock', search: { etablissement: id } })
+        }}
+      />
       {stock.data !== undefined && etablissement !== undefined && (
         <section
           aria-labelledby="titre-politique-stock"
@@ -296,38 +287,20 @@ export function PageStock({
       )}
       {stock.data !== undefined && stock.data.lignes.length > 0 && etablissement !== undefined && (
         <>
-          <div className="flex flex-wrap items-center gap-2">
-            {(['tous', 'aTraiter', 'aCompter'] as const).map((candidat) => (
-              <button
-                key={candidat}
-                type="button"
-                aria-pressed={filtre === candidat}
-                onClick={() => {
-                  setFiltre(candidat)
-                }}
-                className={clsx(
-                  'flex min-h-cible-min items-center gap-1.5 rounded-normal px-3 text-libelle font-bold',
-                  filtre === candidat
-                    ? 'border border-accent bg-accent text-accent-texte'
-                    : 'border border-trait bg-surface text-encre',
-                )}
-              >
-                {t(`stock.filtres.${candidat}`)}
-                <span className="chiffres opacity-70">{nombres[candidat]}</span>
-              </button>
-            ))}
-            <span className="flex-1" />
-            <input
-              type="search"
-              aria-label={t('stock.rechercher')}
-              placeholder={t('stock.rechercher')}
-              value={recherche}
-              onChange={(evenement) => {
-                setRecherche(evenement.target.value)
-              }}
-              className="min-h-cible-min w-full rounded-normal border border-bordure-controle bg-surface px-3 text-corps text-encre sm:w-64"
-            />
-          </div>
+          <BarreFiltres
+            filtres={(['tous', 'aTraiter', 'aCompter'] as const).map((cle) => ({
+              cle,
+              libelle: t(`stock.filtres.${cle}`),
+              nombre: nombres[cle],
+            }))}
+            actif={filtre}
+            surChoisir={setFiltre}
+            recherche={{
+              libelle: t('stock.rechercher'),
+              valeur: recherche,
+              surChanger: setRecherche,
+            }}
+          />
           <Tableau
             libelle={t('stock.tableau', { etablissement: etablissement.nom })}
             colonnes={colonnes}

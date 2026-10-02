@@ -14,7 +14,7 @@ import { formaterDateHeure } from '../../partage/dates/formaterDate'
 import { AlerteErreur } from '../../partage/ui/Alerte'
 import { BadgeStatut } from '../../partage/ui/BadgeStatut'
 import { ChampSaisie, ChampSelection } from '../../partage/ui/ChampSaisie'
-import { Chargement } from '../../partage/ui/Chargement'
+import { EtatsListe } from '../../partage/ui/EtatsListe'
 import { Dialogue } from '../../partage/ui/Dialogue'
 import { detailMouvement, quantiteSignee, TONS_MOUVEMENT } from './presentation'
 import { requeteHistoriqueStock } from './requetes'
@@ -249,11 +249,11 @@ export function DialogueHistorique({
       libelleConfirmer={t('commun.fermer')}
       surConfirmer={surFermer}
     >
-      {historique.isPending && <Chargement texte={t('stock.historique.chargement')} />}
-      {historique.isError && <AlerteErreur erreur={historique.error} />}
-      {historique.data?.length === 0 && (
-        <p className="m-0 text-corps text-attenue">{t('stock.historique.vide')}</p>
-      )}
+      <EtatsListe
+        requete={historique}
+        chargement={t('stock.historique.chargement')}
+        vide={t('stock.historique.vide')}
+      />
       {historique.data !== undefined && historique.data.length > 0 && (
         <ul
           aria-label={t('stock.historique.liste')}

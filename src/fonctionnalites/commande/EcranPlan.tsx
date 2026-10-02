@@ -24,6 +24,7 @@ import { Chargement } from '../../partage/ui/Chargement'
 import { Dialogue } from '../../partage/ui/Dialogue'
 import { EtatVide } from '../../partage/ui/EtatVide'
 import { useSessionCaisse } from '../caisse/requetes'
+import { numeroEtCanal } from './PanneauNote'
 import { requeteAppareil } from '../tablette/requetes'
 import { dureeDepuis } from './duree'
 import { requeteCommande, requetePlan } from './requetes'
@@ -31,6 +32,12 @@ import { requeteCommande, requetePlan } from './requetes'
 type Ouverture = { canal: 'SUR_PLACE'; table: TablePlan; salle: string } | { canal: 'EMPORTER' }
 
 /** Accueil de la caisse : les tables et leur note ouverte, la vente au comptoir et à emporter. */
+/** À envoyer prime sur l'addition demandée : l'un et l'autre se voient à leur bordure. */
+function bordureDeTable(aEnvoyer: boolean, addition: boolean): string {
+  if (aEnvoyer) return 'border-2 border-alerte-bord'
+  return addition ? 'border-2 border-info' : 'border border-trait'
+}
+
 export function EcranPlan() {
   const { t } = useTranslation()
   const clientRequetes = useQueryClient()
@@ -290,11 +297,7 @@ function TuileTable({
   // Articles pris mais pas partis en préparation : couleur d'alerte, l'accent reste à l'action principale.
   const classes = clsx(
     'flex min-h-36 w-full flex-col justify-between gap-2 rounded-moyen p-3.5 text-left text-encre',
-    aEnvoyer > 0
-      ? 'border-2 border-alerte-bord'
-      : addition
-        ? 'border-2 border-info'
-        : 'border border-trait',
+    bordureDeTable(aEnvoyer > 0, addition),
     note === undefined ? 'bg-fond' : 'bg-surface',
   )
   const contenu =
@@ -395,7 +398,7 @@ function aTraiter(salles: SallePlan[], sansTable: NoteOuverte[], t: TFunction): 
     ),
     ...sansTable.map((note) => ({
       note,
-      libelle: `${t('caisse.note.numero', { numero: note.numero })}, ${t(`caisse.canaux.${note.canal}`)}`,
+      libelle: numeroEtCanal(note, t),
     })),
   ]
   const additions = toutes
@@ -499,9 +502,10 @@ function ResumeNotes({
           <span className="chiffres font-medium text-attenue">{comptoir.length}</span>
         </h2>
       )}
-      {sansTable.length === 0 ? (
+      {sansTable.length === 0 && (
         <p className="m-0 mt-1 text-legende text-attenue">{t('caisse.plan.aucuneSansTable')}</p>
-      ) : comptoir.length === 0 ? null : (
+      )}
+      {comptoir.length > 0 && (
         <ul
           aria-label={t('caisse.plan.sansTable')}
           className="m-0 mt-1.5 flex list-none flex-col gap-2 p-0"

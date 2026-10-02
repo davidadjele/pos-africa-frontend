@@ -56,181 +56,248 @@ export function auteurDe(evenement: EvenementActivite, t: TFunction): EvenementA
   }
 }
 
+/** Ce que chaque détail utilise : la traduction, les montants dans la devise, l'heure locale, les établissements. */
+interface Outils {
+  t: TFunction
+  montant: (valeur: unknown) => string
+  contexte: ContexteActivite
+}
+
+type Detail = (evenement: EvenementActivite, outils: Outils) => string | null
+
 /** Ce qui a changé, en clair : « 1 000 F → 1 200 F », « 18 % → 19 % », les rôles avant et après. */
 export function detailActivite(
   evenement: EvenementActivite,
   t: TFunction,
-  { devise, fuseauHoraire, etablissements }: ContexteActivite,
+  contexte: ContexteActivite,
 ): string | null {
-  const { avant, apres } = evenement.details as { avant?: unknown; apres?: unknown }
   const montant = (valeur: unknown) =>
     typeof valeur === 'number'
-      ? formaterMontant({ unitesMineures: valeur, devise }, { forme: 'courte' })
+      ? formaterMontant({ unitesMineures: valeur, devise: contexte.devise }, { forme: 'courte' })
       : t('activite.prixDeBase')
-  switch (evenement.type) {
-    case 'PRIX_MODIFIE':
-    case 'PRIX_ETABLISSEMENT_MODIFIE':
-      return `${montant(avant)} → ${montant(apres)}`
-    case 'TAUX_TAXE_MODIFIE':
-      return typeof avant === 'number' && typeof apres === 'number'
-        ? `${formaterTaux(avant)} → ${formaterTaux(apres)}`
-        : null
-    case 'TAXE_CREEE': {
-      const taux = evenement.details.taux
-      return typeof taux === 'number'
-        ? t('activite.tauxInitial', { taux: formaterTaux(taux) })
-        : null
-    }
-    case 'TAXE_PRODUIT_MODIFIEE':
-      return `${typeof avant === 'string' ? avant : t('activite.aucune')} → ${
-        typeof apres === 'string' ? apres : t('activite.aucune')
-      }`
-    case 'RUPTURE_DECLAREE': {
-      const jusqua = evenement.details.jusqua
-      return typeof jusqua === 'string'
-        ? t('activite.jusqua', { date: formaterDateHeure(jusqua, fuseauHoraire) })
-        : null
-    }
-    case 'LIGNE_ANNULEE':
-      return annulation(evenement, t, montant)
-    case 'REMISE_APPLIQUEE':
-    case 'ARTICLE_OFFERT':
-      return remise(evenement, t, montant)
-    case 'CAISSE_OUVERTE':
-      return t('activite.fond', { montant: montant(evenement.details.fond) })
-    case 'RETRAIT_CAISSE':
-    case 'DEPENSE_CAISSE':
-    case 'APPORT_CAISSE': {
-      const valeurs = {
-        montant: montant(evenement.details.montant),
-        motif: texte(evenement.details.motif),
-      }
-      const validateur = evenement.detailsNoms.validateurId
-      return validateur === undefined
-        ? t('activite.mouvement', valeurs)
-        : t('activite.mouvementValide', { ...valeurs, validateur })
-    }
-    case 'CLOTURE_CAISSE':
-    case 'ECART_CAISSE':
-      return cloture(evenement, t, montant)
-    case 'RECEPTION_STOCK': {
-      const reference = evenement.details.reference
-      return t('activite.reception', {
-        quantite: nombre(evenement.details.quantite),
-        apres: nombreSigne(evenement.details.apres),
-        reference: typeof reference === 'string' ? `, ${reference}` : '',
-      })
-    }
-    case 'PERTE_STOCK':
-      return t('activite.perte', {
-        quantite: nombre(evenement.details.quantite),
-        motif: t(`stock.motifs.${texte(evenement.details.motif) || 'AUTRE'}`).toLowerCase(),
-        apres: nombreSigne(evenement.details.apres),
-      })
-    case 'ECART_INVENTAIRE': {
-      const { attendu, compte, ecart, motif } = evenement.details
-      const signe = typeof ecart === 'number' && ecart > 0 ? '+' : ''
-      return t('activite.ecartInventaire', {
-        attendu: nombreSigne(attendu),
-        compte: nombreSigne(compte),
-        ecart: `${signe}${nombreSigne(ecart)}`,
-        motif: t(`stock.motifs.${texte(motif) || 'AUTRE'}`).toLowerCase(),
-      })
-    }
-    case 'VENTE_SANS_STOCK':
-      return t('activite.venteSansStock', {
-        quantite: nombre(evenement.details.quantite),
-        apres: nombreSigne(evenement.details.apres),
-        detail: texte(evenement.details.detail),
-      })
-    case 'VENTE_ARDOISE':
-    case 'PLAFOND_ARDOISE_DEPASSE': {
-      const { plafond, depassement } = evenement.details
-      const valeurs = {
-        montant: montant(evenement.details.montant),
-        note: texte(evenement.details.note),
-        solde: montant(evenement.details.solde),
-        plafond: montant(plafond),
-        depassement: montant(depassement),
-      }
-      const cle =
-        evenement.type === 'VENTE_ARDOISE' ? 'activite.venteArdoise' : 'activite.depassementArdoise'
-      const validateur = evenement.detailsNoms.validateurId
-      return validateur === undefined
-        ? t(cle, valeurs)
-        : t(
-            evenement.type === 'VENTE_ARDOISE'
-              ? 'activite.venteArdoiseValidee'
-              : 'activite.depassementArdoiseValide',
-            {
-              ...valeurs,
-              validateur,
-            },
-          )
-    }
-    case 'PLAFOND_ARDOISE_MODIFIE': {
-      const plafond = (valeur: unknown) =>
-        typeof valeur === 'number' ? montant(valeur) : t('activite.sansPlafond')
-      return t('activite.plafondArdoise', { avant: plafond(avant), apres: plafond(apres) })
-    }
-    case 'POLITIQUE_STOCK_MODIFIEE':
-      return t('activite.politiqueStock', {
-        avant: t(`activite.politiques.${texte(evenement.details.avant) || 'ENTREPRISE'}`),
-        apres: t(`activite.politiques.${texte(evenement.details.apres) || 'ENTREPRISE'}`),
-      })
-    case 'REMBOURSEMENT': {
-      const { mode, motif, detail } = evenement.details
-      const valeurs = {
-        montant: montant(evenement.details.montant),
-        mode: t(`encaissement.modesEn.${texte(mode) || 'ESPECES'}`),
-        ou: ou(evenement, t),
-        motif:
-          motif === 'AUTRE' && typeof detail === 'string'
-            ? detail
-            : t(`remboursement.motifs.${texte(motif) || 'AUTRE'}`),
-      }
-      const validateur = evenement.detailsNoms.validateurId
-      return validateur === undefined
-        ? t('activite.remboursement', valeurs)
-        : t('activite.remboursementValide', { ...valeurs, validateur })
-    }
-    case 'ECART_OUVERTURE_CAISSE': {
-      const { attendu, fond, ecart, explication } = evenement.details
-      return t('activite.ouvertureEcart', {
-        attendu: montant(attendu),
-        compte: montant(fond),
-        ecart:
-          typeof ecart === 'number' ? `${ecart > 0 ? '+' : '−'}${montant(Math.abs(ecart))}` : '',
-        explication: texte(explication),
-      })
-    }
-    case 'REMISE_RETIREE':
-      return t('activite.remiseRetiree', {
-        montant: montant(evenement.details.montant),
-        ou: ou(evenement, t),
-      })
-    case 'NOTE_ANNULEE':
-      return annulationNote(evenement, t, montant)
-    case 'TABLE_TRANSFEREE':
-      return t('activite.transfert', {
-        de: texte(evenement.details.de),
-        vers: texte(evenement.details.vers),
-        numero: numero(evenement, t),
-      })
-    case 'SERVEUR_CHANGE':
-      return t('activite.serveurChange', {
-        avant: texte(evenement.details.avant),
-        apres: texte(evenement.details.apres),
-        numero: numero(evenement, t),
-      })
-    case 'ROLES_MODIFIES':
-      return t('activite.roles', {
-        avant: roles(avant, t, etablissements),
-        apres: roles(apres, t, etablissements),
-      })
-    default:
-      return null
+  return DETAILS[evenement.type]?.(evenement, { t, montant, contexte }) ?? null
+}
+
+const avantApres = (evenement: EvenementActivite) =>
+  evenement.details as { avant?: unknown; apres?: unknown }
+
+const prix: Detail = (evenement, { montant }) => {
+  const { avant, apres } = avantApres(evenement)
+  return `${montant(avant)} → ${montant(apres)}`
+}
+
+const tauxTaxe: Detail = (evenement) => {
+  const { avant, apres } = avantApres(evenement)
+  if (typeof avant !== 'number' || typeof apres !== 'number') return null
+  return `${formaterTaux(avant)} → ${formaterTaux(apres)}`
+}
+
+const taxeCreee: Detail = (evenement, { t }) => {
+  const taux = evenement.details.taux
+  return typeof taux === 'number' ? t('activite.tauxInitial', { taux: formaterTaux(taux) }) : null
+}
+
+const taxeProduit: Detail = (evenement, { t }) => {
+  const { avant, apres } = avantApres(evenement)
+  const nom = (valeur: unknown) => (typeof valeur === 'string' ? valeur : t('activite.aucune'))
+  return `${nom(avant)} → ${nom(apres)}`
+}
+
+const rupture: Detail = (evenement, { t, contexte }) => {
+  const jusqua = evenement.details.jusqua
+  if (typeof jusqua !== 'string') return null
+  return t('activite.jusqua', { date: formaterDateHeure(jusqua, contexte.fuseauHoraire) })
+}
+
+const mouvementCaisse: Detail = (evenement, { t, montant }) => {
+  const valeurs = {
+    montant: montant(evenement.details.montant),
+    motif: texte(evenement.details.motif),
   }
+  return avecValidateur(evenement, t, 'activite.mouvement', 'activite.mouvementValide', valeurs)
+}
+
+const reception: Detail = (evenement, { t }) => {
+  const reference = evenement.details.reference
+  return t('activite.reception', {
+    quantite: nombre(evenement.details.quantite),
+    apres: nombreSigne(evenement.details.apres),
+    reference: typeof reference === 'string' ? `, ${reference}` : '',
+  })
+}
+
+const perte: Detail = (evenement, { t }) =>
+  t('activite.perte', {
+    quantite: nombre(evenement.details.quantite),
+    motif: motifDeStock(evenement.details.motif, t),
+    apres: nombreSigne(evenement.details.apres),
+  })
+
+const ecartInventaire: Detail = (evenement, { t }) => {
+  const { attendu, compte, ecart, motif } = evenement.details
+  const signe = typeof ecart === 'number' && ecart > 0 ? '+' : ''
+  return t('activite.ecartInventaire', {
+    attendu: nombreSigne(attendu),
+    compte: nombreSigne(compte),
+    ecart: `${signe}${nombreSigne(ecart)}`,
+    motif: motifDeStock(motif, t),
+  })
+}
+
+const venteSansStock: Detail = (evenement, { t }) =>
+  t('activite.venteSansStock', {
+    quantite: nombre(evenement.details.quantite),
+    apres: nombreSigne(evenement.details.apres),
+    detail: texte(evenement.details.detail),
+  })
+
+const venteArdoise: Detail = (evenement, { t, montant }) => {
+  const valeurs = {
+    montant: montant(evenement.details.montant),
+    note: texte(evenement.details.note),
+    solde: montant(evenement.details.solde),
+    plafond: montant(evenement.details.plafond),
+    depassement: montant(evenement.details.depassement),
+  }
+  return evenement.type === 'VENTE_ARDOISE'
+    ? avecValidateur(evenement, t, 'activite.venteArdoise', 'activite.venteArdoiseValidee', valeurs)
+    : avecValidateur(
+        evenement,
+        t,
+        'activite.depassementArdoise',
+        'activite.depassementArdoiseValide',
+        valeurs,
+      )
+}
+
+const plafondArdoise: Detail = (evenement, { t, montant }) => {
+  const { avant, apres } = avantApres(evenement)
+  const plafond = (valeur: unknown) =>
+    typeof valeur === 'number' ? montant(valeur) : t('activite.sansPlafond')
+  return t('activite.plafondArdoise', { avant: plafond(avant), apres: plafond(apres) })
+}
+
+const politiqueStock: Detail = (evenement, { t }) => {
+  const politique = (valeur: unknown) => t(`activite.politiques.${texte(valeur) || 'ENTREPRISE'}`)
+  return t('activite.politiqueStock', {
+    avant: politique(evenement.details.avant),
+    apres: politique(evenement.details.apres),
+  })
+}
+
+const remboursement: Detail = (evenement, { t, montant }) => {
+  const { mode, motif, detail } = evenement.details
+  const valeurs = {
+    montant: montant(evenement.details.montant),
+    mode: t(`encaissement.modesEn.${texte(mode) || 'ESPECES'}`),
+    ou: ou(evenement, t),
+    motif: motifLisible(motif, detail, 'remboursement.motifs', t),
+  }
+  return avecValidateur(
+    evenement,
+    t,
+    'activite.remboursement',
+    'activite.remboursementValide',
+    valeurs,
+  )
+}
+
+const ouvertureEcart: Detail = (evenement, { t, montant }) => {
+  const { attendu, fond, ecart, explication } = evenement.details
+  return t('activite.ouvertureEcart', {
+    attendu: montant(attendu),
+    compte: montant(fond),
+    ecart: ecartSigne(ecart, montant),
+    explication: texte(explication),
+  })
+}
+
+const remiseRetiree: Detail = (evenement, { t, montant }) =>
+  t('activite.remiseRetiree', { montant: montant(evenement.details.montant), ou: ou(evenement, t) })
+
+const transfert: Detail = (evenement, { t }) =>
+  t('activite.transfert', {
+    de: texte(evenement.details.de),
+    vers: texte(evenement.details.vers),
+    numero: numero(evenement, t),
+  })
+
+const serveurChange: Detail = (evenement, { t }) =>
+  t('activite.serveurChange', {
+    avant: texte(evenement.details.avant),
+    apres: texte(evenement.details.apres),
+    numero: numero(evenement, t),
+  })
+
+const rolesModifies: Detail = (evenement, { t, contexte }) => {
+  const { avant, apres } = avantApres(evenement)
+  return t('activite.roles', {
+    avant: roles(avant, t, contexte.etablissements),
+    apres: roles(apres, t, contexte.etablissements),
+  })
+}
+
+/** Les types sans détail (désactivations, réactivations…) n'ont qu'une phrase. */
+const DETAILS: Partial<Record<EvenementActivite['type'], Detail>> = {
+  PRIX_MODIFIE: prix,
+  PRIX_ETABLISSEMENT_MODIFIE: prix,
+  TAUX_TAXE_MODIFIE: tauxTaxe,
+  TAXE_CREEE: taxeCreee,
+  TAXE_PRODUIT_MODIFIEE: taxeProduit,
+  RUPTURE_DECLAREE: rupture,
+  LIGNE_ANNULEE: (evenement, { t, montant }) => annulation(evenement, t, montant),
+  REMISE_APPLIQUEE: (evenement, { t, montant }) => remise(evenement, t, montant),
+  ARTICLE_OFFERT: (evenement, { t, montant }) => remise(evenement, t, montant),
+  CAISSE_OUVERTE: (evenement, { t, montant }) =>
+    t('activite.fond', { montant: montant(evenement.details.fond) }),
+  RETRAIT_CAISSE: mouvementCaisse,
+  DEPENSE_CAISSE: mouvementCaisse,
+  APPORT_CAISSE: mouvementCaisse,
+  CLOTURE_CAISSE: (evenement, { t, montant }) => cloture(evenement, t, montant),
+  ECART_CAISSE: (evenement, { t, montant }) => cloture(evenement, t, montant),
+  RECEPTION_STOCK: reception,
+  PERTE_STOCK: perte,
+  ECART_INVENTAIRE: ecartInventaire,
+  VENTE_SANS_STOCK: venteSansStock,
+  VENTE_ARDOISE: venteArdoise,
+  PLAFOND_ARDOISE_DEPASSE: venteArdoise,
+  PLAFOND_ARDOISE_MODIFIE: plafondArdoise,
+  POLITIQUE_STOCK_MODIFIEE: politiqueStock,
+  REMBOURSEMENT: remboursement,
+  ECART_OUVERTURE_CAISSE: ouvertureEcart,
+  REMISE_RETIREE: remiseRetiree,
+  NOTE_ANNULEE: (evenement, { t, montant }) => annulationNote(evenement, t, montant),
+  TABLE_TRANSFEREE: transfert,
+  SERVEUR_CHANGE: serveurChange,
+  ROLES_MODIFIES: rolesModifies,
+}
+
+/** La phrase simple, ou celle qui nomme le gérant qui a validé. */
+function avecValidateur(
+  evenement: EvenementActivite,
+  t: TFunction,
+  cle: string,
+  cleValidee: string,
+  valeurs: Record<string, string | number>,
+): string {
+  const validateur = evenement.detailsNoms.validateurId
+  return validateur === undefined ? t(cle, valeurs) : t(cleValidee, { ...valeurs, validateur })
+}
+
+/** Le motif traduit, ou ce que l'employé a écrit pour « Autre ». */
+function motifLisible(motif: unknown, detail: unknown, prefixe: string, t: TFunction): string {
+  if (motif === 'AUTRE' && typeof detail === 'string') return detail
+  return t(`${prefixe}.${texte(motif) || 'AUTRE'}`)
+}
+
+function motifDeStock(motif: unknown, t: TFunction): string {
+  return t(`stock.motifs.${texte(motif) || 'AUTRE'}`).toLowerCase()
+}
+
+/** « +200 F », « −700 F » ; vide sans écart connu. */
+function ecartSigne(ecart: unknown, montant: (valeur: unknown) => string): string {
+  if (typeof ecart !== 'number') return ''
+  return `${ecart > 0 ? '+' : '−'}${montant(Math.abs(ecart))}`
 }
 
 /** « 1 × 3 500 F, T4, n°42. Motif : Non servie. Validé par Afi M. » */
@@ -248,15 +315,9 @@ function annulation(
     quantite: typeof quantite === 'number' ? quantite : 0,
     montant: montant(evenement.details.montant),
     ou,
-    motif:
-      motif === 'AUTRE' && typeof detail === 'string'
-        ? detail
-        : t(`caisse.motifs.${typeof motif === 'string' ? motif : 'AUTRE'}`),
+    motif: motifLisible(motif, detail, 'caisse.motifs', t),
   }
-  const validateur = evenement.detailsNoms.validateurId
-  return validateur === undefined
-    ? t('activite.annulation', valeurs)
-    : t('activite.annulationValidee', { ...valeurs, validateur })
+  return avecValidateur(evenement, t, 'activite.annulation', 'activite.annulationValidee', valeurs)
 }
 
 /** « 12 600 F, T4, n°42. Motif : Le client est parti. Validé par Afi M. » */
@@ -269,15 +330,15 @@ function annulationNote(
   const valeurs = {
     montant: montant(evenement.details.montant),
     ou: [...(typeof table === 'string' ? [table] : []), numero(evenement, t)].join(', '),
-    motif:
-      motif === 'AUTRE' && typeof detail === 'string'
-        ? detail
-        : t(`caisse.motifs.${typeof motif === 'string' ? motif : 'AUTRE'}`),
+    motif: motifLisible(motif, detail, 'caisse.motifs', t),
   }
-  const validateur = evenement.detailsNoms.validateurId
-  return validateur === undefined
-    ? t('activite.annulationNote', valeurs)
-    : t('activite.annulationNoteValidee', { ...valeurs, validateur })
+  return avecValidateur(
+    evenement,
+    t,
+    'activite.annulationNote',
+    'activite.annulationNoteValidee',
+    valeurs,
+  )
 }
 
 /** « −360 F, T4, n°42. Motif : Client fidèle. » ou « 1 × offert (1 200 F), … » */
@@ -291,10 +352,7 @@ function remise(
     montant: montant(evenement.details.montant),
     quantite: typeof quantite === 'number' ? quantite : 1,
     ou: ou(evenement, t),
-    motif:
-      motif === 'AUTRE' && typeof detail === 'string'
-        ? detail
-        : t(`caisse.motifsRemise.${typeof motif === 'string' ? motif : 'AUTRE'}`),
+    motif: motifLisible(motif, detail, 'caisse.motifsRemise', t),
   }
   const offert = evenement.type === 'ARTICLE_OFFERT'
   const validateur = evenement.detailsNoms.validateurId
@@ -315,7 +373,7 @@ function cloture(
   if (typeof ecart !== 'number' || ecart === 0) return t('activite.cloture', valeurs)
   return t('activite.clotureEcart', {
     ...valeurs,
-    ecart: `${ecart > 0 ? '+' : '−'}${montant(Math.abs(ecart))}`,
+    ecart: ecartSigne(ecart, montant),
     explication: texte(explication),
   })
 }

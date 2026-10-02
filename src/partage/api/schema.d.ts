@@ -385,7 +385,7 @@ export interface paths {
         put?: never;
         /**
          * Ouvrir une note
-         * @description Sur place (une table), au comptoir ou à emporter. Numéro du jour attribué. Erreurs : TABLE_OCCUPEE (409), REQUETE_INVALIDE (table inconnue).
+         * @description Sur place (une table), au comptoir ou à emporter. Numéro du jour attribué. Erreurs : TABLE_OCCUPEE (409), TABLE_INDISPONIBLE (409, table désactivée ou inconnue).
          */
         post: operations["ouvrir_1"];
         delete?: never;
@@ -812,7 +812,7 @@ export interface paths {
         put?: never;
         /**
          * Transférer la note vers une table libre
-         * @description Erreur : TABLE_OCCUPEE (409).
+         * @description Erreurs : TABLE_OCCUPEE (409), TABLE_INDISPONIBLE (409).
          */
         post: operations["transferer"];
         delete?: never;
@@ -2337,7 +2337,7 @@ export interface components {
             note?: string;
             /** Format: int64 */
             plafond?: number;
-            /** @example +22890123456 */
+            /** @example 90 11 23 45 */
             telephone?: string;
         };
         DemandeCloture: {
@@ -2861,6 +2861,7 @@ export interface components {
             dernierFond?: number;
             operateurs: components["schemas"]["OperateurMobileMoney"][];
             ouverture?: components["schemas"]["OuvertureResume"];
+            pays: string;
         };
         EtatEncaissement: {
             articles: components["schemas"]["ArticleAPayer"][];

@@ -83,7 +83,7 @@ export function MenuActions({
     }
     if (evenement.key !== 'ArrowDown' && evenement.key !== 'ArrowUp') return
     evenement.preventDefault()
-    const rang = elements.current.findIndex((element) => element === document.activeElement)
+    const rang = elements.current.indexOf(document.activeElement as HTMLButtonElement | null)
     const pas = evenement.key === 'ArrowDown' ? 1 : -1
     elements.current[(rang + pas + actions.length) % actions.length]?.focus()
   }

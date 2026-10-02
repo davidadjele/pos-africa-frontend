@@ -1,6 +1,6 @@
 import { clsx } from 'clsx'
 import { Search } from 'lucide-react'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { LigneCarteEtablissement, StockCaisse } from '../../partage/api/contrat'
 import { formaterMontant, type Devise } from '../../partage/montants/formaterMontant'
@@ -148,6 +148,19 @@ function Tuile({
   const vide = article !== undefined && sansStock(article)
   // En politique stricte, la caisse refuse ce qui n'a plus de stock : la tuile se grise comme une rupture.
   const bloquee = ligne.epuise || (vide && stock?.politique === 'STRICT')
+  // Épuisé ce jour prime sur le stock ; un stock faible n'est signalé que s'il est compté.
+  let badge: ReactNode = null
+  if (ligne.epuise) {
+    badge = <BadgeStatut ton="neutre">{t('caisse.carte.epuise')}</BadgeStatut>
+  } else if (vide) {
+    badge = <BadgeStatut ton="danger">{t('caisse.carte.plusEnStock')}</BadgeStatut>
+  } else if (article?.faible === true && article.quantite !== undefined) {
+    badge = (
+      <BadgeStatut ton="alerte">
+        {t('caisse.carte.restants', { count: article.quantite })}
+      </BadgeStatut>
+    )
+  }
   return (
     <button
       type="button"
@@ -166,18 +179,7 @@ function Tuile({
         <span className="chiffres text-montant-tuile text-encre">
           {formaterMontant({ unitesMineures: ligne.prix, devise }, { forme: 'nombre' })}
         </span>
-        {ligne.epuise ? (
-          <BadgeStatut ton="neutre">{t('caisse.carte.epuise')}</BadgeStatut>
-        ) : vide ? (
-          <BadgeStatut ton="danger">{t('caisse.carte.plusEnStock')}</BadgeStatut>
-        ) : (
-          article?.faible === true &&
-          article.quantite !== undefined && (
-            <BadgeStatut ton="alerte">
-              {t('caisse.carte.restants', { count: article.quantite })}
-            </BadgeStatut>
-          )
-        )}
+        {badge}
       </span>
     </button>
   )

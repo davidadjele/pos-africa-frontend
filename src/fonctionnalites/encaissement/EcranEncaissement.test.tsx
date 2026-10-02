@@ -36,6 +36,7 @@ const CAISSE_OUVERTE: EtatCaisse = {
     ouvertePar: 'Yawa T.',
     ouverteLe: '2026-09-29T07:02:00Z',
   },
+  pays: 'TG',
   operateurs: OPERATEURS,
 }
 const A_PAYER: EtatEncaissement = {
@@ -120,7 +121,7 @@ describe('EcranEncaissement', () => {
         return HttpResponse.json(CAISSE_OUVERTE)
       }),
     )
-    encaissementServi({ operateurs: OPERATEURS })
+    encaissementServi({ pays: 'TG', operateurs: OPERATEURS })
 
     expect(
       await screen.findByRole('heading', { name: 'La caisse de cette tablette n’est pas ouverte' }),
@@ -358,7 +359,10 @@ describe('EcranEncaissement', () => {
   })
 
   it('ne propose pas d’ouvrir la caisse à qui n’en a pas le droit', async () => {
-    encaissementServi({ operateurs: OPERATEURS }, ['COMMANDE_CREER', 'PAIEMENT_ENCAISSER'])
+    encaissementServi({ pays: 'TG', operateurs: OPERATEURS }, [
+      'COMMANDE_CREER',
+      'PAIEMENT_ENCAISSER',
+    ])
 
     expect(
       await screen.findByText('Un caissier ou un gérant ouvre la caisse avec son code.'),
@@ -521,6 +525,7 @@ describe('Encaisser sur l’ardoise', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Nouveau client' }))
     const dialogue = screen.getByRole('dialog', { name: 'Nouveau client' })
     expect(within(dialogue).queryByLabelText(/Note interne/)).not.toBeInTheDocument()
+    expect(within(dialogue).getByText('+228')).toBeVisible()
     await userEvent.type(within(dialogue).getByLabelText(/^Nom/), 'Akossiwa M.')
     await userEvent.click(within(dialogue).getByRole('button', { name: 'Ouvrir l’ardoise' }))
 

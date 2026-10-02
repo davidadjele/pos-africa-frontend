@@ -184,34 +184,36 @@ export function ResultatEcart({
   const ecart = compte - attendu
   const courte = (valeur: number) =>
     formaterMontant({ unitesMineures: valeur, devise }, { forme: 'courte' })
+  const sens = sensEcart(ecart)
   return (
     <div className="grid grid-cols-3 gap-2.5">
       <Chiffre libelle={libelleAttendu} valeur={courte(attendu)} />
       <Chiffre libelle={t('cloture.compte')} valeur={courte(compte)} />
-      <span
-        className={clsx(
-          'flex flex-col rounded-normal px-2.5 py-1.5',
-          ecart === 0
-            ? 'bg-succes-fond text-succes'
-            : ecart < 0
-              ? 'bg-danger-fond text-danger'
-              : 'bg-alerte-fond text-alerte-texte',
-        )}
-      >
-        <span className="text-legende font-semibold">
-          {ecart === 0
-            ? t('cloture.juste')
-            : ecart < 0
-              ? t('cloture.manque')
-              : t('cloture.surplus')}
-        </span>
+      <span className={clsx('flex flex-col rounded-normal px-2.5 py-1.5', COULEURS_ECART[sens])}>
+        <span className="text-legende font-semibold">{t(`cloture.${sens}`)}</span>
         <span className="chiffres text-montant-tuile">
-          {ecart > 0 ? '+' : ecart < 0 ? '−' : ''}
+          {SIGNES_ECART[sens]}
           {courte(Math.abs(ecart))}
         </span>
       </span>
     </div>
   )
+}
+
+type SensEcart = 'juste' | 'manque' | 'surplus'
+
+export function sensEcart(ecart: number): SensEcart {
+  if (ecart === 0) return 'juste'
+  return ecart < 0 ? 'manque' : 'surplus'
+}
+
+/** « −500 », « +200 », « 0 » : le signe moins typographique, comme pour les montants. */
+export const SIGNES_ECART: Record<SensEcart, string> = { juste: '', manque: '−', surplus: '+' }
+
+const COULEURS_ECART: Record<SensEcart, string> = {
+  juste: 'bg-succes-fond text-succes',
+  manque: 'bg-danger-fond text-danger',
+  surplus: 'bg-alerte-fond text-alerte-texte',
 }
 
 function Chiffre({ libelle, valeur }: Readonly<{ libelle: string; valeur: string }>) {

@@ -11,6 +11,7 @@ import { formaterHeure } from '../../partage/dates/formaterDate'
 import { Bouton } from '../../partage/ui/Bouton'
 import { ChampSaisie } from '../../partage/ui/ChampSaisie'
 import { Dialogue } from '../../partage/ui/Dialogue'
+import { ChoixQuantite } from './ChoixQuantite'
 import { ChoixMotif, useChoixMotif } from './ChoixMotif'
 
 const MOTIFS: MotifAnnulation[] = [
@@ -72,15 +73,15 @@ export function DialogueLigne({
 
 /** Ligne envoyée : combien en annuler et pourquoi. Le motif part dans l'activité du gérant. */
 /** Un article jamais servi ou saisi par erreur revient intact ; les autres motifs supposent une perte. */
-const REVIENNENT_EN_STOCK: MotifAnnulation[] = [
+const REVIENNENT_EN_STOCK = new Set<MotifAnnulation>([
   'ERREUR_SAISIE',
   'CLIENT_CHANGE_AVIS',
   'NON_SERVIE',
   'EPUISE_CUISINE',
-]
+])
 
 export function retourParDefaut(motif: MotifAnnulation): boolean {
-  return REVIENNENT_EN_STOCK.includes(motif)
+  return REVIENNENT_EN_STOCK.has(motif)
 }
 
 export function DialogueAnnulation({
@@ -127,35 +128,14 @@ export function DialogueAnnulation({
       }}
     >
       {ligne.quantite > 1 && (
-        <div className="flex items-center gap-3">
-          <span className="flex-1 text-libelle text-encre">
-            {t('caisse.note.annulation.combien')}
-          </span>
-          <Bouton
-            aria-label={t('caisse.note.annulation.moins')}
-            disabled={quantite <= 1}
-            className="h-14 w-14 text-titre-section"
-            onClick={() => {
-              setQuantite(quantite - 1)
-            }}
-          >
-            −
-          </Bouton>
-          <output className="chiffres w-12 text-center text-touche">{quantite}</output>
-          <Bouton
-            aria-label={t('caisse.note.annulation.plus')}
-            disabled={quantite >= ligne.quantite}
-            className="h-14 w-14 text-titre-section"
-            onClick={() => {
-              setQuantite(quantite + 1)
-            }}
-          >
-            +
-          </Bouton>
-          <span className="text-libelle text-attenue">
-            {t('caisse.note.annulation.sur', { count: ligne.quantite })}
-          </span>
-        </div>
+        <ChoixQuantite
+          question={t('caisse.note.annulation.combien')}
+          libelleMoins={t('caisse.note.annulation.moins')}
+          libellePlus={t('caisse.note.annulation.plus')}
+          quantite={quantite}
+          maximum={ligne.quantite}
+          surChanger={setQuantite}
+        />
       )}
       <ChoixMotif motifs={MOTIFS} choix={choix} />
       {suiviEnStock && choix.motif !== null && (

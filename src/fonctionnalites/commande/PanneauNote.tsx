@@ -18,8 +18,15 @@ export type Rupture = 'EPUISE' | 'RETIRE'
 /** « T4, Terrasse » ou « n°43, Comptoir » : où est la note, dans les phrases des dialogues. */
 export function ouEstLaNote(note: CommandeDetail, t: TFunction) {
   return note.table === undefined
-    ? `${t('caisse.note.numero', { numero: note.numero })}, ${t(`caisse.canaux.${note.canal}`)}`
+    ? numeroEtCanal(note, t)
     : `${note.table.nom}, ${note.table.salle}`
+}
+
+/** « n°43, Comptoir » : une note sans table se désigne par son numéro du jour et son canal. */
+export function numeroEtCanal(note: Pick<CommandeDetail, 'numero' | 'canal'>, t: TFunction) {
+  return [t('caisse.note.numero', { numero: note.numero }), t(`caisse.canaux.${note.canal}`)].join(
+    ', ',
+  )
 }
 
 export function PanneauNote({
@@ -271,6 +278,49 @@ export function PanneauNote({
   )
 }
 
+/** « Annulé à 21:05, Non servie. Validé par Afi M. », « À envoyer », « Envoyé à 20:40, servi à 20:52 ». */
+function statutDeLigne(ligne: LigneNote, serveur: string, fuseauHoraire: string, t: TFunction) {
+  const heure = (instant: string | undefined) =>
+    instant === undefined ? '' : formaterHeure(instant, fuseauHoraire)
+  if (ligne.statut === 'ANNULEE') {
+    const motif =
+      ligne.motifAnnulation === 'AUTRE' && ligne.detailAnnulation !== undefined
+        ? ligne.detailAnnulation
+        : t(`caisse.motifs.${ligne.motifAnnulation ?? 'AUTRE'}`)
+    const validation =
+      ligne.annulationValideePar === undefined
+        ? []
+        : [t('caisse.note.valideePar', { nom: ligne.annulationValideePar })]
+    return [
+      t('caisse.note.annuleeA', { heure: heure(ligne.annuleeLe), motif }),
+      ...validation,
+    ].join(' ')
+  }
+  // Qui a pris quoi : utile quand un collègue ajoute sur la note d'un autre.
+  const auteur =
+    ligne.ajouteePar !== '' && ligne.ajouteePar !== serveur
+      ? `, ${t('caisse.note.ajoutePar', { nom: ligne.ajouteePar })}`
+      : ''
+  if (ligne.statut === 'BROUILLON') return `${t('caisse.note.aEnvoyer')}${auteur}`
+  const service =
+    ligne.servieLe === undefined
+      ? []
+      : [t('caisse.service.serviA', { heure: heure(ligne.servieLe) })]
+  return (
+    [t('caisse.note.envoyeA', { heure: heure(ligne.envoyeeLe) }), ...service].join(', ') + auteur
+  )
+}
+
+/** « Offert », « −10 % » ou « −500 F ». */
+function badgeDeRemise(ligne: LigneNote, devise: Devise, t: TFunction) {
+  if (ligne.offert) return t('caisse.note.offert')
+  const remise =
+    ligne.tauxRemise === undefined
+      ? formaterMontant({ unitesMineures: ligne.remise, devise }, { forme: 'courte' })
+      : formaterTaux(ligne.tauxRemise)
+  return `−${remise}`
+}
+
 function LigneDeNote({
   ligne,
   serveur,
@@ -299,34 +349,7 @@ function LigneDeNote({
   const note = ligne.note === undefined ? {} : { note: ligne.note }
   const annulee = ligne.statut === 'ANNULEE'
   const brouillon = ligne.statut === 'BROUILLON'
-  const heure = (instant: string | undefined) =>
-    instant === undefined ? '' : formaterHeure(instant, fuseauHoraire)
-  // Qui a pris quoi : utile quand un collègue ajoute sur la note d'un autre.
-  const auteur =
-    ligne.ajouteePar !== '' && ligne.ajouteePar !== serveur
-      ? `, ${t('caisse.note.ajoutePar', { nom: ligne.ajouteePar })}`
-      : ''
-  const statut = annulee
-    ? [
-        t('caisse.note.annuleeA', {
-          heure: heure(ligne.annuleeLe),
-          motif:
-            ligne.motifAnnulation === 'AUTRE' && ligne.detailAnnulation !== undefined
-              ? ligne.detailAnnulation
-              : t(`caisse.motifs.${ligne.motifAnnulation ?? 'AUTRE'}`),
-        }),
-        ...(ligne.annulationValideePar === undefined
-          ? []
-          : [t('caisse.note.valideePar', { nom: ligne.annulationValideePar })]),
-      ].join(' ')
-    : brouillon
-      ? `${t('caisse.note.aEnvoyer')}${auteur}`
-      : [
-          t('caisse.note.envoyeA', { heure: heure(ligne.envoyeeLe) }),
-          ...(ligne.servieLe === undefined
-            ? []
-            : [t('caisse.service.serviA', { heure: heure(ligne.servieLe) })]),
-        ].join(', ') + auteur
+  const statut = statutDeLigne(ligne, serveur, fuseauHoraire, t)
   const barre = annulee && 'text-attenue line-through'
   const motifRemise = libelleMotif(
     ligne.motifRemise ?? 'AUTRE',
@@ -334,13 +357,7 @@ function LigneDeNote({
     t,
     'caisse.motifsRemise',
   )
-  const badgeRemise = ligne.offert
-    ? t('caisse.note.offert')
-    : `−${
-        ligne.tauxRemise === undefined
-          ? formaterMontant({ unitesMineures: ligne.remise, devise }, { forme: 'courte' })
-          : formaterTaux(ligne.tauxRemise)
-      }`
+  const badgeRemise = badgeDeRemise(ligne, devise, t)
   const motifEtValidation =
     ligne.remiseValideePar === undefined
       ? motifRemise

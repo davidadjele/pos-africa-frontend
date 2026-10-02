@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next'
 import { clsx } from 'clsx'
 import { useId, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -17,6 +18,7 @@ import { Bouton } from '../../partage/ui/Bouton'
 import { ChampSaisie } from '../../partage/ui/ChampSaisie'
 import { Dialogue } from '../../partage/ui/Dialogue'
 import { usePiegeFocus } from '../../partage/ui/usePiegeFocus'
+import { ChoixQuantite } from './ChoixQuantite'
 import { ChoixMotif, useChoixMotif } from './ChoixMotif'
 
 export const MOTIFS_REMISE: MotifRemise[] = [
@@ -48,6 +50,52 @@ export function droitsDe(session: SessionCaisseCourante | undefined) {
   }
 }
 
+interface ActionProposee {
+  action: ActionLigne
+  libelle: string
+  /** Ce qu'il faudra : « jusqu'à 10 % », ou la validation d'un gérant. */
+  indice?: string
+  danger?: boolean
+}
+
+/** Les actions d'une ligne : consigne, remise ou offert, puis retirer (brouillon) ou annuler (envoyée). */
+function actionsDeLigne(
+  ligne: LigneNote,
+  droits: ReturnType<typeof droitsDe>,
+  t: TFunction,
+): ActionProposee[] {
+  const brouillon = ligne.statut === 'BROUILLON'
+  const validation = t('caisse.ligne.validation')
+  const consigne: ActionProposee[] = brouillon
+    ? [{ action: 'consigne', libelle: t('caisse.ligne.consigne') }]
+    : []
+  const fin: ActionProposee = brouillon
+    ? { action: 'retirer', libelle: t('caisse.ligne.retirer'), danger: true }
+    : {
+        action: 'annuler',
+        libelle: t('caisse.ligne.annuler'),
+        danger: true,
+        ...(droits.annuler ? {} : { indice: validation }),
+      }
+  if (ligne.offert) {
+    return [...consigne, { action: 'retirerRemise', libelle: t('caisse.ligne.retirerOffert') }, fin]
+  }
+  const indiceRemise =
+    droits.plafond > 0
+      ? t('caisse.ligne.jusqua', { taux: formaterTaux(droits.plafond) })
+      : validation
+  const remise: ActionProposee =
+    ligne.remise > 0
+      ? { action: 'retirerRemise', libelle: t('caisse.ligne.retirerRemise') }
+      : { action: 'remise', libelle: t('caisse.ligne.remise'), indice: indiceRemise }
+  const offrir: ActionProposee = {
+    action: 'offrir',
+    libelle: t('caisse.ligne.offrir'),
+    ...(droits.offrir ? {} : { indice: validation }),
+  }
+  return [...consigne, remise, offrir, fin]
+}
+
 /** Toucher une ligne : ses actions, et celles qui demanderont la validation d'un gérant. */
 export function DialogueActionsLigne({
   ligne,
@@ -69,41 +117,9 @@ export function DialogueActionsLigne({
   const cadre = useRef<HTMLElement>(null)
   const boutonFermer = useRef<HTMLButtonElement>(null)
   usePiegeFocus(cadre, boutonFermer, surFermer)
-  const droits = droitsDe(session)
   const brouillon = ligne.statut === 'BROUILLON'
   const montant = formaterMontant({ unitesMineures: ligne.montant, devise }, { forme: 'courte' })
-  const validation = t('caisse.ligne.validation')
-  const aRemise = ligne.remise > 0 && !ligne.offert
-  const actions: { action: ActionLigne; libelle: string; indice?: string; danger?: boolean }[] = [
-    ...(brouillon ? [{ action: 'consigne' as const, libelle: t('caisse.ligne.consigne') }] : []),
-    ...(ligne.offert
-      ? [{ action: 'retirerRemise' as const, libelle: t('caisse.ligne.retirerOffert') }]
-      : [
-          aRemise
-            ? { action: 'retirerRemise' as const, libelle: t('caisse.ligne.retirerRemise') }
-            : {
-                action: 'remise' as const,
-                libelle: t('caisse.ligne.remise'),
-                indice:
-                  droits.plafond > 0
-                    ? t('caisse.ligne.jusqua', { taux: formaterTaux(droits.plafond) })
-                    : validation,
-              },
-          {
-            action: 'offrir' as const,
-            libelle: t('caisse.ligne.offrir'),
-            ...(droits.offrir ? {} : { indice: validation }),
-          },
-        ]),
-    brouillon
-      ? { action: 'retirer' as const, libelle: t('caisse.ligne.retirer'), danger: true }
-      : {
-          action: 'annuler' as const,
-          libelle: t('caisse.ligne.annuler'),
-          danger: true,
-          ...(droits.annuler ? {} : { indice: validation }),
-        },
-  ]
+  const actions = actionsDeLigne(ligne, droitsDe(session), t)
 
   return (
     <div className="fixed inset-0 z-10 flex items-end justify-center bg-voile sm:items-center sm:p-4">
@@ -193,16 +209,17 @@ export function DialogueRemise({
   const choix = useChoixMotif<MotifRemise>()
   const tauxLu = autreTaux ? lireTaux(saisieTaux) : taux
   const montantLu = lireMontant(saisieMontant, devise)
-  const remise =
-    mode === 'taux' ? (tauxLu === null ? null : remiseEnPourcentage(base, tauxLu)) : montantLu
+  const remiseEnTaux = tauxLu === null ? null : remiseEnPourcentage(base, tauxLu)
+  const remise = mode === 'taux' ? remiseEnTaux : montantLu
   const valide = remise !== null && remise > 0 && remise <= base
   const montant = (valeur: number) =>
     formaterMontant({ unitesMineures: valeur, devise }, { forme: 'courte' })
-  const libelle = !valide
-    ? t('caisse.remise.appliquer')
-    : t('caisse.remise.appliquerMoins', {
-        remise: mode === 'taux' && tauxLu !== null ? formaterTaux(tauxLu) : montant(remise),
+  const enTaux = mode === 'taux' && tauxLu !== null
+  const libelle = valide
+    ? t('caisse.remise.appliquerMoins', {
+        remise: enTaux ? formaterTaux(tauxLu) : montant(remise),
       })
+    : t('caisse.remise.appliquer')
 
   return (
     <Dialogue
@@ -216,11 +233,7 @@ export function DialogueRemise({
         setTente(true)
         const motif = choix.valider()
         if (!valide || motif === null) return
-        surAppliquer(
-          mode === 'taux' && tauxLu !== null
-            ? { taux: tauxLu, ...motif }
-            : { montant: remise, ...motif },
-        )
+        surAppliquer(enTaux ? { taux: tauxLu, ...motif } : { montant: remise, ...motif })
       }}
     >
       <div
@@ -247,53 +260,16 @@ export function DialogueRemise({
         ))}
       </div>
       {mode === 'taux' ? (
-        <>
-          <div className="grid grid-cols-5 gap-2">
-            {TAUX_RAPIDES.map((candidat) => (
-              <button
-                key={candidat}
-                type="button"
-                aria-pressed={!autreTaux && taux === candidat}
-                onClick={() => {
-                  setAutreTaux(false)
-                  setTaux(candidat)
-                }}
-                className={clsx(
-                  'chiffres min-h-cible-caisse rounded-normal bg-surface text-corps-fort text-encre',
-                  !autreTaux && taux === candidat
-                    ? 'border-2 border-accent'
-                    : 'border border-trait',
-                )}
-              >
-                {formaterTaux(candidat)}
-              </button>
-            ))}
-            <button
-              type="button"
-              aria-pressed={autreTaux}
-              onClick={() => {
-                setAutreTaux(true)
-              }}
-              className={clsx(
-                'min-h-cible-caisse rounded-normal bg-surface text-corps text-encre',
-                autreTaux ? 'border-2 border-accent font-bold' : 'border border-trait',
-              )}
-            >
-              {t('caisse.remise.autreTaux')}
-            </button>
-          </div>
-          {autreTaux && (
-            <ChampSaisie
-              libelle={t('caisse.remise.taux')}
-              inputMode="decimal"
-              suffixe="%"
-              value={saisieTaux}
-              onChange={(evenement) => {
-                setSaisieTaux(evenement.target.value)
-              }}
-            />
-          )}
-        </>
+        <ChoixTaux
+          taux={taux}
+          autreTaux={autreTaux}
+          saisieTaux={saisieTaux}
+          surChoisir={(choisi) => {
+            setAutreTaux(choisi === null)
+            if (choisi !== null) setTaux(choisi)
+          }}
+          surSaisir={setSaisieTaux}
+        />
       ) : (
         <ChampSaisie
           libelle={t('caisse.remise.montant')}
@@ -333,6 +309,69 @@ export function DialogueRemise({
   )
 }
 
+/** Les taux courants d'un geste, ou un autre taux saisi (null : « Autre taux »). */
+function ChoixTaux({
+  taux,
+  autreTaux,
+  saisieTaux,
+  surChoisir,
+  surSaisir,
+}: Readonly<{
+  taux: number | null
+  autreTaux: boolean
+  saisieTaux: string
+  surChoisir: (taux: number | null) => void
+  surSaisir: (saisie: string) => void
+}>) {
+  const { t } = useTranslation()
+  return (
+    <>
+      <div className="grid grid-cols-5 gap-2">
+        {TAUX_RAPIDES.map((candidat) => (
+          <button
+            key={candidat}
+            type="button"
+            aria-pressed={!autreTaux && taux === candidat}
+            onClick={() => {
+              surChoisir(candidat)
+            }}
+            className={clsx(
+              'chiffres min-h-cible-caisse rounded-normal bg-surface text-corps-fort text-encre',
+              !autreTaux && taux === candidat ? 'border-2 border-accent' : 'border border-trait',
+            )}
+          >
+            {formaterTaux(candidat)}
+          </button>
+        ))}
+        <button
+          type="button"
+          aria-pressed={autreTaux}
+          onClick={() => {
+            surChoisir(null)
+          }}
+          className={clsx(
+            'min-h-cible-caisse rounded-normal bg-surface text-corps text-encre',
+            autreTaux ? 'border-2 border-accent font-bold' : 'border border-trait',
+          )}
+        >
+          {t('caisse.remise.autreTaux')}
+        </button>
+      </div>
+      {autreTaux && (
+        <ChampSaisie
+          libelle={t('caisse.remise.taux')}
+          inputMode="decimal"
+          suffixe="%"
+          value={saisieTaux}
+          onChange={(evenement) => {
+            surSaisir(evenement.target.value)
+          }}
+        />
+      )}
+    </>
+  )
+}
+
 /** Offrir tout ou partie d'une ligne : l'article reste sur la note à 0 F. */
 export function DialogueOffrir({
   ligne,
@@ -364,33 +403,14 @@ export function DialogueOffrir({
       }}
     >
       {ligne.quantite > 1 && (
-        <div className="flex items-center gap-3">
-          <span className="flex-1 text-libelle text-encre">{t('caisse.offert.combien')}</span>
-          <Bouton
-            aria-label={t('caisse.offert.moins')}
-            disabled={quantite <= 1}
-            className="h-14 w-14 text-titre-section"
-            onClick={() => {
-              setQuantite(quantite - 1)
-            }}
-          >
-            −
-          </Bouton>
-          <output className="chiffres w-12 text-center text-touche">{quantite}</output>
-          <Bouton
-            aria-label={t('caisse.offert.plus')}
-            disabled={quantite >= ligne.quantite}
-            className="h-14 w-14 text-titre-section"
-            onClick={() => {
-              setQuantite(quantite + 1)
-            }}
-          >
-            +
-          </Bouton>
-          <span className="text-libelle text-attenue">
-            {t('caisse.note.annulation.sur', { count: ligne.quantite })}
-          </span>
-        </div>
+        <ChoixQuantite
+          question={t('caisse.offert.combien')}
+          libelleMoins={t('caisse.offert.moins')}
+          libellePlus={t('caisse.offert.plus')}
+          quantite={quantite}
+          maximum={ligne.quantite}
+          surChanger={setQuantite}
+        />
       )}
       <ChoixMotif motifs={MOTIFS_REMISE} choix={choix} prefixe={PREFIXE_MOTIFS} />
     </Dialogue>

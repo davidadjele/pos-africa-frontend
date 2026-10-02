@@ -25,12 +25,14 @@ export function ChoixClientArdoise({
   client,
   montant,
   devise,
+  pays,
   peutCreer,
   surChoisir,
 }: Readonly<{
   client: ClientEnCaisse | null
   montant: number
   devise: Devise
+  pays: string
   /** Ouvrir une ardoise demande le droit de vendre à crédit. */
   peutCreer: boolean
   surChoisir: (client: ClientEnCaisse) => void
@@ -199,6 +201,7 @@ export function ChoixClientArdoise({
       {creation && (
         <DialogueClient
           devise={devise}
+          pays={pays}
           avecNote={false}
           surFermer={() => {
             setCreation(false)

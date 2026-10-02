@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { clsx } from 'clsx'
 import { Clock, OctagonAlert, RotateCw } from 'lucide-react'
-import { useCallback, useId, useState } from 'react'
+import { useCallback, useId, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appelerApi } from '../../partage/api/appelerApi'
 import type {
@@ -68,6 +68,60 @@ export function PriseDeCaisse({ appareil }: Readonly<{ appareil: AppareilCourant
   }
 
   const profilChoisi = etape.type === 'choix' ? undefined : etape.profil
+  let liste: ReactNode
+  if (personnel.isPending) {
+    liste = <Chargement texte={t('caisse.prise.chargement')} />
+  } else if (personnel.isError) {
+    liste = (
+      <AlerteErreur
+        erreur={personnel.error}
+        action={
+          <Bouton icone={RotateCw} onClick={() => void personnel.refetch()}>
+            {t('commun.reessayer')}
+          </Bouton>
+        }
+      />
+    )
+  } else if (personnel.data.length === 0) {
+    liste = (
+      <EtatVide
+        titre={t('caisse.prise.vide.titre')}
+        phrase={t('caisse.prise.vide.phrase', { etablissement: appareil.etablissement.nom })}
+      />
+    )
+  } else {
+    liste = (
+      <ul className="m-0 grid list-none grid-cols-1 gap-2.5 p-0 sm:grid-cols-2 lg:grid-cols-3">
+        {personnel.data.map((profil) => (
+          <li key={profil.utilisateurId}>
+            <button
+              type="button"
+              aria-pressed={profil.utilisateurId === profilChoisi?.utilisateurId}
+              onClick={() => {
+                setEtape(profil.bloque ? { type: 'bloque', profil } : { type: 'pin', profil })
+              }}
+              className={clsx(
+                'flex h-[76px] w-full items-center gap-3 rounded-moyen bg-surface px-4 text-left text-encre',
+                profil.utilisateurId === profilChoisi?.utilisateurId
+                  ? 'border-2 border-accent'
+                  : 'border border-trait hover:border-bordure-controle',
+              )}
+            >
+              <Pastille nomCourt={profil.nomCourt} />
+              <span className="flex min-w-0 flex-col items-start gap-1">
+                <span className="truncate text-corps-fort">{profil.nomCourt}</span>
+                {profil.bloque ? (
+                  <BadgeStatut ton="danger">{t('caisse.prise.bloque')}</BadgeStatut>
+                ) : (
+                  <span className="text-legende text-attenue">{t(`roles.${profil.role}`)}</span>
+                )}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    )
+  }
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-auto md:flex-row">
       <main className="flex flex-1 flex-col gap-5 p-6 md:px-10 md:py-8">
@@ -75,53 +129,7 @@ export function PriseDeCaisse({ appareil }: Readonly<{ appareil: AppareilCourant
           <h1 className="m-0 text-titre-ecran text-encre">{t('caisse.prise.titre')}</h1>
           <p className="m-0 mt-1 text-corps text-attenue">{t('caisse.prise.phrase')}</p>
         </div>
-        {personnel.isPending ? (
-          <Chargement texte={t('caisse.prise.chargement')} />
-        ) : personnel.isError ? (
-          <AlerteErreur
-            erreur={personnel.error}
-            action={
-              <Bouton icone={RotateCw} onClick={() => void personnel.refetch()}>
-                {t('commun.reessayer')}
-              </Bouton>
-            }
-          />
-        ) : personnel.data.length === 0 ? (
-          <EtatVide
-            titre={t('caisse.prise.vide.titre')}
-            phrase={t('caisse.prise.vide.phrase', { etablissement: appareil.etablissement.nom })}
-          />
-        ) : (
-          <ul className="m-0 grid list-none grid-cols-1 gap-2.5 p-0 sm:grid-cols-2 lg:grid-cols-3">
-            {personnel.data.map((profil) => (
-              <li key={profil.utilisateurId}>
-                <button
-                  type="button"
-                  aria-pressed={profil.utilisateurId === profilChoisi?.utilisateurId}
-                  onClick={() => {
-                    setEtape(profil.bloque ? { type: 'bloque', profil } : { type: 'pin', profil })
-                  }}
-                  className={clsx(
-                    'flex h-[76px] w-full items-center gap-3 rounded-moyen bg-surface px-4 text-left text-encre',
-                    profil.utilisateurId === profilChoisi?.utilisateurId
-                      ? 'border-2 border-accent'
-                      : 'border border-trait hover:border-bordure-controle',
-                  )}
-                >
-                  <Pastille nomCourt={profil.nomCourt} />
-                  <span className="flex min-w-0 flex-col items-start gap-1">
-                    <span className="truncate text-corps-fort">{profil.nomCourt}</span>
-                    {profil.bloque ? (
-                      <BadgeStatut ton="danger">{t('caisse.prise.bloque')}</BadgeStatut>
-                    ) : (
-                      <span className="text-legende text-attenue">{t(`roles.${profil.role}`)}</span>
-                    )}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+        {liste}
         <p className="m-0 mt-auto flex items-center gap-2.5 rounded-moyen border border-trait bg-surface px-4 py-3 text-legende text-attenue">
           <Clock aria-hidden="true" size={16} className="shrink-0" />
           {t('caisse.prise.verrouillage', { count: appareil.delaiVerrouillageMinutes })}
