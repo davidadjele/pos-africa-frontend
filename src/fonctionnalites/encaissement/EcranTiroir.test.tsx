@@ -64,7 +64,16 @@ const SITUATION: SituationCaisse = {
   ],
   especes: ESPECES,
 
-  notesOuvertes: 1,
+  notesOuvertes: [
+    {
+      id: 'c0000000-0000-4000-8000-0000000000aa',
+      numero: 12,
+      canal: 'SUR_PLACE',
+      table: 'T4',
+      total: 13_500,
+      serveur: 'Kossi A.',
+    },
+  ],
 }
 const Z: RapportZ = {
   numero: 12,
@@ -143,7 +152,9 @@ describe('Caisse de la tablette', () => {
     expect(ventes).toHaveTextContent('RetraitVers le coffre')
     const especes = screen.getByRole('region', { name: 'Espèces dans le tiroir' })
     expect(especes).toHaveTextContent('Attendu15 700 F')
-    expect(screen.getByText('1 note encore ouverte dans l’établissement.')).toBeVisible()
+    const ouvertes = screen.getByRole('region', { name: 'Notes non encaissées' })
+    expect(ouvertes).toHaveTextContent('1 note encore ouverte dans l’établissement')
+    expect(ouvertes).toHaveTextContent(/T4, n°12, Kossi A\.13\s500/)
   })
 
   it('compte l’ardoise dans les ventes, sans rien attendre dans le tiroir', async () => {
@@ -271,7 +282,21 @@ describe('Caisse de la tablette', () => {
     const clotures: DemandeCloture[] = []
     serveurMsw.use(
       http.post(`${API}/caisse/cloture/comptage`, () =>
-        HttpResponse.json({ compte: 15_000, attendu: 15_700, ecart: -700, notesOuvertes: 1 }),
+        HttpResponse.json({
+          compte: 15_000,
+          attendu: 15_700,
+          ecart: -700,
+          notesOuvertes: [
+            {
+              id: 'c0000000-0000-4000-8000-0000000000aa',
+              numero: 12,
+              canal: 'SUR_PLACE',
+              table: 'T4',
+              total: 13_500,
+              serveur: 'Kossi A.',
+            },
+          ],
+        }),
       ),
       http.post(`${API}/caisse/cloture`, async ({ request }) => {
         clotures.push((await request.json()) as DemandeCloture)

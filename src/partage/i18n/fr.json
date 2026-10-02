@@ -1163,7 +1163,9 @@
     "depassementArdoiseValide": "+{{montant}}, {{note}}. Doit {{solde}}, plafond {{plafond}} dépassé de {{depassement}}. Validé par {{validateur}}",
     "plafondArdoise": "{{avant}} → {{apres}}",
     "sansPlafond": "Sans plafond",
-    "reglementArdoise": "−{{montant}} en {{mode}}. Doit encore {{solde}}."
+    "reglementArdoise": "−{{montant}} en {{mode}}. Doit encore {{solde}}.",
+    "remboursementReparti": "−{{montant}} ({{repartition}}), {{ou}}. Motif : {{motif}}.",
+    "remboursementRepartiValide": "−{{montant}} ({{repartition}}), {{ou}}. Motif : {{motif}}. Validé par {{validateur}}"
   },
   "salles": {
     "titre": "Salles et tables de {{etablissement}}",
@@ -1403,8 +1405,8 @@
       "remboursements": "Remboursements en espèces",
       "reglements": "Règlements d’ardoise en espèces"
     },
-    "notesOuvertes_one": "{{count}} note encore ouverte dans l’établissement.",
-    "notesOuvertes_other": "{{count}} notes encore ouvertes dans l’établissement.",
+    "notesOuvertes_one": "{{count}} note encore ouverte dans l’établissement",
+    "notesOuvertes_other": "{{count}} notes encore ouvertes dans l’établissement",
     "dialogue": {
       "titre": "Mouvement de caisse",
       "phrase": "Des espèces entrent dans le tiroir ou en sortent sans vente. Elles comptent dans l’attendu de la clôture.",
@@ -1427,6 +1429,10 @@
     },
     "reglements": {
       "titre": "Règlements d’ardoise"
+    },
+    "ouvertes": {
+      "titre": "Notes non encaissées",
+      "phrase": "Elles restent ouvertes : encaissées sur une prochaine caisse, elles compteront dans sa journée."
     }
   },
   "cloture": {
@@ -1537,7 +1543,11 @@
     "validationTitre": "Rembourser {{montant}} en {{mode}} ?",
     "validationContexte": "{{note}}, demandé par {{demandeur}}. Motif : {{motif}}.",
     "chargementNote": "Chargement de la note…",
-    "aideArdoise": "Diminue ce que doit le client, au plus {{montant}}"
+    "aideArdoise": "Diminue ce que doit le client, au plus {{montant}}",
+    "partEn": "{{mode}} {{montant}}",
+    "validerSeul": "Rembourser {{montant}}",
+    "validationTitreReparti": "Rembourser {{montant}}",
+    "ordre": "Réparti entre les modes de la note : l’ardoise d’abord, puis la carte et le Mobile Money, les espèces en dernier."
   },
   "stock": {
     "titre": "Stock",

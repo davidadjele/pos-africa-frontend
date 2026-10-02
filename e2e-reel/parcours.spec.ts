@@ -953,10 +953,10 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     .first()
     .click()
   await expect(tablette.getByRole('status', { name: 'À rembourser' })).toContainText('4 500 F')
-  await tablette
-    .getByRole('radiogroup', { name: 'Rendre l’argent en' })
-    .getByRole('radio', { name: /Carte/ })
-    .click()
+  // La note a été payée en partie par carte : le remboursement s'y fait d'abord, avant les espèces.
+  await expect(tablette.getByRole('region', { name: 'Rendre l’argent en' })).toContainText(
+    /Carte.*4\s500\sF/,
+  )
   await tablette.getByRole('radio', { name: 'Article non conforme' }).click()
   await capturer(tablette, '58-rembourser')
   await tablette.setViewportSize({ width: 390, height: 844 })

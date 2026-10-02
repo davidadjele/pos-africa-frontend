@@ -350,4 +350,30 @@ describe('description de l’activité', () => {
       ),
     ).toBe(`−10${FINE}000${INSEC}F en espèces. Doit encore 8${FINE}000${INSEC}F.`)
   })
+
+  it('détaille un remboursement réparti entre plusieurs modes', () => {
+    expect(
+      detailActivite(
+        evenement({
+          type: 'REMBOURSEMENT',
+          domaine: 'CAISSE',
+          details: {
+            montant: 1100,
+            mode: 'ARDOISE',
+            parts: [
+              { mode: 'ARDOISE', montant: 500 },
+              { mode: 'ESPECES', montant: 600 },
+            ],
+            motif: 'ARTICLE_NON_CONFORME',
+            numero: 1,
+            table: 'T2',
+          },
+        }),
+        t,
+        CONTEXTE,
+      ),
+    ).toBe(
+      `−1${FINE}100${INSEC}F (ardoise 500${INSEC}F, espèces 600${INSEC}F), T2, n°1. Motif : Article non conforme.`,
+    )
+  })
 })

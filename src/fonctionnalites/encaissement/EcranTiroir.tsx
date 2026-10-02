@@ -11,6 +11,7 @@ import type {
   DemandeMouvement,
   EspecesCaisse,
   MouvementResume,
+  NoteNonEncaissee,
   RapportZ,
   ReglementsCaisse,
   RemboursementsCaisse,
@@ -32,6 +33,7 @@ import { useValidation } from '../commande/useValidation'
 import { requeteAppareil } from '../tablette/requetes'
 import { EtapeComptage, ResultatEcart, SIGNES_ECART, sensEcart, useComptage } from './Comptage'
 import { OuvertureCaisse } from './EcranEncaissement'
+import { numeroEtCanal } from '../commande/PanneauNote'
 import { NotesEncaissees } from './NotesEncaissees'
 import { ReglementsArdoise } from './ReglementsArdoise'
 import { requeteOuvertureCaisse, requeteSituation } from './requetes'
@@ -278,11 +280,7 @@ function Tiroir() {
                 ))}
               </ul>
             )}
-            {notesOuvertes > 0 && (
-              <p className="m-0 mt-4 text-legende text-attenue">
-                {t('tiroir.notesOuvertes', { count: notesOuvertes })}
-              </p>
-            )}
+            <NotesNonEncaissees notes={notesOuvertes} nombre={nombre} />
           </section>
           {especes === undefined ? (
             <p className="m-0 rounded-moyen border border-trait bg-surface p-5 text-corps text-attenue lg:w-ticket-largeur">
@@ -321,6 +319,42 @@ function Tiroir() {
         />
       )}
     </div>
+  )
+}
+
+/**
+ * Les notes encore ouvertes dans l'établissement : la clôture ne les bloque pas, elles s'encaisseront sur une
+ * prochaine caisse, et compteront dans sa journée.
+ */
+function NotesNonEncaissees({
+  notes,
+  nombre,
+}: Readonly<{ notes: NoteNonEncaissee[]; nombre: (valeur: number) => string }>) {
+  const { t } = useTranslation()
+  if (notes.length === 0) return null
+  return (
+    <section
+      aria-label={t('tiroir.ouvertes.titre')}
+      className="mt-4 flex flex-col gap-1 rounded-normal border border-alerte-bord bg-alerte-fond p-3"
+    >
+      <p className="m-0 text-corps-fort text-alerte-texte">
+        {t('tiroir.notesOuvertes', { count: notes.length })}
+      </p>
+      <ul className="m-0 list-none p-0">
+        {notes.map((note) => (
+          <li key={note.id} className="flex justify-between gap-3 py-0.5 text-corps text-encre">
+            <span>
+              {note.table === undefined
+                ? numeroEtCanal(note, t)
+                : `${note.table}, ${t('caisse.note.numero', { numero: note.numero })}`}
+              <span className="text-legende text-attenue">, {note.serveur}</span>
+            </span>
+            <span className="chiffres">{nombre(note.total)}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="m-0 text-legende text-alerte-texte">{t('tiroir.ouvertes.phrase')}</p>
+    </section>
   )
 }
 
@@ -635,6 +669,8 @@ function Cloture({
 }>) {
   const { t } = useTranslation()
   const comptage = useComptage(devise)
+  const nombre = (valeur: number) =>
+    formaterMontant({ unitesMineures: valeur, devise }, { forme: 'nombre' })
   const [resultat, setResultat] = useState<ResultatComptage | null>(null)
   const [explication, setExplication] = useState('')
   const [fondLaisse, setFondLaisse] = useState(String(situation.ouverture.fondInitial))
@@ -719,11 +755,7 @@ function Cloture({
               setFondLaisse(evenement.target.value)
             }}
           />
-          {resultat.notesOuvertes > 0 && (
-            <p className="m-0 text-legende text-attenue">
-              {t('tiroir.notesOuvertes', { count: resultat.notesOuvertes })}
-            </p>
-          )}
+          <NotesNonEncaissees notes={resultat.notesOuvertes} nombre={nombre} />
           {aExpliquer && (
             <p className="m-0 text-legende text-danger">{t('cloture.explicationRequise')}</p>
           )}

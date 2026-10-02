@@ -1163,7 +1163,9 @@
     "depassementArdoiseValide": "+{{montant}}, {{note}}. Owes {{solde}}, {{plafond}} limit exceeded by {{depassement}}. Approved by {{validateur}}",
     "plafondArdoise": "{{avant}} → {{apres}}",
     "sansPlafond": "No limit",
-    "reglementArdoise": "−{{montant}} in {{mode}}. Still owes {{solde}}."
+    "reglementArdoise": "−{{montant}} in {{mode}}. Still owes {{solde}}.",
+    "remboursementReparti": "−{{montant}} ({{repartition}}), {{ou}}. Reason: {{motif}}.",
+    "remboursementRepartiValide": "−{{montant}} ({{repartition}}), {{ou}}. Reason: {{motif}}. Approved by {{validateur}}"
   },
   "salles": {
     "titre": "{{etablissement}} areas and tables",
@@ -1403,8 +1405,8 @@
       "remboursements": "Cash refunds",
       "reglements": "Tab payments in cash"
     },
-    "notesOuvertes_one": "{{count}} tab still open at this location.",
-    "notesOuvertes_other": "{{count}} tabs still open at this location.",
+    "notesOuvertes_one": "{{count}} bill still open at this location",
+    "notesOuvertes_other": "{{count}} bills still open at this location",
     "dialogue": {
       "titre": "Cash movement",
       "phrase": "Cash goes in or out of the drawer without a sale. It counts in the expected cash at closing.",
@@ -1427,6 +1429,10 @@
     },
     "reglements": {
       "titre": "Tab payments"
+    },
+    "ouvertes": {
+      "titre": "Unpaid bills",
+      "phrase": "They stay open: paid on a later till session, they will count on its day."
     }
   },
   "cloture": {
@@ -1537,7 +1543,11 @@
     "validationTitre": "Refund {{montant}} in {{mode}}?",
     "validationContexte": "{{note}}, requested by {{demandeur}}. Reason: {{motif}}.",
     "chargementNote": "Loading the bill…",
-    "aideArdoise": "Reduces what the customer owes, up to {{montant}}"
+    "aideArdoise": "Reduces what the customer owes, up to {{montant}}",
+    "partEn": "{{mode}} {{montant}}",
+    "validerSeul": "Refund {{montant}}",
+    "validationTitreReparti": "Refund {{montant}}",
+    "ordre": "Split across the bill’s payment methods: tab first, then card and Mobile Money, cash last."
   },
   "stock": {
     "titre": "Stock",

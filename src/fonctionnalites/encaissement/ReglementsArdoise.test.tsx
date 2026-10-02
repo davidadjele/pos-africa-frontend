@@ -29,7 +29,7 @@ const SITUATION: SituationCaisse = {
   },
   reglementsArdoise: VIDE,
   mouvements: [],
-  notesOuvertes: 0,
+  notesOuvertes: [],
 }
 const KOMLAN: ClientEnCaisse = { ...KOMLAN_EN_CAISSE, solde: 18_000, detteDepuis: ilYA(45) }
 const AMA: ClientEnCaisse = { id: 'c0000000-0000-4000-8000-000000000003', nom: 'Ama K.', solde: 0 }

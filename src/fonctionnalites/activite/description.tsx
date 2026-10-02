@@ -193,12 +193,28 @@ const politiqueStock: Detail = (evenement, { t }) => {
 }
 
 const remboursement: Detail = (evenement, { t, montant }) => {
-  const { mode, motif, detail } = evenement.details
+  const { mode, motif, detail, parts } = evenement.details
   const valeurs = {
     montant: montant(evenement.details.montant),
     mode: t(`encaissement.modesEn.${texte(mode) || 'ESPECES'}`),
     ou: ou(evenement, t),
     motif: motifLisible(motif, detail, 'remboursement.motifs', t),
+  }
+  // Réparti entre plusieurs modes : chacun avec sa part.
+  if (Array.isArray(parts) && parts.length > 1) {
+    const repartition = (parts as { mode?: unknown; montant?: unknown }[])
+      .map((part) => {
+        const mode = t(`encaissement.modesEn.${texte(part.mode) || 'ESPECES'}`)
+        return `${mode} ${montant(part.montant)}`
+      })
+      .join(', ')
+    return avecValidateur(
+      evenement,
+      t,
+      'activite.remboursementReparti',
+      'activite.remboursementRepartiValide',
+      { ...valeurs, repartition },
+    )
   }
   return avecValidateur(
     evenement,

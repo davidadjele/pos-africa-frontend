@@ -2633,8 +2633,6 @@ export interface components {
             detail?: string;
             /** Format: uuid */
             id: string;
-            /** @enum {string} */
-            mode: "ESPECES" | "MOBILE_MONEY" | "CARTE" | "ARDOISE";
             /** Format: int64 */
             montant: number;
             /** @enum {string} */
@@ -3093,6 +3091,8 @@ export interface components {
             /** Format: int64 */
             paye: number;
             /** Format: int64 */
+            remboursable: number;
+            /** Format: int64 */
             rembourse: number;
         };
         MouvementResume: {
@@ -3158,6 +3158,18 @@ export interface components {
             payee: boolean;
             /** Format: int64 */
             rembourse: number;
+            table?: string;
+            /** Format: int64 */
+            total: number;
+        };
+        NoteNonEncaissee: {
+            /** @enum {string} */
+            canal: "SUR_PLACE" | "COMPTOIR" | "EMPORTER";
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            numero: number;
+            serveur: string;
             table?: string;
             /** Format: int64 */
             total: number;
@@ -3276,6 +3288,14 @@ export interface components {
             part: boolean;
             reference?: string;
         };
+        PartRemboursement: {
+            /** @enum {string} */
+            mode: "ESPECES" | "MOBILE_MONEY" | "CARTE" | "ARDOISE";
+            /** Format: int64 */
+            montant: number;
+            operateur?: string;
+            reference?: string;
+        };
         PlanDeSalle: {
             enService: components["schemas"]["NoteEnService"][];
             salles: components["schemas"]["SallePlan"][];
@@ -3348,14 +3368,11 @@ export interface components {
             detail?: string;
             /** Format: uuid */
             id: string;
-            /** @enum {string} */
-            mode: "ESPECES" | "MOBILE_MONEY" | "CARTE" | "ARDOISE";
             /** Format: int64 */
             montant: number;
             /** @enum {string} */
             motif: "ERREUR_ENCAISSEMENT" | "ARTICLE_NON_CONFORME" | "ARTICLE_NON_SERVI" | "AUTRE";
-            operateur?: string;
-            reference?: string;
+            parts: components["schemas"]["PartRemboursement"][];
             /** Format: date-time */
             rembourseLe: string;
             remboursePar: string;
@@ -3425,8 +3442,7 @@ export interface components {
             compte: number;
             /** Format: int64 */
             ecart: number;
-            /** Format: int32 */
-            notesOuvertes: number;
+            notesOuvertes: components["schemas"]["NoteNonEncaissee"][];
         };
         ResultatEmploye: {
             compteExistant: boolean;
@@ -3489,8 +3505,7 @@ export interface components {
         SituationCaisse: {
             especes?: components["schemas"]["EspecesCaisse"];
             mouvements: components["schemas"]["MouvementResume"][];
-            /** Format: int32 */
-            notesOuvertes: number;
+            notesOuvertes: components["schemas"]["NoteNonEncaissee"][];
             ouverture: components["schemas"]["OuvertureResume"];
             reglementsArdoise: components["schemas"]["ReglementsCaisse"];
             ventes: components["schemas"]["VentesCaisse"];
