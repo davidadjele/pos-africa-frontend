@@ -1,0 +1,29 @@
+/*
+ * Impression des tickets par le navigateur : seule la zone d'impression sort sur le papier, à la largeur du
+ * rouleau. Une impression directe (ESC/POS) pourra remplacer ce mécanisme sans toucher aux écrans.
+ */
+.zone-impression {
+  display: none;
+}
+
+.ticket-58 {
+  width: 58mm;
+}
+
+.ticket-80 {
+  width: 80mm;
+}
+
+@media print {
+  @page {
+    margin: 0;
+  }
+
+  body > *:not(.zone-impression) {
+    display: none !important;
+  }
+
+  .zone-impression {
+    display: block;
+  }
+}

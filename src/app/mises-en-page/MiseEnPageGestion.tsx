@@ -3,6 +3,7 @@ import {
   Activity,
   Building2,
   LayoutDashboard,
+  Landmark,
   LayoutGrid,
   NotebookPen,
   Percent,
@@ -38,6 +39,7 @@ interface EntreeNavigation {
     | '/gestion/tablettes'
     | '/gestion/stock'
     | '/gestion/ardoises'
+    | '/gestion/entreprise'
   cle: string
   icone: LucideIcon
   /** Entrée masquée sans l'une de ces permissions : l'écran ne servirait qu'à afficher un refus. */
@@ -86,6 +88,12 @@ const CARTE: EntreeNavigation[] = [
 
 // Réglages en bas, séparés des actions quotidiennes.
 const REGLAGES: EntreeNavigation[] = [
+  {
+    vers: '/gestion/entreprise',
+    cle: 'gestion.menu.entreprise',
+    icone: Landmark,
+    permission: 'ETABLISSEMENT_GERER',
+  },
   {
     vers: '/gestion/etablissements',
     cle: 'gestion.menu.etablissements',

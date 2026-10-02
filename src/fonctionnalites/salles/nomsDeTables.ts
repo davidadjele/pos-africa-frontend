@@ -1,11 +1,11 @@
-const FIN_NUMEROTEE = /^(.*?)(\d+)$/
-
 /** Même règle que le serveur (NomsDeTables) : l'aperçu annonce exactement ce qui sera créé. */
 export function nomsDeTables(premier: string, nombre: number): string[] {
-  const numerote = FIN_NUMEROTEE.exec(premier)
-  if (numerote !== null) {
-    const [, prefixe = '', chiffres = '0'] = numerote
-    const debut = Number(chiffres)
+  // Les chiffres de fin, lus sans expression régulière pour éviter tout retour arrière.
+  let debutChiffres = premier.length
+  while (debutChiffres > 0 && /\d/.test(premier.charAt(debutChiffres - 1))) debutChiffres--
+  if (debutChiffres < premier.length) {
+    const prefixe = premier.slice(0, debutChiffres)
+    const debut = Number(premier.slice(debutChiffres))
     return Array.from({ length: nombre }, (_, rang) => `${prefixe}${String(debut + rang)}`)
   }
   if (nombre === 1) return [premier]

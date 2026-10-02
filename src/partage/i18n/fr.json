@@ -403,7 +403,8 @@
       "stock": "Stock",
       "aTraiter_one": "{{count}} produit à traiter",
       "aTraiter_other": "{{count}} produits à traiter",
-      "ardoises": "Ardoises"
+      "ardoises": "Ardoises",
+      "entreprise": "Entreprise"
     },
     "tableauDeBord": {
       "titre": "Tableau de bord",
@@ -414,9 +415,65 @@
     }
   },
   "recu": {
-    "titre": "Reçu pas encore consultable",
-    "reference": "Référence",
-    "phrase": "L’affichage des reçus partagés arrive au prochain lot. Gardez ce lien : il restera valable."
+    "ticket": "Reçu {{numero}}",
+    "duplicata": "DUPLICATA",
+    "telephone": "Tél. {{telephone}}",
+    "nif": "NIF {{numero}}",
+    "numero": "Reçu n° {{numero}}",
+    "numeroLong": "Reçu n° {{numero}}",
+    "note": "Note {{note}}",
+    "servi": "Servi par {{serveur}}, encaissé par {{caissier}}",
+    "offert": "Offert",
+    "remise": "Remise sur la note",
+    "total": "TOTAL",
+    "dontTaxe": "dont {{taxe}}",
+    "avecReference": "{{moyen}}, réf. {{reference}}",
+    "rendu": "reçu {{recu}}, rendu {{rendu}}",
+    "doitEncore": "Doit à ce jour : {{montant}}",
+    "logiciel": "Logiciel de caisse Tonti",
+    "imprimer": "Imprimer le reçu",
+    "sansRecu": "Sans reçu",
+    "chargement": "Préparation du reçu…",
+    "reimprimer": "Réimprimer le reçu",
+    "reglages": {
+      "action": "Reçu",
+      "titre": "Reçu de {{nom}}",
+      "phrase": "Ce que la caisse imprime : le nom et le numéro fiscal viennent de l’entreprise.",
+      "chargement": "Chargement des réglages…",
+      "largeur": "Largeur du papier",
+      "mm": "{{largeur}} mm",
+      "auto": "Imprimer le reçu dès qu’une note est encaissée",
+      "autoAide": "Sinon, la caisse propose d’imprimer ou de continuer sans reçu.",
+      "telephone": "Téléphone",
+      "enTete": "Message en tête",
+      "pied": "Message en pied",
+      "fait": "Reçu de {{nom}} enregistré."
+    },
+    "enLigne": {
+      "titre": "Votre reçu",
+      "imprimer": "Imprimer ou enregistrer en PDF",
+      "chargement": "Ouverture du reçu…",
+      "introuvable": "Reçu introuvable",
+      "introuvablePhrase": "Ce lien ne mène à aucun reçu. Vérifiez que le lien est complet, ou demandez-le de nouveau à l’établissement.",
+      "qr": "QR code du reçu en ligne",
+      "legende": "Votre reçu en ligne"
+    },
+    "rembourse": "Remboursé le {{date}} à {{heure}}, {{mode}}",
+    "rembourseEn": {
+      "ESPECES": "espèces",
+      "MOBILE_MONEY": "Mobile Money",
+      "CARTE": "carte",
+      "ARDOISE": "sur l’ardoise"
+    },
+    "whatsapp": {
+      "titre": "Envoyer par WhatsApp",
+      "numero": "Numéro WhatsApp du client",
+      "envoyer": "Envoyer",
+      "aide": "Le client reçoit un lien vers son reçu. Le numéro n’est pas enregistré.",
+      "message": "Votre reçu {{numero}} de {{entreprise}} : {{lien}}",
+      "statut": "Envoi WhatsApp",
+      "ouvert": "WhatsApp est ouvert : il reste à envoyer le message."
+    }
   },
   "introuvable": {
     "titre": "Page introuvable",
@@ -1827,5 +1884,15 @@
       "regle": "Règlement de {{montant}} encaissé. {{nom}} doit encore {{reste}}.",
       "solde": "Règlement de {{montant}} encaissé. L’ardoise de {{nom}} est soldée."
     }
+  },
+  "entreprise": {
+    "chargement": "Chargement de l’entreprise…",
+    "phrase": "Ce que les reçus impriment de l’entreprise. Le nom se change auprès de l’équipe Tonti.",
+    "numeroFiscal": "Numéro fiscal",
+    "numeroFiscalAide": "NIF, IFU ou NCC selon le pays : il figure sur chaque reçu.",
+    "telephone": "Téléphone",
+    "email": "E-mail",
+    "adresse": "Adresse",
+    "fait": "Identité de l’entreprise enregistrée."
   }
 }

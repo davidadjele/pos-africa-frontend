@@ -403,7 +403,8 @@
       "stock": "Stock",
       "aTraiter_one": "{{count}} product to handle",
       "aTraiter_other": "{{count}} products to handle",
-      "ardoises": "Tabs"
+      "ardoises": "Tabs",
+      "entreprise": "Company"
     },
     "tableauDeBord": {
       "titre": "Dashboard",
@@ -414,9 +415,65 @@
     }
   },
   "recu": {
-    "titre": "Receipt not available yet",
-    "reference": "Reference",
-    "phrase": "Shared receipts arrive in the next release. Keep this link: it will remain valid."
+    "ticket": "Receipt {{numero}}",
+    "duplicata": "DUPLICATE",
+    "telephone": "Tel. {{telephone}}",
+    "nif": "Tax ID {{numero}}",
+    "numero": "Receipt no. {{numero}}",
+    "numeroLong": "Receipt no. {{numero}}",
+    "note": "Bill {{note}}",
+    "servi": "Served by {{serveur}}, paid with {{caissier}}",
+    "offert": "Free",
+    "remise": "Bill discount",
+    "total": "TOTAL",
+    "dontTaxe": "incl. {{taxe}}",
+    "avecReference": "{{moyen}}, ref. {{reference}}",
+    "rendu": "received {{recu}}, change {{rendu}}",
+    "doitEncore": "Owes to date: {{montant}}",
+    "logiciel": "Tonti point of sale",
+    "imprimer": "Print the receipt",
+    "sansRecu": "No receipt",
+    "chargement": "Preparing the receipt…",
+    "reimprimer": "Print the receipt again",
+    "reglages": {
+      "action": "Receipt",
+      "titre": "{{nom}} receipt",
+      "phrase": "What the till prints: name and tax ID come from the company.",
+      "chargement": "Loading settings…",
+      "largeur": "Paper width",
+      "mm": "{{largeur}} mm",
+      "auto": "Print the receipt as soon as a bill is paid",
+      "autoAide": "Otherwise, the till offers to print or to go on without a receipt.",
+      "telephone": "Phone",
+      "enTete": "Header message",
+      "pied": "Footer message",
+      "fait": "{{nom}} receipt saved."
+    },
+    "enLigne": {
+      "titre": "Your receipt",
+      "imprimer": "Print or save as PDF",
+      "chargement": "Opening the receipt…",
+      "introuvable": "Receipt not found",
+      "introuvablePhrase": "This link does not lead to any receipt. Check that the link is complete, or ask the venue for it again.",
+      "qr": "QR code of the online receipt",
+      "legende": "Your receipt online"
+    },
+    "rembourse": "Refunded on {{date}} at {{heure}}, {{mode}}",
+    "rembourseEn": {
+      "ESPECES": "cash",
+      "MOBILE_MONEY": "Mobile Money",
+      "CARTE": "card",
+      "ARDOISE": "to the tab"
+    },
+    "whatsapp": {
+      "titre": "Send by WhatsApp",
+      "numero": "Customer’s WhatsApp number",
+      "envoyer": "Send",
+      "aide": "The customer receives a link to the receipt. The number is not stored.",
+      "message": "Your receipt {{numero}} from {{entreprise}}: {{lien}}",
+      "statut": "WhatsApp sending",
+      "ouvert": "WhatsApp is open: just send the message."
+    }
   },
   "introuvable": {
     "titre": "Page not found",
@@ -1827,5 +1884,15 @@
       "regle": "Payment of {{montant}} taken. {{nom}} still owes {{reste}}.",
       "solde": "Payment of {{montant}} taken. {{nom}}’s tab is settled."
     }
+  },
+  "entreprise": {
+    "chargement": "Loading the company…",
+    "phrase": "What receipts print about the company. The name is changed by the Tonti team.",
+    "numeroFiscal": "Tax ID",
+    "numeroFiscalAide": "Tax number for your country: it is on every receipt.",
+    "telephone": "Phone",
+    "email": "Email",
+    "adresse": "Address",
+    "fait": "Company details saved."
   }
 }

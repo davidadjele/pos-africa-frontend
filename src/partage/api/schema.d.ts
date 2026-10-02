@@ -440,7 +440,7 @@ export interface paths {
             cookie?: never;
         };
         /** Lire une note */
-        get: operations["lire_1"];
+        get: operations["lire_2"];
         put?: never;
         post?: never;
         /**
@@ -538,7 +538,7 @@ export interface paths {
          * Envoyer en préparation tout ce qui est à envoyer
          * @description Tout ou rien. Erreurs : PRODUIT_EPUISE (409), PRODUIT_INDISPONIBLE (409) si un article à envoyer ne se vend plus.
          */
-        post: operations["envoyer"];
+        post: operations["envoyer_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -720,6 +720,67 @@ export interface paths {
          */
         put: operations["partager"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/commandes/{id}/recu": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Le reçu d'une note encaissée
+         * @description Émis quand la note est payée. Erreur : RESSOURCE_INTROUVABLE (404) pour une note pas encore payée.
+         */
+        get: operations["lire_3"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/commandes/{id}/recu/envois": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Envoyer le reçu par WhatsApp
+         * @description Lit le numéro dans le pays de l'entreprise s'il est saisi sans indicatif, et le renvoie en E.164 pour ouvrir
+         *     WhatsApp. Le numéro n'est pas enregistré. Erreur : REQUETE_INVALIDE (400) sur le champ telephone.
+         */
+        post: operations["envoyer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/commandes/{id}/recu/impressions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Imprimer le reçu
+         * @description La première impression est l'original, les suivantes des duplicatas.
+         */
+        post: operations["imprimer"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1102,7 +1163,7 @@ export interface paths {
          * Modifier une catégorie
          * @description Erreurs : RESSOURCE_INTROUVABLE, CONFLIT_MODIFICATION, REQUETE_INVALIDE.
          */
-        put: operations["modifier_5"];
+        put: operations["modifier_6"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1144,6 +1205,24 @@ export interface paths {
          * @description Permission CATALOGUE_GERER.
          */
         post: operations["reactiver_5"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/entreprise": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** L'identité de l'entreprise */
+        get: operations["identite"];
+        /** Modifier le numéro fiscal, le téléphone, l'e-mail ou l'adresse de l'entreprise */
+        put: operations["modifier_5"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1537,6 +1616,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/etablissements/{id}/recu": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Les réglages du reçu de l'établissement */
+        get: operations["reglagesRecu"];
+        /** Régler le reçu : téléphone, messages, largeur du papier, impression d'office */
+        put: operations["reglerRecu"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/inscription": {
         parameters: {
             query?: never;
@@ -1847,6 +1944,27 @@ export interface paths {
         };
         /** Réglages publics (sans authentification) */
         get: operations["configuration"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/recus/{jeton}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Le reçu en ligne
+         * @description Sans authentification : le jeton seul ouvre le reçu. Erreur : RESSOURCE_INTROUVABLE (404) pour un jeton
+         *     inconnu ou le reçu d'une entreprise suspendue.
+         */
+        get: operations["lire_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2427,6 +2545,9 @@ export interface components {
             /** @example 90 11 23 45 */
             telephone?: string;
         };
+        DemandeEnvoiRecu: {
+            telephone: string;
+        };
         DemandeEtablissement: {
             adresse?: string;
             /** @example BE */
@@ -2456,6 +2577,15 @@ export interface components {
              * @example 20000
              */
             fond: number;
+        };
+        DemandeIdentiteEntreprise: {
+            adresse?: string;
+            /** Format: email */
+            email?: string;
+            /** @example 1000123456 */
+            numeroFiscal?: string;
+            /** @example 90 11 23 45 */
+            telephone?: string;
         };
         DemandeInscription: {
             entreprise: components["schemas"]["DonneesEntreprise"];
@@ -2613,6 +2743,21 @@ export interface components {
             lignes: components["schemas"]["LigneReceptionStock"][];
             /** @example BL 2240 */
             reference?: string;
+        };
+        DemandeReglagesRecu: {
+            /** @example Bienvenue au maquis ! */
+            enTete?: string;
+            impressionAuto: boolean;
+            /**
+             * Format: int32
+             * @description 58 ou 80
+             * @example 80
+             */
+            largeur: number;
+            /** @example Merci et à bientôt ! */
+            pied?: string;
+            /** @example 90 11 23 45 */
+            telephone?: string;
         };
         DemandeReglement: {
             /** Format: uuid */
@@ -2873,6 +3018,9 @@ export interface components {
             /** @enum {string} */
             statut: "ACTIVE" | "SUSPENDUE";
         };
+        EnvoiRecu: {
+            telephone: string;
+        };
         EspecesCaisse: {
             /** Format: int64 */
             apports: number;
@@ -2898,6 +3046,14 @@ export interface components {
             /** Format: uuid */
             id: string;
             nom: string;
+            ville?: string;
+        };
+        EtablissementRecu: {
+            adresse?: string;
+            enTete?: string;
+            nom: string;
+            pied?: string;
+            telephone?: string;
             ville?: string;
         };
         EtablissementResume: {
@@ -2992,6 +3148,21 @@ export interface components {
         FicheClient: {
             client: components["schemas"]["ClientArdoise"];
             ecritures: components["schemas"]["EcritureArdoise"][];
+        };
+        IdentiteEntreprise: {
+            adresse?: string;
+            email?: string;
+            nom: string;
+            numeroFiscal?: string;
+            telephone?: string;
+        };
+        Ligne: {
+            /** Format: int64 */
+            montant: number;
+            nom: string;
+            offert: boolean;
+            /** Format: int32 */
+            quantite: number;
         };
         LigneCarteEtablissement: {
             categorie: components["schemas"]["CategorieCarte"];
@@ -3268,6 +3439,21 @@ export interface components {
             /** Format: int64 */
             total: number;
         };
+        Paiement: {
+            client?: string;
+            /** Format: int64 */
+            doitEncore?: number;
+            /** @enum {string} */
+            mode: "ESPECES" | "MOBILE_MONEY" | "CARTE" | "ARDOISE";
+            /** Format: int64 */
+            monnaieRendue: number;
+            /** Format: int64 */
+            montant: number;
+            /** Format: int64 */
+            montantRecu?: number;
+            operateur?: string;
+            reference?: string;
+        };
         PaiementResume: {
             articles: components["schemas"]["ArticlePaye"][];
             client?: string;
@@ -3352,6 +3538,44 @@ export interface components {
             tva: number;
             ventes: components["schemas"]["VentesCaisse"];
         };
+        RecuCaisse: {
+            caissier: string;
+            duplicata: boolean;
+            /** Format: date-time */
+            emisLe: string;
+            entreprise: string;
+            etablissement: components["schemas"]["EtablissementRecu"];
+            impressionAuto: boolean;
+            jeton: string;
+            /** Format: int32 */
+            largeur: number;
+            lignes: components["schemas"]["Ligne"][];
+            note: string;
+            numero: string;
+            numeroFiscal?: string;
+            paiements: components["schemas"]["Paiement"][];
+            /** Format: int64 */
+            remise: number;
+            serveur: string;
+            taxes: components["schemas"]["Taxe"][];
+            /** Format: int64 */
+            total: number;
+        };
+        RecuEnLigne: {
+            devise: string;
+            fuseauHoraire: string;
+            operateurs: components["schemas"]["OperateurMobileMoney"][];
+            recu: components["schemas"]["RecuCaisse"];
+            remboursements: components["schemas"]["RemboursementEnLigne"][];
+        };
+        ReglagesRecu: {
+            enTete?: string;
+            impressionAuto: boolean;
+            /** Format: int32 */
+            largeur: number;
+            pied?: string;
+            telephone?: string;
+        };
         ReglementsCaisse: {
             /** Format: int64 */
             carte: number;
@@ -3361,6 +3585,14 @@ export interface components {
             mobileMoney: number;
             /** Format: int64 */
             total: number;
+        };
+        RemboursementEnLigne: {
+            /** Format: date-time */
+            le: string;
+            /** @enum {string} */
+            mode: "ESPECES" | "MOBILE_MONEY" | "CARTE" | "ARDOISE";
+            /** Format: int64 */
+            montant: number;
         };
         RemboursementResume: {
             approuvePar?: string;
@@ -3550,6 +3782,13 @@ export interface components {
             places: number;
             /** Format: int64 */
             version: number;
+        };
+        Taxe: {
+            /** Format: int64 */
+            montant: number;
+            nom: string;
+            /** Format: int32 */
+            tauxPointsDeBase: number;
         };
         TaxeNote: {
             /** Format: int64 */
@@ -4378,7 +4617,7 @@ export interface operations {
             };
         };
     };
-    lire_1: {
+    lire_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -4599,7 +4838,7 @@ export interface operations {
             };
         };
     };
-    envoyer: {
+    envoyer_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -4934,6 +5173,103 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["EtatEncaissement"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    lire_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecuCaisse"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    envoyer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeEnvoiRecu"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EnvoiRecu"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    imprimer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecuCaisse"];
                 };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
@@ -5610,7 +5946,7 @@ export interface operations {
             };
         };
     };
-    modifier_5: {
+    modifier_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -5691,6 +6027,68 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    identite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentiteEntreprise"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    modifier_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeIdentiteEntreprise"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentiteEntreprise"];
+                };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
             default: {
@@ -6524,6 +6922,72 @@ export interface operations {
             };
         };
     };
+    reglagesRecu: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReglagesRecu"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    reglerRecu: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeReglagesRecu"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReglagesRecu"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
     inscrire: {
         parameters: {
             query?: never;
@@ -7137,6 +7601,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ConfigurationPublique"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    lire_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jeton: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecuEnLigne"];
                 };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */

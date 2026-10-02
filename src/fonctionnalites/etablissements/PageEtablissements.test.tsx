@@ -286,4 +286,37 @@ describe('PageEtablissements', () => {
       screen.queryByRole('button', { name: 'Ajouter un établissement' }),
     ).not.toBeInTheDocument()
   })
+
+  it('règle le reçu d’un établissement : papier, impression d’office, messages', async () => {
+    etablissementsEnMemoire([BE_KPOTA])
+    let corps: unknown = null
+    serveurMsw.use(
+      http.get(`${API}/etablissements/${BE_KPOTA.id}/recu`, () =>
+        HttpResponse.json({ largeur: 80, impressionAuto: false, pied: 'Merci !' }),
+      ),
+      http.put(`${API}/etablissements/${BE_KPOTA.id}/recu`, async ({ request }) => {
+        corps = await request.json()
+        return HttpResponse.json(corps as object)
+      }),
+    )
+    await ouvrirEtablissements()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Reçu de Bè Kpota' }))
+    const dialogue = await screen.findByRole('dialog', { name: 'Reçu de Bè Kpota' })
+    expect(await within(dialogue).findByLabelText(/^Message en pied/)).toHaveValue('Merci !')
+    await userEvent.click(within(dialogue).getByRole('radio', { name: '58 mm' }))
+    await userEvent.click(within(dialogue).getByRole('checkbox', { name: /Imprimer le reçu dès/ }))
+    await userEvent.type(within(dialogue).getByLabelText(/^Téléphone/), '90 11 23 45')
+    await userEvent.type(within(dialogue).getByLabelText(/^Message en tête/), 'Bienvenue !')
+    await userEvent.click(within(dialogue).getByRole('button', { name: 'Enregistrer' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Reçu de Bè Kpota enregistré.')
+    expect(corps).toEqual({
+      telephone: '90 11 23 45',
+      enTete: 'Bienvenue !',
+      pied: 'Merci !',
+      largeur: 58,
+      impressionAuto: true,
+    })
+  })
 })

@@ -218,9 +218,17 @@ describe('routeur', () => {
   })
 
   it('ouvre un reçu public sans rien demander à la session', async () => {
+    serveurMsw.use(
+      http.get(`${API}/public/recus/abc`, () =>
+        HttpResponse.json(
+          { statut: 404, code: 'RESSOURCE_INTROUVABLE', message: 'Introuvable.', traceId: 't' },
+          { status: 404 },
+        ),
+      ),
+    )
     ouvrir('/r/abc')
 
-    expect(await screen.findByText('abc')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Reçu introuvable' })).toBeInTheDocument()
   })
 
   it('affiche une page introuvable qui ramène à l’accueil', async () => {

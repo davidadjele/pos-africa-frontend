@@ -1,9 +1,10 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { API, caisseOuverte } from '../../../tests/application'
 import { serveurMsw } from '../../../tests/serveurMsw'
+import { RECU } from './fixturesRecu'
 import type {
   DemandeRemboursement,
   EtatRemboursement,
@@ -284,5 +285,26 @@ describe('Notes encaissées', () => {
     await screen.findByRole('dialog', { name: /^Rembourser 1\s200\sF/ })
     expect(recus[0]).toMatchObject({ montant: 1200 })
     expect(recus[0]).not.toHaveProperty('mode')
+  })
+
+  it('réimprime le reçu d’une note, marqué duplicata', async () => {
+    notesServies()
+    const imprimer = vi.spyOn(window, 'print').mockImplementation(() => undefined)
+    serveurMsw.use(
+      http.post(`${API}/caisse/commandes/${NOTE_42}/recu/impressions`, () =>
+        HttpResponse.json({ ...RECU, duplicata: true }),
+      ),
+    )
+    caisseOuverte('/caisse/tiroir', { permissions: CAISSIER })
+
+    await userEvent.click(await screen.findByRole('tab', { name: 'Notes encaissées' }))
+    await userEvent.click(await screen.findByRole('button', { name: /n°42, T4/ }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Réimprimer le reçu' }))
+
+    await vi.waitFor(() => {
+      expect(imprimer).toHaveBeenCalledOnce()
+    })
+    expect(document.querySelector('.zone-impression')).toHaveTextContent('DUPLICATA')
+    imprimer.mockRestore()
   })
 })
