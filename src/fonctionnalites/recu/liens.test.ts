@@ -1,8 +1,20 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { lienRecu, lienWhatsApp } from './liens'
 
 describe('liens du reçu', () => {
-  it('ouvre le reçu en ligne sur l’adresse de l’application', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it('ouvre le reçu en ligne sur l’adresse publique de production', () => {
+    vi.stubEnv('VITE_ADRESSE_PUBLIQUE', 'https://app.tonti.africa/')
+
+    expect(lienRecu('k3F9qL2m')).toBe('https://app.tonti.africa/r/k3F9qL2m')
+  })
+
+  it('reste sur l’adresse de la page tant que l’adresse publique n’est pas fixée', () => {
+    vi.stubEnv('VITE_ADRESSE_PUBLIQUE', '')
+
     expect(lienRecu('k3F9qL2m')).toBe(`${window.location.origin}/r/k3F9qL2m`)
   })
 
