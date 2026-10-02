@@ -18,10 +18,13 @@ export const TONS_ECRITURE: Record<TypeEcriture, TonStatut> = {
   CORRECTION: 'info',
 }
 
-/** « Vente à crédit, n°42, T4 », « Règlement, espèces ». */
+/** « Vente à crédit, n°42, T4 », « Règlement, espèces », « Règlement, Mobile Money, 8KQ21 ». */
 export function libelleEcriture(ecriture: EcritureArdoise, t: TFunction): string {
-  const type = t(`ardoise.ecritures.${ecriture.type}`)
-  return ecriture.detail === undefined ? type : `${type}, ${ecriture.detail}`
+  return [
+    t(`ardoise.ecritures.${ecriture.type}`),
+    ...(ecriture.mode === undefined ? [] : [t(`encaissement.modesEn.${ecriture.mode}`)]),
+    ...(ecriture.detail === undefined ? [] : [ecriture.detail]),
+  ].join(', ')
 }
 
 /** « Yawa T. », ou « Yawa T., validé par Afi M. » quand un gérant a validé. */

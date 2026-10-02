@@ -1062,6 +1062,28 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await capturer(page, '73-ardoises-telephone')
   await page.setViewportSize({ width: 1280, height: 800 })
 
+  // Komlan revient régler son ardoise : la gérante encaisse en espèces, depuis la caisse de la tablette.
+  await tablette.getByRole('button', { name: 'Caisse', exact: true }).click()
+  await tablette.getByRole('tab', { name: 'Ardoises' }).click()
+  await tablette
+    .getByRole('list', { name: 'Clients qui doivent' })
+    .getByRole('button', { name: /Komlan D\./ })
+    .click()
+  const reglement = tablette.getByRole('region', { name: 'Règlement de Komlan D.' })
+  await reglement.getByRole('button', { name: /^Tout : 1\s200/ }).click()
+  await reglement.getByLabel(/^Espèces reçues/).fill('2000')
+  await expect(reglement).toContainText('Monnaie à rendre : 800 F')
+  await capturer(tablette, '74-reglement-ardoise')
+  await reglement.getByRole('button', { name: /^Encaisser 1\s200\sF en espèces/ }).click()
+  await expect(
+    tablette.getByText('Règlement de 1 200 F encaissé. L’ardoise de Komlan D. est soldée.'),
+  ).toBeVisible()
+  await tablette.getByRole('tab', { name: 'Situation' }).click()
+  await expect(tablette.getByRole('region', { name: 'Règlements d’ardoise' })).toContainText(
+    'dont espèces1 200',
+  )
+  await tablette.getByRole('button', { name: 'Plan de salle' }).click()
+
   // Kossi prend la tablette laissée sur l'écran de la caisse : il arrive sur le plan, pas sur une erreur.
   await tablette.getByRole('banner').getByRole('button', { name: 'Changer d’utilisateur' }).click()
   await tablette.getByRole('button', { name: /Kossi A\./ }).click()
@@ -1081,7 +1103,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await expect(ventes).toContainText('Ardoise1 200')
   await expect(ventes).toContainText('Ventes nettes14 700 F')
   const especes = tablette.getByRole('region', { name: 'Espèces dans le tiroir' })
-  await expect(especes).toContainText('Attendu22 500 F')
+  await expect(especes).toContainText('Attendu23 700 F')
   await tablette.getByRole('button', { name: /Mouvement de caisse/ }).click()
   const mouvement = tablette.getByRole('dialog', { name: 'Mouvement de caisse' })
   await mouvement.getByRole('radio', { name: /Retrait/ }).click()
@@ -1090,7 +1112,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await capturer(tablette, '47-mouvement-de-caisse')
   await mouvement.getByRole('button', { name: /^Sortir 10\s000\sF du tiroir/ }).click()
   await expect(ventes).toContainText('RetraitVers le coffre')
-  await expect(especes).toContainText('Attendu12 500 F')
+  await expect(especes).toContainText('Attendu13 700 F')
   await capturer(tablette, '48-caisse-de-la-tablette')
   await tablette.setViewportSize({ width: 390, height: 844 })
   await capturer(tablette, '48-caisse-de-la-tablette-telephone')
@@ -1100,7 +1122,9 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await expect(tablette.getByText(/Attendu/)).toHaveCount(0)
   await tablette.getByRole('textbox', { name: /^Nombre de billets de 10\s000\sF$/ }).fill('1')
   await tablette.getByRole('button', { name: /^Un de plus : 2\s000\sF$/ }).click()
-  await expect(tablette.getByRole('status', { name: 'Espèces comptées' })).toContainText('12 000 F')
+  await tablette.getByRole('button', { name: /^Un de plus : 1\s000\sF$/ }).click()
+  await tablette.getByRole('button', { name: /^Un de plus : 200\sF$/ }).click()
+  await expect(tablette.getByRole('status', { name: 'Espèces comptées' })).toContainText('13 200 F')
   await capturer(tablette, '49-cloture-comptage')
   await tablette.setViewportSize({ width: 390, height: 844 })
   await capturer(tablette, '49-cloture-comptage-telephone')
@@ -1121,6 +1145,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await expect(z).toContainText('Remboursements−4 500')
   await expect(z).toContainText('dont carte4 500')
   await expect(z).toContainText('dont ardoise1 200')
+  await expect(z).toContainText('Règlements d’ardoise1 200')
   await expect(z).toContainText('Ventes nettes14 700')
   await capturer(tablette, '51-rapport-z')
   await tablette.setViewportSize({ width: 390, height: 844 })

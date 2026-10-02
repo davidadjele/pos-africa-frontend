@@ -18,6 +18,7 @@ function ardoisesServies() {
       HttpResponse.json({ elements: [BE_KPOTA], page: 0, taille: 100, total: 1 }),
     ),
     http.get(`${API}/stock/a-traiter`, () => HttpResponse.json({ nombre: 0 })),
+    http.get(`${API}/ardoises/a-relancer`, () => HttpResponse.json({ nombre: 1 })),
     http.get(`${API}/etablissements/:id/clients`, () => HttpResponse.json(ARDOISES)),
     http.get(`${API}/etablissements/:id/clients/:client`, () => HttpResponse.json(FICHE_KOMLAN)),
     http.post(`${API}/etablissements/:id/clients`, async ({ request }) => {

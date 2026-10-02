@@ -239,6 +239,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/ardoises/a-relancer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Combien de clients doivent depuis plus de 30 jours, dans les établissements visibles */
+        get: operations["aRelancer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/connexion": {
         parameters: {
             query?: never;
@@ -331,6 +348,27 @@ export interface paths {
         put?: never;
         /** Ouvrir une ardoise à un client depuis la caisse */
         post: operations["creer_7"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/clients/{clientId}/reglements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Encaisser le règlement d'une ardoise
+         * @description Tout ou partie de ce que doit le client, jamais plus. Les espèces entrent dans le tiroir. \
+         *     Erreurs : CAISSE_FERMEE (409), REQUETE_INVALIDE (montant au-delà de la dette).
+         */
+        post: operations["regler"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2087,6 +2125,10 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ARelancer: {
+            /** Format: int32 */
+            nombre: number;
+        };
         AffectationEmploye: {
             /** Format: uuid */
             etablissementId?: string;
@@ -2214,6 +2256,8 @@ export interface components {
             telephone?: string;
         };
         ClientEnCaisse: {
+            /** Format: date-time */
+            detteDepuis?: string;
             /** Format: uuid */
             id: string;
             nom: string;
@@ -2570,6 +2614,20 @@ export interface components {
             /** @example BL 2240 */
             reference?: string;
         };
+        DemandeReglement: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            mode: "ESPECES" | "MOBILE_MONEY" | "CARTE" | "ARDOISE";
+            /** Format: int64 */
+            montant: number;
+            /** Format: int64 */
+            montantRecu?: number;
+            /** @example FLOOZ */
+            operateur?: string;
+            /** @example 8KQ21 */
+            reference?: string;
+        };
         DemandeRemboursement: {
             articles: components["schemas"]["DemandeArticle"][];
             detail?: string;
@@ -2749,6 +2807,8 @@ export interface components {
             id: string;
             /** Format: date-time */
             le: string;
+            /** @enum {string} */
+            mode?: "ESPECES" | "MOBILE_MONEY" | "CARTE";
             /** Format: int64 */
             montant: number;
             par: string;
@@ -2826,6 +2886,8 @@ export interface components {
             fond: number;
             /** Format: int64 */
             recues: number;
+            /** Format: int64 */
+            reglementsArdoise: number;
             /** Format: int64 */
             remboursements: number;
             /** Format: int64 */
@@ -2927,7 +2989,7 @@ export interface components {
             /** Format: date-time */
             survenuLe: string;
             /** @enum {string} */
-            type: "TAXE_CREEE" | "TAUX_TAXE_MODIFIE" | "TAXE_DESACTIVEE" | "TAXE_REACTIVEE" | "PRIX_MODIFIE" | "TAXE_PRODUIT_MODIFIEE" | "PRODUIT_DESACTIVE" | "PRODUIT_REACTIVE" | "PRIX_ETABLISSEMENT_MODIFIE" | "PRODUIT_RETIRE_ETABLISSEMENT" | "PRODUIT_PROPOSE_ETABLISSEMENT" | "RUPTURE_DECLAREE" | "RUPTURE_LEVEE" | "ROLES_MODIFIES" | "PIN_REINITIALISE" | "EMPLOYE_DESACTIVE" | "EMPLOYE_REACTIVE" | "TABLETTE_REVOQUEE" | "VALIDATION_GERANT_UTILISEE" | "LIGNE_ANNULEE" | "NOTE_ANNULEE" | "TABLE_TRANSFEREE" | "SERVEUR_CHANGE" | "REMISE_APPLIQUEE" | "ARTICLE_OFFERT" | "REMISE_RETIREE" | "CAISSE_OUVERTE" | "RETRAIT_CAISSE" | "DEPENSE_CAISSE" | "APPORT_CAISSE" | "CLOTURE_CAISSE" | "ECART_CAISSE" | "ECART_OUVERTURE_CAISSE" | "REMBOURSEMENT" | "RECEPTION_STOCK" | "PERTE_STOCK" | "ECART_INVENTAIRE" | "POLITIQUE_STOCK_MODIFIEE" | "VENTE_SANS_STOCK" | "VENTE_ARDOISE" | "PLAFOND_ARDOISE_DEPASSE" | "PLAFOND_ARDOISE_MODIFIE" | "CLIENT_ARDOISE_DESACTIVE" | "CLIENT_ARDOISE_REACTIVE";
+            type: "TAXE_CREEE" | "TAUX_TAXE_MODIFIE" | "TAXE_DESACTIVEE" | "TAXE_REACTIVEE" | "PRIX_MODIFIE" | "TAXE_PRODUIT_MODIFIEE" | "PRODUIT_DESACTIVE" | "PRODUIT_REACTIVE" | "PRIX_ETABLISSEMENT_MODIFIE" | "PRODUIT_RETIRE_ETABLISSEMENT" | "PRODUIT_PROPOSE_ETABLISSEMENT" | "RUPTURE_DECLAREE" | "RUPTURE_LEVEE" | "ROLES_MODIFIES" | "PIN_REINITIALISE" | "EMPLOYE_DESACTIVE" | "EMPLOYE_REACTIVE" | "TABLETTE_REVOQUEE" | "VALIDATION_GERANT_UTILISEE" | "LIGNE_ANNULEE" | "NOTE_ANNULEE" | "TABLE_TRANSFEREE" | "SERVEUR_CHANGE" | "REMISE_APPLIQUEE" | "ARTICLE_OFFERT" | "REMISE_RETIREE" | "CAISSE_OUVERTE" | "RETRAIT_CAISSE" | "DEPENSE_CAISSE" | "APPORT_CAISSE" | "CLOTURE_CAISSE" | "ECART_CAISSE" | "ECART_OUVERTURE_CAISSE" | "REMBOURSEMENT" | "RECEPTION_STOCK" | "PERTE_STOCK" | "ECART_INVENTAIRE" | "POLITIQUE_STOCK_MODIFIEE" | "VENTE_SANS_STOCK" | "VENTE_ARDOISE" | "REGLEMENT_ARDOISE" | "PLAFOND_ARDOISE_DEPASSE" | "PLAFOND_ARDOISE_MODIFIE" | "CLIENT_ARDOISE_DESACTIVE" | "CLIENT_ARDOISE_REACTIVE";
         };
         FicheClient: {
             client: components["schemas"]["ClientArdoise"];
@@ -3263,11 +3325,22 @@ export interface components {
             numero: number;
             /** Format: date-time */
             ouverteLe: string;
+            reglementsArdoise: components["schemas"]["ReglementsCaisse"];
             /** Format: int64 */
             remises: number;
             /** Format: int64 */
             tva: number;
             ventes: components["schemas"]["VentesCaisse"];
+        };
+        ReglementsCaisse: {
+            /** Format: int64 */
+            carte: number;
+            /** Format: int64 */
+            especes: number;
+            /** Format: int64 */
+            mobileMoney: number;
+            /** Format: int64 */
+            total: number;
         };
         RemboursementResume: {
             approuvePar?: string;
@@ -3288,6 +3361,8 @@ export interface components {
             remboursePar: string;
         };
         RemboursementsCaisse: {
+            /** Format: int64 */
+            ardoise: number;
             /** Format: int64 */
             carte: number;
             /** Format: int64 */
@@ -3417,6 +3492,7 @@ export interface components {
             /** Format: int32 */
             notesOuvertes: number;
             ouverture: components["schemas"]["OuvertureResume"];
+            reglementsArdoise: components["schemas"]["ReglementsCaisse"];
             ventes: components["schemas"]["VentesCaisse"];
         };
         StatutCode: {
@@ -3936,6 +4012,35 @@ export interface operations {
             };
         };
     };
+    aRelancer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ARelancer"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
     connecter: {
         parameters: {
             query?: never;
@@ -4106,6 +4211,41 @@ export interface operations {
         responses: {
             /** @description Created */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientEnCaisse"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    regler: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                clientId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeReglement"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

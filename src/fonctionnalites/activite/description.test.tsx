@@ -336,4 +336,18 @@ describe('description de l’activité', () => {
       ),
     ).toBe(`Sans plafond → 40${FINE}000${INSEC}F`)
   })
+
+  it('détaille un règlement d’ardoise', () => {
+    expect(
+      detailActivite(
+        evenement({
+          type: 'REGLEMENT_ARDOISE',
+          domaine: 'ARDOISE',
+          details: { montant: 10000, mode: 'ESPECES', solde: 8000 },
+        }),
+        t,
+        CONTEXTE,
+      ),
+    ).toBe(`−10${FINE}000${INSEC}F en espèces. Doit encore 8${FINE}000${INSEC}F.`)
+  })
 })

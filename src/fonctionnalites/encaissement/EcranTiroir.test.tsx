@@ -27,19 +27,22 @@ const OUVERTURE = {
   ouvertePar: 'Afi M.',
   ouverteLe: '2026-09-29T07:02:00Z',
 }
-const AUCUN_REMBOURSEMENT = { total: 0, especes: 0, mobileMoney: 0, carte: 0 }
+const AUCUN_REMBOURSEMENT = { total: 0, especes: 0, mobileMoney: 0, carte: 0, ardoise: 0 }
 const ESPECES = {
   fond: 20_000,
   recues: 10_000,
   rendues: 4300,
   remboursements: 0,
+  reglementsArdoise: 0,
   apports: 0,
   retraits: 10_000,
   depenses: 0,
   attendu: 15_700,
 }
+const AUCUN_REGLEMENT = { total: 0, especes: 0, mobileMoney: 0, carte: 0 }
 const SITUATION: SituationCaisse = {
   ouverture: OUVERTURE,
+  reglementsArdoise: AUCUN_REGLEMENT,
   ventes: {
     notes: 2,
     especes: 5700,
@@ -68,11 +71,12 @@ const Z: RapportZ = {
   ouverteLe: '2026-09-29T07:02:00Z',
   clotureeLe: '2026-09-29T23:14:00Z',
   clotureePar: 'Yawa T.',
+  reglementsArdoise: { total: 5000, especes: 5000, mobileMoney: 0, carte: 0 },
   ventes: {
     ...SITUATION.ventes,
     ardoise: 2000,
     total: 10_100,
-    remboursements: { total: 2600, especes: 1100, mobileMoney: 1500, carte: 0 },
+    remboursements: { total: 2600, especes: 1100, mobileMoney: 1500, carte: 0, ardoise: 0 },
   },
   remises: 0,
   annulations: 0,
@@ -83,6 +87,7 @@ const Z: RapportZ = {
     recues: 10_000,
     rendues: 4300,
     remboursements: 0,
+    reglementsArdoise: 0,
     apports: 0,
     retraits: 10_000,
     depenses: 0,
@@ -153,14 +158,33 @@ describe('Caisse de la tablette', () => {
     )
   })
 
+  it('montre les règlements d’ardoise à part des ventes, et leurs espèces dans le tiroir', async () => {
+    tiroirServi({
+      ...SITUATION,
+      reglementsArdoise: { total: 12_000, especes: 10_000, mobileMoney: 0, carte: 2000 },
+      especes: { ...ESPECES, reglementsArdoise: 10_000, attendu: 25_700 },
+    })
+    caisseOuverte('/caisse/tiroir', { permissions: GERANT })
+
+    const ventes = await screen.findByRole('region', { name: 'Ventes de la caisse' })
+    expect(ventes).toHaveTextContent('Total encaissé8 100 F')
+    const reglements = screen.getByRole('region', { name: 'Règlements d’ardoise' })
+    expect(reglements).toHaveTextContent('Règlements d’ardoise12 000')
+    expect(reglements).toHaveTextContent('dont espèces10 000')
+    expect(reglements).toHaveTextContent('dont carte2 000')
+    const especes = screen.getByRole('region', { name: 'Espèces dans le tiroir' })
+    expect(especes).toHaveTextContent('Règlements d’ardoise en espèces+10 000')
+    expect(especes).toHaveTextContent('Attendu25 700 F')
+  })
+
   it('déduit les remboursements des ventes et, en espèces, de l’attendu', async () => {
     tiroirServi({
       ...SITUATION,
       ventes: {
         ...SITUATION.ventes,
-        remboursements: { total: 4500, especes: 4500, mobileMoney: 0, carte: 0 },
+        remboursements: { total: 4500, especes: 4500, mobileMoney: 0, carte: 0, ardoise: 0 },
       },
-      especes: { ...ESPECES, remboursements: 4500, attendu: 11_200 },
+      especes: { ...ESPECES, remboursements: 4500, reglementsArdoise: 0, attendu: 11_200 },
     })
     caisseOuverte('/caisse/tiroir', { permissions: GERANT })
 
@@ -185,6 +209,7 @@ describe('Caisse de la tablette', () => {
     const sansEspeces: SituationCaisse = {
       ouverture: SITUATION.ouverture,
       ventes: SITUATION.ventes,
+      reglementsArdoise: AUCUN_REGLEMENT,
       mouvements: SITUATION.mouvements,
       notesOuvertes: SITUATION.notesOuvertes,
     }
@@ -284,6 +309,9 @@ describe('Caisse de la tablette', () => {
     // Une note sur l'ardoise est vendue, pas encaissée.
     expect(z).toHaveTextContent('Ventes (2 notes)10 100')
     expect(z).toHaveTextContent('dont ardoise2 000')
+    // Un règlement d'ardoise n'est pas une vente : il a sa propre section.
+    expect(within(z).getByRole('heading', { name: 'Règlements d’ardoise' })).toBeVisible()
+    expect(z).toHaveTextContent('Règlements d’ardoise5 000')
     expect(z).toHaveTextContent('Ventes nettes7 500')
     // L'attendu s'explique sur le Z lui-même : fond, espèces reçues et rendues, mouvements.
     expect(z).toHaveTextContent('Fond de caisse20 000')

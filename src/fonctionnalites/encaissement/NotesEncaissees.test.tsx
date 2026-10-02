@@ -17,6 +17,7 @@ const POULETS = '1e000000-0000-4000-8000-000000000001'
 const FLAGS = '1e000000-0000-4000-8000-000000000002'
 const FLAG_PRODUIT = 'b0000000-0000-4000-8000-000000000002'
 const SITUATION: SituationCaisse = {
+  reglementsArdoise: { total: 0, especes: 0, mobileMoney: 0, carte: 0 },
   ouverture: {
     id: 'ca155e00-0000-4000-8000-000000000001',
     fondInitial: 20_000,
@@ -30,7 +31,7 @@ const SITUATION: SituationCaisse = {
     carte: 0,
     ardoise: 0,
     total: 18_000,
-    remboursements: { total: 0, especes: 0, mobileMoney: 0, carte: 0 },
+    remboursements: { total: 0, especes: 0, mobileMoney: 0, carte: 0, ardoise: 0 },
   },
   mouvements: [],
   notesOuvertes: 0,
@@ -108,9 +109,9 @@ const REMBOURSEE: EtatRemboursement = {
   ],
 }
 
-function notesServies() {
+function notesServies(initial: EtatRemboursement = A_REMBOURSER) {
   const recus: DemandeRemboursement[] = []
-  let etat = A_REMBOURSER
+  let etat = initial
   serveurMsw.use(
     http.get(`${API}/caisse/situation`, () => HttpResponse.json(SITUATION)),
     http.get(`${API}/caisse/ouverture`, () =>
@@ -237,5 +238,19 @@ describe('Notes encaissées', () => {
 
     await screen.findByRole('dialog', { name: /^Rembourser 1\s200\sF/ })
     expect(recus[0]).toMatchObject({ motif: 'ARTICLE_NON_CONFORME', retourEnStock: true })
+  })
+
+  it('rembourse une vente sur l’ardoise en diminuant ce que doit le client', async () => {
+    notesServies({ ...A_REMBOURSER, modes: [{ mode: 'ARDOISE', paye: 13_500, rembourse: 0 }] })
+    caisseOuverte('/caisse/tiroir', { permissions: CAISSIER })
+
+    await userEvent.click(await screen.findByRole('tab', { name: 'Notes encaissées' }))
+    await userEvent.click(await screen.findByRole('button', { name: /n°42, T4/ }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Rembourser' }))
+
+    const modes = screen.getByRole('radiogroup', { name: 'Rendre l’argent en' })
+    const ardoise = within(modes).getByRole('radio', { name: /Ardoise/ })
+    expect(ardoise).toBeChecked()
+    expect(ardoise).toHaveTextContent('Diminue ce que doit le client')
   })
 })

@@ -20,6 +20,7 @@ import { useSession, type Permission } from '../../partage/auth/useSession'
 import { nomPays } from '../../partage/referentiel/pays'
 import { AlerteErreur } from '../../partage/ui/Alerte'
 import { BarreHaute } from '../../partage/ui/BarreHaute'
+import { requeteARelancer } from '../../fonctionnalites/ardoise/requetes'
 import { requeteStockATraiter } from '../../fonctionnalites/stock/requetes'
 import { MenuCompte } from './MenuCompte'
 
@@ -42,7 +43,7 @@ interface EntreeNavigation {
   /** Entrée masquée sans l'une de ces permissions : l'écran ne servirait qu'à afficher un refus. */
   permission?: Permission | Permission[]
   /** Nombre à côté de l'entrée : ce qui attend une action. */
-  compteur?: 'stock'
+  compteur?: 'stock' | 'ardoises'
 }
 
 // Les autres entrées (Ventes, Rapports…) arriveront avec leurs modules : pas de lien mort.
@@ -67,6 +68,7 @@ const QUOTIDIEN: EntreeNavigation[] = [
     cle: 'gestion.menu.ardoises',
     icone: NotebookPen,
     permission: 'CLIENT_CREDIT',
+    compteur: 'ardoises',
   },
 ]
 
@@ -127,7 +129,9 @@ function Entree({
 }: Readonly<Omit<EntreeNavigation, 'permission'>>) {
   const { t } = useTranslation()
   const aTraiter = useQuery({ ...requeteStockATraiter, enabled: compteur === 'stock' })
-  const nombre = compteur === 'stock' ? (aTraiter.data?.nombre ?? 0) : 0
+  const aRelancer = useQuery({ ...requeteARelancer, enabled: compteur === 'ardoises' })
+  const nombres = { stock: aTraiter.data?.nombre ?? 0, ardoises: aRelancer.data?.nombre ?? 0 }
+  const nombre = compteur === undefined ? 0 : nombres[compteur]
   return (
     <li>
       <Link

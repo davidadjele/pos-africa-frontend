@@ -54,6 +54,14 @@ function nomDe(
  * Les notes encaissées de la journée : on retrouve une note (numéro, table, client), on voit ce qui en a été
  * remboursé, et on rembourse des articles dans le mode où le client a payé.
  */
+/** Ce que fait le remboursement dans chaque mode : en espèces il sort du tiroir, sur l'ardoise il réduit la dette. */
+const AIDES_REMBOURSEMENT: Record<ModePaiement, string> = {
+  ESPECES: 'remboursement.aideEspeces',
+  MOBILE_MONEY: 'remboursement.aidePaye',
+  CARTE: 'remboursement.aidePaye',
+  ARDOISE: 'remboursement.aideArdoise',
+}
+
 export function NotesEncaissees({
   devise,
   fuseauHoraire,
@@ -333,10 +341,7 @@ function Rembourser({
   const clientRequetes = useQueryClient()
   const validation = useValidation()
   const session = useSessionCaisse()
-  // Rembourser une vente sur l'ardoise corrigera ce que doit le client : prévu avec les règlements (6b).
-  const disponibles = etat.modes.filter(
-    (candidat) => candidat.mode !== 'ARDOISE' && candidat.paye > candidat.rembourse,
-  )
+  const disponibles = etat.modes.filter((candidat) => candidat.paye > candidat.rembourse)
   const [selection, setSelection] = useState<Record<string, number>>({})
   const [mode, setMode] = useState<ModePaiement | null>(disponibles[0]?.mode ?? null)
   const [operateur, setOperateur] = useState<string | null>(
@@ -488,12 +493,9 @@ function Rembourser({
               >
                 <span className="text-corps-fort">{t(`encaissement.modes.${candidat.mode}`)}</span>
                 <span className="text-legende text-attenue">
-                  {t(
-                    candidat.mode === 'ESPECES'
-                      ? 'remboursement.aideEspeces'
-                      : 'remboursement.aidePaye',
-                    { montant: courte(candidat.paye - candidat.rembourse) },
-                  )}
+                  {t(AIDES_REMBOURSEMENT[candidat.mode], {
+                    montant: courte(candidat.paye - candidat.rembourse),
+                  })}
                 </span>
               </button>
             ))}

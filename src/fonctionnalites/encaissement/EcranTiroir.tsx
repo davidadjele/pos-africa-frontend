@@ -12,6 +12,7 @@ import type {
   EspecesCaisse,
   MouvementResume,
   RapportZ,
+  ReglementsCaisse,
   RemboursementsCaisse,
   ResultatComptage,
   SituationCaisse,
@@ -32,20 +33,14 @@ import { requeteAppareil } from '../tablette/requetes'
 import { EtapeComptage, ResultatEcart, SIGNES_ECART, sensEcart, useComptage } from './Comptage'
 import { OuvertureCaisse } from './EcranEncaissement'
 import { NotesEncaissees } from './NotesEncaissees'
-import { requeteOuvertureCaisse } from './requetes'
+import { ReglementsArdoise } from './ReglementsArdoise'
+import { requeteOuvertureCaisse, requeteSituation } from './requetes'
 
 const TYPES: TypeMouvement[] = ['RETRAIT', 'DEPENSE', 'APPORT']
 const TONS: Record<TypeMouvement, 'neutre' | 'alerte' | 'info'> = {
   RETRAIT: 'neutre',
   DEPENSE: 'alerte',
   APPORT: 'info',
-}
-
-export const requeteSituation = {
-  queryKey: ['caisse', 'situation'],
-  queryFn: ({ signal }: { signal: AbortSignal }) =>
-    appelerCaisse<SituationCaisse>('/caisse/situation', { signal }),
-  retry: false,
 }
 
 /**
@@ -107,7 +102,11 @@ function Tiroir() {
   const permissions = session?.permissions ?? []
   const situation = useQuery(requeteSituation)
   const [etape, setEtape] = useState<'situation' | 'mouvement' | 'cloture'>('situation')
-  const [vue, setVue] = useState<'situation' | 'notes'>('situation')
+  const [vue, setVue] = useState<'situation' | 'notes' | 'ardoises'>('situation')
+  // Les règlements d'ardoise s'encaissent : l'onglet suit le droit d'encaisser.
+  const vues = permissions.includes('PAIEMENT_ENCAISSER')
+    ? (['situation', 'notes', 'ardoises'] as const)
+    : (['situation', 'notes'] as const)
   const nomCaisse = appareil?.nom ?? ''
   const retour = (
     <Bouton icone={ArrowLeft} onClick={() => void naviguer({ to: '/caisse' })}>
@@ -206,7 +205,7 @@ function Tiroir() {
         </span>
       </div>
       <div role="tablist" aria-label={t('tiroir.vues.titre')} className="flex gap-2">
-        {(['situation', 'notes'] as const).map((candidat) => (
+        {vues.map((candidat) => (
           <button
             key={candidat}
             type="button"
@@ -224,9 +223,9 @@ function Tiroir() {
           </button>
         ))}
       </div>
-      {vue === 'notes' ? (
-        <NotesEncaissees devise={devise} fuseauHoraire={fuseauHoraire} />
-      ) : (
+      {vue === 'notes' && <NotesEncaissees devise={devise} fuseauHoraire={fuseauHoraire} />}
+      {vue === 'ardoises' && <ReglementsArdoise devise={devise} />}
+      {vue === 'situation' && (
         <div className="flex flex-col gap-3 lg:min-h-0 lg:flex-1 lg:flex-row">
           <section
             aria-label={t('tiroir.ventes.titre')}
@@ -259,6 +258,11 @@ function Tiroir() {
                 {courte(ventes.total - ventes.remboursements.total)}
               </span>
             </span>
+            {situation.data.reglementsArdoise.total > 0 && (
+              <section aria-label={t('tiroir.reglements.titre')} className="mt-4 flex flex-col">
+                <DetailReglements reglements={situation.data.reglementsArdoise} nombre={nombre} />
+              </section>
+            )}
             <h2 className="m-0 mt-5 text-titre-carte text-encre">{t('tiroir.mouvements.titre')}</h2>
             {mouvements.length === 0 ? (
               <p className="m-0 text-corps text-attenue">{t('tiroir.mouvements.aucun')}</p>
@@ -320,6 +324,34 @@ function Tiroir() {
   )
 }
 
+/** Les règlements d'ardoise, puis leur détail par mode : ce ne sont pas des ventes, la dette est déjà comptée. */
+function DetailReglements({
+  reglements,
+  nombre,
+}: Readonly<{ reglements: ReglementsCaisse; nombre: (valeur: number) => string }>) {
+  const { t } = useTranslation()
+  const parMode = [
+    ['ESPECES', reglements.especes],
+    ['MOBILE_MONEY', reglements.mobileMoney],
+    ['CARTE', reglements.carte],
+  ] as const
+  return (
+    <>
+      <Montant libelle={t('tiroir.reglements.titre')} valeur={nombre(reglements.total)} />
+      {parMode
+        .filter(([, montant]) => montant > 0)
+        .map(([mode, montant]) => (
+          <Montant
+            key={mode}
+            retrait
+            libelle={t('cloture.z.dontMode', { mode: t(`encaissement.modesEn.${mode}`) })}
+            valeur={nombre(montant)}
+          />
+        ))}
+    </>
+  )
+}
+
 /** « +5 000 », « −2 500 », mais « 0 » tout court. */
 function signe(prefixe: '+' | '−', valeur: number, nombre: (valeur: number) => string): string {
   return valeur === 0 ? nombre(0) : `${prefixe}${nombre(valeur)}`
@@ -351,6 +383,7 @@ function LignesRemboursements({
     ['ESPECES', remboursements.especes],
     ['MOBILE_MONEY', remboursements.mobileMoney],
     ['CARTE', remboursements.carte],
+    ['ARDOISE', remboursements.ardoise],
   ] as const
   return (
     <>
@@ -387,6 +420,12 @@ function DetailEspeces({
         <Montant
           libelle={t('tiroir.especes.remboursements')}
           valeur={signe('−', especes.remboursements, nombre)}
+        />
+      )}
+      {especes.reglementsArdoise > 0 && (
+        <Montant
+          libelle={t('tiroir.especes.reglements')}
+          valeur={signe('+', especes.reglementsArdoise, nombre)}
         />
       )}
       <Montant libelle={t('tiroir.especes.apports')} valeur={signe('+', especes.apports, nombre)} />
@@ -812,6 +851,11 @@ function RapportDeCloture({
           </span>
         </span>
       </SectionZ>
+      {rapport.reglementsArdoise.total > 0 && (
+        <SectionZ titre={t('tiroir.reglements.titre')}>
+          <DetailReglements reglements={rapport.reglementsArdoise} nombre={nombre} />
+        </SectionZ>
+      )}
       <SectionZ titre={t('cloture.z.sections.information')}>
         <Montant libelle={t('cloture.z.remises')} valeur={signe('−', rapport.remises, nombre)} />
         <Montant

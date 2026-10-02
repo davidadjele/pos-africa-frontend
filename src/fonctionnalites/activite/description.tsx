@@ -170,6 +170,13 @@ const venteArdoise: Detail = (evenement, { t, montant }) => {
       )
 }
 
+const reglementArdoise: Detail = (evenement, { t, montant }) =>
+  t('activite.reglementArdoise', {
+    montant: montant(evenement.details.montant),
+    mode: t(`encaissement.modesEn.${texte(evenement.details.mode) || 'ESPECES'}`),
+    solde: montant(evenement.details.solde),
+  })
+
 const plafondArdoise: Detail = (evenement, { t, montant }) => {
   const { avant, apres } = avantApres(evenement)
   const plafond = (valeur: unknown) =>
@@ -262,6 +269,7 @@ const DETAILS: Partial<Record<EvenementActivite['type'], Detail>> = {
   VENTE_ARDOISE: venteArdoise,
   PLAFOND_ARDOISE_DEPASSE: venteArdoise,
   PLAFOND_ARDOISE_MODIFIE: plafondArdoise,
+  REGLEMENT_ARDOISE: reglementArdoise,
   POLITIQUE_STOCK_MODIFIEE: politiqueStock,
   REMBOURSEMENT: remboursement,
   ECART_OUVERTURE_CAISSE: ouvertureEcart,
