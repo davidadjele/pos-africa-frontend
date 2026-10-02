@@ -4027,8 +4027,16 @@ export interface components {
             quantite: number;
         };
         VentesDeLHeure: {
+            /** Format: int64 */
+            ardoise: number;
+            /** Format: int64 */
+            carte: number;
+            /** Format: int64 */
+            especes: number;
             /** Format: int32 */
             heure: number;
+            /** Format: int64 */
+            mobileMoney: number;
             /** Format: int32 */
             notes: number;
             /** Format: int64 */

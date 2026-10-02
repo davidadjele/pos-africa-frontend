@@ -224,7 +224,10 @@ function Rapport({
                   <LegendeModes />
                 </>
               ) : (
-                <HistogrammeHeures heures={rapport.parHeure} />
+                <>
+                  <HistogrammeHeures heures={rapport.parHeure} />
+                  <LegendeModes />
+                </>
               )}
             </Carte>
             <ASurveiller points={points} formater={formater} />

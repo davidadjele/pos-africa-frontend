@@ -5,6 +5,7 @@ import { FOND_MODE, MODES } from './couleurs'
 import { formaterJourCourt } from './periodes'
 
 type Jour = RapportVentes['parJour'][number]
+type Repartition = Pick<Jour, 'total' | 'especes' | 'mobileMoney' | 'carte' | 'ardoise'>
 type Heure = RapportVentes['parHeure'][number]
 type EcartJour = HistoriqueCaisses['parJour'][number]
 
@@ -38,6 +39,36 @@ function milliers(valeur: number): string {
   return valeur >= 1000 ? `${String(Math.round(valeur / 1000))} k` : String(valeur)
 }
 
+/** Une barre à la hauteur de son total, découpée par mode de paiement : espèces en bas, ardoise en haut. */
+function PileModes({
+  ventes,
+  plusHaut,
+  largeur,
+}: Readonly<{ ventes: Repartition; plusHaut: number; largeur: string }>) {
+  const montants: Record<(typeof MODES)[number], number> = {
+    ESPECES: ventes.especes,
+    MOBILE_MONEY: ventes.mobileMoney,
+    CARTE: ventes.carte,
+    ARDOISE: ventes.ardoise,
+  }
+  return (
+    <span
+      className={clsx('flex w-full flex-col-reverse overflow-hidden rounded-t-petit', largeur)}
+      style={{ height: `${String((ventes.total / plusHaut) * 100)}%` }}
+    >
+      {MODES.map((mode) => (
+        <span
+          key={mode}
+          className={clsx('block w-full', FOND_MODE[mode])}
+          style={{
+            height: `${String(ventes.total === 0 ? 0 : (montants[mode] / ventes.total) * 100)}%`,
+          }}
+        />
+      ))}
+    </span>
+  )
+}
+
 /** Les ventes de chaque jour, empilées par mode de paiement ; le meilleur jour en gras. */
 export function HistogrammeJours({ jours }: Readonly<{ jours: Jour[] }>) {
   const { t } = useTranslation()
@@ -58,28 +89,7 @@ export function HistogrammeJours({ jours }: Readonly<{ jours: Jour[] }>) {
           className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1"
         >
           <span className="chiffres text-legende text-attenue">{milliers(jour.total)}</span>
-          <span
-            className="flex w-full max-w-14 flex-col-reverse overflow-hidden rounded-t-petit"
-            style={{ height: `${String((jour.total / plusHaut) * 100)}%` }}
-          >
-            {MODES.map((mode) => {
-              const montant = {
-                ESPECES: jour.especes,
-                MOBILE_MONEY: jour.mobileMoney,
-                CARTE: jour.carte,
-                ARDOISE: jour.ardoise,
-              }[mode]
-              return (
-                <span
-                  key={mode}
-                  className={clsx('block w-full', FOND_MODE[mode])}
-                  style={{
-                    height: `${String(jour.total === 0 ? 0 : (montant / jour.total) * 100)}%`,
-                  }}
-                />
-              )
-            })}
-          </span>
+          <PileModes ventes={jour} plusHaut={plusHaut} largeur="max-w-14" />
           <span
             className={clsx(
               'truncate text-legende',
@@ -96,7 +106,7 @@ export function HistogrammeJours({ jours }: Readonly<{ jours: Jour[] }>) {
   )
 }
 
-/** L'affluence : le chiffre d'affaires de chaque heure où l'on a encaissé. */
+/** L'affluence : le chiffre d'affaires de chaque heure où l'on a encaissé, par mode comme les jours. */
 export function HistogrammeHeures({ heures }: Readonly<{ heures: Heure[] }>) {
   const { t } = useTranslation()
   const plusHaut = Math.max(1, ...heures.map((heure) => heure.total))
@@ -112,10 +122,7 @@ export function HistogrammeHeures({ heures }: Readonly<{ heures: Heure[] }>) {
           className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1"
         >
           <span className="chiffres text-legende text-attenue">{milliers(heure.total)}</span>
-          <span
-            className="block w-full max-w-10 rounded-t-petit bg-graphique-carte"
-            style={{ height: `${String((heure.total / plusHaut) * 100)}%` }}
-          />
+          <PileModes ventes={heure} plusHaut={plusHaut} largeur="max-w-10" />
           <span className="chiffres text-legende text-attenue">{`${String(heure.heure)} h`}</span>
         </li>
       ))}

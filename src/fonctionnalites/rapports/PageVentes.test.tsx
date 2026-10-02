@@ -96,6 +96,16 @@ describe('PageVentes', () => {
     expect(screen.getByRole('table', { name: 'Par produit' })).toHaveTextContent(
       /Grillades58261\s000/,
     )
+
+    // Par heure, les barres s'empilent par mode comme par jour : une seule couleur ferait croire à de la carte.
+    await userEvent.click(screen.getByRole('button', { name: 'Par heure' }))
+    const vingtHeures = screen.getByRole('listitem', { name: /^20 h : 452000/ })
+    for (const fond of ['especes', 'mobile-money', 'carte', 'ardoise']) {
+      expect(vingtHeures.querySelector(`.bg-graphique-${fond}`)).not.toBeNull()
+    }
+    expect(
+      screen.getByRole('list', { name: 'Chiffre d’affaires par heure' }).nextElementSibling,
+    ).toHaveTextContent(/Espèces.*Mobile Money.*Carte.*Ardoise/)
   })
 
   it('sans le rapport financier, ne parle pas des écarts de caisse', async () => {

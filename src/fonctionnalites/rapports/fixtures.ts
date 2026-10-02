@@ -52,8 +52,24 @@ export const RAPPORT: RapportVentes = {
     }
   }),
   parHeure: [
-    { heure: 12, notes: 40, total: 128_000 },
-    { heure: 20, notes: 120, total: 452_000 },
+    {
+      heure: 12,
+      notes: 40,
+      total: 128_000,
+      especes: 98_000,
+      mobileMoney: 30_000,
+      carte: 0,
+      ardoise: 0,
+    },
+    {
+      heure: 20,
+      notes: 120,
+      total: 452_000,
+      especes: 250_000,
+      mobileMoney: 150_000,
+      carte: 40_000,
+      ardoise: 12_000,
+    },
   ],
   parMode: [
     { mode: 'ESPECES', montant: 702_500, operateurs: [] },
