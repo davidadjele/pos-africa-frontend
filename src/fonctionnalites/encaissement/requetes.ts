@@ -5,6 +5,7 @@ import type {
   EtatEncaissement,
   EtatRemboursement,
   NoteEncaissee,
+  RecuCaisse,
   SituationCaisse,
 } from '../../partage/api/contrat'
 
@@ -42,4 +43,13 @@ export const requeteSituation = {
   queryFn: ({ signal }: { signal: AbortSignal }) =>
     appelerCaisse<SituationCaisse>('/caisse/situation', { signal }),
   retry: false,
+}
+
+/** Le reçu d'une note encaissée. */
+export function requeteRecu(commandeId: string) {
+  return queryOptions({
+    queryKey: ['caisse', 'recu', commandeId],
+    queryFn: ({ signal }) =>
+      appelerCaisse<RecuCaisse>(`/caisse/commandes/${commandeId}/recu`, { signal }),
+  })
 }

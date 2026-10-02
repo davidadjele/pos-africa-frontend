@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { API, caisseOuverte } from '../../../tests/application'
 import {
   FLAG,
@@ -13,6 +13,7 @@ import {
 } from '../../../tests/commandes'
 import { serveurMsw } from '../../../tests/serveurMsw'
 import { KOMLAN_EN_CAISSE, YAO_EN_CAISSE } from '../ardoise/fixtures'
+import { RECU } from './fixturesRecu'
 import type {
   ClientEnCaisse,
   DemandeClient,
@@ -21,6 +22,7 @@ import type {
   DemandePartage,
   EtatCaisse,
   EtatEncaissement,
+  RecuCaisse,
 } from '../../partage/api/contrat'
 
 const CAISSIER = ['COMMANDE_CREER', 'PAIEMENT_ENCAISSER', 'CAISSE_OUVRIR']
@@ -84,6 +86,7 @@ function encaissementServi(
   caisse: EtatCaisse = CAISSE_OUVERTE,
   permissions = CAISSIER,
   etat: EtatEncaissement = A_PAYER,
+  recu: RecuCaisse = RECU,
 ) {
   serveurMsw.use(
     http.get(`${API}/caisse/commandes/${NOTE_T4.id}`, () => HttpResponse.json(NOTE_T4)),
@@ -91,6 +94,7 @@ function encaissementServi(
     http.get(`${API}/caisse/ouverture`, () => HttpResponse.json(caisse)),
     http.get(`${API}/caisse/carte`, () => HttpResponse.json([FLAG, POULET])),
     http.get(`${API}/caisse/plan`, () => HttpResponse.json(PLAN)),
+    http.get(`${API}/caisse/commandes/${NOTE_T4.id}/recu`, () => HttpResponse.json(recu)),
   )
   caisseOuverte(`/caisse/notes/${NOTE_T4.id}/encaisser`, { permissions })
 }
@@ -195,7 +199,7 @@ describe('EcranEncaissement', () => {
     ])
     expect(recus[0]?.id).not.toBe(recus[1]?.id)
 
-    await userEvent.click(screen.getByRole('button', { name: 'Retour au plan de salle' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Sans reçu' }))
     expect(await screen.findByRole('list', { name: 'Tables' })).toBeVisible()
   })
 
@@ -531,5 +535,77 @@ describe('Encaisser sur l’ardoise', () => {
 
     expect(await screen.findByRole('region', { name: 'Ardoise de Akossiwa M.' })).toBeVisible()
     expect(crees).toEqual([{ nom: 'Akossiwa M.' }])
+  })
+})
+
+describe('Reçu de fin d’encaissement', () => {
+  const PAYEE: EtatEncaissement = { ...A_PAYER, paye: 10_200, reste: 0, payee: true }
+
+  function payerToutEnCarte(recu: RecuCaisse = RECU) {
+    encaissementServi(CAISSE_OUVERTE, CAISSIER, A_PAYER, recu)
+    paiements(PAYEE)
+    const impressions: string[] = []
+    serveurMsw.use(
+      http.post(`${API}/caisse/commandes/${NOTE_T4.id}/recu/impressions`, () => {
+        impressions.push('impression')
+        return HttpResponse.json({ ...recu, duplicata: impressions.length > 1 })
+      }),
+    )
+    return impressions
+  }
+
+  async function encaisser() {
+    await userEvent.click(await screen.findByRole('radio', { name: /Carte/ }))
+    await userEvent.click(screen.getByRole('button', { name: /^Valider 10\s200\sF en carte/ }))
+  }
+
+  it('montre le reçu numéroté et l’imprime à la demande', async () => {
+    const imprimer = vi.spyOn(window, 'print').mockImplementation(() => undefined)
+    const impressions = payerToutEnCarte()
+
+    await encaisser()
+
+    expect(await screen.findByRole('heading', { name: 'Reçu n° BE-000127' })).toBeVisible()
+    const ticket = screen.getByRole('article', { name: 'Reçu BE-000127' })
+    expect(ticket).toHaveTextContent('Maquis Chez Tanti')
+    expect(ticket).toHaveTextContent('NIF 1000123456')
+    expect(ticket).toHaveTextContent(/2× Poulet braisé9\s000/)
+    expect(ticket).toHaveTextContent(/TOTAL10\s200\sF/)
+    expect(ticket).toHaveTextContent(/dont TVA 18\s%1\s556/)
+    expect(ticket).toHaveTextContent('Flooz (Moov Africa), réf. 7F3K29')
+    expect(ticket).toHaveTextContent(/reçu 10\s000, rendu 4\s800/)
+    expect(ticket).toHaveTextContent('Merci et à bientôt !')
+    expect(imprimer).not.toHaveBeenCalled()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Imprimer le reçu' }))
+
+    await vi.waitFor(() => {
+      expect(imprimer).toHaveBeenCalledOnce()
+    })
+    expect(impressions).toHaveLength(1)
+    imprimer.mockRestore()
+  })
+
+  it('imprime d’office quand l’établissement le demande', async () => {
+    const imprimer = vi.spyOn(window, 'print').mockImplementation(() => undefined)
+    const impressions = payerToutEnCarte({ ...RECU, impressionAuto: true })
+
+    await encaisser()
+
+    await vi.waitFor(() => {
+      expect(imprimer).toHaveBeenCalledOnce()
+    })
+    expect(impressions).toHaveLength(1)
+    imprimer.mockRestore()
+  })
+
+  it('repart au plan sans reçu', async () => {
+    const impressions = payerToutEnCarte()
+
+    await encaisser()
+    await userEvent.click(await screen.findByRole('button', { name: 'Sans reçu' }))
+
+    expect(await screen.findByRole('list', { name: 'Tables' })).toBeVisible()
+    expect(impressions).toHaveLength(0)
   })
 })

@@ -14,9 +14,9 @@ export function taxeIncluse(prixTtc: number, tauxPointsDeBase: number): number {
 /** 1 800 points de base : « 18 % » ; 1 925 : « 19,25 % ». */
 export function formaterTaux(pointsDeBase: number): string {
   const entier = Math.trunc(pointsDeBase / 100)
-  const decimales = String(pointsDeBase % 100)
-    .padStart(2, '0')
-    .replace(/0+$/, '')
+  const reste = pointsDeBase % 100
+  let decimales = String(reste).padStart(2, '0')
+  if (reste % 10 === 0) decimales = reste === 0 ? '' : String(reste / 10)
   const virgule = decimales === '' ? '' : ',' + decimales
   return `${String(entier)}${virgule}${ESPACE_INSECABLE}%`
 }

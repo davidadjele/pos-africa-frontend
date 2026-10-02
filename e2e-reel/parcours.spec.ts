@@ -12,6 +12,24 @@ const AFI = { telephone: '90 44 55 66', motDePasse: 'Afi-Bekpota-26' }
 const DOSSIER_CAPTURES = process.env.DOSSIER_CAPTURES ?? 'test-results/captures-1a'
 mkdirSync(DOSSIER_CAPTURES, { recursive: true })
 
+/** Remplace la boîte d'impression du navigateur, qui bloquerait le parcours, par un simple compteur. */
+async function simulerImpression(page: Page) {
+  await page.evaluate(() => {
+    const fenetre = globalThis as typeof globalThis & { impressions?: number }
+    fenetre.impressions = 0
+    fenetre.print = () => {
+      fenetre.impressions = (fenetre.impressions ?? 0) + 1
+      fenetre.dispatchEvent(new Event('afterprint'))
+    }
+  })
+}
+
+async function impressions(page: Page): Promise<number> {
+  return page.evaluate(
+    () => (globalThis as typeof globalThis & { impressions?: number }).impressions ?? 0,
+  )
+}
+
 async function capturer(page: Page, nom: string) {
   // Transitions terminées : un bouton qui vient de s'activer apparaît avec sa couleur finale.
   await page.screenshot({
@@ -851,7 +869,15 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await capturer(tablette, '42-encaisser-especes')
   await tablette.getByRole('button', { name: /^Valider 2\s500\sF en espèces/ }).click()
   await expect(tablette.getByRole('heading', { name: 'n°3 est encaissée' })).toBeVisible()
+  // Le reçu est numéroté dès l'encaissement ; on l'imprime, sans ouvrir la boîte d'impression du navigateur.
+  await expect(tablette.getByRole('heading', { name: /^Reçu n° / })).toBeVisible()
   await capturer(tablette, '43-note-encaissee')
+  await tablette.setViewportSize({ width: 390, height: 844 })
+  await capturer(tablette, '43-note-encaissee-telephone')
+  await tablette.setViewportSize({ width: 1280, height: 800 })
+  await simulerImpression(tablette)
+  await tablette.getByRole('button', { name: 'Imprimer le reçu' }).click()
+  await expect.poll(() => impressions(tablette)).toBe(1)
   await tablette.getByRole('button', { name: 'Retour au plan de salle' }).click()
   await expect(resume).toContainText('0 note ouverte')
 
@@ -935,7 +961,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await tablette.setViewportSize({ width: 1280, height: 800 })
   await tablette.getByRole('button', { name: /^Valider 4\s500\sF en Mobile Money/ }).click()
   await expect(tablette.getByRole('heading', { name: 'T6 est libre' })).toBeVisible()
-  await tablette.getByRole('button', { name: 'Retour au plan de salle' }).click()
+  await tablette.getByRole('button', { name: 'Sans reçu' }).click()
 
   // Un poulet de T6 n'était pas bon : la gérante le rembourse, sur la carte qui l'a payé.
   await tablette.getByRole('button', { name: 'Caisse', exact: true }).click()
@@ -946,6 +972,9 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     .click()
   await expect(tablette.getByRole('button', { name: 'Rembourser' })).toBeVisible()
   await capturer(tablette, '57-notes-encaissees')
+  // Le client revient chercher son reçu : la réimpression est un duplicata, comptée côté serveur.
+  await tablette.getByRole('button', { name: 'Réimprimer le reçu' }).click()
+  await expect.poll(() => impressions(tablette)).toBe(2)
   await tablette.getByRole('button', { name: 'Rembourser' }).click()
   await tablette
     .getByRole('list', { name: 'Articles à rembourser' })
@@ -1044,7 +1073,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     .getByRole('button', { name: /^Dépasser le plafond : 1\s200\sF sur l’ardoise de Komlan D\./ })
     .click()
   await expect(tablette.getByRole('heading', { name: /est encaissée/ })).toBeVisible()
-  await tablette.getByRole('button', { name: 'Retour au plan de salle' }).click()
+  await tablette.getByRole('button', { name: 'Sans reçu' }).click()
 
   await page.getByRole('button', { name: /Tous les clients/ }).click()
   await page.getByRole('link', { name: 'Komlan D.' }).click()

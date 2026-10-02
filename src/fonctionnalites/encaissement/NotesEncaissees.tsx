@@ -13,6 +13,7 @@ import type {
   NoteEncaissee,
   OperateurMobileMoney,
   PartRemboursement,
+  RecuCaisse,
 } from '../../partage/api/contrat'
 import { formaterHeure } from '../../partage/dates/formaterDate'
 import { formaterMontant, type Devise } from '../../partage/montants/formaterMontant'
@@ -29,6 +30,8 @@ import { ChoixRetourStock } from '../commande/DialoguesLigne'
 import { requeteStockCaisse, stockDuProduit } from '../commande/requetes'
 import { ChoixArticles, ChoixOperateur } from './ChoixArticles'
 import { ORDRE_REMBOURSEMENT, repartirRemboursement } from './repartition'
+import { TicketRecu } from './TicketRecu'
+import { useImpression } from '../../partage/impression/useImpression'
 import { requeteNotesEncaissees, requeteOuvertureCaisse, requeteRemboursement } from './requetes'
 
 const MOTIFS: MotifRemboursement[] = [
@@ -235,8 +238,36 @@ function DetailNote({
   const { t } = useTranslation()
   const etat = useQuery(requeteRemboursement(commandeId))
   const { data: caisse } = useQuery(requeteOuvertureCaisse)
+  const { imprimer, zone } = useImpression()
+  const [impression, setImpression] = useState<{ enCours: boolean; erreur: unknown }>({
+    enCours: false,
+    erreur: null,
+  })
   const nombre = (valeur: number) =>
     formaterMontant({ unitesMineures: valeur, devise }, { forme: 'nombre' })
+
+  async function reimprimer() {
+    setImpression({ enCours: true, erreur: null })
+    try {
+      const recu = await appelerCaisse<RecuCaisse>(
+        `/caisse/commandes/${commandeId}/recu/impressions`,
+        {
+          methode: 'POST',
+        },
+      )
+      imprimer(
+        <TicketRecu
+          recu={recu}
+          operateurs={caisse?.operateurs ?? []}
+          devise={devise}
+          fuseauHoraire={fuseauHoraire}
+        />,
+      )
+      setImpression({ enCours: false, erreur: null })
+    } catch (echec) {
+      setImpression({ enCours: false, erreur: echec })
+    }
+  }
 
   if (etat.isPending) return <Chargement texte={t('remboursement.chargementNote')} />
   if (etat.isError) return <AlerteErreur erreur={etat.error} />
@@ -302,6 +333,15 @@ function DetailNote({
         </ul>
       )}
       <span className="mt-auto pt-4" />
+      {impression.erreur !== null && <AlerteErreur erreur={impression.erreur} />}
+      <Bouton
+        className="min-h-cible-caisse"
+        enCours={impression.enCours}
+        onClick={() => void reimprimer()}
+      >
+        {t('recu.reimprimer')}
+      </Bouton>
+      {zone}
       {note.remboursable && resteARembourser ? (
         <Bouton className="min-h-cible-caisse" onClick={surRembourser}>
           {t('remboursement.rembourser')}

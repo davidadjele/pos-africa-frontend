@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Navigate, useNavigate } from '@tanstack/react-router'
 import { clsx } from 'clsx'
 import { ArrowLeft, Delete, RotateCw } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appelerCaisse } from '../../partage/api/appelerCaisse'
 import { ErreurApi } from '../../partage/api/ErreurApi'
@@ -18,6 +18,7 @@ import type {
   ModePaiement,
   OperateurMobileMoney,
   PaiementResume,
+  RecuCaisse,
 } from '../../partage/api/contrat'
 import { formaterHeure } from '../../partage/dates/formaterDate'
 import { formaterMontant, symboleDe, type Devise } from '../../partage/montants/formaterMontant'
@@ -37,7 +38,9 @@ import { requeteAppareil } from '../tablette/requetes'
 import { ChoixArticles, ChoixOperateur } from './ChoixArticles'
 import { ChoixClientArdoise, depassementPlafond } from './ChoixClientArdoise'
 import { EtapeComptage, ResultatEcart, useComptage } from './Comptage'
-import { requeteEncaissement, requeteOuvertureCaisse } from './requetes'
+import { requeteEncaissement, requeteOuvertureCaisse, requeteRecu } from './requetes'
+import { TicketRecu } from './TicketRecu'
+import { useImpression } from '../../partage/impression/useImpression'
 
 const MODES: ModePaiement[] = ['ESPECES', 'MOBILE_MONEY', 'CARTE', 'ARDOISE']
 /** Billets courants : les montants rapides arrondissent au billet supérieur. */
@@ -103,7 +106,15 @@ function Encaissement({ commandeId }: Readonly<{ commandeId: string }>) {
     caisse.data.dernierFond === undefined ? {} : { dernierFond: caisse.data.dernierFond }
 
   if (termine !== null) {
-    return <FinEncaissement etat={termine} note={note.data} devise={devise} />
+    return (
+      <FinEncaissement
+        etat={termine}
+        note={note.data}
+        devise={devise}
+        fuseauHoraire={fuseauHoraire}
+        operateurs={caisse.data.operateurs}
+      />
+    )
   }
 
   return (
@@ -1011,41 +1022,128 @@ function FinEncaissement({
   etat,
   note,
   devise,
-}: Readonly<{ etat: EtatEncaissement; note: CommandeDetail; devise: Devise }>) {
+  fuseauHoraire,
+  operateurs,
+}: Readonly<{
+  etat: EtatEncaissement
+  note: CommandeDetail
+  devise: Devise
+  fuseauHoraire: string
+  operateurs: OperateurMobileMoney[]
+}>) {
   const { t } = useTranslation()
   const naviguer = useNavigate()
+  const recu = useQuery(requeteRecu(etat.commandeId))
+  const { imprimer, zone } = useImpression()
+  const [imprime, setImprime] = useState(false)
+  const [enCours, setEnCours] = useState(false)
+  const [erreur, setErreur] = useState<unknown>(null)
+  // L'impression d'office ne part qu'une fois, même si le reçu est relu.
+  const auto = useRef(false)
   const rendu = etat.paiements.reduce((somme, paiement) => somme + paiement.monnaieRendue, 0)
   const courte = (valeur: number) =>
     formaterMontant({ unitesMineures: valeur, devise }, { forme: 'courte' })
+
+  const imprimerRecu = useCallback(async () => {
+    setEnCours(true)
+    setErreur(null)
+    try {
+      const imprimable = await appelerCaisse<RecuCaisse>(
+        `/caisse/commandes/${etat.commandeId}/recu/impressions`,
+        { methode: 'POST' },
+      )
+      imprimer(
+        <TicketRecu
+          recu={imprimable}
+          operateurs={operateurs}
+          devise={devise}
+          fuseauHoraire={fuseauHoraire}
+        />,
+      )
+      setImprime(true)
+    } catch (echec) {
+      setErreur(echec)
+    } finally {
+      setEnCours(false)
+    }
+  }, [etat.commandeId, imprimer, operateurs, devise, fuseauHoraire])
+
+  useEffect(() => {
+    if (recu.data?.impressionAuto === true && !auto.current) {
+      auto.current = true
+      void imprimerRecu()
+    }
+  }, [recu.data, imprimerRecu])
+
+  const retour = () => void naviguer({ to: '/caisse' })
   return (
-    <section className="mx-auto flex w-full max-w-[520px] flex-col items-center gap-3.5 rounded-moyen border border-trait bg-surface p-8 text-center">
-      <BadgeStatut ton="succes">{t('encaissement.fin.badge')}</BadgeStatut>
-      <h1 className="m-0 text-titre-page text-encre">
-        {note.table === undefined
-          ? t('encaissement.fin.titre', {
-              numero: t('caisse.note.numero', { numero: note.numero }),
-            })
-          : t('encaissement.fin.titreTable', { table: note.table.nom })}
-      </h1>
-      <span className="chiffres text-corps text-attenue">{courte(etat.total)}</span>
-      {rendu > 0 && (
-        <div
-          role="status"
-          aria-label={t('encaissement.rendu')}
-          className="flex w-full items-center justify-between rounded-moyen bg-succes-fond px-5 py-4 text-succes"
-        >
-          <span className="text-corps-fort">{t('encaissement.rendu')}</span>
-          <span className="chiffres text-montant-total">{courte(rendu)}</span>
-        </div>
-      )}
-      <p className="m-0 text-legende text-attenue">{t('encaissement.fin.recu')}</p>
-      <Bouton
-        variante="principal"
-        className="w-full min-h-bouton-encaisser text-titre-carte"
-        onClick={() => void naviguer({ to: '/caisse' })}
-      >
-        {t('encaissement.fin.retour')}
-      </Bouton>
-    </section>
+    <div className="mx-auto flex w-full max-w-[920px] flex-col gap-4 lg:flex-row lg:items-start">
+      <section className="flex flex-1 flex-col items-center gap-3.5 rounded-moyen border border-trait bg-surface p-8 text-center">
+        <BadgeStatut ton="succes">{t('encaissement.fin.badge')}</BadgeStatut>
+        <h1 className="m-0 text-titre-page text-encre">
+          {note.table === undefined
+            ? t('encaissement.fin.titre', {
+                numero: t('caisse.note.numero', { numero: note.numero }),
+              })
+            : t('encaissement.fin.titreTable', { table: note.table.nom })}
+        </h1>
+        <span className="chiffres text-corps text-attenue">{courte(etat.total)}</span>
+        {rendu > 0 && (
+          <div
+            role="status"
+            aria-label={t('encaissement.rendu')}
+            className="flex w-full items-center justify-between rounded-moyen bg-succes-fond px-5 py-4 text-succes"
+          >
+            <span className="text-corps-fort">{t('encaissement.rendu')}</span>
+            <span className="chiffres text-montant-total">{courte(rendu)}</span>
+          </div>
+        )}
+        {recu.data !== undefined && (
+          <h2 className="m-0 mt-2 text-titre-carte text-encre">
+            {t('recu.numeroLong', { numero: recu.data.numero })}
+          </h2>
+        )}
+        {erreur !== null && <AlerteErreur erreur={erreur} />}
+        {recu.isError && <AlerteErreur erreur={recu.error} />}
+        {imprime ? (
+          <Bouton
+            variante="principal"
+            className="w-full min-h-bouton-encaisser text-titre-carte"
+            onClick={retour}
+          >
+            {t('encaissement.fin.retour')}
+          </Bouton>
+        ) : (
+          <div className="grid w-full gap-2 sm:grid-cols-2">
+            <Bouton
+              variante="principal"
+              className="min-h-bouton-encaisser text-titre-carte"
+              disabled={recu.data === undefined}
+              enCours={enCours}
+              onClick={() => void imprimerRecu()}
+            >
+              {t('recu.imprimer')}
+            </Bouton>
+            <Bouton className="min-h-bouton-encaisser text-titre-carte" onClick={retour}>
+              {t('recu.sansRecu')}
+            </Bouton>
+          </div>
+        )}
+      </section>
+      <aside className="flex shrink-0 flex-col items-center gap-2">
+        {recu.isPending && <Chargement texte={t('recu.chargement')} />}
+        {recu.data !== undefined && (
+          <div className="rounded-moyen border border-trait bg-fond p-3">
+            <TicketRecu
+              recu={recu.data}
+              operateurs={operateurs}
+              devise={devise}
+              fuseauHoraire={fuseauHoraire}
+            />
+          </div>
+        )}
+      </aside>
+      {zone}
+    </div>
   )
 }

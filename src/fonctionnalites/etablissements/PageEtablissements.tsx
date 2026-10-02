@@ -1,16 +1,17 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Pencil, Plus } from 'lucide-react'
+import { Pencil, Plus, Receipt } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { EtablissementResume } from '../../partage/api/contrat'
 import { useSession } from '../../partage/auth/useSession'
-import { optionsFuseaux } from '../../partage/referentiel/pays'
+import { optionsFuseaux, PAYS_PAR_DEFAUT } from '../../partage/referentiel/pays'
 import { Alerte } from '../../partage/ui/Alerte'
 import { Bouton } from '../../partage/ui/Bouton'
 import { EtatVide } from '../../partage/ui/EtatVide'
 import { ListePaginee } from '../../partage/ui/ListePaginee'
 import { type ColonneTableau } from '../../partage/ui/Tableau'
 import { FormulaireEtablissement } from './FormulaireEtablissement'
+import { DialogueReglagesRecu } from './DialogueReglagesRecu'
 import { requeteEtablissements, TAILLE_PAGE } from './requetes'
 
 type Edition = { mode: 'creation' } | { mode: 'modification'; etablissement: EtablissementResume }
@@ -27,6 +28,7 @@ export function PageEtablissements() {
   const requete = useQuery(requeteEtablissements(page))
   const [edition, setEdition] = useState<Edition | null>(null)
   const [confirmation, setConfirmation] = useState<string | null>(null)
+  const [reglagesRecu, setReglagesRecu] = useState<EtablissementResume | null>(null)
 
   function ouvrir(nouvelle: Edition) {
     setConfirmation(null)
@@ -81,15 +83,26 @@ export function PageEtablissements() {
       cle: 'actions',
       entete: t('etablissements.colonnes.actions'),
       rendu: (e) => (
-        <Bouton
-          icone={Pencil}
-          aria-label={t('etablissements.modifierNomme', { nom: e.nom })}
-          onClick={() => {
-            ouvrir({ mode: 'modification', etablissement: e })
-          }}
-        >
-          {t('etablissements.modifier')}
-        </Bouton>
+        <span className="flex flex-wrap justify-end gap-2">
+          <Bouton
+            icone={Receipt}
+            aria-label={t('recu.reglages.titre', { nom: e.nom })}
+            onClick={() => {
+              setReglagesRecu(e)
+            }}
+          >
+            {t('recu.reglages.action')}
+          </Bouton>
+          <Bouton
+            icone={Pencil}
+            aria-label={t('etablissements.modifierNomme', { nom: e.nom })}
+            onClick={() => {
+              ouvrir({ mode: 'modification', etablissement: e })
+            }}
+          >
+            {t('etablissements.modifier')}
+          </Bouton>
+        </span>
       ),
     })
   }
@@ -151,6 +164,19 @@ export function PageEtablissements() {
         taille={TAILLE_PAGE}
         surChangerPage={setPage}
       />
+      {reglagesRecu !== null && (
+        <DialogueReglagesRecu
+          etablissement={reglagesRecu}
+          pays={moi?.entrepriseCourante?.pays ?? PAYS_PAR_DEFAUT.pays}
+          surFermer={() => {
+            setReglagesRecu(null)
+          }}
+          surEnregistre={() => {
+            setConfirmation(t('recu.reglages.fait', { nom: reglagesRecu.nom }))
+            setReglagesRecu(null)
+          }}
+        />
+      )}
     </div>
   )
 }

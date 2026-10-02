@@ -53,10 +53,18 @@ export function formaterMontant(
   const partieEntiere = chiffres.slice(0, chiffres.length - decimales)
   const partieDecimale = chiffres.slice(chiffres.length - decimales)
 
-  const entiereGroupee = partieEntiere.replace(/\B(?=(\d{3})+$)/g, ESPACE_FINE_INSECABLE)
+  const entiereGroupee = grouperParMilliers(partieEntiere)
   const signe = unitesMineures < 0 ? SIGNE_MOINS : ''
   const nombre = signe + entiereGroupee + (decimales > 0 ? `,${partieDecimale}` : '')
 
   if (forme === 'nombre') return nombre
   return nombre + ESPACE_INSECABLE + (forme === 'courte' ? symboleCourt : symbole)
+}
+
+function grouperParMilliers(chiffres: string): string {
+  const groupes: string[] = []
+  for (let fin = chiffres.length; fin > 0; fin -= 3) {
+    groupes.unshift(chiffres.slice(Math.max(0, fin - 3), fin))
+  }
+  return groupes.join(ESPACE_FINE_INSECABLE)
 }

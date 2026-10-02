@@ -14,6 +14,7 @@ import { PageProduits, type RechercheProduits } from '../fonctionnalites/catalog
 import { PageTaxes } from '../fonctionnalites/catalogue/PageTaxes'
 import { PageSalles } from '../fonctionnalites/salles/PageSalles'
 import { PageArdoises } from '../fonctionnalites/ardoise/PageArdoises'
+import { PageEntreprise } from '../fonctionnalites/etablissements/PageEntreprise'
 import { PageFicheClient } from '../fonctionnalites/ardoise/PageFicheClient'
 import { PageInventaireStock } from '../fonctionnalites/stock/PageInventaireStock'
 import { PageReceptionStock } from '../fonctionnalites/stock/PageReceptionStock'
@@ -317,6 +318,12 @@ const ficheClient = createRoute({
   },
 })
 
+const entreprise = createRoute({
+  getParentRoute: () => gestion,
+  path: '/entreprise',
+  component: PageEntreprise,
+})
+
 const taxes = createRoute({
   getParentRoute: () => gestion,
   path: '/taxes',
@@ -388,6 +395,7 @@ const arbre = racine.addChildren([
     receptionStock,
     inventaireStock,
     ardoises,
+    entreprise,
     ficheClient,
   ]),
   plateforme.addChildren([plateformeAccueil, nouvelleEntreprise]),
