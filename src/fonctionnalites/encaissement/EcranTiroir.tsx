@@ -9,12 +9,8 @@ import { ErreurApi } from '../../partage/api/ErreurApi'
 import type {
   DemandeCloture,
   DemandeMouvement,
-  EspecesCaisse,
-  MouvementResume,
   NoteNonEncaissee,
   RapportZ,
-  ReglementsCaisse,
-  RemboursementsCaisse,
   ResultatComptage,
   SituationCaisse,
   TypeMouvement,
@@ -31,19 +27,22 @@ import { Dialogue } from '../../partage/ui/Dialogue'
 import { useSessionCaisse } from '../caisse/requetes'
 import { useValidation } from '../commande/useValidation'
 import { requeteAppareil } from '../tablette/requetes'
-import { EtapeComptage, ResultatEcart, SIGNES_ECART, sensEcart, useComptage } from './Comptage'
+import { EtapeComptage, ResultatEcart, useComptage } from './Comptage'
 import { OuvertureCaisse } from './EcranEncaissement'
 import { numeroEtCanal } from '../commande/PanneauNote'
 import { NotesEncaissees } from './NotesEncaissees'
+import {
+  ContenuRapportZ,
+  DetailEspeces,
+  DetailReglements,
+  LigneMouvement,
+  LignesRemboursements,
+  Montant,
+} from './PartiesRapportZ'
 import { ReglementsArdoise } from './ReglementsArdoise'
 import { requeteOuvertureCaisse, requeteSituation } from './requetes'
 
 const TYPES: TypeMouvement[] = ['RETRAIT', 'DEPENSE', 'APPORT']
-const TONS: Record<TypeMouvement, 'neutre' | 'alerte' | 'info'> = {
-  RETRAIT: 'neutre',
-  DEPENSE: 'alerte',
-  APPORT: 'info',
-}
 
 /**
  * La caisse de la tablette pendant la journée : ce qu'elle a encaissé, ses mouvements d'espèces,
@@ -355,169 +354,6 @@ function NotesNonEncaissees({
       </ul>
       <p className="m-0 text-legende text-alerte-texte">{t('tiroir.ouvertes.phrase')}</p>
     </section>
-  )
-}
-
-/** Les règlements d'ardoise, puis leur détail par mode : ce ne sont pas des ventes, la dette est déjà comptée. */
-function DetailReglements({
-  reglements,
-  nombre,
-}: Readonly<{ reglements: ReglementsCaisse; nombre: (valeur: number) => string }>) {
-  const { t } = useTranslation()
-  const parMode = [
-    ['ESPECES', reglements.especes],
-    ['MOBILE_MONEY', reglements.mobileMoney],
-    ['CARTE', reglements.carte],
-  ] as const
-  return (
-    <>
-      <Montant libelle={t('tiroir.reglements.titre')} valeur={nombre(reglements.total)} />
-      {parMode
-        .filter(([, montant]) => montant > 0)
-        .map(([mode, montant]) => (
-          <Montant
-            key={mode}
-            retrait
-            libelle={t('cloture.z.dontMode', { mode: t(`encaissement.modesEn.${mode}`) })}
-            valeur={nombre(montant)}
-          />
-        ))}
-    </>
-  )
-}
-
-/** « +5 000 », « −2 500 », mais « 0 » tout court. */
-function signe(prefixe: '+' | '−', valeur: number, nombre: (valeur: number) => string): string {
-  return valeur === 0 ? nombre(0) : `${prefixe}${nombre(valeur)}`
-}
-
-/** Une partie du rapport Z, sous son titre : chaque partie répond à une seule question. */
-function SectionZ({ titre, children }: Readonly<{ titre: string; children: ReactNode }>) {
-  return (
-    <div className="mt-3 flex flex-col border-t border-trait pt-3">
-      <h2 className="m-0 mb-1 text-libelle font-bold uppercase tracking-wide text-attenue">
-        {titre}
-      </h2>
-      {children}
-    </div>
-  )
-}
-
-/**
- * Les remboursements, puis leur détail par mode : tous réduisent les ventes, seuls ceux en espèces sortent du
- * tiroir.
- */
-function LignesRemboursements({
-  remboursements,
-  nombre,
-}: Readonly<{ remboursements: RemboursementsCaisse; nombre: (valeur: number) => string }>) {
-  const { t } = useTranslation()
-  if (remboursements.total === 0) return null
-  const parMode = [
-    ['ESPECES', remboursements.especes],
-    ['MOBILE_MONEY', remboursements.mobileMoney],
-    ['CARTE', remboursements.carte],
-    ['ARDOISE', remboursements.ardoise],
-  ] as const
-  return (
-    <>
-      <Montant
-        libelle={t('tiroir.ventes.remboursements')}
-        valeur={signe('−', remboursements.total, nombre)}
-      />
-      {parMode
-        .filter(([, montant]) => montant > 0)
-        .map(([mode, montant]) => (
-          <Montant
-            key={mode}
-            retrait
-            libelle={t('cloture.z.dontMode', { mode: t(`encaissement.modesEn.${mode}`) })}
-            valeur={nombre(montant)}
-          />
-        ))}
-    </>
-  )
-}
-
-/** D'où vient l'attendu : le même détail sur l'écran de la caisse et sur le rapport Z. */
-function DetailEspeces({
-  especes,
-  nombre,
-}: Readonly<{ especes: EspecesCaisse; nombre: (valeur: number) => string }>) {
-  const { t } = useTranslation()
-  return (
-    <>
-      <Montant libelle={t('tiroir.especes.fond')} valeur={nombre(especes.fond)} />
-      <Montant libelle={t('tiroir.especes.recues')} valeur={signe('+', especes.recues, nombre)} />
-      <Montant libelle={t('tiroir.especes.rendues')} valeur={signe('−', especes.rendues, nombre)} />
-      {especes.remboursements > 0 && (
-        <Montant
-          libelle={t('tiroir.especes.remboursements')}
-          valeur={signe('−', especes.remboursements, nombre)}
-        />
-      )}
-      {especes.reglementsArdoise > 0 && (
-        <Montant
-          libelle={t('tiroir.especes.reglements')}
-          valeur={signe('+', especes.reglementsArdoise, nombre)}
-        />
-      )}
-      <Montant libelle={t('tiroir.especes.apports')} valeur={signe('+', especes.apports, nombre)} />
-      <Montant
-        libelle={t('tiroir.especes.retraits')}
-        valeur={signe('−', especes.retraits, nombre)}
-      />
-      <Montant
-        libelle={t('tiroir.especes.depenses')}
-        valeur={signe('−', especes.depenses, nombre)}
-      />
-    </>
-  )
-}
-
-function Montant({
-  libelle,
-  valeur,
-  retrait = false,
-}: Readonly<{ libelle: string; valeur: string; retrait?: boolean }>) {
-  return (
-    <span
-      className={clsx('flex justify-between gap-3 py-1 text-corps text-attenue', retrait && 'pl-4')}
-    >
-      <span>{libelle}</span>
-      <span className="chiffres text-encre">{valeur}</span>
-    </span>
-  )
-}
-
-function LigneMouvement({
-  mouvement,
-  devise,
-  fuseauHoraire,
-}: Readonly<{ mouvement: MouvementResume; devise: Devise; fuseauHoraire: string }>) {
-  const { t } = useTranslation()
-  const heure = formaterHeure(mouvement.effectueLe, fuseauHoraire)
-  const signe = mouvement.type === 'APPORT' ? '+' : '−'
-  return (
-    <li className="flex items-center gap-2.5 border-b border-trait py-2.5 last:border-b-0">
-      <BadgeStatut ton={TONS[mouvement.type]}>{t(`tiroir.types.${mouvement.type}`)}</BadgeStatut>
-      <span className="flex min-w-0 flex-1 flex-col">
-        <span className="text-libelle font-bold text-encre">{mouvement.motif}</span>
-        <span className="text-legende text-attenue">
-          {mouvement.approuvePar === undefined
-            ? t('tiroir.mouvements.par', { heure, nom: mouvement.effectuePar })
-            : t('tiroir.mouvements.valide', {
-                heure,
-                nom: mouvement.effectuePar,
-                validateur: mouvement.approuvePar,
-              })}
-        </span>
-      </span>
-      <span className="chiffres text-montant-ligne text-encre">
-        {signe}
-        {formaterMontant({ unitesMineures: mouvement.montant, devise }, { forme: 'nombre' })}
-      </span>
-    </li>
   )
 }
 
@@ -849,68 +685,7 @@ function RapportDeCloture({
           nom: rapport.clotureePar,
         })}
       </span>
-      <SectionZ titre={t('cloture.z.sections.ventes')}>
-        <Montant
-          libelle={t(
-            rapport.ventes.ardoise > 0 ? 'cloture.z.ventesAvecArdoise' : 'cloture.z.ventes',
-            { count: rapport.ventes.notes },
-          )}
-          valeur={nombre(rapport.ventes.total)}
-        />
-        {(
-          [
-            ['ESPECES', rapport.ventes.especes],
-            ['MOBILE_MONEY', rapport.ventes.mobileMoney],
-            ['CARTE', rapport.ventes.carte],
-            ['ARDOISE', rapport.ventes.ardoise],
-          ] as const
-        )
-          // L'ardoise n'apparaît que les jours où l'on a vendu à crédit.
-          .filter(([mode, montant]) => mode !== 'ARDOISE' || montant > 0)
-          .map(([mode, montant]) => (
-            <Montant
-              key={mode}
-              retrait
-              libelle={t('cloture.z.dontMode', { mode: t(`encaissement.modesEn.${mode}`) })}
-              valeur={nombre(montant)}
-            />
-          ))}
-        <LignesRemboursements remboursements={rapport.ventes.remboursements} nombre={nombre} />
-        <span className="mt-1 flex justify-between gap-3 border-t border-trait pt-1.5 text-corps-fort text-encre">
-          <span>{t('tiroir.ventes.nettes')}</span>
-          <span className="chiffres">
-            {nombre(rapport.ventes.total - rapport.ventes.remboursements.total)}
-          </span>
-        </span>
-      </SectionZ>
-      {rapport.reglementsArdoise.total > 0 && (
-        <SectionZ titre={t('tiroir.reglements.titre')}>
-          <DetailReglements reglements={rapport.reglementsArdoise} nombre={nombre} />
-        </SectionZ>
-      )}
-      <SectionZ titre={t('cloture.z.sections.information')}>
-        <Montant libelle={t('cloture.z.remises')} valeur={signe('−', rapport.remises, nombre)} />
-        <Montant
-          libelle={t('cloture.z.annulations', { nombre: rapport.articlesAnnules })}
-          valeur={signe('−', rapport.annulations, nombre)}
-        />
-        <Montant libelle={t('cloture.z.tva')} valeur={nombre(rapport.tva)} />
-      </SectionZ>
-      <SectionZ titre={t('cloture.z.sections.tiroir')}>
-        <DetailEspeces especes={rapport.especes} nombre={nombre} />
-        <span className="mt-1 flex justify-between gap-3 border-t border-trait pt-1.5 text-corps-fort text-encre">
-          <span>{t('cloture.z.attendu')}</span>
-          <span className="chiffres">{nombre(rapport.especes.attendu)}</span>
-        </span>
-      </SectionZ>
-      <SectionZ titre={t('cloture.z.sections.comptage')}>
-        <Montant libelle={t('cloture.z.compte')} valeur={nombre(rapport.compte)} />
-        <Montant
-          libelle={t('cloture.z.ecart')}
-          valeur={`${SIGNES_ECART[sensEcart(rapport.ecart)]}${nombre(Math.abs(rapport.ecart))}`}
-        />
-        <Montant libelle={t('cloture.z.fondLaisse')} valeur={nombre(rapport.fondLaisse)} />
-      </SectionZ>
+      <ContenuRapportZ rapport={rapport} nombre={nombre} />
       <p className="m-0 mt-2 text-legende text-attenue">{t('cloture.z.fige')}</p>
       <Bouton variante="principal" className="mt-2 min-h-cible-caisse" onClick={surTermine}>
         {t('cloture.z.terminer')}

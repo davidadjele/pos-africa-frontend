@@ -404,7 +404,9 @@
       "aTraiter_one": "{{count}} produit à traiter",
       "aTraiter_other": "{{count}} produits à traiter",
       "ardoises": "Ardoises",
-      "entreprise": "Entreprise"
+      "entreprise": "Entreprise",
+      "ventes": "Ventes",
+      "caisses": "Caisses"
     },
     "tableauDeBord": {
       "titre": "Tableau de bord",
@@ -1538,7 +1540,8 @@
         "comptage": "Comptage"
       },
       "ventesAvecArdoise_one": "Ventes ({{count}} note)",
-      "ventesAvecArdoise_other": "Ventes ({{count}} notes)"
+      "ventesAvecArdoise_other": "Ventes ({{count}} notes)",
+      "explication": "Explication de l’écart"
     },
     "comptage": "Comptage des espèces"
   },
@@ -1894,5 +1897,143 @@
     "email": "E-mail",
     "adresse": "Adresse",
     "fait": "Identité de l’entreprise enregistrée."
+  },
+  "rapports": {
+    "periode": {
+      "titre": "Période",
+      "AUJOURDHUI": "Aujourd’hui",
+      "HIER": "Hier",
+      "SEPT_JOURS": "7 derniers jours",
+      "CE_MOIS": "Ce mois",
+      "MOIS_DERNIER": "Mois dernier",
+      "DATES": "Choisir les dates",
+      "du": "du {{du}} au {{au}}",
+      "debut": "Du",
+      "fin": "Au"
+    },
+    "etablissement": "Établissement",
+    "tousEtablissements": "Tous les établissements",
+    "exporter": "Exporter (CSV)",
+    "ventes": {
+      "titre": "Ventes",
+      "phrase": "Notes encaissées, par journée de caisse : une note payée après minuit compte pour la veille.",
+      "chargement": "Calcul des ventes…",
+      "parJour": "Chiffre d’affaires par jour",
+      "parHeure": "Chiffre d’affaires par heure",
+      "jours": "Par jour",
+      "heures": "Par heure",
+      "parProduit": "Par produit",
+      "produits": "Produits",
+      "categories": "Catégories",
+      "remisesSurNotes": "Montants après remise sur l’article. Remises sur les notes : −{{montant}}, non réparties.",
+      "parMode": "Par mode de paiement",
+      "parServeur": "Par serveur",
+      "serveur": "Serveur",
+      "notes": "Notes",
+      "montant": "Montant",
+      "parEtablissement": "Par établissement",
+      "dont": "dont {{nom}}",
+      "produit": "Produit",
+      "quantite": "Qté",
+      "part": "Part",
+      "vide": {
+        "titre": "Aucune vente sur cette période",
+        "phrase": "Choisissez une autre période, ou un autre établissement."
+      }
+    },
+    "indicateurs": {
+      "titre": "Indicateurs",
+      "chiffreAffaires": "Chiffre d’affaires",
+      "avant": "{{valeur}} avant",
+      "notes": "Notes encaissées",
+      "panierMoyen": "Panier moyen",
+      "remises": "Remises et offerts",
+      "partDesVentes": "{{part}} % des ventes",
+      "remboursements": "Remboursements",
+      "notesRemboursees_one": "{{count}} note",
+      "notesRemboursees_other": "{{count}} notes"
+    },
+    "vigilance": {
+      "titre": "À surveiller",
+      "rien": "Rien à signaler sur cette période.",
+      "ecarts": {
+        "titre": "Écarts de caisse : {{montant}}",
+        "detail": "Caisses avec écart : {{avecEcart}} sur {{cloturees}}"
+      },
+      "remboursements": {
+        "titre": "Remboursements : −{{montant}}",
+        "detail": "Notes remboursées : {{notes}}"
+      },
+      "annulations": {
+        "titre": "{{articles}} articles annulés après envoi (−{{montant}})",
+        "detail": "dont {{articlesDuServeur}} sur les notes de {{serveur}}"
+      },
+      "remises": {
+        "titre": "Remises en hausse : {{part}} % des ventes",
+        "detail": "contre {{partAvant}} % la période d’avant"
+      },
+      "ardoise": {
+        "titre": "{{montant}} vendus sur l’ardoise",
+        "detail": "Clients concernés : {{clients}}"
+      }
+    },
+    "csv": {
+      "journee": "Journée",
+      "total": "Total",
+      "categorie": "Catégorie"
+    },
+    "caisses": {
+      "titre": "Caisses",
+      "phrase": "Chaque ouverture de caisse et son rapport Z, figé à la clôture.",
+      "rapport": "Rapport",
+      "enCours": "En cours",
+      "z": "Z n°{{numero}}",
+      "caisse": "Caisse",
+      "periode": "Période",
+      "ouverteLe": "Ouverte le {{jour}}, {{heure}}",
+      "de": "{{jour}}, {{ouverture}} à {{cloture}}",
+      "par": "Clôturée par",
+      "ventes": "Ventes",
+      "ecart": "Écart",
+      "voir": "Voir {{caisse}}",
+      "voirCourt": "Voir",
+      "ecartsSeulement": "Seulement les écarts",
+      "chargement": "Chargement des caisses…",
+      "synthese": "Synthèse des caisses",
+      "cloturees": "Caisses clôturées",
+      "ecarts": "Écarts cumulés",
+      "avecEcart_one": "{{count}} caisse avec écart",
+      "avecEcart_other": "{{count}} caisses avec écart",
+      "ouvertes": "Encore ouvertes",
+      "ecartsParJour": "Écarts de caisse par jour",
+      "manque": "Manque",
+      "surplus": "Surplus",
+      "juste": "Juste",
+      "aucune": "aucune clôture",
+      "vide": {
+        "titre": "Aucune caisse sur cette période",
+        "phrase": "Les caisses ouvertes depuis la tablette apparaissent ici, avec leur rapport Z."
+      },
+      "liste": "Caisses de la période",
+      "lecture": "Un écart se lit côté espèces : compté moins attendu. L’explication saisie à la clôture est dans le détail."
+    },
+    "detail": {
+      "titre": "Rapport Z n°{{numero}}, {{caisse}}",
+      "titreEnCours": "{{caisse}}, en cours",
+      "ouverte": "{{etablissement}}. Ouverte le {{jour}} à {{heure}} par {{nom}}",
+      "cloturee": "{{etablissement}}. Ouverte le {{jour}} à {{ouverture}} par {{nom}}, clôturée à {{cloture}} par {{par}}",
+      "imprimer": "Imprimer le Z",
+      "enCours": "Caisse en cours",
+      "z": "Rapport Z",
+      "ventesEnCours_one": "Encaissé jusqu’ici ({{count}} note)",
+      "ventesEnCours_other": "Encaissé jusqu’ici ({{count}} notes)",
+      "mouvements": "Mouvements de caisse",
+      "aucunMouvement": "Aucun apport, retrait ni dépense.",
+      "remboursements": "Remboursements",
+      "aucunRemboursement": "Aucun remboursement depuis cette caisse.",
+      "parA": "{{heure}}, par {{nom}}",
+      "voirVentes": "Voir les ventes de cette journée",
+      "remboursement": "{{note}}, {{motif}}"
+    }
   }
 }

@@ -404,7 +404,9 @@
       "aTraiter_one": "{{count}} product to handle",
       "aTraiter_other": "{{count}} products to handle",
       "ardoises": "Tabs",
-      "entreprise": "Company"
+      "entreprise": "Company",
+      "ventes": "Sales",
+      "caisses": "Tills"
     },
     "tableauDeBord": {
       "titre": "Dashboard",
@@ -1538,7 +1540,8 @@
         "comptage": "Count"
       },
       "ventesAvecArdoise_one": "Sales ({{count}} bill)",
-      "ventesAvecArdoise_other": "Sales ({{count}} bills)"
+      "ventesAvecArdoise_other": "Sales ({{count}} bills)",
+      "explication": "Explanation of the difference"
     },
     "comptage": "Cash count"
   },
@@ -1894,5 +1897,143 @@
     "email": "Email",
     "adresse": "Address",
     "fait": "Company details saved."
+  },
+  "rapports": {
+    "periode": {
+      "titre": "Period",
+      "AUJOURDHUI": "Today",
+      "HIER": "Yesterday",
+      "SEPT_JOURS": "Last 7 days",
+      "CE_MOIS": "This month",
+      "MOIS_DERNIER": "Last month",
+      "DATES": "Pick dates",
+      "du": "from {{du}} to {{au}}",
+      "debut": "From",
+      "fin": "To"
+    },
+    "etablissement": "Venue",
+    "tousEtablissements": "All venues",
+    "exporter": "Export (CSV)",
+    "ventes": {
+      "titre": "Sales",
+      "phrase": "Paid bills, by till day: a bill paid after midnight counts for the day before.",
+      "chargement": "Computing sales…",
+      "parJour": "Revenue per day",
+      "parHeure": "Revenue per hour",
+      "jours": "Per day",
+      "heures": "Per hour",
+      "parProduit": "By product",
+      "produits": "Products",
+      "categories": "Categories",
+      "remisesSurNotes": "Amounts after item discounts. Whole-bill discounts: −{{montant}}, not split.",
+      "parMode": "By payment method",
+      "parServeur": "By server",
+      "serveur": "Server",
+      "notes": "Bills",
+      "montant": "Amount",
+      "parEtablissement": "By venue",
+      "dont": "of which {{nom}}",
+      "produit": "Product",
+      "quantite": "Qty",
+      "part": "Share",
+      "vide": {
+        "titre": "No sales in this period",
+        "phrase": "Pick another period, or another venue."
+      }
+    },
+    "indicateurs": {
+      "titre": "Key figures",
+      "chiffreAffaires": "Revenue",
+      "avant": "{{valeur}} before",
+      "notes": "Paid bills",
+      "panierMoyen": "Average bill",
+      "remises": "Discounts and freebies",
+      "partDesVentes": "{{part}}% of sales",
+      "remboursements": "Refunds",
+      "notesRemboursees_one": "{{count}} bill",
+      "notesRemboursees_other": "{{count}} bills"
+    },
+    "vigilance": {
+      "titre": "To watch",
+      "rien": "Nothing to report for this period.",
+      "ecarts": {
+        "titre": "Till differences: {{montant}}",
+        "detail": "Tills with a difference: {{avecEcart}} of {{cloturees}}"
+      },
+      "remboursements": {
+        "titre": "Refunds: −{{montant}}",
+        "detail": "Refunded bills: {{notes}}"
+      },
+      "annulations": {
+        "titre": "{{articles}} items cancelled after sending (−{{montant}})",
+        "detail": "{{articlesDuServeur}} on {{serveur}}’s bills"
+      },
+      "remises": {
+        "titre": "Discounts rising: {{part}}% of sales",
+        "detail": "versus {{partAvant}}% the period before"
+      },
+      "ardoise": {
+        "titre": "{{montant}} sold on tab",
+        "detail": "Customers involved: {{clients}}"
+      }
+    },
+    "csv": {
+      "journee": "Day",
+      "total": "Total",
+      "categorie": "Category"
+    },
+    "caisses": {
+      "titre": "Tills",
+      "phrase": "Each till opening and its Z report, frozen at closing.",
+      "rapport": "Report",
+      "enCours": "Open",
+      "z": "Z no. {{numero}}",
+      "caisse": "Till",
+      "periode": "Period",
+      "ouverteLe": "Opened {{jour}}, {{heure}}",
+      "de": "{{jour}}, {{ouverture}} to {{cloture}}",
+      "par": "Closed by",
+      "ventes": "Sales",
+      "ecart": "Difference",
+      "voir": "View {{caisse}}",
+      "voirCourt": "View",
+      "ecartsSeulement": "Differences only",
+      "chargement": "Loading tills…",
+      "synthese": "Tills summary",
+      "cloturees": "Closed tills",
+      "ecarts": "Total difference",
+      "avecEcart_one": "{{count}} till with a difference",
+      "avecEcart_other": "{{count}} tills with a difference",
+      "ouvertes": "Still open",
+      "ecartsParJour": "Till differences per day",
+      "manque": "Short",
+      "surplus": "Over",
+      "juste": "Exact",
+      "aucune": "no closing",
+      "vide": {
+        "titre": "No till in this period",
+        "phrase": "Tills opened on the tablet show up here, with their Z report."
+      },
+      "liste": "Tills of the period",
+      "lecture": "A difference is read on cash: counted minus expected. The explanation entered at closing is in the details."
+    },
+    "detail": {
+      "titre": "Z report no. {{numero}}, {{caisse}}",
+      "titreEnCours": "{{caisse}}, open",
+      "ouverte": "{{etablissement}}. Opened {{jour}} at {{heure}} by {{nom}}",
+      "cloturee": "{{etablissement}}. Opened {{jour}} at {{ouverture}} by {{nom}}, closed at {{cloture}} by {{par}}",
+      "imprimer": "Print the Z",
+      "enCours": "Open till",
+      "z": "Z report",
+      "ventesEnCours_one": "Taken so far ({{count}} bill)",
+      "ventesEnCours_other": "Taken so far ({{count}} bills)",
+      "mouvements": "Cash movements",
+      "aucunMouvement": "No float, withdrawal or expense.",
+      "remboursements": "Refunds",
+      "aucunRemboursement": "No refund from this till.",
+      "parA": "{{heure}}, by {{nom}}",
+      "voirVentes": "See this day’s sales",
+      "remboursement": "{{note}}, {{motif}}"
+    }
   }
 }
