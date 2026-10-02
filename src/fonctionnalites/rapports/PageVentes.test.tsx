@@ -99,6 +99,10 @@ describe('PageVentes', () => {
 
     // Par heure, les barres s'empilent par mode comme par jour : une seule couleur ferait croire à de la carte.
     await userEvent.click(screen.getByRole('button', { name: 'Par heure' }))
+    const parHeure = screen.getByRole('list', { name: 'Chiffre d’affaires par heure' })
+    // De midi à 20 h sans trou : les heures creuses sont là, à 0.
+    expect(within(parHeure).getAllByRole('listitem')).toHaveLength(9)
+    expect(within(parHeure).getByRole('listitem', { name: '15 h : 0' })).toBeVisible()
     const vingtHeures = screen.getByRole('listitem', { name: /^20 h : 452000/ })
     for (const fond of ['especes', 'mobile-money', 'carte', 'ardoise']) {
       expect(vingtHeures.querySelector(`.bg-graphique-${fond}`)).not.toBeNull()

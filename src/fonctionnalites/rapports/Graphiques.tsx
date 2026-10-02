@@ -2,6 +2,7 @@ import { clsx } from 'clsx'
 import { useTranslation } from 'react-i18next'
 import type { HistoriqueCaisses, RapportVentes } from '../../partage/api/contrat'
 import { FOND_MODE, MODES } from './couleurs'
+import { heuresDeLaJournee } from './heures'
 import { formaterJourCourt } from './periodes'
 
 type Jour = RapportVentes['parJour'][number]
@@ -107,9 +108,12 @@ export function HistogrammeJours({ jours }: Readonly<{ jours: Jour[] }>) {
 }
 
 /** L'affluence : le chiffre d'affaires de chaque heure où l'on a encaissé, par mode comme les jours. */
-export function HistogrammeHeures({ heures }: Readonly<{ heures: Heure[] }>) {
+export function HistogrammeHeures({ heures: vendues }: Readonly<{ heures: Heure[] }>) {
   const { t } = useTranslation()
+  const heures = heuresDeLaJournee(vendues)
   const plusHaut = Math.max(1, ...heures.map((heure) => heure.total))
+  // Une journée entière ne tient sur un téléphone qu'avec des étiquettes réduites au chiffre.
+  const serre = heures.length > 12
   return (
     <ol
       aria-label={t('rapports.ventes.parHeure')}
@@ -121,9 +125,13 @@ export function HistogrammeHeures({ heures }: Readonly<{ heures: Heure[] }>) {
           aria-label={`${String(heure.heure)} h : ${String(heure.total)}`}
           className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-1"
         >
-          <span className="chiffres text-legende text-attenue">{milliers(heure.total)}</span>
+          <span className="chiffres text-legende text-attenue">
+            {heure.total === 0 ? '' : milliers(heure.total)}
+          </span>
           <PileModes ventes={heure} plusHaut={plusHaut} largeur="max-w-10" />
-          <span className="chiffres text-legende text-attenue">{`${String(heure.heure)} h`}</span>
+          <span className="chiffres text-legende text-attenue">
+            {serre ? String(heure.heure) : `${String(heure.heure)} h`}
+          </span>
         </li>
       ))}
     </ol>
