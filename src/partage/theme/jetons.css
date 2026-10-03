@@ -76,6 +76,23 @@
   --categorie-menthe-texte: #185445;
   --categorie-ardoise-fond: #dfe3ea;
   --categorie-ardoise-texte: #2e3a4b;
+  /* Graphiques des rapports : une couleur par mode de paiement et par catégorie, vive pour se lire d'un coup d'œil.
+     Fixes comme les statuts : une couleur désigne toujours la même chose, quelle que soit la marque. */
+  --graphique-especes: #16a34a;
+  --graphique-mobile-money: #f59e0b;
+  --graphique-carte: #2563eb;
+  --graphique-ardoise: #db2777;
+  --graphique-manque: #dc2626;
+  --graphique-surplus: #f59e0b;
+  --graphique-juste: #16a34a;
+  --graphique-ocre: #f59e0b;
+  --graphique-brique: #c2410c;
+  --graphique-feuille: #65a30d;
+  --graphique-lagune: #0ea5e9;
+  --graphique-prune: #a855f7;
+  --graphique-sable: #eab308;
+  --graphique-menthe: #14b8a6;
+  --graphique-ardoise-categorie: #64748b;
 }
 
 [data-theme='sombre'] {

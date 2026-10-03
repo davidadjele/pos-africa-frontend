@@ -40,9 +40,11 @@ export const FLAG: LigneStock = {
     quantite: 24,
     quantiteApres: 27,
     reference: 'BL 2231',
+    coutUnitaire: 700,
     par: 'Afi M.',
     le: '2026-10-01T10:15:00Z',
   },
+  coutMoyen: 650,
 }
 export const YOUKI: LigneStock = {
   produitId: 'b0000000-0000-4000-8000-000000000013',

@@ -253,6 +253,29 @@ describe('description de l’activité', () => {
     )
   })
 
+  it('dit de quel jour était la note remboursée un autre jour', () => {
+    expect(
+      detailActivite(
+        evenement({
+          type: 'REMBOURSEMENT',
+          domaine: 'CAISSE',
+          details: {
+            montant: 1200,
+            mode: 'ESPECES',
+            motif: 'ARTICLE_NON_CONFORME',
+            numero: 7,
+            journee: '2026-09-26',
+          },
+          detailsNoms: { validateurId: 'Afi M.' },
+        }),
+        t,
+        CONTEXTE,
+      ),
+    ).toBe(
+      `−1${FINE}200${INSEC}F en espèces, n°7. Motif : Article non conforme. Validé par Afi M. Note du sam. 26 sept.`,
+    )
+  })
+
   it('détaille les réceptions, pertes, écarts d’inventaire et la politique de stock', () => {
     const detail = (type: EvenementActivite['type'], details: Record<string, unknown>) =>
       detailActivite(evenement({ type, domaine: 'STOCK', details }), t, CONTEXTE)

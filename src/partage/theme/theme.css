@@ -58,6 +58,21 @@
   --color-categorie-menthe-texte: var(--categorie-menthe-texte);
   --color-categorie-ardoise-fond: var(--categorie-ardoise-fond);
   --color-categorie-ardoise-texte: var(--categorie-ardoise-texte);
+  --color-graphique-especes: var(--graphique-especes);
+  --color-graphique-mobile-money: var(--graphique-mobile-money);
+  --color-graphique-carte: var(--graphique-carte);
+  --color-graphique-ardoise: var(--graphique-ardoise);
+  --color-graphique-manque: var(--graphique-manque);
+  --color-graphique-surplus: var(--graphique-surplus);
+  --color-graphique-juste: var(--graphique-juste);
+  --color-graphique-ocre: var(--graphique-ocre);
+  --color-graphique-brique: var(--graphique-brique);
+  --color-graphique-feuille: var(--graphique-feuille);
+  --color-graphique-lagune: var(--graphique-lagune);
+  --color-graphique-prune: var(--graphique-prune);
+  --color-graphique-sable: var(--graphique-sable);
+  --color-graphique-menthe: var(--graphique-menthe);
+  --color-graphique-ardoise-categorie: var(--graphique-ardoise-categorie);
 
   --font-texte: var(--font-texte);
   --font-chiffres: var(--font-chiffres);

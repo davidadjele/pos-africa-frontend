@@ -33,6 +33,9 @@ import { PagePersonnel } from '../fonctionnalites/personnel/PagePersonnel'
 import { PageEntreprises } from '../fonctionnalites/plateforme/PageEntreprises'
 import { PageNouvelleEntreprise } from '../fonctionnalites/plateforme/PageNouvelleEntreprise'
 import { PageRecu } from '../fonctionnalites/recu/PageRecu'
+import { PageCaisses } from '../fonctionnalites/rapports/PageCaisses'
+import { PageDetailCaisse } from '../fonctionnalites/rapports/PageDetailCaisse'
+import { PageVentes } from '../fonctionnalites/rapports/PageVentes'
 import { PageEnregistrementTablette } from '../fonctionnalites/tablette/PageEnregistrementTablette'
 import { PageTablettes } from '../fonctionnalites/tablette/PageTablettes'
 import {
@@ -286,6 +289,49 @@ const inventaireStock = createRoute({
   },
 })
 
+interface RechercheVentes {
+  du?: string
+  au?: string
+  etablissement?: string
+}
+
+function lireRechercheVentes(recherche: Record<string, unknown>): RechercheVentes {
+  const journee = (valeur: unknown) =>
+    typeof valeur === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(valeur)
+  return {
+    ...(journee(recherche.du) ? { du: recherche.du as string } : {}),
+    ...(journee(recherche.au) ? { au: recherche.au as string } : {}),
+    ...(typeof recherche.etablissement === 'string'
+      ? { etablissement: recherche.etablissement }
+      : {}),
+  }
+}
+
+const ventes = createRoute({
+  getParentRoute: () => gestion,
+  path: '/ventes',
+  validateSearch: lireRechercheVentes,
+  component: function RouteVentes() {
+    const recherche = ventes.useSearch()
+    return <PageVentes key={JSON.stringify(recherche)} {...recherche} />
+  },
+})
+
+const caisses = createRoute({
+  getParentRoute: () => gestion,
+  path: '/caisses',
+  component: PageCaisses,
+})
+
+const detailCaisse = createRoute({
+  getParentRoute: () => gestion,
+  path: '/caisses/$ouvertureId',
+  component: function RouteDetailCaisse() {
+    const { ouvertureId } = detailCaisse.useParams()
+    return <PageDetailCaisse ouvertureId={ouvertureId} />
+  },
+})
+
 const ardoises = createRoute({
   getParentRoute: () => gestion,
   path: '/ardoises',
@@ -395,6 +441,9 @@ const arbre = racine.addChildren([
     receptionStock,
     inventaireStock,
     ardoises,
+    ventes,
+    caisses,
+    detailCaisse,
     entreprise,
     ficheClient,
   ]),

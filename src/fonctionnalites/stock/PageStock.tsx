@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import type { EtatStock, LigneStock, PolitiqueStock } from '../../partage/api/contrat'
 import { useSession } from '../../partage/auth/useSession'
 import { formaterDateHeure } from '../../partage/dates/formaterDate'
+import { formaterMontant, type Devise } from '../../partage/montants/formaterMontant'
 import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
 import { BadgeStatut, type TonStatut } from '../../partage/ui/BadgeStatut'
 import { BarreFiltres } from '../../partage/ui/BarreFiltres'
@@ -46,7 +47,8 @@ export function PageStock({
   const { t } = useTranslation()
   const clientRequetes = useQueryClient()
   const naviguer = useNavigate()
-  const { aLaPermission } = useSession()
+  const { aLaPermission, moi } = useSession()
+  const devise = (moi?.entrepriseCourante?.devise ?? 'XOF') as Devise
   const { etablissements, etablissement } = useEtablissementChoisi(etablissementId)
   const stock = useQuery({
     ...requeteStock(etablissement?.id ?? ''),
@@ -102,6 +104,19 @@ export function PageStock({
                 {t('stock.seuilCourt', { seuil: ligne.seuil })}
               </span>
             )}
+          </span>
+        ),
+    },
+    {
+      cle: 'coutMoyen',
+      entete: t('stock.colonnes.coutMoyen'),
+      masqueeSurTelephone: true,
+      rendu: (ligne) =>
+        ligne.coutMoyen === undefined ? (
+          <span className="text-legende text-attenue">{t('stock.coutNonRenseigne')}</span>
+        ) : (
+          <span className="chiffres text-encre">
+            {formaterMontant({ unitesMineures: ligne.coutMoyen, devise }, { forme: 'courte' })}
           </span>
         ),
     },

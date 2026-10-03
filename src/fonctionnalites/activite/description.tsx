@@ -4,6 +4,7 @@ import type { EvenementActivite } from '../../partage/api/contrat'
 import { formaterDateHeure } from '../../partage/dates/formaterDate'
 import { formaterMontant, type Devise } from '../../partage/montants/formaterMontant'
 import { formaterTaux } from '../../partage/montants/taxes'
+import { formaterJournee } from '../rapports/periodes'
 
 export interface ContexteActivite {
   devise: Devise
@@ -216,13 +217,19 @@ const remboursement: Detail = (evenement, { t, montant }) => {
       { ...valeurs, repartition },
     )
   }
-  return avecValidateur(
+  const phrase = avecValidateur(
     evenement,
     t,
     'activite.remboursement',
     'activite.remboursementValide',
     valeurs,
   )
+  // Une note d'un autre jour : l'argent est sorti aujourd'hui, la vente datait d'avant.
+  const journee = texte(evenement.details.journee)
+  if (journee === '') return phrase
+  // « Validé par Afi M. » finit déjà par un point : on n'en ajoute pas un second.
+  const fin = phrase.endsWith('.') ? ' ' : '. '
+  return `${phrase}${fin}${t('activite.noteDuJour', { jour: formaterJournee(journee) })}`
 }
 
 const ouvertureEcart: Detail = (evenement, { t, montant }) => {

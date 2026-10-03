@@ -64,36 +64,38 @@ export function TicketRecu({
         )}
         {etablissement.enTete !== undefined && <span className="mt-1">{etablissement.enTete}</span>}
       </div>
-      <Separateur />
+      <SeparateurTicket />
       <span className="font-bold">{t('recu.numero', { numero: recu.numero })}</span>
       <span>{formaterDateHeure(recu.emisLe, fuseauHoraire)}</span>
       <span>{t('recu.note', { note: recu.note })}</span>
       <span>{t('recu.servi', { serveur: recu.serveur, caissier: recu.caissier })}</span>
-      <Separateur />
+      <SeparateurTicket />
       {recu.lignes.map((ligne, rang) => (
-        <Ligne
+        <LigneTicket
           key={`${ligne.nom}-${String(rang)}`}
           gauche={`${String(ligne.quantite)}× ${ligne.nom}`}
         >
           {ligne.offert ? t('recu.offert') : nombre(ligne.montant)}
-        </Ligne>
+        </LigneTicket>
       ))}
-      {recu.remise > 0 && <Ligne gauche={t('recu.remise')}>−{nombre(recu.remise)}</Ligne>}
-      <Separateur />
-      <Ligne gauche={t('recu.total')} fort>
+      {recu.remise > 0 && (
+        <LigneTicket gauche={t('recu.remise')}>−{nombre(recu.remise)}</LigneTicket>
+      )}
+      <SeparateurTicket />
+      <LigneTicket gauche={t('recu.total')} fort>
         {formaterMontant({ unitesMineures: recu.total, devise }, { forme: 'courte' })}
-      </Ligne>
+      </LigneTicket>
       {recu.taxes.map((taxe) => (
-        <Ligne
+        <LigneTicket
           key={taxe.nom}
           gauche={t('recu.dontTaxe', {
             taxe: `${taxe.nom} ${formaterTaux(taxe.tauxPointsDeBase)}`,
           })}
         >
           {nombre(taxe.montant)}
-        </Ligne>
+        </LigneTicket>
       ))}
-      <Separateur />
+      <SeparateurTicket />
       {recu.paiements.map((paiement, rang) => (
         <Paiement
           key={`${paiement.mode}-${String(rang)}`}
@@ -102,20 +104,21 @@ export function TicketRecu({
           nombre={nombre}
         />
       ))}
-      {remboursements.length > 0 && <Separateur />}
+      {remboursements.length > 0 && <SeparateurTicket />}
       {remboursements.map((remboursement, rang) => (
-        <Ligne
+        <LigneTicket
           key={`${remboursement.le}-${String(rang)}`}
-          gauche={t('recu.rembourse', {
+          gauche={t(remboursement.avoir === undefined ? 'recu.rembourse' : 'recu.rembourseAvoir', {
             date: formaterDate(remboursement.le, fuseauHoraire),
             heure: formaterHeure(remboursement.le, fuseauHoraire),
             mode: t(`recu.rembourseEn.${remboursement.mode}`),
+            avoir: remboursement.avoir,
           })}
         >
           −{nombre(remboursement.montant)}
-        </Ligne>
+        </LigneTicket>
       ))}
-      <Separateur />
+      <SeparateurTicket />
       {etablissement.pied !== undefined && <p className="m-0 text-center">{etablissement.pied}</p>}
       {avecQr && (
         <div className="mt-2 flex flex-col items-center gap-1">
@@ -158,7 +161,7 @@ function Paiement({
       : t('recu.avecReference', { moyen, reference: paiement.reference })
   return (
     <>
-      <Ligne gauche={libelle}>{nombre(paiement.montant)}</Ligne>
+      <LigneTicket gauche={libelle}>{nombre(paiement.montant)}</LigneTicket>
       {paiement.montantRecu !== undefined && (
         <span className="pl-2">
           {t('recu.rendu', {
@@ -176,7 +179,7 @@ function Paiement({
   )
 }
 
-function Ligne({
+export function LigneTicket({
   gauche,
   fort = false,
   children,
@@ -189,6 +192,6 @@ function Ligne({
   )
 }
 
-function Separateur() {
+export function SeparateurTicket() {
   return <span aria-hidden="true" className="my-1 block border-t border-dashed border-encre" />
 }

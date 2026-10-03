@@ -2,6 +2,7 @@ import { Link, Outlet } from '@tanstack/react-router'
 import {
   Activity,
   Building2,
+  ChartColumn,
   LayoutDashboard,
   Landmark,
   LayoutGrid,
@@ -12,6 +13,7 @@ import {
   Package,
   Users,
   UtensilsCrossed,
+  Wallet,
   type LucideIcon,
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
@@ -38,6 +40,8 @@ interface EntreeNavigation {
     | '/gestion/personnel'
     | '/gestion/tablettes'
     | '/gestion/stock'
+    | '/gestion/ventes'
+    | '/gestion/caisses'
     | '/gestion/ardoises'
     | '/gestion/entreprise'
   cle: string
@@ -48,10 +52,21 @@ interface EntreeNavigation {
   compteur?: 'stock' | 'ardoises'
 }
 
-// Les autres entrées (Ventes, Rapports…) arriveront avec leurs modules : pas de lien mort.
 const QUOTIDIEN: EntreeNavigation[] = [
   { vers: '/gestion', cle: 'gestion.menu.tableauDeBord', icone: LayoutDashboard },
   { vers: '/caisse', cle: 'gestion.menu.caisse', icone: Store },
+  {
+    vers: '/gestion/ventes',
+    cle: 'gestion.menu.ventes',
+    icone: ChartColumn,
+    permission: 'RAPPORT_VENTES',
+  },
+  {
+    vers: '/gestion/caisses',
+    cle: 'gestion.menu.caisses',
+    icone: Wallet,
+    permission: 'RAPPORT_FINANCIER',
+  },
   {
     vers: '/gestion/activite',
     cle: 'gestion.menu.activite',
