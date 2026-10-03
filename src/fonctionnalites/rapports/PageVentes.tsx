@@ -258,7 +258,8 @@ function Rapport({
                         quantite: produit.quantite,
                         montant: produit.montant,
                         cout: produit.cout,
-                        montantCoutConnu: produit.montantCoutConnu,
+                        marge: produit.marge,
+                        quantiteCoutConnu: produit.quantiteCoutConnu,
                       }))
                     : rapport.parCategorie.map((categorie) => ({
                         cle: categorie.categorieId,
@@ -267,7 +268,8 @@ function Rapport({
                         quantite: categorie.quantite,
                         montant: categorie.montant,
                         cout: categorie.cout,
-                        montantCoutConnu: categorie.montantCoutConnu,
+                        marge: categorie.marge,
+                        quantiteCoutConnu: categorie.quantiteCoutConnu,
                       }))
                 }
                 total={indicateurs.chiffreAffaires}
@@ -393,7 +395,11 @@ function Indicateurs({
     },
   ]
   // La marge ne vient qu'avec le rapport financier, et ne porte que sur les articles dont le coût est connu.
-  if (indicateurs.marge !== undefined && indicateurs.coutConnu !== undefined) {
+  if (
+    indicateurs.marge !== undefined &&
+    indicateurs.cout !== undefined &&
+    indicateurs.coutConnu !== undefined
+  ) {
     tuiles.push({
       libelle: t('rapports.indicateurs.marge'),
       valeur: nombre(indicateurs.marge),
@@ -401,7 +407,7 @@ function Indicateurs({
         indicateurs.coutConnu === 0
           ? null
           : {
-              texte: `${String(Math.round((indicateurs.marge / indicateurs.coutConnu) * 100))} %`,
+              texte: `${String(tauxDeMarge(indicateurs.marge, indicateurs.cout))} %`,
               ton: 'succes',
             },
       detail: t('rapports.indicateurs.coutConnu', {
@@ -503,7 +509,8 @@ function TableauProduits({
     quantite: number
     montant: number
     cout?: number | undefined
-    montantCoutConnu?: number | undefined
+    marge?: number | undefined
+    quantiteCoutConnu?: number | undefined
   }[]
   total: number
   nombre: (valeur: number) => string
@@ -511,7 +518,7 @@ function TableauProduits({
   const { t } = useTranslation()
   const plusHaut = Math.max(1, ...lignes.map((ligne) => ligne.montant))
   // Les colonnes de marge n'apparaissent qu'avec le rapport financier, et au moins un coût connu.
-  const avecMarge = lignes.some((ligne) => ligne.montantCoutConnu !== undefined)
+  const avecMarge = lignes.some((ligne) => ligne.quantiteCoutConnu !== undefined)
   return (
     <div className="overflow-x-auto">
       <table
@@ -575,28 +582,51 @@ function TableauProduits({
   )
 }
 
-/** Coût, marge et taux d'une ligne ; « coût inconnu » quand aucune de ses ventes n'a de coût. */
+/** Marge rapportée au hors taxe des ventes dont le coût est connu, c'est-à-dire marge + coût. */
+function tauxDeMarge(marge: number, cout: number): number {
+  return marge + cout === 0 ? 0 : Math.round((marge / (marge + cout)) * 100)
+}
+
+/**
+ * Coût, marge et taux d'une ligne ; « coût inconnu » quand aucune de ses ventes n'a de coût. Quand une partie
+ * seulement en a un (ventes d'avant la saisie du coût), la marge dit sur combien d'unités elle porte.
+ */
 function CellulesMarge({
   ligne,
   nombre,
 }: Readonly<{
-  ligne: { cout?: number | undefined; montantCoutConnu?: number | undefined }
+  ligne: {
+    quantite: number
+    cout?: number | undefined
+    marge?: number | undefined
+    quantiteCoutConnu?: number | undefined
+  }
   nombre: (valeur: number) => string
 }>) {
   const { t } = useTranslation()
-  if (ligne.cout === undefined || ligne.montantCoutConnu === undefined) {
+  if (
+    ligne.cout === undefined ||
+    ligne.marge === undefined ||
+    ligne.quantiteCoutConnu === undefined
+  ) {
     return (
       <td colSpan={3} className="px-4 py-2 text-right text-legende text-attenue">
         {t('rapports.ventes.coutInconnu')}
       </td>
     )
   }
-  const marge = ligne.montantCoutConnu - ligne.cout
-  const taux = ligne.montantCoutConnu === 0 ? 0 : Math.round((marge / ligne.montantCoutConnu) * 100)
+  const taux = tauxDeMarge(ligne.marge, ligne.cout)
   return (
     <>
       <td className="chiffres px-4 py-2 text-right text-attenue">{nombre(ligne.cout)}</td>
-      <td className="chiffres px-4 py-2 text-right">{nombre(marge)}</td>
+      <td className="px-4 py-2 text-right">
+        <span className="chiffres block">{nombre(ligne.marge)}</span>
+        {ligne.quantiteCoutConnu < ligne.quantite && (
+          <span className="block text-legende text-attenue">
+            {t('rapports.ventes.surVendus', { count: ligne.quantiteCoutConnu })}
+          </span>
+        )}
+      </td>
       <td className="px-4 py-2 text-right">
         <BadgeStatut
           ton={taux >= SEUIL_BONNE_MARGE ? 'succes' : 'alerte'}

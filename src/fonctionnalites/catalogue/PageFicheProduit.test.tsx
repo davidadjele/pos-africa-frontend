@@ -79,7 +79,10 @@ describe('PageFicheProduit', () => {
     await userEvent.selectOptions(screen.getByLabelText(/^Catégorie/), 'Grillades')
     await userEvent.type(screen.getByLabelText(/^Prix TTC/), '4500')
     await userEvent.type(screen.getByLabelText(/^Coût de revient/), '2300')
-    expect(screen.getByText(/Marge par plat : 2\s200\sF, soit 49 % du prix/)).toBeVisible()
+    // 4 500 TTC à 18 % font 3 814 HT : la TVA revient à l'État.
+    expect(
+      screen.getByText(/Marge par plat : 1\s514\sF, soit 40 % du prix hors taxe/),
+    ).toBeVisible()
     await userEvent.click(screen.getByRole('button', { name: 'Enregistrer le produit' }))
 
     await waitFor(() => {

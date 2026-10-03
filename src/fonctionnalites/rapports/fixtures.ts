@@ -28,7 +28,9 @@ export const RAPPORT: RapportVentes = {
     remises: 28_400,
     remboursements: 9000,
     notesRemboursees: 2,
-    marge: 206_000,
+    // Marge hors taxe : 494 400 TTC à 18 % font 419 000 HT.
+    marge: 130_600,
+    cout: 288_400,
     coutConnu: 494_400,
   },
   precedent: {
@@ -96,7 +98,8 @@ export const RAPPORT: RapportVentes = {
       quantite: 412,
       montant: 494_400,
       cout: 288_400,
-      montantCoutConnu: 494_400,
+      marge: 130_600,
+      quantiteCoutConnu: 400,
     },
     {
       produitId: 'f1000000-0000-4000-8000-000000000002',

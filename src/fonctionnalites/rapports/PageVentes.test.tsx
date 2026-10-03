@@ -75,17 +75,17 @@ describe('PageVentes', () => {
     expect(points[0]).toHaveAttribute('href', '/gestion/activite')
   })
 
-  it('montre la marge brute et, par produit, le coût, la marge et son taux', async () => {
+  it('montre la marge brute hors taxe et, par produit, le coût, la marge et la part des ventes au coût connu', async () => {
     rapportServi()
     sessionOuverte({ ...MOI_TANTI, permissions: PROPRIETAIRE })
     ouvrir('/gestion/ventes')
 
     const indicateurs = await screen.findByRole('list', { name: 'Indicateurs' })
     expect(indicateurs).toHaveTextContent(
-      /Marge brute206\s00042 %sur 38,5 % du chiffre d’affaires au coût connu/,
+      /Marge brute130\s60031 %sur 38,5 % du chiffre d’affaires au coût connu/,
     )
     const lignes = within(screen.getByRole('table', { name: 'Par produit' })).getAllByRole('row')
-    expect(lignes[1]).toHaveTextContent(/288\s400206\s00042 %$/)
+    expect(lignes[1]).toHaveTextContent(/288\s400130\s600sur 400 vendus31 %$/)
     expect(lignes[2]).toHaveTextContent(/coût inconnu$/)
   })
 

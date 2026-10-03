@@ -1065,7 +1065,7 @@
       "chargement": "Loading the product…",
       "coutRevient": "Cost price",
       "coutRevientAide": "Optional. What a dish costs (ingredients, gas): used for the margin. A new cost applies to later sales.",
-      "margePlat": "Margin per dish: {{marge}}, i.e. {{taux}}% of the price",
+      "margePlat": "Margin per dish: {{marge}}, i.e. {{taux}}% of the price before tax",
       "coutInvalide": "Enter an amount, or leave empty."
     },
     "historiquePrix": "Price history",
@@ -1725,6 +1725,7 @@
     "colonnes": {
       "produit": "Product",
       "quantite": "In stock",
+      "coutMoyen": "Average cost",
       "etat": "Status",
       "mouvement": "Last movement",
       "actions": "Actions"
@@ -1800,7 +1801,8 @@
       "aCompter": "Not counted yet.",
       "chargement": "Loading history…",
       "vide": "No movement yet.",
-      "liste": "Movements"
+      "liste": "Movements",
+      "coutUnitaire": "{{cout}} per unit"
     },
     "reception": {
       "action": "Receive a delivery",
@@ -1868,7 +1870,8 @@
       "SOUPLE": "The till sells even without stock at {{etablissement}}: negative stock points to an unrecorded delivery.",
       "AVERTISSEMENT": "At {{etablissement}}, the till warns when an item has no stock left, then sells once confirmed.",
       "STRICT": "At {{etablissement}}, the till refuses to sell an item with no stock left."
-    }
+    },
+    "coutNonRenseigne": "not set"
   },
   "ardoise": {
     "titre": "Tabs",
@@ -2035,7 +2038,9 @@
       "cout": "Cost",
       "marge": "Margin",
       "taux": "Rate",
-      "coutInconnu": "cost unknown"
+      "coutInconnu": "cost unknown",
+      "surVendus_one": "on {{count}} sold",
+      "surVendus_other": "on {{count}} sold"
     },
     "indicateurs": {
       "titre": "Key figures",

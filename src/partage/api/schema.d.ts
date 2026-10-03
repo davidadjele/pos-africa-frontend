@@ -3434,6 +3434,8 @@ export interface components {
             /** Format: int64 */
             chiffreAffaires: number;
             /** Format: int64 */
+            cout?: number;
+            /** Format: int64 */
             coutConnu?: number;
             /** Format: int64 */
             marge?: number;
@@ -3536,6 +3538,8 @@ export interface components {
         };
         LigneStock: {
             categorie: string;
+            /** Format: int64 */
+            coutMoyen?: number;
             dernierMouvement?: components["schemas"]["MouvementStockResume"];
             /** @enum {string} */
             etat: "A_COMPTER" | "EN_STOCK" | "FAIBLE" | "RUPTURE" | "NEGATIF";
@@ -4211,12 +4215,14 @@ export interface components {
             /** Format: int64 */
             cout?: number;
             /** Format: int64 */
-            montant: number;
+            marge?: number;
             /** Format: int64 */
-            montantCoutConnu?: number;
+            montant: number;
             nom: string;
             /** Format: int32 */
             quantite: number;
+            /** Format: int32 */
+            quantiteCoutConnu?: number;
         };
         VentesDeLHeure: {
             /** Format: int64 */
@@ -4277,14 +4283,16 @@ export interface components {
             /** Format: int64 */
             cout?: number;
             /** Format: int64 */
-            montant: number;
+            marge?: number;
             /** Format: int64 */
-            montantCoutConnu?: number;
+            montant: number;
             nom: string;
             /** Format: uuid */
             produitId: string;
             /** Format: int32 */
             quantite: number;
+            /** Format: int32 */
+            quantiteCoutConnu?: number;
         };
         VentesServeur: {
             /** Format: int64 */

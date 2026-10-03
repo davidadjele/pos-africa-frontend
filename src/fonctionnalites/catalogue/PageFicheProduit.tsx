@@ -156,6 +156,10 @@ function FormulaireProduit({
   const cout = coutRevient.trim() === '' ? undefined : lireMontant(coutRevient, devise)
   const taxe = taxes.find((candidate) => candidate.id === taxeId)
   const categorie = categories.find((candidate) => candidate.id === categorieId)
+  const horsTaxe =
+    montant === null || taxe === undefined
+      ? montant
+      : montant - taxeIncluse(montant, taxe.tauxPointsDeBase)
 
   async function envoyer(saisie: Saisie) {
     const prixLu = lireMontant(saisie.prix, devise)
@@ -336,13 +340,13 @@ function FormulaireProduit({
             <ChampSaisie
               libelle={t('produits.fiche.coutRevient')}
               aide={
-                montant !== null && montant > 0 && cout !== undefined && cout !== null
+                horsTaxe !== null && horsTaxe > 0 && cout !== undefined && cout !== null
                   ? t('produits.fiche.margePlat', {
                       marge: formaterMontant(
-                        { unitesMineures: montant - cout, devise },
+                        { unitesMineures: horsTaxe - cout, devise },
                         { forme: 'courte' },
                       ),
-                      taux: String(Math.round(((montant - cout) / montant) * 100)),
+                      taux: String(Math.round(((horsTaxe - cout) / horsTaxe) * 100)),
                     })
                   : t('produits.fiche.coutRevientAide')
               }

@@ -1065,7 +1065,7 @@
       "chargement": "Chargement du produit…",
       "coutRevient": "Coût de revient",
       "coutRevientAide": "Facultatif. Ce que coûte un plat (ingrédients, gaz) : sert au calcul de la marge. Un nouveau coût vaut pour les ventes suivantes.",
-      "margePlat": "Marge par plat : {{marge}}, soit {{taux}} % du prix",
+      "margePlat": "Marge par plat : {{marge}}, soit {{taux}} % du prix hors taxe",
       "coutInvalide": "Saisissez un montant, ou laissez vide."
     },
     "historiquePrix": "Historique des prix",
@@ -1725,6 +1725,7 @@
     "colonnes": {
       "produit": "Produit",
       "quantite": "En stock",
+      "coutMoyen": "Coût moyen",
       "etat": "État",
       "mouvement": "Dernier mouvement",
       "actions": "Actions"
@@ -1800,7 +1801,8 @@
       "aCompter": "Pas encore compté.",
       "chargement": "Chargement de l’historique…",
       "vide": "Aucun mouvement pour l’instant.",
-      "liste": "Mouvements"
+      "liste": "Mouvements",
+      "coutUnitaire": "{{cout}} l’unité"
     },
     "reception": {
       "action": "Réceptionner une livraison",
@@ -1868,7 +1870,8 @@
       "SOUPLE": "La caisse vend même sans stock à {{etablissement}} : un stock négatif signale une livraison non saisie.",
       "AVERTISSEMENT": "À {{etablissement}}, la caisse prévient quand un article n’a plus de stock, puis vend si on le confirme.",
       "STRICT": "À {{etablissement}}, la caisse refuse de vendre un article qui n’a plus de stock."
-    }
+    },
+    "coutNonRenseigne": "non renseigné"
   },
   "ardoise": {
     "titre": "Ardoises",
@@ -2035,7 +2038,9 @@
       "cout": "Coût",
       "marge": "Marge",
       "taux": "Taux",
-      "coutInconnu": "coût inconnu"
+      "coutInconnu": "coût inconnu",
+      "surVendus_one": "sur {{count}} vendu",
+      "surVendus_other": "sur {{count}} vendus"
     },
     "indicateurs": {
       "titre": "Indicateurs",
