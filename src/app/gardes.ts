@@ -17,8 +17,8 @@ export const requeteConfiguration = queryOptions({
   staleTime: 5 * 60_000,
 })
 
-export function accueilDe(portee: Portee): '/plateforme' | '/gestion' {
-  return portee === 'PLATEFORME' ? '/plateforme' : '/gestion'
+export function accueilDe(portee: Portee): '/plateforme/tableau-de-bord' | '/gestion' {
+  return portee === 'PLATEFORME' ? '/plateforme/tableau-de-bord' : '/gestion'
 }
 
 async function chargerMoi(clientRequetes: QueryClient): Promise<ReponseMoi> {

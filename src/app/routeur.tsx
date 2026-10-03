@@ -31,7 +31,12 @@ import { TableauDeBord } from '../fonctionnalites/gestion/TableauDeBord'
 import { PageInscription } from '../fonctionnalites/inscription/PageInscription'
 import { PagePersonnel } from '../fonctionnalites/personnel/PagePersonnel'
 import { PageEntreprises } from '../fonctionnalites/plateforme/PageEntreprises'
+import { PageActivitePlateforme } from '../fonctionnalites/plateforme/PageActivitePlateforme'
+import { PageEquipe } from '../fonctionnalites/plateforme/PageEquipe'
+import { PageFicheEntreprise } from '../fonctionnalites/plateforme/PageFicheEntreprise'
 import { PageNouvelleEntreprise } from '../fonctionnalites/plateforme/PageNouvelleEntreprise'
+import { PageSupport } from '../fonctionnalites/plateforme/PageSupport'
+import { PageTableauDeBordPlateforme } from '../fonctionnalites/plateforme/PageTableauDeBordPlateforme'
 import { PageRecu } from '../fonctionnalites/recu/PageRecu'
 import { PageCaisses } from '../fonctionnalites/rapports/PageCaisses'
 import { PageDetailCaisse } from '../fonctionnalites/rapports/PageDetailCaisse'
@@ -408,6 +413,48 @@ const nouvelleEntreprise = createRoute({
   component: PageNouvelleEntreprise,
 })
 
+const tableauDeBordPlateforme = createRoute({
+  getParentRoute: () => plateforme,
+  path: '/tableau-de-bord',
+  component: PageTableauDeBordPlateforme,
+})
+
+const equipe = createRoute({
+  getParentRoute: () => plateforme,
+  path: '/equipe',
+  component: PageEquipe,
+})
+
+const activitePlateforme = createRoute({
+  getParentRoute: () => plateforme,
+  path: '/activite',
+  validateSearch: (recherche: Record<string, unknown>): { entrepriseId?: string } =>
+    typeof recherche.entrepriseId === 'string' ? { entrepriseId: recherche.entrepriseId } : {},
+  component: function RouteActivitePlateforme() {
+    const { entrepriseId } = activitePlateforme.useSearch()
+    return entrepriseId === undefined ? (
+      <PageActivitePlateforme />
+    ) : (
+      <PageActivitePlateforme key={entrepriseId} entrepriseId={entrepriseId} />
+    )
+  },
+})
+
+const support = createRoute({
+  getParentRoute: () => plateforme,
+  path: '/support',
+  component: PageSupport,
+})
+
+const ficheEntreprise = createRoute({
+  getParentRoute: () => plateforme,
+  path: '/entreprises/$entrepriseId',
+  component: function RouteFicheEntreprise() {
+    const { entrepriseId } = ficheEntreprise.useParams()
+    return <PageFicheEntreprise key={entrepriseId} entrepriseId={entrepriseId} />
+  },
+})
+
 const recu = createRoute({
   getParentRoute: () => racine,
   path: '/r/$jeton',
@@ -447,7 +494,15 @@ const arbre = racine.addChildren([
     entreprise,
     ficheClient,
   ]),
-  plateforme.addChildren([plateformeAccueil, nouvelleEntreprise]),
+  plateforme.addChildren([
+    tableauDeBordPlateforme,
+    plateformeAccueil,
+    nouvelleEntreprise,
+    ficheEntreprise,
+    activitePlateforme,
+    equipe,
+    support,
+  ]),
   recu,
 ])
 

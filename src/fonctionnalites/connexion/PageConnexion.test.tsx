@@ -98,8 +98,22 @@ describe('PageConnexion', () => {
     connexionRepond({ compte: MOI_ADMIN.compte, entreprises: [], jetonAcces: 'eyJ.admin' })
     serveurMsw.use(
       http.get(`${API}/moi`, () => HttpResponse.json(MOI_ADMIN)),
-      http.get(`${API}/plateforme/entreprises`, () =>
-        HttpResponse.json({ elements: [], page: 0, taille: 50, total: 0 }),
+      http.get(`${API}/plateforme/tableau-de-bord`, () =>
+        HttpResponse.json({
+          indicateurs: {
+            actives: 0,
+            suspendues: 0,
+            nouvellesSemaine: 0,
+            etablissements: 0,
+            tablettes: 0,
+            notesHier: 0,
+            notesSemaineAvant: 0,
+            erreursInternes24h: 0,
+          },
+          parJour: [],
+          aRelancer: [],
+          nouvelles: [],
+        }),
       ),
     )
     const { routeur } = ouvrir('/connexion')
@@ -107,7 +121,7 @@ describe('PageConnexion', () => {
     await seConnecter('admin@tonti.africa', 'mot-de-passe-admin')
 
     expect(await screen.findByText('Administration de la plateforme')).toBeVisible()
-    expect(routeur.state.location.pathname).toBe('/plateforme')
+    expect(routeur.state.location.pathname).toBe('/plateforme/tableau-de-bord')
   })
 
   it('fait choisir l’entreprise à un compte qui en a plusieurs', async () => {

@@ -115,7 +115,12 @@
       "chargement": "Chargement de la carte…",
       "plusEnStock": "Plus en stock",
       "restants_one": "{{count}} restant",
-      "restants_other": "{{count}} restants"
+      "restants_other": "{{count}} restants",
+      "nombreProduits_one": "{{count}} produit",
+      "nombreProduits_other": "{{count}} produits",
+      "surLaNote_one": "{{count}} sur la note",
+      "surLaNote_other": "{{count}} sur la note",
+      "retirerUn": "En retirer un"
     },
     "note": {
       "titre": "Note en cours",
@@ -279,7 +284,13 @@
       "payee": "Payée",
       "enPreparation": "{{serveur}}, en préparation depuis {{heure}}",
       "aEncaisser": "À encaisser {{montant}}",
-      "aEncaisserCourt": "À encaisser"
+      "aEncaisserCourt": "À encaisser",
+      "legende": {
+        "titre": "Légende des couleurs",
+        "occupee": "Occupée",
+        "enAttente": "Articles à envoyer ou à servir",
+        "addition": "Addition demandée"
+      }
     },
     "ouverture": {
       "titreTable": "Ouvrir une note sur {{table}}",
@@ -385,6 +396,22 @@
       "revientAide": "Intact, pas ouvert",
       "perdu": "Perdu",
       "perduAide": "Ouvert, cassé, inutilisable"
+    },
+    "ruban": {
+      "titre": "Notes ouvertes",
+      "aEnvoyer": "À envoyer",
+      "aServir": "À servir",
+      "aRemettre": "À remettre",
+      "addition": "Addition demandée"
+    },
+    "telephone": {
+      "continuer": "Continuer la commande",
+      "resume_one": "{{count}} article",
+      "resume_other": "{{count}} articles",
+      "resumeAEnvoyer_one": "{{count}} article, {{aEnvoyer}} à envoyer",
+      "resumeAEnvoyer_other": "{{count}} articles, {{aEnvoyer}} à envoyer",
+      "voir": "Voir la note",
+      "voirEtEnvoyer": "Voir la note et envoyer"
     }
   },
   "gestion": {
@@ -658,6 +685,7 @@
         "pays": "Pays",
         "etablissements": "Établissements",
         "statut": "Statut",
+        "derniereVente": "Dernière vente",
         "actions": "Actions"
       },
       "creeeLe": "Créée le {{date}}",
@@ -666,9 +694,7 @@
         "SUSPENDUE": "Suspendue"
       },
       "suspendre": "Suspendre",
-      "suspendreNomme": "Suspendre {{nom}}",
       "reactiver": "Réactiver",
-      "reactiverNomme": "Réactiver {{nom}}",
       "chargement": "Chargement des entreprises…",
       "vide": {
         "titre": "Aucune entreprise",
@@ -689,11 +715,287 @@
         "annuler": "Laisser suspendue",
         "confirmer": "Réactiver l’entreprise",
         "faite": "{{nom}} est de nouveau active."
+      },
+      "aucuneVente": "Aucune vente",
+      "signaux": {
+        "SANS_VENTE": "Sans vente depuis 7 jours",
+        "NOUVELLE": "Nouvelle"
+      },
+      "ouvrir": "Ouvrir la fiche",
+      "ouvrirNomme": "Ouvrir la fiche de {{nom}}",
+      "rechercher": "Rechercher",
+      "rechercherExemple": "Nom de l’entreprise ou du propriétaire, téléphone, e-mail",
+      "aucunResultat": {
+        "titre": "Aucune entreprise trouvée",
+        "phrase": "Rien ne correspond à « {{recherche}} ». Vérifiez l’orthographe, ou cherchez le téléphone du propriétaire."
       }
     },
     "nouvelle": {
       "titre": "Nouvelle entreprise",
       "retour": "Retour aux entreprises"
+    },
+    "fiche": {
+      "chargement": "Chargement de la fiche…",
+      "clienteDepuis": "Cliente depuis le {{date}}.",
+      "modifier": "Modifier",
+      "conflit": "Cette entreprise a été modifiée entre-temps : la fiche montre maintenant ses informations à jour. Refaites vos changements.",
+      "jamais": "Jamais",
+      "nonRenseigne": "Non renseigné",
+      "identite": "Identité",
+      "pays": "Pays",
+      "devise": "Devise",
+      "numeroFiscal": "Numéro fiscal (NIF)",
+      "tvaDepart": "TVA de départ",
+      "proprietaire_one": "Propriétaire",
+      "proprietaire_other": "Propriétaires",
+      "nom": "Nom",
+      "telephone": "Téléphone",
+      "email": "E-mail",
+      "derniereConnexion": "Dernière connexion",
+      "utilisation": {
+        "titre": "Utilisation",
+        "utilisateurs": "Utilisateurs actifs",
+        "avecBackOffice_one": "dont {{count}} avec accès au back-office",
+        "avecBackOffice_other": "dont {{count}} avec accès au back-office",
+        "tablettes": "Tablettes",
+        "revoquees_one": "dont {{count}} révoquée",
+        "revoquees_other": "dont {{count}} révoquées",
+        "notes": "Notes encaissées, 7 jours",
+        "semainePrecedente": "contre {{nombre}} la semaine d’avant",
+        "derniereConnexion": "Dernière connexion au back-office"
+      },
+      "etablissements": {
+        "titre": "Établissements",
+        "tableau": "Établissements de l’entreprise",
+        "code": "Code",
+        "nom": "Nom",
+        "ville": "Ville",
+        "tablettes": "Tablettes",
+        "derniereVente": "Dernière vente",
+        "statut": "Statut",
+        "actif": "Actif",
+        "inactif": "Désactivé"
+      },
+      "modification": {
+        "titre": "Modifier {{nom}}",
+        "phrase": "La modification est tracée dans l’activité de la plateforme.",
+        "nom": "Nom de l’entreprise",
+        "nomManquant": "Indiquez le nom de l’entreprise.",
+        "numeroFiscal": "Numéro fiscal (NIF)",
+        "numeroFiscalAide": "Imprimé sur les reçus et les rapports Z.",
+        "pays": "Pays",
+        "devise": "Devise",
+        "figes": "Pays et devise ne changent plus depuis la première vente : les montants déjà encaissés et les numéros de téléphone en dépendent.",
+        "faite": "Les modifications sont enregistrées."
+      },
+      "suspension": {
+        "titre": "Suspension",
+        "raison": "Raison",
+        "precision": "Précision",
+        "precisionExemple": "Ex. : fermeture pour travaux jusqu’au 15 novembre",
+        "precisionAide": "Visible sur la fiche et dans l’activité de la plateforme.",
+        "precisionManquante": "Précisez la raison.",
+        "depuis": "Suspendue le {{date}}.",
+        "raisons": {
+          "DEMANDE_CLIENT": "Demande du client",
+          "IMPAYE": "Impayé",
+          "ABUS": "Abus ou fraude",
+          "AUTRE": "Autre"
+        }
+      },
+      "verrouille": "Compte verrouillé jusqu’à {{heure}}",
+      "ouvreAussi": "Ouvre aussi",
+      "motDePasse": {
+        "action": "Redonner un mot de passe temporaire",
+        "titre": "Redonner un mot de passe à {{nom}} ?",
+        "phrase": "Un mot de passe temporaire s’affiche une seule fois ; le propriétaire le remplacera à sa connexion.",
+        "verifier": "Vérifiez d’abord que c’est bien la bonne personne : rappelez-la au {{contact}} enregistré sur la fiche, jamais à un numéro donné pendant l’appel.",
+        "consequenceSessions": "Ses sessions ouvertes sont coupées et le verrouillage est levé.",
+        "consequenceAutres": "Ce compte ouvre aussi {{entreprises}} : le nouveau mot de passe vaut partout.",
+        "consequenceTrace": "L’action est tracée dans l’activité de la plateforme, à votre nom.",
+        "generer": "Générer le mot de passe",
+        "secretTitre": "Mot de passe temporaire de {{nom}}",
+        "secretPhrase": "Dictez-le. Il ne sera plus affiché : un nouveau sera choisi à la connexion.",
+        "secretLibelle": "Mot de passe temporaire",
+        "transmis": "J’ai transmis le mot de passe"
+      },
+      "retour": "Toutes les entreprises",
+      "clienteDepuisPar": "Cliente depuis le {{date}}, créée par {{nom}}.",
+      "toutVoir": "Tout voir"
+    },
+    "navigation": {
+      "titre": "Espace plateforme",
+      "tableau": "Tableau de bord",
+      "entreprises": "Entreprises",
+      "activite": "Activité",
+      "equipe": "Équipe",
+      "support": "Support"
+    },
+    "support": {
+      "titre": "Support",
+      "phrase": "Retrouvez une erreur à partir du code affiché au client, sous le message. Conservées 30 jours.",
+      "code": "Code de l’erreur",
+      "codeTropCourt": "Saisissez au moins les 8 premiers caractères du code.",
+      "rechercher": "Rechercher",
+      "recherche": "Recherche de l’erreur…",
+      "chargement": "Chargement des erreurs…",
+      "recentes": "Erreurs récentes",
+      "recentesPhrase": "Dernières 24 heures, toutes entreprises",
+      "aucuneRecente": {
+        "titre": "Aucune erreur depuis 24 heures",
+        "phrase": "Les erreurs renvoyées aux clients s’afficheront ici."
+      },
+      "introuvable": {
+        "titre": "Aucune erreur avec ce code",
+        "phrase": "Faites relire le code au client, sous le message d’erreur. Une erreur de plus de 30 jours n’est plus conservée."
+      },
+      "libelles": {
+        "interne": "Erreur interne",
+        "client": "Demande refusée"
+      },
+      "quand": "Quand",
+      "entreprise": "Entreprise",
+      "qui": "Qui",
+      "action": "Action",
+      "messageVu": "Message affiché",
+      "codeComplet": "Code complet",
+      "horsEntreprise": "Hors entreprise",
+      "inconnu": "Personne connectée",
+      "surTablette": "{{personne}}, sur la tablette « {{tablette}} »",
+      "journaux": "Le détail technique reste dans les journaux du serveur, sous le même code. Rien de ce qui a été saisi n’est conservé.",
+      "colonnes": {
+        "heure": "Heure",
+        "entreprise": "Entreprise",
+        "erreur": "Erreur",
+        "action": "Action",
+        "code": "Code"
+      }
+    },
+    "activite": {
+      "titre": "Activité de la plateforme",
+      "phrase": "Ce que l’équipe a fait, et qui l’a fait. Rien ne s’efface.",
+      "chargement": "Chargement de l’activité…",
+      "sansNom": "Membre sans nom",
+      "equipe": "Équipe",
+      "vide": {
+        "titre": "Aucune action",
+        "phrase": "Aucune action de l’équipe ne correspond à ces filtres."
+      },
+      "colonnes": {
+        "quand": "Quand",
+        "membre": "Membre",
+        "action": "Action",
+        "entreprise": "Entreprise",
+        "detail": "Détail"
+      },
+      "filtres": {
+        "action": "Action",
+        "toutes": "Toutes les actions",
+        "membre": "Membre",
+        "toute": "Toute l’équipe",
+        "entreprise": "Entreprise",
+        "entrepriseExemple": "Nom de l’entreprise"
+      },
+      "types": {
+        "ENTREPRISE_CREEE": "Création",
+        "ENTREPRISE_MODIFIEE": "Modification",
+        "ENTREPRISE_SUSPENDUE": "Suspension",
+        "ENTREPRISE_REACTIVEE": "Réactivation",
+        "MOT_DE_PASSE_REINITIALISE": "Mot de passe redonné",
+        "MEMBRE_AJOUTE": "Membre ajouté",
+        "MEMBRE_DESACTIVE": "Membre désactivé",
+        "MEMBRE_REACTIVE": "Membre réactivé",
+        "MEMBRE_ROLE_CHANGE": "Rôle changé"
+      }
+    },
+    "equipe": {
+      "titre": "Équipe plateforme",
+      "phrase": "Les personnes qui administrent Tonti. Chacune se connecte avec son propre e-mail ; ses actions sont tracées à son nom.",
+      "ajouter": "Ajouter un membre",
+      "chargement": "Chargement de l’équipe…",
+      "tableau": "Membres de l’équipe",
+      "colonnes": {
+        "nom": "Nom",
+        "email": "E-mail",
+        "statut": "Statut",
+        "connexion": "Dernière connexion",
+        "ajout": "Ajouté",
+        "actions": "Actions"
+      },
+      "vous": "Vous",
+      "actif": "Actif",
+      "desactive": "Désactivé",
+      "motDePasseAChoisir": "Mot de passe à choisir",
+      "premier": "Premier administrateur",
+      "ajoutePar": "Le {{date}}, par {{nom}}",
+      "desactiver": "Désactiver",
+      "reactiver": "Réactiver",
+      "regle": "Un responsable gère l’équipe ; il n’est jamais désactivé ni réinitialisé d’ici, et il en reste toujours un. Un membre n’est jamais supprimé : l’activité garde son nom.",
+      "secretPhrase": "Transmettez-le au nouveau membre. Il ne sera plus affiché : il en choisira un à sa première connexion.",
+      "desactivation": {
+        "titre": "Désactiver {{nom}} ?",
+        "consequence": "Ses sessions ouvertes sont coupées et il ne pourra plus se connecter à l’espace plateforme. Vous pourrez le réactiver.",
+        "confirmer": "Désactiver le membre"
+      },
+      "ajout": {
+        "titre": "Ajouter un membre à l’équipe",
+        "phrase": "Il pourra créer, modifier et suspendre des entreprises, et redonner un mot de passe à un propriétaire.",
+        "prenom": "Prénom",
+        "nom": "Nom",
+        "email": "E-mail",
+        "emailAide": "Son identifiant de connexion.",
+        "manquant": "Ce champ est obligatoire.",
+        "confirmer": "Ajouter le membre"
+      },
+      "responsable": "Responsable",
+      "actionsNomme": "Plus d’actions pour {{nom}}",
+      "retirerRole": "Retirer le rôle de responsable",
+      "nommerResponsable": "Nommer responsable",
+      "redonnerMotDePasse": "Redonner un mot de passe",
+      "regleMembre": "Seul un responsable gère l’équipe : vous gérez les entreprises et le support.",
+      "role": {
+        "RESPONSABLE": {
+          "titre": "Nommer {{nom}} responsable ?",
+          "consequence": "Il pourra gérer l’équipe : ajouter et désactiver des membres, leur redonner un mot de passe, nommer d’autres responsables. Il ne pourra plus être désactivé ni réinitialisé depuis l’interface.",
+          "confirmer": "Nommer responsable"
+        },
+        "MEMBRE": {
+          "titre": "Retirer le rôle de responsable à {{nom}} ?",
+          "consequence": "Il gérera toujours les entreprises et le support, mais plus l’équipe. L’équipe garde toujours au moins un responsable.",
+          "confirmer": "Retirer le rôle"
+        }
+      },
+      "roles": {
+        "RESPONSABLE": "Responsable",
+        "MEMBRE": "Membre"
+      }
+    },
+    "tableau": {
+      "titre": "Tableau de bord",
+      "phrase": "Des comptes, jamais de montants : les chiffres d’affaires restent aux clients. Mis à jour toutes les 5 minutes.",
+      "chargement": "Chargement du tableau de bord…",
+      "indicateurs": "Indicateurs",
+      "actives": "Entreprises actives",
+      "nouvellesSemaine_one": "+{{count}} cette semaine",
+      "nouvellesSemaine_other": "+{{count}} cette semaine",
+      "suspendues": "Suspendues",
+      "etablissements": "Établissements",
+      "tablettes": "Tablettes en service",
+      "notesHier": "Notes encaissées hier",
+      "variation": "{{signe}}{{valeur}} % sur la semaine d’avant",
+      "erreurs": "Erreurs internes, 24 h",
+      "erreursDetail": "À regarder dans Support",
+      "parJour": "Notes encaissées par jour",
+      "parJourPhrase": "30 derniers jours, tous clients",
+      "parJourResume": "Notes encaissées par jour sur 30 jours : {{total}} au total",
+      "aRelancer": "À relancer",
+      "aRelancerPhrase": "Actives sans vente depuis 7 jours, ou nouvelles sans première vente après 3 jours.",
+      "aRelancerVide": "Personne à relancer pour l’instant.",
+      "derniereVente": "Dernière vente le {{date}}",
+      "nouvelles": "Nouvelles entreprises",
+      "nouvellesPhrase": "7 derniers jours",
+      "nouvellesVide": "Aucune nouvelle entreprise cette semaine.",
+      "premiereVente": "Première vente le {{date}}"
     }
   },
   "formulaireEntreprise": {

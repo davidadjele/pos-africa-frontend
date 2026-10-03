@@ -6,8 +6,8 @@
   --font-texte: 'Neulis', system-ui, sans-serif;
   --font-chiffres: 'Barlow Semi Condensed', 'Neulis', system-ui, sans-serif;
   --rayon-petit: 4px;
-  --rayon: 6px;
-  --rayon-moyen: 8px;
+  --rayon: 8px;
+  --rayon-moyen: 10px;
   --rayon-grand: 12px;
   --rayon-rond: 50%;
   --espace-1: 4px;
@@ -21,7 +21,7 @@
   --cible-min: 44px;
   --cible-caisse: 48px;
   --bouton-encaisser: 64px;
-  --barre-hauteur: 56px;
+  --barre-hauteur: 64px;
   --rail-largeur: 184px;
   --ticket-largeur: 392px;
 
@@ -37,11 +37,17 @@
   --accent-vif: #ed4f28;
   --accent-lisible: #00102b;
   --accent-doux: #eef0f4;
-  --barre-fond: #00102b;
-  --barre-texte: #ffffff;
-  --barre-attenue: #a3aec2;
-  --barre-trait: #1c2c47;
-  --rail-actif-fond: var(--barre-fond);
+  /* Barre haute claire : le navy reste la couleur de l'action principale. */
+  --barre-fond: #ffffff;
+  --barre-texte: #0f172a;
+  --barre-attenue: #5b6576;
+  --barre-trait: #e8e6e2;
+  /* Bandeau fort (chiffre du jour) : la seule grande surface navy. */
+  --bandeau-fond: #00102b;
+  --bandeau-texte: #ffffff;
+  --bandeau-attenue: #a3aec2;
+  --bandeau-trait: #1c2c47;
+  --rail-actif-fond: #00102b;
   --rail-actif-texte: #ffffff;
   --succes: #2f7344;
   --succes-vif: #5cad6d;

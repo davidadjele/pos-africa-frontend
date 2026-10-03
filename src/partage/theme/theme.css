@@ -26,6 +26,10 @@
   --color-barre-texte: var(--barre-texte);
   --color-barre-attenue: var(--barre-attenue);
   --color-barre-trait: var(--barre-trait);
+  --color-bandeau-fond: var(--bandeau-fond);
+  --color-bandeau-texte: var(--bandeau-texte);
+  --color-bandeau-attenue: var(--bandeau-attenue);
+  --color-bandeau-trait: var(--bandeau-trait);
   --color-rail-actif-fond: var(--rail-actif-fond);
   --color-rail-actif-texte: var(--rail-actif-texte);
   --color-succes: var(--succes);
@@ -113,17 +117,17 @@
   --text-titre-carte: 18px;
   --text-titre-carte--line-height: 26px;
   --text-titre-carte--font-weight: 600;
-  --text-corps: 15px;
+  --text-corps: 16px;
   --text-corps--line-height: 22px;
   --text-corps--font-weight: 400;
-  --text-corps-fort: 15px;
+  --text-corps-fort: 16px;
   --text-corps-fort--line-height: 22px;
   --text-corps-fort--font-weight: 600;
-  --text-libelle: 13px;
-  --text-libelle--line-height: 18px;
+  --text-libelle: 14px;
+  --text-libelle--line-height: 20px;
   --text-libelle--font-weight: 500;
-  --text-legende: 12px;
-  --text-legende--line-height: 16px;
+  --text-legende: 13px;
+  --text-legende--line-height: 18px;
   --text-legende--font-weight: 400;
   --text-badge: 11px;
   --text-badge--line-height: 16px;
@@ -169,10 +173,6 @@
   :focus-visible {
     outline: 2px solid var(--accent-vif);
     outline-offset: 2px;
-  }
-
-  [data-zone='barre'] :focus-visible {
-    outline-color: var(--barre-texte);
   }
 
   @media (prefers-reduced-motion: reduce) {

@@ -33,9 +33,35 @@ type Ouverture = { canal: 'SUR_PLACE'; table: TablePlan; salle: string } | { can
 
 /** Accueil de la caisse : les tables et leur note ouverte, la vente au comptoir et à emporter. */
 /** À envoyer prime sur l'addition demandée : l'un et l'autre se voient à leur bordure. */
-function bordureDeTable(aEnvoyer: boolean, addition: boolean): string {
-  if (aEnvoyer) return 'border-2 border-alerte-bord'
-  return addition ? 'border-2 border-info' : 'border border-trait'
+/** La couleur dit l'état d'un coup d'œil : libre, occupée, articles en attente, addition demandée. */
+function couleurDeTable(occupee: boolean, enAttente: boolean, addition: boolean): string {
+  if (!occupee) return 'border border-trait bg-surface'
+  if (enAttente) return 'border-2 border-alerte-bord bg-alerte-fond'
+  return addition
+    ? 'border-2 border-info bg-info-fond'
+    : 'border border-bordure-controle bg-accent-doux'
+}
+
+function LegendeTables() {
+  const { t } = useTranslation()
+  const etats = [
+    { cle: 'occupee', classes: 'border-bordure-controle bg-accent-doux' },
+    { cle: 'enAttente', classes: 'border-alerte-bord bg-alerte-fond' },
+    { cle: 'addition', classes: 'border-info bg-info-fond' },
+  ] as const
+  return (
+    <ul
+      aria-label={t('caisse.plan.legende.titre')}
+      className="m-0 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 text-legende text-attenue"
+    >
+      {etats.map(({ cle, classes }) => (
+        <li key={cle} className="flex items-center gap-1.5">
+          <span aria-hidden="true" className={clsx('size-3.5 rounded-petit border', classes)} />
+          {t(`caisse.plan.legende.${cle}`)}
+        </li>
+      ))}
+    </ul>
+  )
 }
 
 export function EcranPlan() {
@@ -182,6 +208,7 @@ export function EcranPlan() {
           </section>
         ) : (
           <>
+            <LegendeTables />
             <ul
               aria-label={t('caisse.plan.tables')}
               className="m-0 grid list-none grid-cols-2 content-start gap-3 overflow-y-auto p-0 sm:grid-cols-3 xl:grid-cols-4"
@@ -296,16 +323,15 @@ function TuileTable({
   const addition = note?.additionDemandeeLe !== undefined
   // Articles pris mais pas partis en préparation : couleur d'alerte, l'accent reste à l'action principale.
   const classes = clsx(
-    'flex min-h-36 w-full flex-col justify-between gap-2 rounded-moyen p-3.5 text-left text-encre',
-    bordureDeTable(aEnvoyer > 0, addition),
-    note === undefined ? 'bg-fond' : 'bg-surface',
+    'flex min-h-38 w-full flex-col justify-between gap-2 rounded-moyen p-3.5 text-left text-encre',
+    couleurDeTable(note !== undefined, aEnvoyer > 0 || (note?.aServir ?? 0) > 0, addition),
   )
   const contenu =
     note === undefined ? (
       <>
         <span className="flex items-start justify-between gap-2">
-          <span className="text-titre-section font-bold text-attenue">{table.nom}</span>
-          <span className="text-libelle text-attenue">
+          <span className="text-titre-ecran text-attenue">{table.nom}</span>
+          <span className="whitespace-nowrap text-libelle text-attenue">
             {t('caisse.plan.places', { count: table.places })}
           </span>
         </span>
@@ -319,7 +345,7 @@ function TuileTable({
     ) : (
       <>
         <span className="flex items-start gap-1.5">
-          <span className="text-titre-section font-extrabold">{table.nom}</span>
+          <span className="text-titre-ecran">{table.nom}</span>
           {note.mienne && <BadgeStatut ton="info">{t('caisse.plan.maTable')}</BadgeStatut>}
           <span className="chiffres ml-auto text-corps text-attenue">
             {dureeDepuis(note.ouverteLe)}
@@ -370,7 +396,7 @@ function TuileTable({
             })
       }
       onClick={surToucher}
-      className={clsx(classes, aEnvoyer === 0 && !addition && 'hover:border-bordure-controle')}
+      className={clsx(classes, note === undefined && 'hover:border-bordure-controle')}
     >
       {contenu}
     </button>

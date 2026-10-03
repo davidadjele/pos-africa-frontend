@@ -46,14 +46,30 @@ describe('routeur', () => {
     it('mène à l’administration pour une session plateforme', async () => {
       sessionOuverte(MOI_ADMIN)
       serveurMsw.use(
-        http.get(`${API}/plateforme/entreprises`, () =>
-          HttpResponse.json({ elements: [], page: 0, taille: 50, total: 0 }),
+        http.get(`${API}/plateforme/tableau-de-bord`, () =>
+          HttpResponse.json({
+            indicateurs: {
+              actives: 0,
+              suspendues: 0,
+              nouvellesSemaine: 0,
+              etablissements: 0,
+              tablettes: 0,
+              notesHier: 0,
+              notesSemaineAvant: 0,
+              erreursInternes24h: 0,
+            },
+            parJour: [],
+            aRelancer: [],
+            nouvelles: [],
+          }),
         ),
       )
       const { routeur } = ouvrir('/')
 
-      expect(await screen.findByRole('heading', { level: 1, name: 'Entreprises' })).toBeVisible()
-      await attendreChemin(routeur, '/plateforme')
+      expect(
+        await screen.findByRole('heading', { level: 1, name: 'Tableau de bord' }),
+      ).toBeVisible()
+      await attendreChemin(routeur, '/plateforme/tableau-de-bord')
     })
 
     it('demande de choisir l’entreprise quand le compte en a plusieurs', async () => {
@@ -96,14 +112,28 @@ describe('routeur', () => {
     it('garde la gestion hors de portée d’une session plateforme', async () => {
       sessionOuverte(MOI_ADMIN)
       serveurMsw.use(
-        http.get(`${API}/plateforme/entreprises`, () =>
-          HttpResponse.json({ elements: [], page: 0, taille: 50, total: 0 }),
+        http.get(`${API}/plateforme/tableau-de-bord`, () =>
+          HttpResponse.json({
+            indicateurs: {
+              actives: 0,
+              suspendues: 0,
+              nouvellesSemaine: 0,
+              etablissements: 0,
+              tablettes: 0,
+              notesHier: 0,
+              notesSemaineAvant: 0,
+              erreursInternes24h: 0,
+            },
+            parJour: [],
+            aRelancer: [],
+            nouvelles: [],
+          }),
         ),
       )
       const { routeur } = ouvrir('/gestion')
 
-      await screen.findByRole('heading', { level: 1, name: 'Entreprises' })
-      await attendreChemin(routeur, '/plateforme')
+      await screen.findByRole('heading', { level: 1, name: 'Tableau de bord' })
+      await attendreChemin(routeur, '/plateforme/tableau-de-bord')
     })
 
     it('impose de remplacer un mot de passe temporaire avant tout autre écran', async () => {

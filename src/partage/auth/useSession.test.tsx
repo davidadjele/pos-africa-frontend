@@ -107,6 +107,24 @@ describe('nomAffiche', () => {
     expect(nomAffiche(MOI_TANTI)).toBe('Tanti Akouvi')
   })
 
+  it('nomme le membre de l’équipe plateforme', () => {
+    const sansUtilisateur: ReponseMoi = { ...MOI_TANTI }
+    delete sansUtilisateur.utilisateur
+    expect(
+      nomAffiche({
+        ...sansUtilisateur,
+        portee: 'PLATEFORME',
+        compte: {
+          id: 'a',
+          administrateurPlateforme: true,
+          motDePasseAChanger: false,
+          email: 'kodjo@tonti.africa',
+          nom: 'Kodjo Amegah',
+        },
+      }),
+    ).toBe('Kodjo Amegah')
+  })
+
   it('se rabat sur l’e-mail ou le téléphone du compte', () => {
     const sansUtilisateur: ReponseMoi = { ...MOI_TANTI }
     delete sansUtilisateur.utilisateur

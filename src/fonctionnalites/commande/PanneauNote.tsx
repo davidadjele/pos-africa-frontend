@@ -94,7 +94,7 @@ export function PanneauNote({
   return (
     <section
       aria-label={t('caisse.note.titre')}
-      className="flex shrink-0 flex-col rounded-moyen border border-trait bg-surface lg:w-ticket-largeur"
+      className="flex min-h-0 flex-1 flex-col rounded-moyen border border-trait bg-surface lg:w-ticket-largeur"
     >
       <div className="flex items-start gap-3 border-b border-trait px-4 py-3.5">
         <Bouton icone={ArrowLeft} className="shrink-0 whitespace-nowrap" onClick={surRevenir}>
@@ -247,9 +247,11 @@ export function PanneauNote({
       </div>
       {(modifiable || peutEncaisser || note.totalPaye > 0) && (
         <div className="flex flex-col gap-2 px-4 pb-4">
+          {/* Une seule action principale : envoyer tant qu'il reste des articles, sinon encaisser. */}
           {modifiable && aEnvoyer > 0 && (
             <Bouton
-              className="min-h-cible-caisse border-accent text-accent-lisible"
+              variante="principal"
+              className="min-h-bouton-encaisser text-titre-carte"
               enCours={envoiEnCours}
               onClick={() => {
                 surEnvoyer(aEnvoyer)
@@ -259,9 +261,14 @@ export function PanneauNote({
             </Bouton>
           )}
           <Bouton
-            variante="principal"
+            variante={modifiable && aEnvoyer > 0 ? 'secondaire' : 'principal'}
             disabled={!peutEncaisser || note.total - note.totalPaye <= 0}
-            className="min-h-bouton-encaisser justify-between text-titre-carte"
+            className={clsx(
+              'justify-between',
+              modifiable && aEnvoyer > 0
+                ? 'min-h-cible-caisse'
+                : 'min-h-bouton-encaisser text-titre-carte',
+            )}
             onClick={surEncaisser}
           >
             <span>
@@ -391,9 +398,15 @@ function LigneDeNote({
     </>
   )
   return (
-    <li className="grid min-h-15 grid-cols-[40px_minmax(0,1fr)_auto_96px] items-center gap-2 border-b border-trait py-1.5 last:border-b-0">
-      <span className={clsx('chiffres text-montant-ligne text-encre', barre)}>
-        {ligne.quantite}×
+    <li className="grid min-h-16 grid-cols-[40px_minmax(0,1fr)_auto_96px] items-center gap-2 border-b border-trait py-2 last:border-b-0">
+      <span
+        className={clsx(
+          'chiffres flex size-9 items-center justify-center rounded-normal bg-accent-doux text-montant-ligne text-encre',
+          barre,
+        )}
+      >
+        {ligne.quantite}
+        <span className="sr-only">×</span>
       </span>
       {modifiable && !annulee ? (
         <button

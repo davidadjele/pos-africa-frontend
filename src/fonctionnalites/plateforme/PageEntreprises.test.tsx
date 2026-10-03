@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { API, MOI_ADMIN, ouvrir, sessionOuverte } from '../../../tests/application'
 import { serveurMsw } from '../../../tests/serveurMsw'
 import type { EntreprisePlateforme } from '../../partage/api/contrat'
@@ -10,29 +10,44 @@ const MAQUIS: EntreprisePlateforme = {
   id: '6b0e6a52-7a6a-4d57-9d3e-1c1a9b1f0a01',
   nom: 'Maquis Chez Tanti',
   pays: 'TG',
+  devise: 'XOF',
   nombreEtablissements: 2,
   statut: 'ACTIVE',
   creeLe: '2026-09-28T10:15:00Z',
+  derniereVenteLe: '2026-10-02T20:41:00Z',
 }
 const FLAMBOYANT: EntreprisePlateforme = {
   id: '6b0e6a52-7a6a-4d57-9d3e-1c1a9b1f0a02',
   nom: 'Bar Le Flamboyant',
   pays: 'CI',
+  devise: 'XOF',
   nombreEtablissements: 1,
   statut: 'SUSPENDUE',
   creeLe: '2026-09-12T08:00:00Z',
+}
+const BAOBAB: EntreprisePlateforme = {
+  id: '6b0e6a52-7a6a-4d57-9d3e-1c1a9b1f0a03',
+  nom: 'Restaurant Le Baobab',
+  pays: 'SN',
+  devise: 'XOF',
+  nombreEtablissements: 2,
+  statut: 'ACTIVE',
+  creeLe: '2026-09-02T08:00:00Z',
 }
 
 function entreprisesEnMemoire(depart: EntreprisePlateforme[], total = depart.length) {
   const liste = [...depart]
   const pagesDemandees: string[] = []
+  const recherches: string[] = []
   serveurMsw.use(
     http.get(`${API}/plateforme/entreprises`, ({ request }) => {
-      pagesDemandees.push(new URL(request.url).searchParams.get('page') ?? '')
+      const parametres = new URL(request.url).searchParams
+      pagesDemandees.push(parametres.get('page') ?? '')
+      recherches.push(parametres.toString())
       return HttpResponse.json({ elements: liste, page: 0, taille: 50, total })
     }),
   )
-  return { liste, pagesDemandees }
+  return { liste, pagesDemandees, recherches }
 }
 
 async function ouvrirPlateforme(chemin = '/plateforme') {
@@ -43,6 +58,10 @@ async function ouvrirPlateforme(chemin = '/plateforme') {
 }
 
 describe('PageEntreprises', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('se présente sous une barre navy titrée « Administration de la plateforme »', async () => {
     entreprisesEnMemoire([MAQUIS])
     await ouvrirPlateforme()
@@ -62,7 +81,7 @@ describe('PageEntreprises', () => {
     const ligneFlamboyant = within(tableau).getByRole('row', { name: /Bar Le Flamboyant/ })
     expect(ligneMaquis).toHaveTextContent('Maquis Chez Tanti')
     expect(ligneMaquis).toHaveTextContent('Créée le 28/09/2026')
-    expect(ligneMaquis).toHaveTextContent('Togo')
+    expect(ligneMaquis).toHaveTextContent('Togo, XOF')
     expect(within(ligneMaquis).getByRole('cell', { name: '2' })).toHaveClass('chiffres')
     expect(within(ligneMaquis).getByText('Active')).toHaveClass('bg-succes-fond', 'rounded-petit')
     expect(within(ligneFlamboyant).getByText('Suspendue')).toHaveClass('bg-danger-fond')
@@ -90,82 +109,46 @@ describe('PageEntreprises', () => {
     expect(liens[0]).toHaveAttribute('href', '/plateforme/entreprises/nouvelle')
   })
 
-  it('suspend une entreprise après une confirmation explicite', async () => {
-    const { liste } = entreprisesEnMemoire([MAQUIS])
-    let suspensions = 0
-    serveurMsw.use(
-      http.post(`${API}/plateforme/entreprises/${MAQUIS.id}/suspension`, () => {
-        suspensions += 1
-        liste[0] = { ...MAQUIS, statut: 'SUSPENDUE' }
-        return new HttpResponse(null, { status: 204 })
-      }),
-    )
+  it('mène à la fiche de chaque entreprise, où se font désormais suspension et réactivation', async () => {
+    entreprisesEnMemoire([MAQUIS, FLAMBOYANT])
     await ouvrirPlateforme()
 
-    await userEvent.click(
-      await screen.findByRole('button', { name: 'Suspendre Maquis Chez Tanti' }),
-    )
-    const dialogue = screen.getByRole('dialog', { name: 'Suspendre Maquis Chez Tanti ?' })
-    expect(dialogue).toHaveTextContent('les sessions en cours seront coupées')
-    await userEvent.click(within(dialogue).getByRole('button', { name: 'Suspendre l’entreprise' }))
-
-    expect(await screen.findByRole('status')).toHaveTextContent('Maquis Chez Tanti est suspendue.')
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(await screen.findByText('Suspendue')).toBeVisible()
-    expect(suspensions).toBe(1)
+    const lien = await screen.findByRole('link', { name: 'Ouvrir la fiche de Maquis Chez Tanti' })
+    expect(lien).toHaveAttribute('href', `/plateforme/entreprises/${MAQUIS.id}`)
+    expect(screen.queryByRole('button', { name: /Suspendre|Réactiver/ })).not.toBeInTheDocument()
   })
 
-  it('ne suspend rien quand on garde l’entreprise active', async () => {
-    entreprisesEnMemoire([MAQUIS])
+  it('montre la dernière vente, sans montant, et signale ce qui mérite un appel', async () => {
+    vi.useFakeTimers({ now: new Date('2026-10-03T12:00:00Z'), toFake: ['Date'] })
+    entreprisesEnMemoire([
+      MAQUIS,
+      { ...BAOBAB, derniereVenteLe: '2026-09-24T21:00:00Z' },
+      { ...BAOBAB, id: 'nouvelle', nom: 'Chez Mama Adjoa', creeLe: '2026-10-01T09:00:00Z' },
+    ])
     await ouvrirPlateforme()
 
-    await userEvent.click(
-      await screen.findByRole('button', { name: 'Suspendre Maquis Chez Tanti' }),
+    const tableau = await screen.findByRole('table', { name: 'Entreprises clientes' })
+    expect(within(tableau).getByRole('row', { name: /Maquis Chez Tanti/ })).toHaveTextContent(
+      /02\/10\/2026/,
     )
-    await userEvent.click(screen.getByRole('button', { name: 'Garder l’entreprise active' }))
-
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(within(tableau).getByRole('row', { name: /Le Baobab/ })).toHaveTextContent(
+      'Sans vente depuis 7 jours',
+    )
+    const nouvelle = within(tableau).getByRole('row', { name: /Chez Mama Adjoa/ })
+    expect(nouvelle).toHaveTextContent('Aucune vente')
+    expect(within(nouvelle).getByText('Nouvelle')).toHaveClass('rounded-petit')
   })
 
-  it('réactive une entreprise suspendue', async () => {
-    const { liste } = entreprisesEnMemoire([FLAMBOYANT])
-    serveurMsw.use(
-      http.post(`${API}/plateforme/entreprises/${FLAMBOYANT.id}/reactivation`, () => {
-        liste[0] = { ...FLAMBOYANT, statut: 'ACTIVE' }
-        return new HttpResponse(null, { status: 204 })
-      }),
-    )
+  it('cherche par nom d’entreprise ou de propriétaire, depuis la première page', async () => {
+    const { recherches } = entreprisesEnMemoire([MAQUIS], 120)
     await ouvrirPlateforme()
+    await userEvent.click(await screen.findByRole('button', { name: 'Page suivante' }))
 
-    await userEvent.click(
-      await screen.findByRole('button', { name: 'Réactiver Bar Le Flamboyant' }),
-    )
-    await userEvent.click(screen.getByRole('button', { name: 'Réactiver l’entreprise' }))
+    await userEvent.type(screen.getByRole('searchbox', { name: 'Rechercher' }), 'Tanti{Enter}')
 
-    expect(await screen.findByRole('status')).toHaveTextContent(
-      'Bar Le Flamboyant est de nouveau active.',
-    )
-  })
-
-  it('garde le dialogue ouvert et explique un échec', async () => {
-    entreprisesEnMemoire([MAQUIS])
-    serveurMsw.use(
-      http.post(`${API}/plateforme/entreprises/${MAQUIS.id}/suspension`, () =>
-        HttpResponse.json(
-          { statut: 500, code: 'ERREUR_INTERNE', message: 'x', traceId: 'c0ffee42' },
-          { status: 500 },
-        ),
-      ),
-    )
-    await ouvrirPlateforme()
-
-    await userEvent.click(
-      await screen.findByRole('button', { name: 'Suspendre Maquis Chez Tanti' }),
-    )
-    await userEvent.click(screen.getByRole('button', { name: 'Suspendre l’entreprise' }))
-
-    const dialogue = screen.getByRole('dialog')
-    expect(await within(dialogue).findByRole('alert')).toHaveTextContent('c0ffee42')
+    await waitFor(() => {
+      expect(recherches.at(-1)).toBe('recherche=Tanti&page=0&taille=50')
+    })
   })
 
   it('confirme la création d’une entreprise au retour sur la liste', async () => {

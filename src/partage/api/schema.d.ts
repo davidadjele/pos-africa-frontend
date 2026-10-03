@@ -15,7 +15,7 @@ export interface paths {
          * Lister l'activité, de la plus récente
          * @description Permission ACTIVITE_CONSULTER. Un gérant ne voit que ses établissements, la carte commune et le personnel de ses établissements. Par défaut, seulement les actions critiques.
          */
-        get: operations["lister_10"];
+        get: operations["lister_12"];
         put?: never;
         post?: never;
         delete?: never;
@@ -152,7 +152,7 @@ export interface paths {
             cookie?: never;
         };
         /** Lister les tablettes visibles, actives d'abord */
-        get: operations["lister_9"];
+        get: operations["lister_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -344,7 +344,7 @@ export interface paths {
             cookie?: never;
         };
         /** Les clients actifs de l'établissement de la tablette, par nom */
-        get: operations["lister_7"];
+        get: operations["lister_8"];
         put?: never;
         /** Ouvrir une ardoise à un client depuis la caisse */
         post: operations["creer_7"];
@@ -558,7 +558,7 @@ export interface paths {
          * Ajouter une unité d'un produit
          * @description Prix, nom et taxe figés maintenant. Erreurs : PRODUIT_EPUISE (409), PRODUIT_INDISPONIBLE (409).
          */
-        post: operations["ajouter"];
+        post: operations["ajouter_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1180,7 +1180,7 @@ export interface paths {
             cookie?: never;
         };
         /** Lister les catégories, dans l'ordre de la caisse */
-        get: operations["lister_6"];
+        get: operations["lister_7"];
         put?: never;
         /**
          * Créer une catégorie, placée en dernier
@@ -1225,7 +1225,7 @@ export interface paths {
          * Modifier une catégorie
          * @description Erreurs : RESSOURCE_INTROUVABLE, CONFLIT_MODIFICATION, REQUETE_INVALIDE.
          */
-        put: operations["modifier_6"];
+        put: operations["modifier_7"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1246,7 +1246,7 @@ export interface paths {
          * Désactiver
          * @description Permission CATALOGUE_GERER. Retiré de la caisse et des choix ; l'historique reste. Refusé (409) tant que la ressource sert encore : voir la description de la section.
          */
-        post: operations["desactiver_4"];
+        post: operations["desactiver_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1266,7 +1266,7 @@ export interface paths {
          * Réactiver
          * @description Permission CATALOGUE_GERER.
          */
-        post: operations["reactiver_5"];
+        post: operations["reactiver_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1283,7 +1283,7 @@ export interface paths {
         /** L'identité de l'entreprise */
         get: operations["identite"];
         /** Modifier le numéro fiscal, le téléphone, l'e-mail ou l'adresse de l'entreprise */
-        put: operations["modifier_5"];
+        put: operations["modifier_6"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1299,7 +1299,7 @@ export interface paths {
             cookie?: never;
         };
         /** Lister les établissements, triés par code */
-        get: operations["lister_4"];
+        get: operations["lister_5"];
         put?: never;
         /**
          * Créer un établissement
@@ -1445,12 +1445,12 @@ export interface paths {
             cookie?: never;
         };
         /** Un client et les derniers mouvements de son ardoise */
-        get: operations["fiche"];
+        get: operations["fiche_1"];
         /**
          * Modifier un client
          * @description Un changement de plafond est tracé comme action critique.
          */
-        put: operations["modifier_4"];
+        put: operations["modifier_5"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1471,7 +1471,7 @@ export interface paths {
          * Fermer l'ardoise d'un client
          * @description Erreur : ARDOISE_NON_SOLDEE (409) s'il doit encore.
          */
-        post: operations["desactiver_3"];
+        post: operations["desactiver_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1488,7 +1488,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Rouvrir l'ardoise d'un client */
-        post: operations["reactiver_4"];
+        post: operations["reactiver_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1506,7 +1506,7 @@ export interface paths {
          * Salles et tables de l'établissement, dans l'ordre de la caisse
          * @description Erreurs : RESSOURCE_INTROUVABLE (404), ACCES_REFUSE (hors du périmètre d'un gérant).
          */
-        get: operations["lister_5"];
+        get: operations["lister_6"];
         put?: never;
         /**
          * Créer une salle, placée en dernier
@@ -1670,7 +1670,7 @@ export interface paths {
          * Modifier un établissement
          * @description Permission ETABLISSEMENT_GERER. Erreurs : RESSOURCE_INTROUVABLE (404), CONFLIT_MODIFICATION (409, version dépassée), CODE_ETABLISSEMENT_DEJA_UTILISE (409).
          */
-        put: operations["modifier_3"];
+        put: operations["modifier_4"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1761,7 +1761,7 @@ export interface paths {
             cookie?: never;
         };
         /** Lister le personnel visible : actifs d'abord, par nom */
-        get: operations["lister_3"];
+        get: operations["lister_4"];
         put?: never;
         /**
          * Ajouter un employé
@@ -1786,7 +1786,7 @@ export interface paths {
          * Modifier un employé et remplacer ses rôles
          * @description Erreurs : CONFLIT_MODIFICATION (version dépassée), ACCES_REFUSE (hors périmètre, soi-même, propriétaire), REQUETE_INVALIDE.
          */
-        put: operations["modifier_2"];
+        put: operations["modifier_3"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1807,7 +1807,7 @@ export interface paths {
          * Désactiver un employé
          * @description Plus de connexion ni de PIN ; ses sessions tombent.
          */
-        post: operations["desactiver_2"];
+        post: operations["desactiver_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1844,7 +1844,27 @@ export interface paths {
         get?: never;
         put?: never;
         /** Réactiver un employé */
-        post: operations["reactiver_3"];
+        post: operations["reactiver_4"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plateforme/activite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * L'activité de l'équipe plateforme, la plus récente d'abord
+         * @description Filtres facultatifs : type d'action, auteur (compte), entreprise, ou recherche dans le nom de l'entreprise.
+         */
+        get: operations["lister_10"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1858,14 +1878,61 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Lister les entreprises, les plus récentes d'abord */
-        get: operations["lister_2"];
+        /**
+         * Lister les entreprises, les plus récentes d'abord
+         * @description recherche : dans le nom de l'entreprise, ou le nom, le téléphone ou l'e-mail de son propriétaire. La dernière vente est une date : la plateforme ne voit aucun montant.
+         */
+        get: operations["lister_3"];
         put?: never;
         /**
          * Créer une entreprise, son premier établissement et son propriétaire
          * @description Si le propriétaire a déjà un compte (même téléphone ou e-mail), il est rattaché et garde son mot de passe ; sinon un compte est créé avec un mot de passe temporaire, renvoyé une seule fois (motDePasseTemporaire), que le propriétaire remplacera à sa première connexion.
          */
         post: operations["creer_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plateforme/entreprises/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * La fiche d'une entreprise
+         * @description Identité, propriétaires, établissements et compteurs d'utilisation : aucun montant de vente. Erreur : RESSOURCE_INTROUVABLE (404).
+         */
+        get: operations["fiche"];
+        /**
+         * Modifier le nom, le numéro fiscal, le pays ou la devise
+         * @description Pays et devise refusés (REQUETE_INVALIDE sur le champ) s'ils changent après la première vente. Erreur : CONFLIT_MODIFICATION (409, version dépassée).
+         */
+        put: operations["modifier_2"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plateforme/entreprises/{id}/proprietaires/{compteId}/mot-de-passe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Redonner un mot de passe temporaire à un propriétaire
+         * @description Affiché une seule fois ; le propriétaire le remplace à sa connexion. Ses sessions tombent et le verrouillage est levé. Erreur : RESSOURCE_INTROUVABLE (404) si ce compte n'est pas propriétaire ici.
+         */
+        post: operations["redonnerMotDePasse_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1882,7 +1949,7 @@ export interface paths {
         get?: never;
         put?: never;
         /** Réactiver une entreprise suspendue */
-        post: operations["reactiver_2"];
+        post: operations["reactiver_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1899,10 +1966,148 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Suspendre une entreprise
-         * @description Plus aucune connexion ; les jetons en cours tombent.
+         * Suspendre une entreprise, avec sa raison
+         * @description Plus aucune connexion ; les jetons en cours tombent. La raison AUTRE exige une précision.
          */
         post: operations["suspendre"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plateforme/equipe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Les membres de l'équipe plateforme, actifs d'abord */
+        get: operations["lister_2"];
+        put?: never;
+        /**
+         * Ajouter un membre (responsable seulement)
+         * @description Un mot de passe temporaire est renvoyé une seule fois ; le membre le remplace à sa première connexion. Un e-mail déjà utilisé par un compte est refusé (REQUETE_INVALIDE sur email).
+         */
+        post: operations["ajouter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plateforme/equipe/{compteId}/desactivation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Désactiver un membre (responsable seulement)
+         * @description Ses sessions tombent. Jamais un responsable, ni donc soi-même (REQUETE_INVALIDE) ; ACCES_REFUSE (403) pour un membre.
+         */
+        post: operations["desactiver_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plateforme/equipe/{compteId}/mot-de-passe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Redonner un mot de passe temporaire à un membre (responsable seulement)
+         * @description Affiché une seule fois. Jamais à un responsable (REQUETE_INVALIDE) : son secours passe par le serveur. Erreurs : RESSOURCE_INTROUVABLE (404) hors de l'équipe, ACCES_REFUSE (403) pour un membre.
+         */
+        post: operations["redonnerMotDePasse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plateforme/equipe/{compteId}/reactivation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Réactiver un membre (responsable seulement) */
+        post: operations["reactiver_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plateforme/equipe/{compteId}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Nommer responsable, ou retirer ce rôle (responsable seulement)
+         * @description Il reste toujours un responsable actif : retirer le rôle du dernier est refusé (REQUETE_INVALIDE). Erreur : ACCES_REFUSE (403) pour un membre.
+         */
+        post: operations["changerRole"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plateforme/erreurs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Retrouver une erreur par son code, ou voir les erreurs des dernières 24 heures
+         * @description code : tout ou début (8 caractères au moins) du traceId lu par le client ; cherché sur 30 jours. Sans code : les 100 dernières erreurs des 24 dernières heures, toutes entreprises.
+         */
+        get: operations["erreurs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plateforme/tableau-de-bord": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Le tableau de bord de la plateforme
+         * @description Indicateurs, notes encaissées par jour sur 30 jours, entreprises à relancer (7 jours sans vente, ou aucune vente 3 jours après la création) et nouvelles entreprises de la semaine. Aucun montant.
+         */
+        get: operations["tableauDeBord"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2046,7 +2251,7 @@ export interface paths {
          * Les caisses d'une période et leurs écarts
          * @description Permission RAPPORT_FINANCIER. Les ouvertures de caisse de la période (par journée), clôturées ou non, dans le périmètre de la personne connectée. Erreurs : REQUETE_INVALIDE (400) sur le champ au, ACCES_REFUSE (403) hors périmètre.
          */
-        get: operations["lister_8"];
+        get: operations["lister_9"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2829,6 +3034,14 @@ export interface components {
             /** Format: int32 */
             quantite: number;
         };
+        DemandeMembrePlateforme: {
+            /** @example yao@tonti.africa */
+            email: string;
+            /** @example Mensah */
+            nom: string;
+            /** @example Yao */
+            prenom: string;
+        };
         DemandeModificationEmploye: {
             affectations: components["schemas"]["DemandeAffectation"][];
             email?: string;
@@ -2860,6 +3073,18 @@ export interface components {
             /** Format: int64 */
             version: number;
             ville?: string;
+        };
+        DemandeModificationPlateforme: {
+            /** @example XOF */
+            devise: string;
+            /** @example Maquis Chez Tanti */
+            nom: string;
+            /** @example 1000123456 */
+            numeroFiscal?: string;
+            /** @example TG */
+            pays: string;
+            /** Format: int64 */
+            version: number;
         };
         DemandeMouvement: {
             /** Format: int64 */
@@ -3044,6 +3269,10 @@ export interface components {
             /** Format: uuid */
             validationId?: string;
         };
+        DemandeRolePlateforme: {
+            /** @enum {string} */
+            role: "RESPONSABLE" | "MEMBRE";
+        };
         DemandeSalle: {
             /** @example Terrasse */
             nom: string;
@@ -3057,6 +3286,12 @@ export interface components {
         DemandeSeuilStock: {
             /** Format: int32 */
             seuil: number;
+        };
+        DemandeSuspension: {
+            /** @example Relancé deux fois en septembre */
+            precision?: string;
+            /** @enum {string} */
+            raison: "DEMANDE_CLIENT" | "IMPAYE" | "ABUS" | "AUTRE";
         };
         DemandeTable: {
             /** @example T4 */
@@ -3222,11 +3457,38 @@ export interface components {
             /** Format: int64 */
             version: number;
         };
+        EntreeActivitePlateforme: {
+            /** Format: uuid */
+            auteurCompteId: string;
+            auteurNom?: string;
+            detail?: string;
+            /** Format: uuid */
+            entrepriseId?: string;
+            entrepriseNom?: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            le: string;
+            type: string;
+        };
         Entreprise: {
             devise: string;
             /** Format: uuid */
             id: string;
             nom: string;
+        };
+        EntrepriseARelancer: {
+            /** Format: date-time */
+            creeLe: string;
+            /** Format: date-time */
+            derniereVenteLe?: string;
+            email?: string;
+            /** Format: uuid */
+            id: string;
+            nom: string;
+            pays: string;
+            proprietaire?: string;
+            telephone?: string;
         };
         EntrepriseAccessible: {
             /** Format: uuid */
@@ -3255,6 +3517,9 @@ export interface components {
         EntreprisePlateforme: {
             /** Format: date-time */
             creeLe: string;
+            /** Format: date-time */
+            derniereVenteLe?: string;
+            devise: string;
             /** Format: uuid */
             id: string;
             nom: string;
@@ -3266,6 +3531,22 @@ export interface components {
         };
         EnvoiRecu: {
             telephone: string;
+        };
+        ErreurPlateforme: {
+            appareilNom?: string;
+            chemin: string;
+            code: string;
+            /** Format: uuid */
+            entrepriseId?: string;
+            entrepriseNom?: string;
+            etablissementNom?: string;
+            /** Format: date-time */
+            le: string;
+            methode: string;
+            personne?: string;
+            /** Format: int32 */
+            statut: number;
+            traceId: string;
         };
         EspecesCaisse: {
             /** Format: int64 */
@@ -3313,6 +3594,18 @@ export interface components {
             /** Format: date-time */
             plusAncienneLe?: string;
             plusAncienneNote?: string;
+        };
+        EtablissementPlateforme: {
+            actif: boolean;
+            code: string;
+            /** Format: date-time */
+            derniereVenteLe?: string;
+            /** Format: uuid */
+            id: string;
+            nom: string;
+            /** Format: int64 */
+            tablettes: number;
+            ville?: string;
         };
         EtablissementRecu: {
             adresse?: string;
@@ -3418,6 +3711,28 @@ export interface components {
             client: components["schemas"]["ClientArdoise"];
             ecritures: components["schemas"]["EcritureArdoise"][];
         };
+        FicheEntreprisePlateforme: {
+            aDejaVendu: boolean;
+            /** Format: date-time */
+            creeLe: string;
+            creePar?: string;
+            devise: string;
+            etablissements: components["schemas"]["EtablissementPlateforme"][];
+            /** Format: uuid */
+            id: string;
+            nom: string;
+            numeroFiscal?: string;
+            pays: string;
+            proprietaires: components["schemas"]["ProprietairePlateforme"][];
+            /** @enum {string} */
+            statut: "ACTIVE" | "SUSPENDUE";
+            suspension?: components["schemas"]["SuspensionPlateforme"];
+            /** Format: int32 */
+            tvaDepart?: number;
+            utilisation: components["schemas"]["UtilisationPlateforme"];
+            /** Format: int64 */
+            version: number;
+        };
         HistoriqueCaisses: {
             caisses: components["schemas"]["CaisseResume"][];
             parJour: components["schemas"]["EcartDuJour"][];
@@ -3429,6 +3744,24 @@ export interface components {
             nom: string;
             numeroFiscal?: string;
             telephone?: string;
+        };
+        IndicateursPlateforme: {
+            /** Format: int64 */
+            actives: number;
+            /** Format: int64 */
+            erreursInternes24h: number;
+            /** Format: int64 */
+            etablissements: number;
+            /** Format: int64 */
+            notesHier: number;
+            /** Format: int64 */
+            notesSemaineAvant: number;
+            /** Format: int64 */
+            nouvellesSemaine: number;
+            /** Format: int64 */
+            suspendues: number;
+            /** Format: int64 */
+            tablettes: number;
         };
         IndicateursVentes: {
             /** Format: int64 */
@@ -3551,6 +3884,27 @@ export interface components {
             /** Format: int32 */
             seuil: number;
         };
+        MembreAjoute: {
+            membre: components["schemas"]["MembrePlateforme"];
+            motDePasseTemporaire: string;
+        };
+        MembrePlateforme: {
+            actif: boolean;
+            /** Format: date-time */
+            ajouteLe: string;
+            ajoutePar?: string;
+            /** Format: uuid */
+            compteId: string;
+            /** Format: date-time */
+            derniereConnexionLe?: string;
+            email: string;
+            motDePasseAChanger: boolean;
+            nom: string;
+            prenom: string;
+            /** @enum {string} */
+            role: "RESPONSABLE" | "MEMBRE";
+            vous: boolean;
+        };
         ModeRemboursable: {
             /** @enum {string} */
             mode: "ESPECES" | "MOBILE_MONEY" | "CARTE" | "ARDOISE";
@@ -3561,6 +3915,10 @@ export interface components {
             remboursable: number;
             /** Format: int64 */
             rembourse: number;
+        };
+        MotDePasseTemporaire: {
+            identifiant: string;
+            motDePasseTemporaire: string;
         };
         MouvementResume: {
             approuvePar?: string;
@@ -3668,6 +4026,22 @@ export interface components {
             /** Format: int64 */
             totalPaye: number;
         };
+        NotesDuJourPlateforme: {
+            /** Format: date */
+            jour: string;
+            /** Format: int64 */
+            notes: number;
+        };
+        NouvelleEntreprisePlateforme: {
+            /** Format: date-time */
+            creeLe: string;
+            /** Format: uuid */
+            id: string;
+            nom: string;
+            pays: string;
+            /** Format: date-time */
+            premiereVenteLe?: string;
+        };
         OperateurMobileMoney: {
             code: string;
             libelle: string;
@@ -3692,6 +4066,15 @@ export interface components {
         };
         PageResultatsEmployeResume: {
             elements: components["schemas"]["EmployeResume"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            taille: number;
+            /** Format: int64 */
+            total: number;
+        };
+        PageResultatsEntreeActivitePlateforme: {
+            elements: components["schemas"]["EntreeActivitePlateforme"][];
             /** Format: int32 */
             page: number;
             /** Format: int32 */
@@ -3820,6 +4203,19 @@ export interface components {
             role: string;
             /** Format: uuid */
             utilisateurId: string;
+        };
+        ProprietairePlateforme: {
+            autresEntreprises: string[];
+            /** Format: uuid */
+            compteId: string;
+            /** Format: date-time */
+            derniereConnexionLe?: string;
+            email?: string;
+            nom: string;
+            prenom: string;
+            telephone?: string;
+            /** Format: date-time */
+            verrouilleJusquA?: string;
         };
         RapportVentes: {
             annulations: components["schemas"]["AnnulationsPeriode"];
@@ -4041,6 +4437,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             motDePasseAChanger: boolean;
+            nom?: string;
             telephone?: string;
         };
         ResumeUtilisateur: {
@@ -4106,6 +4503,13 @@ export interface components {
             /** @enum {string} */
             politique: "SOUPLE" | "AVERTISSEMENT" | "STRICT";
         };
+        SuspensionPlateforme: {
+            /** Format: date-time */
+            le: string;
+            precision?: string;
+            /** @enum {string} */
+            raison: "DEMANDE_CLIENT" | "IMPAYE" | "ABUS" | "AUTRE";
+        };
         SyntheseCaisses: {
             /** Format: int32 */
             avecEcart: number;
@@ -4154,6 +4558,12 @@ export interface components {
             /** Format: int32 */
             notes: number;
         };
+        TableauDeBordPlateforme: {
+            aRelancer: components["schemas"]["EntrepriseARelancer"][];
+            indicateurs: components["schemas"]["IndicateursPlateforme"];
+            nouvelles: components["schemas"]["NouvelleEntreprisePlateforme"][];
+            parJour: components["schemas"]["NotesDuJourPlateforme"][];
+        };
         Taxe: {
             /** Format: int64 */
             montant: number;
@@ -4186,6 +4596,25 @@ export interface components {
             tauxPointsDeBase: number;
             /** Format: int64 */
             version: number;
+        };
+        UtilisationPlateforme: {
+            /** Format: int64 */
+            avecBackOffice: number;
+            /** Format: date-time */
+            derniereConnexionLe?: string;
+            derniereConnexionPar?: string;
+            /** Format: date-time */
+            derniereVenteLe?: string;
+            /** Format: int64 */
+            notesSemainePrecedente: number;
+            /** Format: int64 */
+            notesSeptJours: number;
+            /** Format: int64 */
+            tablettes: number;
+            /** Format: int64 */
+            tablettesRevoquees: number;
+            /** Format: int64 */
+            utilisateursActifs: number;
         };
         ValidationAccordee: {
             /** Format: date-time */
@@ -4312,7 +4741,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    lister_10: {
+    lister_12: {
         parameters: {
             query?: {
                 depuis?: string;
@@ -4543,7 +4972,7 @@ export interface operations {
             };
         };
     };
-    lister_9: {
+    lister_11: {
         parameters: {
             query?: {
                 page?: number;
@@ -4887,7 +5316,7 @@ export interface operations {
             };
         };
     };
-    lister_7: {
+    lister_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -5335,7 +5764,7 @@ export interface operations {
             };
         };
     };
-    ajouter: {
+    ajouter_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -6412,7 +6841,7 @@ export interface operations {
             };
         };
     };
-    lister_6: {
+    lister_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -6505,7 +6934,7 @@ export interface operations {
             };
         };
     };
-    modifier_6: {
+    modifier_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -6540,7 +6969,7 @@ export interface operations {
             };
         };
     };
-    desactiver_4: {
+    desactiver_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -6569,7 +6998,7 @@ export interface operations {
             };
         };
     };
-    reactiver_5: {
+    reactiver_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -6627,7 +7056,7 @@ export interface operations {
             };
         };
     };
-    modifier_5: {
+    modifier_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -6660,7 +7089,7 @@ export interface operations {
             };
         };
     };
-    lister_4: {
+    lister_5: {
         parameters: {
             query?: {
                 page?: number;
@@ -6976,7 +7405,7 @@ export interface operations {
             };
         };
     };
-    fiche: {
+    fiche_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -7008,7 +7437,7 @@ export interface operations {
             };
         };
     };
-    modifier_4: {
+    modifier_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -7044,7 +7473,7 @@ export interface operations {
             };
         };
     };
-    desactiver_3: {
+    desactiver_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -7076,7 +7505,7 @@ export interface operations {
             };
         };
     };
-    reactiver_4: {
+    reactiver_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -7108,7 +7537,7 @@ export interface operations {
             };
         };
     };
-    lister_5: {
+    lister_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -7446,7 +7875,7 @@ export interface operations {
             };
         };
     };
-    modifier_3: {
+    modifier_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -7640,7 +8069,7 @@ export interface operations {
             };
         };
     };
-    lister_3: {
+    lister_4: {
         parameters: {
             query?: {
                 page?: number;
@@ -7705,7 +8134,7 @@ export interface operations {
             };
         };
     };
-    modifier_2: {
+    modifier_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -7740,7 +8169,7 @@ export interface operations {
             };
         };
     };
-    desactiver_2: {
+    desactiver_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -7800,7 +8229,7 @@ export interface operations {
             };
         };
     };
-    reactiver_3: {
+    reactiver_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -7829,9 +8258,46 @@ export interface operations {
             };
         };
     };
-    lister_2: {
+    lister_10: {
         parameters: {
             query?: {
+                type?: string;
+                auteur?: string;
+                entrepriseId?: string;
+                recherche?: string;
+                page?: number;
+                taille?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PageResultatsEntreeActivitePlateforme"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    lister_3: {
+        parameters: {
+            query?: {
+                recherche?: string;
                 page?: number;
                 taille?: number;
             };
@@ -7894,7 +8360,105 @@ export interface operations {
             };
         };
     };
-    reactiver_2: {
+    fiche: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FicheEntreprisePlateforme"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    modifier_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeModificationPlateforme"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FicheEntreprisePlateforme"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    redonnerMotDePasse_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                compteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MotDePasseTemporaire"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    reactiver_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -7932,6 +8496,101 @@ export interface operations {
             };
             cookie?: never;
         };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeSuspension"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    lister_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MembrePlateforme"][];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    ajouter: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeMembrePlateforme"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MembreAjoute"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    desactiver_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                compteId: string;
+            };
+            cookie?: never;
+        };
         requestBody?: never;
         responses: {
             /** @description No Content */
@@ -7940,6 +8599,159 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    redonnerMotDePasse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                compteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MotDePasseTemporaire"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    reactiver_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                compteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    changerRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                compteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeRolePlateforme"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    erreurs: {
+        parameters: {
+            query?: {
+                code?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErreurPlateforme"][];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    tableauDeBord: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TableauDeBordPlateforme"];
+                };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
             default: {
@@ -8204,7 +9016,7 @@ export interface operations {
             };
         };
     };
-    lister_8: {
+    lister_9: {
         parameters: {
             query: {
                 du: string;

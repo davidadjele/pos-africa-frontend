@@ -2,7 +2,16 @@ import type { TFunction } from 'i18next'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Navigate, useNavigate } from '@tanstack/react-router'
 import { clsx } from 'clsx'
-import { ArrowLeft, Delete, RotateCw } from 'lucide-react'
+import {
+  ArrowLeft,
+  Banknote,
+  CreditCard,
+  Delete,
+  NotebookPen,
+  RotateCw,
+  Smartphone,
+  type LucideIcon,
+} from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appelerCaisse } from '../../partage/api/appelerCaisse'
@@ -44,6 +53,14 @@ import { TicketRecu } from './TicketRecu'
 import { useImpression } from '../../partage/impression/useImpression'
 
 const MODES: ModePaiement[] = ['ESPECES', 'MOBILE_MONEY', 'CARTE', 'ARDOISE']
+
+/** Une icône par mode : on reconnaît la tuile avant de lire son nom. */
+const ICONES_MODES: Record<ModePaiement, LucideIcon> = {
+  ESPECES: Banknote,
+  MOBILE_MONEY: Smartphone,
+  CARTE: CreditCard,
+  ARDOISE: NotebookPen,
+}
 /** Billets courants : les montants rapides arrondissent au billet supérieur. */
 const PALIERS = [1000, 2000, 5000, 10_000, 20_000]
 
@@ -617,11 +634,19 @@ function Paiement({
                 setActif(candidat === 'ESPECES' ? 'recu' : 'montant')
               }}
               className={clsx(
-                'flex min-h-16 flex-col items-start justify-center gap-0.5 rounded-moyen bg-surface px-3 py-1.5 text-left text-encre',
-                mode === candidat ? 'border-2 border-accent' : 'border border-trait',
+                'flex min-h-22 flex-col items-start justify-between gap-1.5 rounded-moyen px-3.5 py-3 text-left text-encre',
+                mode === candidat
+                  ? 'border-2 border-accent bg-accent-doux'
+                  : 'border border-bordure-controle bg-surface hover:bg-fond',
               )}
             >
-              <span className="text-corps-fort">{t(`encaissement.modes.${candidat}`)}</span>
+              {(() => {
+                const Icone = ICONES_MODES[candidat]
+                return <Icone aria-hidden="true" size={22} />
+              })()}
+              <span className="text-titre-carte leading-tight">
+                {t(`encaissement.modes.${candidat}`)}
+              </span>
               <span className="text-legende text-attenue">
                 {t(`encaissement.aides.${candidat}`)}
               </span>

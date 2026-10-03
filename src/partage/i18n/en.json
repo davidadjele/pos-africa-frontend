@@ -115,7 +115,12 @@
       "chargement": "Loading the menu…",
       "plusEnStock": "Out of stock",
       "restants_one": "{{count}} left",
-      "restants_other": "{{count}} left"
+      "restants_other": "{{count}} left",
+      "nombreProduits_one": "{{count}} product",
+      "nombreProduits_other": "{{count}} products",
+      "surLaNote_one": "{{count}} on the bill",
+      "surLaNote_other": "{{count}} on the bill",
+      "retirerUn": "Remove one"
     },
     "note": {
       "titre": "Current tab",
@@ -279,7 +284,13 @@
       "payee": "Paid",
       "enPreparation": "{{serveur}}, in preparation since {{heure}}",
       "aEncaisser": "To collect {{montant}}",
-      "aEncaisserCourt": "To collect"
+      "aEncaisserCourt": "To collect",
+      "legende": {
+        "titre": "Colour legend",
+        "occupee": "Occupied",
+        "enAttente": "Items to send or serve",
+        "addition": "Bill requested"
+      }
     },
     "ouverture": {
       "titreTable": "Open a tab on {{table}}",
@@ -385,6 +396,22 @@
       "revientAide": "Intact, unopened",
       "perdu": "Lost",
       "perduAide": "Opened, broken, unusable"
+    },
+    "ruban": {
+      "titre": "Open bills",
+      "aEnvoyer": "To send",
+      "aServir": "To serve",
+      "aRemettre": "To hand over",
+      "addition": "Bill requested"
+    },
+    "telephone": {
+      "continuer": "Keep ordering",
+      "resume_one": "{{count}} item",
+      "resume_other": "{{count}} items",
+      "resumeAEnvoyer_one": "{{count}} item, {{aEnvoyer}} to send",
+      "resumeAEnvoyer_other": "{{count}} items, {{aEnvoyer}} to send",
+      "voir": "See the bill",
+      "voirEtEnvoyer": "See the bill and send"
     }
   },
   "gestion": {
@@ -658,6 +685,7 @@
         "pays": "Country",
         "etablissements": "Venues",
         "statut": "Status",
+        "derniereVente": "Last sale",
         "actions": "Actions"
       },
       "creeeLe": "Created on {{date}}",
@@ -666,9 +694,7 @@
         "SUSPENDUE": "Suspended"
       },
       "suspendre": "Suspend",
-      "suspendreNomme": "Suspend {{nom}}",
       "reactiver": "Reactivate",
-      "reactiverNomme": "Reactivate {{nom}}",
       "chargement": "Loading businesses…",
       "vide": {
         "titre": "No business",
@@ -689,11 +715,287 @@
         "annuler": "Leave suspended",
         "confirmer": "Reactivate the business",
         "faite": "{{nom}} is active again."
+      },
+      "aucuneVente": "No sale yet",
+      "signaux": {
+        "SANS_VENTE": "No sale for 7 days",
+        "NOUVELLE": "New"
+      },
+      "ouvrir": "Open",
+      "ouvrirNomme": "Open {{nom}}",
+      "rechercher": "Search",
+      "rechercherExemple": "Business or owner name, phone, email",
+      "aucunResultat": {
+        "titre": "No business found",
+        "phrase": "Nothing matches “{{recherche}}”. Check the spelling, or search for the owner’s phone."
       }
     },
     "nouvelle": {
       "titre": "New business",
       "retour": "Back to businesses"
+    },
+    "fiche": {
+      "chargement": "Loading the business…",
+      "clienteDepuis": "Customer since {{date}}.",
+      "modifier": "Edit",
+      "conflit": "This business was changed in the meantime: the page now shows its latest details. Make your changes again.",
+      "jamais": "Never",
+      "nonRenseigne": "Not set",
+      "identite": "Identity",
+      "pays": "Country",
+      "devise": "Currency",
+      "numeroFiscal": "Tax number",
+      "tvaDepart": "Initial VAT",
+      "proprietaire_one": "Owner",
+      "proprietaire_other": "Owners",
+      "nom": "Name",
+      "telephone": "Phone",
+      "email": "Email",
+      "derniereConnexion": "Last sign-in",
+      "utilisation": {
+        "titre": "Usage",
+        "utilisateurs": "Active users",
+        "avecBackOffice_one": "{{count}} with back-office access",
+        "avecBackOffice_other": "{{count}} with back-office access",
+        "tablettes": "Tablets",
+        "revoquees_one": "{{count}} revoked",
+        "revoquees_other": "{{count}} revoked",
+        "notes": "Bills paid, 7 days",
+        "semainePrecedente": "vs {{nombre}} the week before",
+        "derniereConnexion": "Last back-office sign-in"
+      },
+      "etablissements": {
+        "titre": "Locations",
+        "tableau": "Locations of the business",
+        "code": "Code",
+        "nom": "Name",
+        "ville": "City",
+        "tablettes": "Tablets",
+        "derniereVente": "Last sale",
+        "statut": "Status",
+        "actif": "Active",
+        "inactif": "Deactivated"
+      },
+      "modification": {
+        "titre": "Edit {{nom}}",
+        "phrase": "The change is recorded in the platform activity.",
+        "nom": "Business name",
+        "nomManquant": "Enter the business name.",
+        "numeroFiscal": "Tax number",
+        "numeroFiscalAide": "Printed on receipts and Z reports.",
+        "pays": "Country",
+        "devise": "Currency",
+        "figes": "Country and currency are locked since the first sale: amounts already paid and phone numbers depend on them.",
+        "faite": "Changes saved."
+      },
+      "suspension": {
+        "titre": "Suspension",
+        "raison": "Reason",
+        "precision": "Details",
+        "precisionExemple": "E.g. closed for works until 15 November",
+        "precisionAide": "Shown on the page and in the platform activity.",
+        "precisionManquante": "Give the reason.",
+        "depuis": "Suspended on {{date}}.",
+        "raisons": {
+          "DEMANDE_CLIENT": "Customer request",
+          "IMPAYE": "Unpaid",
+          "ABUS": "Abuse or fraud",
+          "AUTRE": "Other"
+        }
+      },
+      "verrouille": "Account locked until {{heure}}",
+      "ouvreAussi": "Also opens",
+      "motDePasse": {
+        "action": "Give a temporary password",
+        "titre": "Give {{nom}} a new password?",
+        "phrase": "A temporary password is shown only once; the owner replaces it when signing in.",
+        "verifier": "First check you are talking to the right person: call back the {{contact}} saved on this page, never a number given during the call.",
+        "consequenceSessions": "Their open sessions are closed and the lock is lifted.",
+        "consequenceAutres": "This account also opens {{entreprises}}: the new password applies everywhere.",
+        "consequenceTrace": "This action is recorded in the platform activity under your name.",
+        "generer": "Generate the password",
+        "secretTitre": "Temporary password for {{nom}}",
+        "secretPhrase": "Read it out. It will not be shown again: a new one is chosen at sign-in.",
+        "secretLibelle": "Temporary password",
+        "transmis": "I have passed on the password"
+      },
+      "retour": "All businesses",
+      "clienteDepuisPar": "Customer since {{date}}, created by {{nom}}.",
+      "toutVoir": "See all"
+    },
+    "navigation": {
+      "titre": "Platform area",
+      "tableau": "Dashboard",
+      "entreprises": "Businesses",
+      "activite": "Activity",
+      "equipe": "Team",
+      "support": "Support"
+    },
+    "support": {
+      "titre": "Support",
+      "phrase": "Find an error from the code shown to the customer, below the message. Kept for 30 days.",
+      "code": "Error code",
+      "codeTropCourt": "Enter at least the first 8 characters of the code.",
+      "rechercher": "Search",
+      "recherche": "Searching for the error…",
+      "chargement": "Loading errors…",
+      "recentes": "Recent errors",
+      "recentesPhrase": "Last 24 hours, all businesses",
+      "aucuneRecente": {
+        "titre": "No error in the last 24 hours",
+        "phrase": "Errors returned to customers will show here."
+      },
+      "introuvable": {
+        "titre": "No error with this code",
+        "phrase": "Ask the customer to read the code again, below the error message. Errors older than 30 days are not kept."
+      },
+      "libelles": {
+        "interne": "Internal error",
+        "client": "Request refused"
+      },
+      "quand": "When",
+      "entreprise": "Business",
+      "qui": "Who",
+      "action": "Action",
+      "messageVu": "Message shown",
+      "codeComplet": "Full code",
+      "horsEntreprise": "Outside a business",
+      "inconnu": "Signed-in person",
+      "surTablette": "{{personne}}, on the “{{tablette}}” tablet",
+      "journaux": "Technical details stay in the server logs under the same code. Nothing that was typed is kept.",
+      "colonnes": {
+        "heure": "Time",
+        "entreprise": "Business",
+        "erreur": "Error",
+        "action": "Action",
+        "code": "Code"
+      }
+    },
+    "activite": {
+      "titre": "Platform activity",
+      "phrase": "What the team did, and who did it. Nothing is erased.",
+      "chargement": "Loading activity…",
+      "sansNom": "Unnamed member",
+      "equipe": "Team",
+      "vide": {
+        "titre": "No action",
+        "phrase": "No team action matches these filters."
+      },
+      "colonnes": {
+        "quand": "When",
+        "membre": "Member",
+        "action": "Action",
+        "entreprise": "Business",
+        "detail": "Details"
+      },
+      "filtres": {
+        "action": "Action",
+        "toutes": "All actions",
+        "membre": "Member",
+        "toute": "Whole team",
+        "entreprise": "Business",
+        "entrepriseExemple": "Business name"
+      },
+      "types": {
+        "ENTREPRISE_CREEE": "Created",
+        "ENTREPRISE_MODIFIEE": "Edited",
+        "ENTREPRISE_SUSPENDUE": "Suspended",
+        "ENTREPRISE_REACTIVEE": "Reactivated",
+        "MOT_DE_PASSE_REINITIALISE": "Password reset",
+        "MEMBRE_AJOUTE": "Member added",
+        "MEMBRE_DESACTIVE": "Member deactivated",
+        "MEMBRE_REACTIVE": "Member reactivated",
+        "MEMBRE_ROLE_CHANGE": "Role changed"
+      }
+    },
+    "equipe": {
+      "titre": "Platform team",
+      "phrase": "The people who run Tonti. Each signs in with their own email; their actions are recorded under their name.",
+      "ajouter": "Add a member",
+      "chargement": "Loading the team…",
+      "tableau": "Team members",
+      "colonnes": {
+        "nom": "Name",
+        "email": "Email",
+        "statut": "Status",
+        "connexion": "Last sign-in",
+        "ajout": "Added",
+        "actions": "Actions"
+      },
+      "vous": "You",
+      "actif": "Active",
+      "desactive": "Deactivated",
+      "motDePasseAChoisir": "Password to choose",
+      "premier": "First administrator",
+      "ajoutePar": "On {{date}}, by {{nom}}",
+      "desactiver": "Deactivate",
+      "reactiver": "Reactivate",
+      "regle": "A lead manages the team; a lead is never deactivated or reset from here, and there is always one. A member is never deleted: the activity keeps their name.",
+      "secretPhrase": "Pass it on to the new member. It will not be shown again: they choose their own at first sign-in.",
+      "desactivation": {
+        "titre": "Deactivate {{nom}}?",
+        "consequence": "Their open sessions are closed and they can no longer sign in to the platform area. You can reactivate them.",
+        "confirmer": "Deactivate the member"
+      },
+      "ajout": {
+        "titre": "Add a team member",
+        "phrase": "They will be able to create, edit and suspend businesses, and give an owner a new password.",
+        "prenom": "First name",
+        "nom": "Last name",
+        "email": "Email",
+        "emailAide": "Their sign-in identifier.",
+        "manquant": "This field is required.",
+        "confirmer": "Add the member"
+      },
+      "responsable": "Lead",
+      "actionsNomme": "More actions for {{nom}}",
+      "retirerRole": "Remove the lead role",
+      "nommerResponsable": "Make lead",
+      "redonnerMotDePasse": "Give a new password",
+      "regleMembre": "Only a lead manages the team: you manage businesses and support.",
+      "role": {
+        "RESPONSABLE": {
+          "titre": "Make {{nom}} a lead?",
+          "consequence": "They will manage the team: add and deactivate members, give them new passwords, name other leads. They can no longer be deactivated or reset from the interface.",
+          "confirmer": "Make lead"
+        },
+        "MEMBRE": {
+          "titre": "Remove the lead role from {{nom}}?",
+          "consequence": "They will still manage businesses and support, but no longer the team. The team always keeps at least one lead.",
+          "confirmer": "Remove the role"
+        }
+      },
+      "roles": {
+        "RESPONSABLE": "Lead",
+        "MEMBRE": "Member"
+      }
+    },
+    "tableau": {
+      "titre": "Dashboard",
+      "phrase": "Counts, never amounts: revenue stays with customers. Updated every 5 minutes.",
+      "chargement": "Loading the dashboard…",
+      "indicateurs": "Indicators",
+      "actives": "Active businesses",
+      "nouvellesSemaine_one": "+{{count}} this week",
+      "nouvellesSemaine_other": "+{{count}} this week",
+      "suspendues": "Suspended",
+      "etablissements": "Locations",
+      "tablettes": "Tablets in use",
+      "notesHier": "Bills paid yesterday",
+      "variation": "{{signe}}{{valeur}}% vs the week before",
+      "erreurs": "Internal errors, 24 h",
+      "erreursDetail": "Look into Support",
+      "parJour": "Bills paid per day",
+      "parJourPhrase": "Last 30 days, all customers",
+      "parJourResume": "Bills paid per day over 30 days: {{total}} in total",
+      "aRelancer": "To follow up",
+      "aRelancerPhrase": "Active with no sale for 7 days, or new with no first sale after 3 days.",
+      "aRelancerVide": "Nobody to follow up for now.",
+      "derniereVente": "Last sale on {{date}}",
+      "nouvelles": "New businesses",
+      "nouvellesPhrase": "Last 7 days",
+      "nouvellesVide": "No new business this week.",
+      "premiereVente": "First sale on {{date}}"
     }
   },
   "formulaireEntreprise": {

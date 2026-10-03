@@ -1,75 +1,35 @@
-import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { Plus, RotateCw } from 'lucide-react'
+import { ChevronRight, Plus, RotateCw } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { RechercheEntreprises } from '../../app/routeur'
-import { appelerApi } from '../../partage/api/appelerApi'
-import type { EntreprisePlateforme, PageEntreprisesPlateforme } from '../../partage/api/contrat'
+import type { EntreprisePlateforme } from '../../partage/api/contrat'
 import { formaterDate } from '../../partage/dates/formaterDate'
 import { nomPays } from '../../partage/referentiel/pays'
 import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
 import { BadgeStatut } from '../../partage/ui/BadgeStatut'
 import { Bouton, classesBouton } from '../../partage/ui/Bouton'
+import { ChampSaisie } from '../../partage/ui/ChampSaisie'
 import { Chargement } from '../../partage/ui/Chargement'
-import { Dialogue } from '../../partage/ui/Dialogue'
 import { EtatVide } from '../../partage/ui/EtatVide'
 import { Pagination, Tableau, type ColonneTableau } from '../../partage/ui/Tableau'
-
-const TAILLE_PAGE = 50
-
-function requeteEntreprises(page: number) {
-  return queryOptions({
-    queryKey: ['plateforme', 'entreprises', page],
-    queryFn: ({ signal }) =>
-      appelerApi<PageEntreprisesPlateforme>(
-        `/plateforme/entreprises?page=${String(page)}&taille=${String(TAILLE_PAGE)}`,
-        { signal },
-      ),
-  })
-}
-
-// L'administrateur n'a pas d'entreprise : les dates suivent le fuseau de son appareil.
-const FUSEAU_APPAREIL = Intl.DateTimeFormat().resolvedOptions().timeZone
-
-interface Changement {
-  action: 'suspension' | 'reactivation'
-  entreprise: EntreprisePlateforme
-}
+import { FUSEAU_APPAREIL, requeteEntreprises, TAILLE_PAGE } from './requetes'
+import { signalEntreprise } from './signaux'
 
 export function PageEntreprises({ recherche }: Readonly<{ recherche: RechercheEntreprises }>) {
   const { t, i18n } = useTranslation()
-  const clientRequetes = useQueryClient()
   const [page, setPage] = useState(0)
-  const requete = useQuery(requeteEntreprises(page))
-  const [changement, setChangement] = useState<Changement | null>(null)
-  const [enCours, setEnCours] = useState(false)
-  const [erreurChangement, setErreurChangement] = useState<unknown>(null)
-  const [confirmation, setConfirmation] = useState<string | null>(() => {
-    if (recherche.creee === undefined) return null
-    return recherche.compteExistant === true
-      ? t('plateforme.entreprises.creeeCompteExistant', { nom: recherche.creee })
-      : t('plateforme.entreprises.creee', { nom: recherche.creee })
-  })
-
-  function demander(action: Changement['action'], entreprise: EntreprisePlateforme) {
-    setErreurChangement(null)
-    setChangement({ action, entreprise })
-  }
-
-  async function confirmer({ action, entreprise }: Changement) {
-    setEnCours(true)
-    try {
-      await appelerApi(`/plateforme/entreprises/${entreprise.id}/${action}`, { methode: 'POST' })
-      setChangement(null)
-      setConfirmation(t(`plateforme.entreprises.${action}.faite`, { nom: entreprise.nom }))
-      await clientRequetes.invalidateQueries({ queryKey: ['plateforme', 'entreprises'] })
-    } catch (erreur) {
-      setErreurChangement(erreur)
-    } finally {
-      setEnCours(false)
-    }
-  }
+  const [saisie, setSaisie] = useState('')
+  const [cherche, setCherche] = useState('')
+  const requete = useQuery(requeteEntreprises(page, cherche))
+  const maintenant = new Date()
+  const cleConfirmation =
+    recherche.compteExistant === true
+      ? 'plateforme.entreprises.creeeCompteExistant'
+      : 'plateforme.entreprises.creee'
+  const confirmation =
+    recherche.creee === undefined ? null : t(cleConfirmation, { nom: recherche.creee })
 
   const colonnes: ColonneTableau<EntreprisePlateforme>[] = [
     {
@@ -87,7 +47,12 @@ export function PageEntreprises({ recherche }: Readonly<{ recherche: RechercheEn
     {
       cle: 'pays',
       entete: t('plateforme.entreprises.colonnes.pays'),
-      rendu: (e) => nomPays(e.pays, i18n.language),
+      rendu: (e) => (
+        <>
+          {nomPays(e.pays, i18n.language)}
+          <span className="text-attenue">, {e.devise}</span>
+        </>
+      ),
       masqueeSurTelephone: true,
     },
     {
@@ -95,6 +60,27 @@ export function PageEntreprises({ recherche }: Readonly<{ recherche: RechercheEn
       entete: t('plateforme.entreprises.colonnes.etablissements'),
       rendu: (e) => e.nombreEtablissements,
       numerique: true,
+    },
+    {
+      cle: 'vente',
+      entete: t('plateforme.entreprises.colonnes.derniereVente'),
+      rendu: (e) => {
+        const signal = signalEntreprise(e, maintenant)
+        return (
+          <span className="flex flex-wrap items-center gap-2">
+            {e.derniereVenteLe === undefined ? (
+              <span className="text-attenue">{t('plateforme.entreprises.aucuneVente')}</span>
+            ) : (
+              formaterDate(e.derniereVenteLe, FUSEAU_APPAREIL)
+            )}
+            {signal !== null && (
+              <BadgeStatut ton={signal === 'SANS_VENTE' ? 'alerte' : 'neutre'}>
+                {t(`plateforme.entreprises.signaux.${signal}`)}
+              </BadgeStatut>
+            )}
+          </span>
+        )
+      },
     },
     {
       cle: 'statut',
@@ -108,32 +94,22 @@ export function PageEntreprises({ recherche }: Readonly<{ recherche: RechercheEn
     {
       cle: 'actions',
       entete: t('plateforme.entreprises.colonnes.actions'),
-      rendu: (e) =>
-        e.statut === 'ACTIVE' ? (
-          <Bouton
-            variante="danger"
-            aria-label={t('plateforme.entreprises.suspendreNomme', { nom: e.nom })}
-            onClick={() => {
-              demander('suspension', e)
-            }}
-          >
-            {t('plateforme.entreprises.suspendre')}
-          </Bouton>
-        ) : (
-          <Bouton
-            aria-label={t('plateforme.entreprises.reactiverNomme', { nom: e.nom })}
-            onClick={() => {
-              demander('reactivation', e)
-            }}
-          >
-            {t('plateforme.entreprises.reactiver')}
-          </Bouton>
-        ),
+      rendu: (e) => (
+        <Link
+          to="/plateforme/entreprises/$entrepriseId"
+          params={{ entrepriseId: e.id }}
+          aria-label={t('plateforme.entreprises.ouvrirNomme', { nom: e.nom })}
+          className={classesBouton('secondaire')}
+        >
+          {t('plateforme.entreprises.ouvrir')}
+          <ChevronRight aria-hidden="true" size={16} />
+        </Link>
+      ),
     },
   ]
 
   const liste = requete.data
-  const vide = liste?.total === 0
+  const vide = liste?.total === 0 && cherche === ''
   const lienCreation = (
     <Link to="/plateforme/entreprises/nouvelle" className={classesBouton('principal')}>
       <Plus aria-hidden="true" size={18} />
@@ -149,6 +125,26 @@ export function PageEntreprises({ recherche }: Readonly<{ recherche: RechercheEn
       </div>
 
       {confirmation !== null && <Alerte ton="succes">{confirmation}</Alerte>}
+
+      <form
+        role="search"
+        className="max-w-md"
+        onSubmit={(evenement) => {
+          evenement.preventDefault()
+          setPage(0)
+          setCherche(saisie.trim())
+        }}
+      >
+        <ChampSaisie
+          type="search"
+          libelle={t('plateforme.entreprises.rechercher')}
+          placeholder={t('plateforme.entreprises.rechercherExemple')}
+          value={saisie}
+          onChange={(evenement) => {
+            setSaisie(evenement.target.value)
+          }}
+        />
+      </form>
 
       {requete.isPending && <Chargement texte={t('plateforme.entreprises.chargement')} />}
 
@@ -173,7 +169,16 @@ export function PageEntreprises({ recherche }: Readonly<{ recherche: RechercheEn
         </section>
       )}
 
-      {liste !== undefined && !vide && (
+      {liste?.total === 0 && cherche !== '' && (
+        <section className="rounded-moyen border border-trait bg-surface p-6">
+          <EtatVide
+            titre={t('plateforme.entreprises.aucunResultat.titre')}
+            phrase={t('plateforme.entreprises.aucunResultat.phrase', { recherche: cherche })}
+          />
+        </section>
+      )}
+
+      {liste !== undefined && liste.total > 0 && (
         <>
           <Tableau
             libelle={t('plateforme.entreprises.tableau')}
@@ -188,25 +193,6 @@ export function PageEntreprises({ recherche }: Readonly<{ recherche: RechercheEn
             surChangerPage={setPage}
           />
         </>
-      )}
-
-      {changement !== null && (
-        <Dialogue
-          titre={t(`plateforme.entreprises.${changement.action}.titre`, {
-            nom: changement.entreprise.nom,
-          })}
-          consequence={t(`plateforme.entreprises.${changement.action}.consequence`)}
-          libelleAnnuler={t(`plateforme.entreprises.${changement.action}.annuler`)}
-          libelleConfirmer={t(`plateforme.entreprises.${changement.action}.confirmer`)}
-          tonConfirmation={changement.action === 'suspension' ? 'danger' : 'principal'}
-          enCours={enCours}
-          surAnnuler={() => {
-            setChangement(null)
-          }}
-          surConfirmer={() => void confirmer(changement)}
-        >
-          {erreurChangement !== null && <AlerteErreur erreur={erreurChangement} />}
-        </Dialogue>
       )}
     </div>
   )

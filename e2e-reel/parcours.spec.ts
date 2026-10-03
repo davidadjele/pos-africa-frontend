@@ -124,6 +124,16 @@ async function premiereConnexion(
   await remplacerMotDePasse(page, identifiant, temporaire, choisi)
 }
 
+/** L'administrateur arrive sur le tableau de bord ; la liste des entreprises est l'onglet suivant. */
+async function ouvrirEntreprisesPlateforme(page: Page) {
+  await expect(page).toHaveURL(/\/plateforme\/tableau-de-bord$/)
+  await page
+    .getByRole('navigation', { name: 'Espace plateforme' })
+    .getByRole('link', { name: 'Entreprises' })
+    .click()
+  await expect(page).toHaveURL(/\/plateforme$/)
+}
+
 /** @returns le mot de passe temporaire du propriétaire, s'il n'avait pas encore de compte */
 async function creerEntreprise(
   page: Page,
@@ -169,7 +179,7 @@ test('l’admin crée Maquis Chez Tanti, puis Tanti gère ses établissements', 
 
   // L'administrateur de la plateforme crée l'entreprise, son propriétaire et Bè Kpota.
   await seConnecter(page, ADMIN.identifiant, ADMIN.motDePasse)
-  await expect(page).toHaveURL(/\/plateforme$/)
+  await ouvrirEntreprisesPlateforme(page)
   await expect(page.getByRole('banner')).toContainText('Administration de la plateforme')
   const temporaire = await creerEntreprise(page, {
     nom: 'Maquis Chez Tanti',
@@ -214,7 +224,7 @@ test('l’admin crée Maquis Chez Tanti, puis Tanti gère ses établissements', 
 
 test('un compte à plusieurs entreprises choisit la sienne après connexion', async ({ page }) => {
   await seConnecter(page, ADMIN.identifiant, ADMIN.motDePasse)
-  await expect(page).toHaveURL(/\/plateforme$/)
+  await ouvrirEntreprisesPlateforme(page)
   await creerEntreprise(page, {
     nom: 'Bar Le Flamboyant',
     etablissement: 'Tokoin',
@@ -834,9 +844,13 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await expect(note).toContainText('Réclamation, validé par Afi M.')
   await expect(note).toContainText('4 000 FCFA')
   await capturer(tablette, '38-note-remisee')
+  // Sur téléphone, la carte occupe l'écran ; la barre du bas rappelle le total et ouvre la note.
   await tablette.setViewportSize({ width: 390, height: 844 })
-  await note.scrollIntoViewIfNeeded()
+  await capturer(tablette, '38-commande-telephone')
+  await tablette.getByRole('button', { name: 'Voir la note' }).click()
+  await expect(note).toBeVisible()
   await capturer(tablette, '38-note-remisee-telephone')
+  await tablette.getByRole('button', { name: 'Continuer la commande' }).click()
   await tablette.setViewportSize({ width: 1280, height: 800 })
   await note.getByRole('button', { name: 'Plan de salle' }).click()
 
@@ -1343,4 +1357,124 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await capturer(page, '83-tableau-de-bord')
   await page.setViewportSize({ width: 390, height: 844 })
   await capturer(page, '83-tableau-de-bord-telephone')
+})
+
+test('L’équipe plateforme ouvre la fiche de Maquis Chez Tanti, la modifie et la suspend', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await seConnecter(page, ADMIN.identifiant, ADMIN.motDePasse)
+  // Le tableau de bord : des comptes, jamais de montants ; Maquis Chez Tanti a vendu, il n'est pas à relancer.
+  await expect(page).toHaveURL(/\/plateforme\/tableau-de-bord$/)
+  await expect(page.getByRole('list', { name: 'Indicateurs' })).toContainText('Entreprises actives')
+  await expect(page.getByRole('region', { name: 'À relancer' })).not.toContainText(
+    'Maquis Chez Tanti',
+  )
+  await capturer(page, '89-plateforme-tableau-de-bord')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await capturer(page, '89-plateforme-tableau-de-bord-telephone')
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page
+    .getByRole('navigation', { name: 'Espace plateforme' })
+    .getByRole('link', { name: 'Entreprises' })
+    .click()
+
+  // La recherche porte aussi sur le propriétaire ; la liste ne montre qu'une date de vente, aucun montant.
+  await page.getByRole('searchbox', { name: 'Rechercher' }).fill('Tanti')
+  await page.getByRole('searchbox', { name: 'Rechercher' }).press('Enter')
+  const ligne = page.getByRole('row', { name: /Maquis Chez Tanti/ })
+  await expect(ligne).toContainText('Togo, XOF')
+  await expect(ligne).not.toContainText('Aucune vente')
+  await capturer(page, '90-plateforme-liste')
+  await ligne.getByRole('link', { name: 'Ouvrir la fiche de Maquis Chez Tanti' }).click()
+
+  await expect(page.getByRole('heading', { level: 1, name: 'Maquis Chez Tanti' })).toBeVisible()
+  await expect(page.getByRole('list', { name: 'Utilisation' })).toContainText(
+    'Notes encaissées, 7 jours',
+  )
+  await expect(page.getByRole('region', { name: 'Propriétaire' })).toContainText('Tanti')
+  await expect(page.getByRole('table', { name: 'Établissements de l’entreprise' })).toContainText(
+    'Bè Kpota',
+  )
+  await capturer(page, '91-plateforme-fiche')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await capturer(page, '91-plateforme-fiche-telephone')
+  await page.setViewportSize({ width: 1280, height: 800 })
+
+  // Pays et devise sont figés : Maquis Chez Tanti a déjà vendu.
+  await page.getByRole('button', { name: 'Modifier' }).click()
+  const modification = page.getByRole('dialog', { name: 'Modifier Maquis Chez Tanti' })
+  await expect(modification.getByLabel('Devise')).toBeDisabled()
+  await modification.getByLabel(/^Numéro fiscal/).fill('1000123456')
+  await capturer(page, '92-plateforme-modifier')
+  await modification.getByRole('button', { name: 'Enregistrer' }).click()
+  await expect(page.getByRole('status')).toContainText('Les modifications sont enregistrées.')
+  await expect(page.getByRole('region', { name: 'Identité' })).toContainText('1000123456')
+
+  await page.getByRole('button', { name: 'Suspendre' }).click()
+  const suspension = page.getByRole('dialog', { name: 'Suspendre Maquis Chez Tanti ?' })
+  await suspension.getByLabel(/^Raison/).selectOption({ label: 'Demande du client' })
+  await suspension.getByLabel(/^Précision/).fill('Fermeture pour travaux')
+  await capturer(page, '93-plateforme-suspendre')
+  await suspension.getByRole('button', { name: 'Suspendre l’entreprise' }).click()
+  await expect(page.getByRole('region', { name: 'Suspension' })).toContainText(
+    'Demande du client : Fermeture pour travaux',
+  )
+  await capturer(page, '94-plateforme-suspendue')
+
+  // Redonner un mot de passe : la fenêtre demande d'abord de vérifier qui appelle (annulée ici).
+  await page
+    .getByRole('region', { name: 'Propriétaire' })
+    .getByRole('button', { name: 'Redonner un mot de passe temporaire' })
+    .click()
+  const motDePasse = page.getByRole('dialog', { name: /^Redonner un mot de passe à / })
+  await expect(motDePasse).toContainText('rappelez-la au')
+  await capturer(page, '95-plateforme-mot-de-passe')
+  await motDePasse.getByRole('button', { name: 'Annuler' }).click()
+
+  // Réactivée aussitôt : le parcours peut être rejoué sur la même base.
+  await page.getByRole('button', { name: 'Réactiver' }).click()
+  await page.getByRole('button', { name: 'Réactiver l’entreprise' }).click()
+  await expect(page.getByRole('status')).toContainText('Maquis Chez Tanti est de nouveau active.')
+
+  // L'équipe : un membre ajouté reçoit un mot de passe temporaire, affiché une seule fois.
+  await page.setViewportSize({ width: 1280, height: 800 })
+  const onglets = page.getByRole('navigation', { name: 'Espace plateforme' })
+  await onglets.getByRole('link', { name: 'Équipe' }).click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Équipe plateforme' })).toBeVisible()
+  await page.getByRole('button', { name: 'Ajouter un membre' }).click()
+  const ajout = page.getByRole('dialog', { name: 'Ajouter un membre à l’équipe' })
+  await ajout.getByLabel(/^Prénom/).fill('Akossiwa')
+  await ajout.getByLabel(/^Nom/).fill('Dogbe')
+  await ajout.getByLabel(/^E-mail/).fill(`akossiwa.${String(Date.now())}@tonti.africa`)
+  await ajout.getByRole('button', { name: 'Ajouter le membre' }).click()
+  const secretMembre = page.getByRole('dialog', {
+    name: 'Mot de passe temporaire de Akossiwa Dogbe',
+  })
+  await expect(secretMembre).toBeVisible()
+  await secretMembre.getByRole('button', { name: 'J’ai transmis le mot de passe' }).click()
+  await expect(page.getByRole('row', { name: /Akossiwa Dogbe/ })).toContainText(
+    'Mot de passe à choisir',
+  )
+  await capturer(page, '97-plateforme-equipe')
+
+  // L'activité : chaque action de l'équipe, avec son auteur.
+  await onglets.getByRole('link', { name: 'Activité' }).click()
+  const activite = page.getByRole('table', { name: 'Activité de la plateforme' })
+  await expect(activite).toContainText('Membre ajouté')
+  await expect(activite).toContainText('Suspension')
+  await capturer(page, '98-plateforme-activite')
+
+  // Le support : les erreurs renvoyées pendant le parcours, puis un code introuvable.
+  await onglets.getByRole('link', { name: 'Support' }).click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Support' })).toBeVisible()
+  await expect(page.getByRole('table', { name: 'Erreurs récentes' })).toContainText(
+    'Maquis Chez Tanti',
+  )
+  await capturer(page, '96-plateforme-support')
+  await page.getByLabel(/^Code de l’erreur/).fill('deadbeef')
+  await page.getByLabel(/^Code de l’erreur/).press('Enter')
+  await expect(page.getByRole('heading', { name: 'Aucune erreur avec ce code' })).toBeVisible()
+  await page.setViewportSize({ width: 390, height: 844 })
+  await capturer(page, '96-plateforme-support-telephone')
 })
