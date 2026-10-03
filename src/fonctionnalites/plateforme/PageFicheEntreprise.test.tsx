@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
@@ -12,6 +12,16 @@ import type {
 
 const ID = '6b0e6a52-7a6a-4d57-9d3e-1c1a9b1f0a01'
 
+const TANTI: FicheEntreprisePlateforme['proprietaires'][number] = {
+  compteId: 'c0000000-0000-4000-8000-000000000001',
+  prenom: 'Tanti',
+  nom: 'Akouvi',
+  telephone: '+22890123456',
+  email: 'tanti.akouvi@gmail.com',
+  derniereConnexionLe: '2026-10-03T18:02:00Z',
+  autresEntreprises: [],
+}
+
 const FICHE: FicheEntreprisePlateforme = {
   id: ID,
   nom: 'Maquis Chez Tanti',
@@ -23,15 +33,7 @@ const FICHE: FicheEntreprisePlateforme = {
   version: 2,
   aDejaVendu: true,
   tvaDepart: 1800,
-  proprietaires: [
-    {
-      prenom: 'Tanti',
-      nom: 'Akouvi',
-      telephone: '+22890123456',
-      email: 'tanti.akouvi@gmail.com',
-      derniereConnexionLe: '2026-10-03T18:02:00Z',
-    },
-  ],
+  proprietaires: [TANTI],
   utilisation: {
     utilisateursActifs: 14,
     avecBackOffice: 3,
@@ -125,7 +127,10 @@ describe('PageFicheEntreprise', () => {
     ficheServie()
     await ouvrirFiche()
 
-    expect(screen.getByRole('link', { name: 'Entreprises' })).toHaveAttribute('href', '/plateforme')
+    expect(screen.getByRole('link', { name: 'Toutes les entreprises' })).toHaveAttribute(
+      'href',
+      '/plateforme',
+    )
     expect(screen.getByText('Active')).toHaveClass('rounded-petit')
     const utilisation = screen.getByRole('list', { name: 'Utilisation' })
     expect(utilisation).toHaveTextContent('Utilisateurs actifs14dont 3 avec accès au back-office')
@@ -229,6 +234,61 @@ describe('PageFicheEntreprise', () => {
     )
     expect(serveur.reactivations()).toBe(1)
     expect(screen.queryByRole('region', { name: 'Suspension' })).not.toBeInTheDocument()
+  })
+
+  it('redonne un mot de passe temporaire au propriétaire verrouillé, affiché une seule fois', async () => {
+    const proprietaire = {
+      ...TANTI,
+      verrouilleJusquA: '2026-10-03T15:42:00Z',
+      autresEntreprises: ['Bar Le Flamboyant'],
+    }
+    const serveur = ficheServie({ ...FICHE, proprietaires: [proprietaire] })
+    let demandes = 0
+    serveurMsw.use(
+      http.post(
+        `${API}/plateforme/entreprises/${ID}/proprietaires/${proprietaire.compteId}/mot-de-passe`,
+        () => {
+          demandes += 1
+          serveur.changerSurLeServeur(FICHE)
+          return HttpResponse.json({
+            identifiant: '+22890123456',
+            motDePasseTemporaire: 'hq4nwd7cpz2k',
+          })
+        },
+      ),
+    )
+    await ouvrirFiche()
+
+    const carte = screen.getByRole('region', { name: 'Propriétaire' })
+    expect(carte).toHaveTextContent('Compte verrouillé jusqu’à')
+    expect(carte).toHaveTextContent('Bar Le Flamboyant')
+    await userEvent.click(
+      within(carte).getByRole('button', { name: 'Redonner un mot de passe temporaire' }),
+    )
+    const confirmation = screen.getByRole('dialog', {
+      name: 'Redonner un mot de passe à Tanti Akouvi ?',
+    })
+    expect(confirmation).toHaveTextContent('rappelez-la au +22890123456')
+    expect(confirmation).toHaveTextContent('Bar Le Flamboyant')
+    await userEvent.click(
+      within(confirmation).getByRole('button', { name: 'Générer le mot de passe' }),
+    )
+
+    const secret = await screen.findByRole('dialog', {
+      name: 'Mot de passe temporaire de Tanti Akouvi',
+    })
+    expect(secret).toHaveTextContent('hq4nwd7cpz2k')
+    expect(secret).toHaveTextContent('+22890123456')
+    await userEvent.click(
+      within(secret).getByRole('button', { name: 'J’ai transmis le mot de passe' }),
+    )
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(demandes).toBe(1)
+    await waitFor(() => {
+      expect(screen.getByRole('region', { name: 'Propriétaire' })).not.toHaveTextContent(
+        'Compte verrouillé',
+      )
+    })
   })
 
   it('laisse changer pays et devise tant que rien n’a été vendu', async () => {

@@ -1899,6 +1899,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/plateforme/entreprises/{id}/proprietaires/{compteId}/mot-de-passe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Redonner un mot de passe temporaire à un propriétaire
+         * @description Affiché une seule fois ; le propriétaire le remplace à sa connexion. Ses sessions tombent et le verrouillage est levé. Erreur : RESSOURCE_INTROUVABLE (404) si ce compte n'est pas propriétaire ici.
+         */
+        post: operations["redonnerMotDePasse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/plateforme/entreprises/{id}/reactivation": {
         parameters: {
             query?: never;
@@ -1930,6 +1950,26 @@ export interface paths {
          * @description Plus aucune connexion ; les jetons en cours tombent. La raison AUTRE exige une précision.
          */
         post: operations["suspendre"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plateforme/erreurs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Retrouver une erreur par son code, ou voir les erreurs des dernières 24 heures
+         * @description code : tout ou début (8 caractères au moins) du traceId lu par le client ; cherché sur 30 jours. Sans code : les 100 dernières erreurs des 24 dernières heures, toutes entreprises.
+         */
+        get: operations["erreurs"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3315,6 +3355,22 @@ export interface components {
         EnvoiRecu: {
             telephone: string;
         };
+        ErreurPlateforme: {
+            appareilNom?: string;
+            chemin: string;
+            code: string;
+            /** Format: uuid */
+            entrepriseId?: string;
+            entrepriseNom?: string;
+            etablissementNom?: string;
+            /** Format: date-time */
+            le: string;
+            methode: string;
+            personne?: string;
+            /** Format: int32 */
+            statut: number;
+            traceId: string;
+        };
         EspecesCaisse: {
             /** Format: int64 */
             apports: number;
@@ -3643,6 +3699,10 @@ export interface components {
             /** Format: int64 */
             rembourse: number;
         };
+        MotDePasseTemporaire: {
+            identifiant: string;
+            motDePasseTemporaire: string;
+        };
         MouvementResume: {
             approuvePar?: string;
             /** Format: date-time */
@@ -3903,12 +3963,17 @@ export interface components {
             utilisateurId: string;
         };
         ProprietairePlateforme: {
+            autresEntreprises: string[];
+            /** Format: uuid */
+            compteId: string;
             /** Format: date-time */
             derniereConnexionLe?: string;
             email?: string;
             nom: string;
             prenom: string;
             telephone?: string;
+            /** Format: date-time */
+            verrouilleJusquA?: string;
         };
         RapportVentes: {
             annulations: components["schemas"]["AnnulationsPeriode"];
@@ -8076,6 +8141,38 @@ export interface operations {
             };
         };
     };
+    redonnerMotDePasse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                compteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MotDePasseTemporaire"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
     reactiver_2: {
         parameters: {
             query?: never;
@@ -8126,6 +8223,37 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    erreurs: {
+        parameters: {
+            query?: {
+                code?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErreurPlateforme"][];
+                };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
             default: {

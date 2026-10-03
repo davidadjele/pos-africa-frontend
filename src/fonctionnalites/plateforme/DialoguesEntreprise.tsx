@@ -1,15 +1,18 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ErreurApi } from '../../partage/api/ErreurApi'
+import { appelerApi } from '../../partage/api/appelerApi'
 import type {
   DemandeModificationPlateforme,
   DemandeSuspension,
   FicheEntreprisePlateforme,
+  MotDePasseTemporaire,
   RaisonSuspension,
 } from '../../partage/api/contrat'
 import { optionsDevises, optionsPays } from '../../partage/referentiel/pays'
 import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
 import { ChampSaisie, ChampSelection } from '../../partage/ui/ChampSaisie'
+import { CodeSecret } from '../../partage/ui/CodeSecret'
 import { Dialogue } from '../../partage/ui/Dialogue'
 
 export const RAISONS: RaisonSuspension[] = ['DEMANDE_CLIENT', 'IMPAYE', 'ABUS', 'AUTRE']
@@ -202,6 +205,91 @@ export function DialogueSuspension({
           setPrecision(evenement.target.value)
         }}
       />
+    </Dialogue>
+  )
+}
+
+/**
+ * Redonner un mot de passe au propriétaire, en deux temps : vérifier qui appelle, puis montrer le mot de passe
+ * une seule fois. Il n'est gardé nulle part : fermer la fenêtre l'efface.
+ */
+export function DialogueMotDePasse({
+  entrepriseId,
+  proprietaire,
+  surFermer,
+}: Readonly<{
+  entrepriseId: string
+  proprietaire: FicheEntreprisePlateforme['proprietaires'][number]
+  surFermer: () => void
+}>) {
+  const { t } = useTranslation()
+  const [temporaire, setTemporaire] = useState<MotDePasseTemporaire | null>(null)
+  const [enCours, setEnCours] = useState(false)
+  const [erreur, setErreur] = useState<unknown>(null)
+  const nom = `${proprietaire.prenom} ${proprietaire.nom}`
+
+  async function generer() {
+    setEnCours(true)
+    setErreur(null)
+    try {
+      setTemporaire(
+        await appelerApi<MotDePasseTemporaire>(
+          `/plateforme/entreprises/${entrepriseId}/proprietaires/${proprietaire.compteId}/mot-de-passe`,
+          { methode: 'POST' },
+        ),
+      )
+    } catch (echec) {
+      setErreur(echec)
+    } finally {
+      setEnCours(false)
+    }
+  }
+
+  if (temporaire !== null)
+    return (
+      <Dialogue
+        titre={t('plateforme.fiche.motDePasse.secretTitre', { nom })}
+        consequence={t('plateforme.fiche.motDePasse.secretPhrase')}
+        libelleConfirmer={t('plateforme.fiche.motDePasse.transmis')}
+        surConfirmer={surFermer}
+      >
+        <CodeSecret
+          libelle={t('plateforme.fiche.motDePasse.secretLibelle')}
+          code={temporaire.motDePasseTemporaire}
+        />
+        <p className="m-0 text-legende text-attenue">
+          {t('personnel.codes.identifiant', { identifiant: temporaire.identifiant })}
+        </p>
+      </Dialogue>
+    )
+
+  return (
+    <Dialogue
+      titre={t('plateforme.fiche.motDePasse.titre', { nom })}
+      consequence={t('plateforme.fiche.motDePasse.phrase')}
+      libelleAnnuler={t('commun.annuler')}
+      libelleConfirmer={t('plateforme.fiche.motDePasse.generer')}
+      enCours={enCours}
+      surAnnuler={surFermer}
+      surConfirmer={() => void generer()}
+    >
+      {erreur !== null && <AlerteErreur erreur={erreur} />}
+      <Alerte ton="alerte">
+        {t('plateforme.fiche.motDePasse.verifier', {
+          contact: proprietaire.telephone ?? proprietaire.email ?? '',
+        })}
+      </Alerte>
+      <ul className="m-0 flex list-disc flex-col gap-1 pl-5 text-corps text-encre">
+        <li>{t('plateforme.fiche.motDePasse.consequenceSessions')}</li>
+        {proprietaire.autresEntreprises.length > 0 && (
+          <li>
+            {t('plateforme.fiche.motDePasse.consequenceAutres', {
+              entreprises: proprietaire.autresEntreprises.join(', '),
+            })}
+          </li>
+        )}
+        <li>{t('plateforme.fiche.motDePasse.consequenceTrace')}</li>
+      </ul>
     </Dialogue>
   )
 }

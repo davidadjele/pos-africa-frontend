@@ -1,6 +1,7 @@
 import { queryOptions } from '@tanstack/react-query'
 import { appelerApi } from '../../partage/api/appelerApi'
 import type {
+  ErreurPlateforme,
   FicheEntreprisePlateforme,
   PageEntreprisesPlateforme,
 } from '../../partage/api/contrat'
@@ -32,3 +33,17 @@ export function requeteFicheEntreprise(id: string) {
 
 // L'administrateur n'a pas d'entreprise : les dates suivent le fuseau de son appareil.
 export const FUSEAU_APPAREIL = Intl.DateTimeFormat().resolvedOptions().timeZone
+
+/** @param code début du traceId lu par le client ; vide : les erreurs des dernières 24 heures */
+export function requeteErreurs(code: string | null) {
+  return queryOptions({
+    queryKey: ['plateforme', 'erreurs', code],
+    queryFn: ({ signal }) =>
+      appelerApi<ErreurPlateforme[]>(
+        code === null
+          ? '/plateforme/erreurs'
+          : `/plateforme/erreurs?${new URLSearchParams({ code }).toString()}`,
+        { signal },
+      ),
+  })
+}

@@ -1395,8 +1395,34 @@ test('L’équipe plateforme ouvre la fiche de Maquis Chez Tanti, la modifie et 
   )
   await capturer(page, '94-plateforme-suspendue')
 
+  // Redonner un mot de passe : la fenêtre demande d'abord de vérifier qui appelle (annulée ici).
+  await page
+    .getByRole('region', { name: 'Propriétaire' })
+    .getByRole('button', { name: 'Redonner un mot de passe temporaire' })
+    .click()
+  const motDePasse = page.getByRole('dialog', { name: /^Redonner un mot de passe à / })
+  await expect(motDePasse).toContainText('rappelez-la au')
+  await capturer(page, '95-plateforme-mot-de-passe')
+  await motDePasse.getByRole('button', { name: 'Annuler' }).click()
+
   // Réactivée aussitôt : le parcours peut être rejoué sur la même base.
   await page.getByRole('button', { name: 'Réactiver' }).click()
   await page.getByRole('button', { name: 'Réactiver l’entreprise' }).click()
   await expect(page.getByRole('status')).toContainText('Maquis Chez Tanti est de nouveau active.')
+
+  // Le support : les erreurs renvoyées pendant le parcours, puis un code introuvable.
+  await page
+    .getByRole('navigation', { name: 'Espace plateforme' })
+    .getByRole('link', { name: 'Support' })
+    .click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Support' })).toBeVisible()
+  await expect(page.getByRole('table', { name: 'Erreurs récentes' })).toContainText(
+    'Maquis Chez Tanti',
+  )
+  await capturer(page, '96-plateforme-support')
+  await page.getByLabel(/^Code de l’erreur/).fill('deadbeef')
+  await page.getByLabel(/^Code de l’erreur/).press('Enter')
+  await expect(page.getByRole('heading', { name: 'Aucune erreur avec ce code' })).toBeVisible()
+  await page.setViewportSize({ width: 390, height: 844 })
+  await capturer(page, '96-plateforme-support-telephone')
 })

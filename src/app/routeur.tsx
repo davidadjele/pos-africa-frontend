@@ -33,6 +33,7 @@ import { PagePersonnel } from '../fonctionnalites/personnel/PagePersonnel'
 import { PageEntreprises } from '../fonctionnalites/plateforme/PageEntreprises'
 import { PageFicheEntreprise } from '../fonctionnalites/plateforme/PageFicheEntreprise'
 import { PageNouvelleEntreprise } from '../fonctionnalites/plateforme/PageNouvelleEntreprise'
+import { PageSupport } from '../fonctionnalites/plateforme/PageSupport'
 import { PageRecu } from '../fonctionnalites/recu/PageRecu'
 import { PageCaisses } from '../fonctionnalites/rapports/PageCaisses'
 import { PageDetailCaisse } from '../fonctionnalites/rapports/PageDetailCaisse'
@@ -409,6 +410,12 @@ const nouvelleEntreprise = createRoute({
   component: PageNouvelleEntreprise,
 })
 
+const support = createRoute({
+  getParentRoute: () => plateforme,
+  path: '/support',
+  component: PageSupport,
+})
+
 const ficheEntreprise = createRoute({
   getParentRoute: () => plateforme,
   path: '/entreprises/$entrepriseId',
@@ -457,7 +464,7 @@ const arbre = racine.addChildren([
     entreprise,
     ficheClient,
   ]),
-  plateforme.addChildren([plateformeAccueil, nouvelleEntreprise, ficheEntreprise]),
+  plateforme.addChildren([plateformeAccueil, nouvelleEntreprise, ficheEntreprise, support]),
   recu,
 ])
 

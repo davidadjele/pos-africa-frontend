@@ -775,6 +775,68 @@
           "ABUS": "Abus ou fraude",
           "AUTRE": "Autre"
         }
+      },
+      "verrouille": "Compte verrouillé jusqu’à {{heure}}",
+      "ouvreAussi": "Ouvre aussi",
+      "motDePasse": {
+        "action": "Redonner un mot de passe temporaire",
+        "titre": "Redonner un mot de passe à {{nom}} ?",
+        "phrase": "Un mot de passe temporaire s’affiche une seule fois ; le propriétaire le remplacera à sa connexion.",
+        "verifier": "Vérifiez d’abord que c’est bien la bonne personne : rappelez-la au {{contact}} enregistré sur la fiche, jamais à un numéro donné pendant l’appel.",
+        "consequenceSessions": "Ses sessions ouvertes sont coupées et le verrouillage est levé.",
+        "consequenceAutres": "Ce compte ouvre aussi {{entreprises}} : le nouveau mot de passe vaut partout.",
+        "consequenceTrace": "L’action est tracée dans l’activité de la plateforme, à votre nom.",
+        "generer": "Générer le mot de passe",
+        "secretTitre": "Mot de passe temporaire de {{nom}}",
+        "secretPhrase": "Dictez-le. Il ne sera plus affiché : un nouveau sera choisi à la connexion.",
+        "secretLibelle": "Mot de passe temporaire",
+        "transmis": "J’ai transmis le mot de passe"
+      },
+      "retour": "Toutes les entreprises"
+    },
+    "navigation": {
+      "titre": "Espace plateforme",
+      "entreprises": "Entreprises",
+      "support": "Support"
+    },
+    "support": {
+      "titre": "Support",
+      "phrase": "Retrouvez une erreur à partir du code affiché au client, sous le message. Conservées 30 jours.",
+      "code": "Code de l’erreur",
+      "codeTropCourt": "Saisissez au moins les 8 premiers caractères du code.",
+      "rechercher": "Rechercher",
+      "recherche": "Recherche de l’erreur…",
+      "chargement": "Chargement des erreurs…",
+      "recentes": "Erreurs récentes",
+      "recentesPhrase": "Dernières 24 heures, toutes entreprises",
+      "aucuneRecente": {
+        "titre": "Aucune erreur depuis 24 heures",
+        "phrase": "Les erreurs renvoyées aux clients s’afficheront ici."
+      },
+      "introuvable": {
+        "titre": "Aucune erreur avec ce code",
+        "phrase": "Faites relire le code au client, sous le message d’erreur. Une erreur de plus de 30 jours n’est plus conservée."
+      },
+      "libelles": {
+        "interne": "Erreur interne",
+        "client": "Demande refusée"
+      },
+      "quand": "Quand",
+      "entreprise": "Entreprise",
+      "qui": "Qui",
+      "action": "Action",
+      "messageVu": "Message affiché",
+      "codeComplet": "Code complet",
+      "horsEntreprise": "Hors entreprise",
+      "inconnu": "Personne connectée",
+      "surTablette": "{{personne}}, sur la tablette « {{tablette}} »",
+      "journaux": "Le détail technique reste dans les journaux du serveur, sous le même code. Rien de ce qui a été saisi n’est conservé.",
+      "colonnes": {
+        "heure": "Heure",
+        "entreprise": "Entreprise",
+        "erreur": "Erreur",
+        "action": "Action",
+        "code": "Code"
       }
     }
   },

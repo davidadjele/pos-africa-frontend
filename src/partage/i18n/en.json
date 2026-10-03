@@ -775,6 +775,68 @@
           "ABUS": "Abuse or fraud",
           "AUTRE": "Other"
         }
+      },
+      "verrouille": "Account locked until {{heure}}",
+      "ouvreAussi": "Also opens",
+      "motDePasse": {
+        "action": "Give a temporary password",
+        "titre": "Give {{nom}} a new password?",
+        "phrase": "A temporary password is shown only once; the owner replaces it when signing in.",
+        "verifier": "First check you are talking to the right person: call back the {{contact}} saved on this page, never a number given during the call.",
+        "consequenceSessions": "Their open sessions are closed and the lock is lifted.",
+        "consequenceAutres": "This account also opens {{entreprises}}: the new password applies everywhere.",
+        "consequenceTrace": "This action is recorded in the platform activity under your name.",
+        "generer": "Generate the password",
+        "secretTitre": "Temporary password for {{nom}}",
+        "secretPhrase": "Read it out. It will not be shown again: a new one is chosen at sign-in.",
+        "secretLibelle": "Temporary password",
+        "transmis": "I have passed on the password"
+      },
+      "retour": "All businesses"
+    },
+    "navigation": {
+      "titre": "Platform area",
+      "entreprises": "Businesses",
+      "support": "Support"
+    },
+    "support": {
+      "titre": "Support",
+      "phrase": "Find an error from the code shown to the customer, below the message. Kept for 30 days.",
+      "code": "Error code",
+      "codeTropCourt": "Enter at least the first 8 characters of the code.",
+      "rechercher": "Search",
+      "recherche": "Searching for the error…",
+      "chargement": "Loading errors…",
+      "recentes": "Recent errors",
+      "recentesPhrase": "Last 24 hours, all businesses",
+      "aucuneRecente": {
+        "titre": "No error in the last 24 hours",
+        "phrase": "Errors returned to customers will show here."
+      },
+      "introuvable": {
+        "titre": "No error with this code",
+        "phrase": "Ask the customer to read the code again, below the error message. Errors older than 30 days are not kept."
+      },
+      "libelles": {
+        "interne": "Internal error",
+        "client": "Request refused"
+      },
+      "quand": "When",
+      "entreprise": "Business",
+      "qui": "Who",
+      "action": "Action",
+      "messageVu": "Message shown",
+      "codeComplet": "Full code",
+      "horsEntreprise": "Outside a business",
+      "inconnu": "Signed-in person",
+      "surTablette": "{{personne}}, on the “{{tablette}}” tablet",
+      "journaux": "Technical details stay in the server logs under the same code. Nothing that was typed is kept.",
+      "colonnes": {
+        "heure": "Time",
+        "entreprise": "Business",
+        "erreur": "Error",
+        "action": "Action",
+        "code": "Code"
       }
     }
   },

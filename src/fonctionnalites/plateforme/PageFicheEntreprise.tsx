@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { ArrowLeft, Pencil, RotateCw } from 'lucide-react'
+import { ArrowLeft, LockKeyhole, Pencil, RotateCw } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appelerApi } from '../../partage/api/appelerApi'
@@ -10,7 +10,7 @@ import type {
   DemandeSuspension,
   FicheEntreprisePlateforme,
 } from '../../partage/api/contrat'
-import { formaterDate, formaterDateHeure } from '../../partage/dates/formaterDate'
+import { formaterDate, formaterDateHeure, formaterHeure } from '../../partage/dates/formaterDate'
 import { nomPays } from '../../partage/referentiel/pays'
 import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
 import { BadgeStatut } from '../../partage/ui/BadgeStatut'
@@ -18,11 +18,16 @@ import { Bouton } from '../../partage/ui/Bouton'
 import { Chargement } from '../../partage/ui/Chargement'
 import { Dialogue } from '../../partage/ui/Dialogue'
 import { Tableau, type ColonneTableau } from '../../partage/ui/Tableau'
-import { DialogueModifierEntreprise, DialogueSuspension } from './DialoguesEntreprise'
+import {
+  DialogueModifierEntreprise,
+  DialogueMotDePasse,
+  DialogueSuspension,
+} from './DialoguesEntreprise'
 import { FUSEAU_APPAREIL, requeteFicheEntreprise } from './requetes'
 
 type Ouvert = 'modification' | 'suspension' | 'reactivation' | null
 type Etablissement = FicheEntreprisePlateforme['etablissements'][number]
+type Proprietaire = FicheEntreprisePlateforme['proprietaires'][number]
 
 /**
  * La fiche d'une entreprise cliente, vue par l'équipe plateforme : de quoi l'administrer et la dépanner. Aucun
@@ -108,7 +113,7 @@ export function PageFicheEntreprise({ entrepriseId }: Readonly<{ entrepriseId: s
         className="inline-flex min-h-cible-min items-center gap-1.5 self-start text-libelle text-encre"
       >
         <ArrowLeft aria-hidden="true" size={16} />
-        {t('plateforme.entreprises.titre')}
+        {t('plateforme.fiche.retour')}
       </Link>
 
       <div className="flex flex-wrap items-start gap-3">
@@ -313,6 +318,8 @@ function Identite({ fiche }: Readonly<{ fiche: FicheEntreprisePlateforme }>) {
 
 function Proprietaires({ fiche }: Readonly<{ fiche: FicheEntreprisePlateforme }>) {
   const { t } = useTranslation()
+  const clientRequetes = useQueryClient()
+  const [choisi, setChoisi] = useState<Proprietaire | null>(null)
   return (
     <section
       aria-labelledby="fiche-proprietaire"
@@ -322,30 +329,65 @@ function Proprietaires({ fiche }: Readonly<{ fiche: FicheEntreprisePlateforme }>
         {t('plateforme.fiche.proprietaire', { count: fiche.proprietaires.length })}
       </h2>
       {fiche.proprietaires.map((proprietaire) => (
-        <dl
-          key={`${proprietaire.prenom} ${proprietaire.nom}`}
-          className="m-0 grid grid-cols-[minmax(0,10rem)_minmax(0,1fr)] gap-x-4 gap-y-2 text-corps"
-        >
-          <Ligne terme={t('plateforme.fiche.nom')}>
-            {proprietaire.prenom} {proprietaire.nom}
-          </Ligne>
-          {proprietaire.telephone !== undefined && (
-            <Ligne terme={t('plateforme.fiche.telephone')}>
-              <a className="chiffres text-encre" href={`tel:${proprietaire.telephone}`}>
-                {proprietaire.telephone}
-              </a>
+        <div key={proprietaire.compteId} className="flex flex-col gap-3">
+          {proprietaire.verrouilleJusquA !== undefined && (
+            <span className="self-start">
+              <BadgeStatut ton="danger">
+                {t('plateforme.fiche.verrouille', {
+                  heure: formaterHeure(proprietaire.verrouilleJusquA, FUSEAU_APPAREIL),
+                })}
+              </BadgeStatut>
+            </span>
+          )}
+          <dl className="m-0 grid grid-cols-[minmax(0,10rem)_minmax(0,1fr)] gap-x-4 gap-y-2 text-corps">
+            <Ligne terme={t('plateforme.fiche.nom')}>
+              {proprietaire.prenom} {proprietaire.nom}
             </Ligne>
-          )}
-          {proprietaire.email !== undefined && (
-            <Ligne terme={t('plateforme.fiche.email')}>{proprietaire.email}</Ligne>
-          )}
-          <Ligne terme={t('plateforme.fiche.derniereConnexion')}>
-            {proprietaire.derniereConnexionLe === undefined
-              ? t('plateforme.fiche.jamais')
-              : formaterDateHeure(proprietaire.derniereConnexionLe, FUSEAU_APPAREIL)}
-          </Ligne>
-        </dl>
+            {proprietaire.telephone !== undefined && (
+              <Ligne terme={t('plateforme.fiche.telephone')}>
+                <a className="chiffres text-encre" href={`tel:${proprietaire.telephone}`}>
+                  {proprietaire.telephone}
+                </a>
+              </Ligne>
+            )}
+            {proprietaire.email !== undefined && (
+              <Ligne terme={t('plateforme.fiche.email')}>{proprietaire.email}</Ligne>
+            )}
+            <Ligne terme={t('plateforme.fiche.derniereConnexion')}>
+              {proprietaire.derniereConnexionLe === undefined
+                ? t('plateforme.fiche.jamais')
+                : formaterDateHeure(proprietaire.derniereConnexionLe, FUSEAU_APPAREIL)}
+            </Ligne>
+            {proprietaire.autresEntreprises.length > 0 && (
+              <Ligne terme={t('plateforme.fiche.ouvreAussi')}>
+                {proprietaire.autresEntreprises.join(', ')}
+              </Ligne>
+            )}
+          </dl>
+          <div className="flex justify-end border-t border-trait pt-3">
+            <Bouton
+              icone={LockKeyhole}
+              onClick={() => {
+                setChoisi(proprietaire)
+              }}
+            >
+              {t('plateforme.fiche.motDePasse.action')}
+            </Bouton>
+          </div>
+        </div>
       ))}
+      {choisi !== null && (
+        <DialogueMotDePasse
+          entrepriseId={fiche.id}
+          proprietaire={choisi}
+          surFermer={() => {
+            setChoisi(null)
+            void clientRequetes.invalidateQueries({
+              queryKey: ['plateforme', 'entreprise', fiche.id],
+            })
+          }}
+        />
+      )}
     </section>
   )
 }
