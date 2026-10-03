@@ -429,7 +429,8 @@
         "titre": "Sold today",
         "a": "Sold today, at {{heure}}",
         "comparaison": "versus last {{jour}} at the same time ({{montant}})",
-        "voir": "See sales"
+        "voir": "See sales",
+        "rienAvant": "Nothing sold last {{jour}} by this time"
       },
       "etablissement": "{{nom}} right now",
       "calme": "No activity today",
@@ -474,9 +475,10 @@
           "action": "See activity"
         },
         "stockFaible": {
-          "titre": "Low stock: {{nombre}} products",
           "detail": "{{produits}}",
-          "action": "See stock"
+          "action": "See stock",
+          "titre_one": "Low stock: {{count}} product",
+          "titre_other": "Low stock: {{count}} products"
         },
         "ardoises": {
           "titre": "Tabs to chase: {{montant}}",

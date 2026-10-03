@@ -429,7 +429,8 @@
         "titre": "Vendu aujourd’hui",
         "a": "Vendu aujourd’hui, à {{heure}}",
         "comparaison": "sur {{jour}} dernier à la même heure ({{montant}})",
-        "voir": "Voir les ventes"
+        "voir": "Voir les ventes",
+        "rienAvant": "Rien vendu {{jour}} dernier à cette heure"
       },
       "etablissement": "{{nom}} en ce moment",
       "calme": "Aucune activité aujourd’hui",
@@ -474,9 +475,10 @@
           "action": "Voir l’activité"
         },
         "stockFaible": {
-          "titre": "Stock faible : {{nombre}} produits",
           "detail": "{{produits}}",
-          "action": "Voir le stock"
+          "action": "Voir le stock",
+          "titre_one": "Stock faible : {{count}} produit",
+          "titre_other": "Stock faible : {{count}} produits"
         },
         "ardoises": {
           "titre": "Ardoises à relancer : {{montant}}",

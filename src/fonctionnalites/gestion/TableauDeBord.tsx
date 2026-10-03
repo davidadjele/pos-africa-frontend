@@ -21,7 +21,13 @@ import { ListePoints, type ElementPoint } from '../rapports/ListePoints'
 import { formaterJournee, journeeCourante, variation } from '../rapports/periodes'
 import { requeteCaisses, requeteCaissesOuvertes, requeteTableauDeBord } from '../rapports/requetes'
 import { requeteStockATraiter } from '../stock/requetes'
-import { pointsATraiter, type CleATraiter, type Destination, type PointATraiter } from './aTraiter'
+import {
+  duree,
+  pointsATraiter,
+  type CleATraiter,
+  type Destination,
+  type PointATraiter,
+} from './aTraiter'
 
 /** Le tableau de bord vit : il se relit toutes les minutes, sans recharger la page. */
 const RAFRAICHIR = 60_000
@@ -117,7 +123,7 @@ export function TableauDeBord() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end gap-3">
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 basis-full sm:basis-auto sm:flex-1">
           <h1 className="m-0 text-titre-page text-encre">{t('gestion.tableauDeBord.titre')}</h1>
           <p className="m-0 mt-1 text-corps text-attenue">
             {t('gestion.tableauDeBord.misAJour', {
@@ -246,10 +252,12 @@ function Vendu({
             {`${signe(pourcent, String)} %`}
           </span>
         )}
-        {t('gestion.tableauDeBord.vendu.comparaison', {
-          jour: jourSemaine,
-          montant: nombre(comparable),
-        })}
+        {comparable === 0
+          ? t('gestion.tableauDeBord.vendu.rienAvant', { jour: jourSemaine })
+          : t('gestion.tableauDeBord.vendu.comparaison', {
+              jour: jourSemaine,
+              montant: nombre(comparable),
+            })}
       </span>
       <span className="hidden flex-1 sm:block" />
       <Link
@@ -365,8 +373,9 @@ function EnCeMoment({
             ? t('gestion.tableauDeBord.aucuneNote')
             : t('gestion.tableauDeBord.notesOuvertes', { count: etablissement.notesOuvertes })}
           {etablissement.plusAncienneNote !== undefined &&
+            depuis >= 1 &&
             t('gestion.tableauDeBord.plusAncienne', {
-              duree: `${String(Math.floor(depuis / 60))} h ${String(depuis % 60).padStart(2, '0')}`,
+              duree: duree(depuis),
               note: etablissement.plusAncienneNote,
             })}
         </span>

@@ -1285,7 +1285,8 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await expect(indicateurs).toContainText('Chiffre d’affaires')
   await expect(page.getByRole('list', { name: 'Chiffre d’affaires par jour' })).toBeVisible()
   const vigilance = page.getByRole('region', { name: 'À surveiller' })
-  await expect(vigilance).toContainText('Écarts de caisse : −500')
+  // Les écarts de caisse se suivent au tableau de bord et dans Caisses, plus dans les ventes.
+  await expect(vigilance).not.toContainText('Écarts de caisse')
   await expect(vigilance).toContainText(/Remboursements : −/)
   await expect(vigilance).toContainText(/vendus sur l’ardoise/)
   await expect(page.getByRole('table', { name: 'Par produit' })).toContainText('Poulet braisé')

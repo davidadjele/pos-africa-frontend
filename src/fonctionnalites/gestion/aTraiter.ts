@@ -56,7 +56,9 @@ const NOTE_ANCIENNE_MINUTES = 3 * 60
 /** Assez pour agir ; le reste se lit dans l'écran Stock. */
 const PRODUITS_MAX = 3
 
-function duree(minutes: number): string {
+/** « 12 min », « 1 h 40 », « 3 h » : l'ancienneté d'une note ouverte. */
+export function duree(minutes: number): string {
+  if (minutes < 60) return `${String(minutes)} min`
   const heures = Math.floor(minutes / 60)
   const reste = minutes % 60
   return reste === 0
@@ -189,7 +191,10 @@ function suivis(
       cle: 'stockFaible',
       ton: 'info',
       identifiant: 'stockFaible',
-      valeurs: { nombre: faibles.length, produits: faibles.map((ligne) => ligne.nom).join(', ') },
+      valeurs: {
+        count: faibles.length,
+        produits: faibles.map((ligne) => ligne.nom).join(', '),
+      },
       destination: { vers: 'stock', etablissementId: faibles[0]?.etablissementId ?? '' },
     })
   }
