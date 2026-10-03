@@ -1292,6 +1292,8 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await navigation.getByRole('link', { name: 'Ventes' }).click()
   const indicateurs = page.getByRole('list', { name: 'Indicateurs' })
   await expect(indicateurs).toContainText('Chiffre d’affaires')
+  // Le Flag a été reçu à 650 : ses ventes ont un coût figé, la marge brute apparaît.
+  await expect(indicateurs).toContainText('Marge brute')
   await expect(page.getByRole('list', { name: 'Chiffre d’affaires par jour' })).toBeVisible()
   const vigilance = page.getByRole('region', { name: 'À surveiller' })
   // Les écarts de caisse se suivent au tableau de bord et dans Caisses, plus dans les ventes.

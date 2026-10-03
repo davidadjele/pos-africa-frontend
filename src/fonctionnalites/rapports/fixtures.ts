@@ -28,6 +28,8 @@ export const RAPPORT: RapportVentes = {
     remises: 28_400,
     remboursements: 9000,
     notesRemboursees: 2,
+    marge: 206_000,
+    coutConnu: 494_400,
   },
   precedent: {
     chiffreAffaires: 1_146_900,
@@ -93,6 +95,8 @@ export const RAPPORT: RapportVentes = {
       couleur: 'OCRE',
       quantite: 412,
       montant: 494_400,
+      cout: 288_400,
+      montantCoutConnu: 494_400,
     },
     {
       produitId: 'f1000000-0000-4000-8000-000000000002',

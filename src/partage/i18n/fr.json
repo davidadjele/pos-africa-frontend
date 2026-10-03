@@ -1062,7 +1062,11 @@
       "prixSansDroit": "Seul un propriétaire ou un administrateur change les prix.",
       "cree": "« {{nom}} » est ajouté à la carte.",
       "modifie": "« {{nom}} » est enregistré.",
-      "chargement": "Chargement du produit…"
+      "chargement": "Chargement du produit…",
+      "coutRevient": "Coût de revient",
+      "coutRevientAide": "Facultatif. Ce que coûte un plat (ingrédients, gaz) : sert au calcul de la marge. Un nouveau coût vaut pour les ventes suivantes.",
+      "margePlat": "Marge par plat : {{marge}}, soit {{taux}} % du prix",
+      "coutInvalide": "Saisissez un montant, ou laissez vide."
     },
     "historiquePrix": "Historique des prix",
     "historique": {
@@ -2027,7 +2031,11 @@
       "vide": {
         "titre": "Aucune vente sur cette période",
         "phrase": "Choisissez une autre période, ou un autre établissement."
-      }
+      },
+      "cout": "Coût",
+      "marge": "Marge",
+      "taux": "Taux",
+      "coutInconnu": "coût inconnu"
     },
     "indicateurs": {
       "titre": "Indicateurs",
@@ -2039,7 +2047,9 @@
       "partDesVentes": "{{part}} % des ventes",
       "remboursements": "Remboursements",
       "notesRemboursees_one": "{{count}} note",
-      "notesRemboursees_other": "{{count}} notes"
+      "notesRemboursees_other": "{{count}} notes",
+      "marge": "Marge brute",
+      "coutConnu": "sur {{part}} % du chiffre d’affaires au coût connu"
     },
     "vigilance": {
       "titre": "À surveiller",

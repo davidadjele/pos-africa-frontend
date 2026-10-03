@@ -1062,7 +1062,11 @@
       "prixSansDroit": "Only an owner or an administrator changes prices.",
       "cree": "“{{nom}}” is added to the menu.",
       "modifie": "“{{nom}}” is saved.",
-      "chargement": "Loading the product…"
+      "chargement": "Loading the product…",
+      "coutRevient": "Cost price",
+      "coutRevientAide": "Optional. What a dish costs (ingredients, gas): used for the margin. A new cost applies to later sales.",
+      "margePlat": "Margin per dish: {{marge}}, i.e. {{taux}}% of the price",
+      "coutInvalide": "Enter an amount, or leave empty."
     },
     "historiquePrix": "Price history",
     "historique": {
@@ -2027,7 +2031,11 @@
       "vide": {
         "titre": "No sales in this period",
         "phrase": "Pick another period, or another venue."
-      }
+      },
+      "cout": "Cost",
+      "marge": "Margin",
+      "taux": "Rate",
+      "coutInconnu": "cost unknown"
     },
     "indicateurs": {
       "titre": "Key figures",
@@ -2039,7 +2047,9 @@
       "partDesVentes": "{{part}}% of sales",
       "remboursements": "Refunds",
       "notesRemboursees_one": "{{count}} bill",
-      "notesRemboursees_other": "{{count}} bills"
+      "notesRemboursees_other": "{{count}} bills",
+      "marge": "Gross margin",
+      "coutConnu": "on {{part}}% of revenue with a known cost"
     },
     "vigilance": {
       "titre": "To watch",

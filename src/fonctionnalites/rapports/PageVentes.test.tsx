@@ -75,6 +75,20 @@ describe('PageVentes', () => {
     expect(points[0]).toHaveAttribute('href', '/gestion/activite')
   })
 
+  it('montre la marge brute et, par produit, le coût, la marge et son taux', async () => {
+    rapportServi()
+    sessionOuverte({ ...MOI_TANTI, permissions: PROPRIETAIRE })
+    ouvrir('/gestion/ventes')
+
+    const indicateurs = await screen.findByRole('list', { name: 'Indicateurs' })
+    expect(indicateurs).toHaveTextContent(
+      /Marge brute206\s00042 %sur 38,5 % du chiffre d’affaires au coût connu/,
+    )
+    const lignes = within(screen.getByRole('table', { name: 'Par produit' })).getAllByRole('row')
+    expect(lignes[1]).toHaveTextContent(/288\s400206\s00042 %$/)
+    expect(lignes[2]).toHaveTextContent(/coût inconnu$/)
+  })
+
   it('change de période et d’établissement, et passe aux catégories', async () => {
     vi.useFakeTimers({ now: new Date('2026-10-01T20:45:00Z'), toFake: ['Date'] })
     const demandes = rapportServi()

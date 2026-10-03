@@ -2949,6 +2949,8 @@ export interface components {
         DemandeProduit: {
             /** Format: uuid */
             categorieId: string;
+            /** Format: int64 */
+            coutRevient?: number;
             /** @example Flag 65 cl */
             nom: string;
             /**
@@ -3431,6 +3433,10 @@ export interface components {
         IndicateursVentes: {
             /** Format: int64 */
             chiffreAffaires: number;
+            /** Format: int64 */
+            coutConnu?: number;
+            /** Format: int64 */
+            marge?: number;
             /** Format: int32 */
             notes: number;
             /** Format: int32 */
@@ -3788,6 +3794,8 @@ export interface components {
         ProduitResume: {
             actif: boolean;
             categorie: components["schemas"]["CategorieProduit"];
+            /** Format: int64 */
+            coutRevient?: number;
             /** Format: uuid */
             id: string;
             nom: string;
@@ -4201,7 +4209,11 @@ export interface components {
             categorieId: string;
             couleur: string;
             /** Format: int64 */
+            cout?: number;
+            /** Format: int64 */
             montant: number;
+            /** Format: int64 */
+            montantCoutConnu?: number;
             nom: string;
             /** Format: int32 */
             quantite: number;
@@ -4263,7 +4275,11 @@ export interface components {
             categorieId: string;
             couleur: string;
             /** Format: int64 */
+            cout?: number;
+            /** Format: int64 */
             montant: number;
+            /** Format: int64 */
+            montantCoutConnu?: number;
             nom: string;
             /** Format: uuid */
             produitId: string;

@@ -71,6 +71,31 @@ describe('PageFicheProduit', () => {
     expect(await screen.findByText('« Flag 65 cl » est enregistré.')).toBeVisible()
   })
 
+  it('crée un plat avec son coût de revient, et montre la marge par plat', async () => {
+    const envois = backendSimule()
+    await ouvrirFiche('/gestion/produits/nouveau')
+
+    await userEvent.type(screen.getByLabelText(/^Nom/), 'Poulet braisé')
+    await userEvent.selectOptions(screen.getByLabelText(/^Catégorie/), 'Grillades')
+    await userEvent.type(screen.getByLabelText(/^Prix TTC/), '4500')
+    await userEvent.type(screen.getByLabelText(/^Coût de revient/), '2300')
+    expect(screen.getByText(/Marge par plat : 2\s200\sF, soit 49 % du prix/)).toBeVisible()
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer le produit' }))
+
+    await waitFor(() => {
+      expect(envois[0]?.corps).toMatchObject({ type: 'PLAT', suiviStock: false, coutRevient: 2300 })
+    })
+  })
+
+  it('ne demande pas de coût de revient pour une boisson suivie en stock', async () => {
+    backendSimule()
+    await ouvrirFiche('/gestion/produits/nouveau')
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Boisson' }))
+
+    expect(screen.queryByLabelText(/^Coût de revient/)).not.toBeInTheDocument()
+  })
+
   it('modifie le prix d’un produit en envoyant sa version', async () => {
     const envois = backendSimule()
     await ouvrirFiche(`/gestion/produits/${FLAG.id}`)

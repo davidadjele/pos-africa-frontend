@@ -29,6 +29,9 @@ import { journeeCourante, periodeDe, variation, type ClePeriode, type Periode } 
 import { requeteVentes } from './requetes'
 import { pointsDeVigilance, type PointVigilance } from './vigilance'
 
+/** Sous ce taux, la marge d'un produit est signalée en ambre : à regarder, sans être une alerte. */
+const SEUIL_BONNE_MARGE = 40
+
 const PERIODES: ClePeriode[] = [
   'AUJOURDHUI',
   'HIER',
@@ -254,6 +257,8 @@ function Rapport({
                         couleur: produit.couleur,
                         quantite: produit.quantite,
                         montant: produit.montant,
+                        cout: produit.cout,
+                        montantCoutConnu: produit.montantCoutConnu,
                       }))
                     : rapport.parCategorie.map((categorie) => ({
                         cle: categorie.categorieId,
@@ -261,6 +266,8 @@ function Rapport({
                         couleur: categorie.couleur,
                         quantite: categorie.quantite,
                         montant: categorie.montant,
+                        cout: categorie.cout,
+                        montantCoutConnu: categorie.montantCoutConnu,
                       }))
                 }
                 total={indicateurs.chiffreAffaires}
@@ -385,10 +392,30 @@ function Indicateurs({
       detail: t('rapports.indicateurs.avant', { valeur: nombre(precedent.remboursements) }),
     },
   ]
+  // La marge ne vient qu'avec le rapport financier, et ne porte que sur les articles dont le coût est connu.
+  if (indicateurs.marge !== undefined && indicateurs.coutConnu !== undefined) {
+    tuiles.push({
+      libelle: t('rapports.indicateurs.marge'),
+      valeur: nombre(indicateurs.marge),
+      badge:
+        indicateurs.coutConnu === 0
+          ? null
+          : {
+              texte: `${String(Math.round((indicateurs.marge / indicateurs.coutConnu) * 100))} %`,
+              ton: 'succes',
+            },
+      detail: t('rapports.indicateurs.coutConnu', {
+        part: part(indicateurs.coutConnu, indicateurs.chiffreAffaires).toLocaleString('fr-FR'),
+      }),
+    })
+  }
   return (
     <ul
       aria-label={t('rapports.indicateurs.titre')}
-      className="m-0 grid list-none grid-cols-2 overflow-hidden rounded-moyen border border-trait bg-surface p-0 md:grid-cols-5"
+      className={clsx(
+        'm-0 grid list-none grid-cols-2 overflow-hidden rounded-moyen border border-trait bg-surface p-0',
+        tuiles.length > 5 ? 'md:grid-cols-3 xl:grid-cols-6' : 'md:grid-cols-5',
+      )}
     >
       {tuiles.map((tuile, rang) => (
         <li
@@ -475,12 +502,16 @@ function TableauProduits({
     couleur: string
     quantite: number
     montant: number
+    cout?: number | undefined
+    montantCoutConnu?: number | undefined
   }[]
   total: number
   nombre: (valeur: number) => string
 }>) {
   const { t } = useTranslation()
   const plusHaut = Math.max(1, ...lignes.map((ligne) => ligne.montant))
+  // Les colonnes de marge n'apparaissent qu'avec le rapport financier, et au moins un coût connu.
+  const avecMarge = lignes.some((ligne) => ligne.montantCoutConnu !== undefined)
   return (
     <div className="overflow-x-auto">
       <table
@@ -492,10 +523,17 @@ function TableauProduits({
             <th className="px-4 py-2">{t('rapports.ventes.produit')}</th>
             <th className="px-4 py-2 text-right">{t('rapports.ventes.quantite')}</th>
             <th className="px-4 py-2 text-right">{t('rapports.ventes.montant')}</th>
-            <th className="hidden px-4 py-2 sm:table-cell">
+            <th className={clsx('hidden px-4 py-2', avecMarge ? 'xl:table-cell' : 'sm:table-cell')}>
               <span className="sr-only">{t('rapports.ventes.part')}</span>
             </th>
             <th className="px-4 py-2 text-right">{t('rapports.ventes.part')}</th>
+            {avecMarge && (
+              <>
+                <th className="px-4 py-2 text-right">{t('rapports.ventes.cout')}</th>
+                <th className="px-4 py-2 text-right">{t('rapports.ventes.marge')}</th>
+                <th className="px-4 py-2 text-right">{t('rapports.ventes.taux')}</th>
+              </>
+            )}
           </tr>
         </thead>
         <tbody>
@@ -512,7 +550,12 @@ function TableauProduits({
               </td>
               <td className="chiffres px-4 py-2 text-right">{ligne.quantite}</td>
               <td className="chiffres px-4 py-2 text-right">{nombre(ligne.montant)}</td>
-              <td className="hidden w-32 px-4 py-2 sm:table-cell">
+              <td
+                className={clsx(
+                  'hidden w-32 px-4 py-2',
+                  avecMarge ? 'xl:table-cell' : 'sm:table-cell',
+                )}
+              >
                 <span className="block h-2 overflow-hidden rounded-petit bg-accent-doux">
                   <span
                     className={clsx('block h-full', fondCategorie(ligne.couleur))}
@@ -523,11 +566,43 @@ function TableauProduits({
               <td className="chiffres px-4 py-2 text-right text-attenue">
                 {total === 0 ? '' : `${String(Math.round((ligne.montant / total) * 100))} %`}
               </td>
+              {avecMarge && <CellulesMarge ligne={ligne} nombre={nombre} />}
             </tr>
           ))}
         </tbody>
       </table>
     </div>
+  )
+}
+
+/** Coût, marge et taux d'une ligne ; « coût inconnu » quand aucune de ses ventes n'a de coût. */
+function CellulesMarge({
+  ligne,
+  nombre,
+}: Readonly<{
+  ligne: { cout?: number | undefined; montantCoutConnu?: number | undefined }
+  nombre: (valeur: number) => string
+}>) {
+  const { t } = useTranslation()
+  if (ligne.cout === undefined || ligne.montantCoutConnu === undefined) {
+    return (
+      <td colSpan={3} className="px-4 py-2 text-right text-legende text-attenue">
+        {t('rapports.ventes.coutInconnu')}
+      </td>
+    )
+  }
+  const marge = ligne.montantCoutConnu - ligne.cout
+  const taux = ligne.montantCoutConnu === 0 ? 0 : Math.round((marge / ligne.montantCoutConnu) * 100)
+  return (
+    <>
+      <td className="chiffres px-4 py-2 text-right text-attenue">{nombre(ligne.cout)}</td>
+      <td className="chiffres px-4 py-2 text-right">{nombre(marge)}</td>
+      <td className="px-4 py-2 text-right">
+        <BadgeStatut
+          ton={taux >= SEUIL_BONNE_MARGE ? 'succes' : 'alerte'}
+        >{`${String(taux)} %`}</BadgeStatut>
+      </td>
+    </>
   )
 }
 
