@@ -94,7 +94,7 @@ export function PanneauNote({
   return (
     <section
       aria-label={t('caisse.note.titre')}
-      className="flex shrink-0 flex-col rounded-moyen border border-trait bg-surface lg:w-ticket-largeur"
+      className="flex min-h-0 flex-1 flex-col rounded-moyen border border-trait bg-surface lg:w-ticket-largeur"
     >
       <div className="flex items-start gap-3 border-b border-trait px-4 py-3.5">
         <Bouton icone={ArrowLeft} className="shrink-0 whitespace-nowrap" onClick={surRevenir}>
