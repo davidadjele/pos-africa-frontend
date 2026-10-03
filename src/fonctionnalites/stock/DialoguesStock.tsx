@@ -10,7 +10,9 @@ import type {
   LigneStock,
   MotifStock,
 } from '../../partage/api/contrat'
+import { useSession } from '../../partage/auth/useSession'
 import { formaterDateHeure } from '../../partage/dates/formaterDate'
+import { formaterMontant, type Devise } from '../../partage/montants/formaterMontant'
 import { AlerteErreur } from '../../partage/ui/Alerte'
 import { BadgeStatut } from '../../partage/ui/BadgeStatut'
 import { ChampSaisie, ChampSelection } from '../../partage/ui/ChampSaisie'
@@ -237,6 +239,8 @@ export function DialogueHistorique({
   surFermer: () => void
 }>) {
   const { t } = useTranslation()
+  const { moi } = useSession()
+  const devise = (moi?.entrepriseCourante?.devise ?? 'XOF') as Devise
   const historique = useQuery(requeteHistoriqueStock(etablissementId, ligne.produitId))
   return (
     <Dialogue
@@ -270,7 +274,19 @@ export function DialogueHistorique({
                     {t(`stock.mouvements.${mouvement.type}`)}
                   </BadgeStatut>
                   <span className="truncate text-corps text-encre">
-                    {detailMouvement(mouvement, t)}
+                    {[
+                      detailMouvement(mouvement, t),
+                      mouvement.coutUnitaire === undefined
+                        ? ''
+                        : t('stock.historique.coutUnitaire', {
+                            cout: formaterMontant(
+                              { unitesMineures: mouvement.coutUnitaire, devise },
+                              { forme: 'courte' },
+                            ),
+                          }),
+                    ]
+                      .filter((partie) => partie !== '')
+                      .join(', ')}
                   </span>
                 </span>
                 <span className="text-legende text-attenue">

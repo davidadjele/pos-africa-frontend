@@ -30,10 +30,10 @@
     "NOTE_NON_VIDE": "This tab has items: it cannot be closed this way.",
     "NOTE_ENTAMEE": "A payment has already been taken on this tab: it can no longer be changed.",
     "CAISSE_FERMEE": "The till on this tablet is not open. Open it with its float to take payments.",
-    "REMBOURSEMENT_HORS_JOURNEE": "Only today’s bills can be refunded at the till.",
     "PLAFOND_ARDOISE_DEPASSE": "This bill would take the customer over their tab limit. Confirm going over, or have part of it paid now.",
     "ARDOISE_NON_SOLDEE": "This customer still owes money: the tab stays open until it is settled.",
-    "TABLE_INDISPONIBLE": "This table was just removed from the floor plan (deactivated by a manager). The plan is up to date: choose another table."
+    "TABLE_INDISPONIBLE": "This table was just removed from the floor plan (deactivated by a manager). The plan is up to date: choose another table.",
+    "REMBOURSEMENT_TROP_ANCIEN": "A bill paid more than 30 days ago can no longer be refunded."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Too many failed attempts: the account is locked. Try again in {{duree}}.",
@@ -404,13 +404,87 @@
       "aTraiter_one": "{{count}} product to handle",
       "aTraiter_other": "{{count}} products to handle",
       "ardoises": "Tabs",
-      "entreprise": "Company"
+      "entreprise": "Company",
+      "ventes": "Sales",
+      "caisses": "Tills"
     },
     "tableauDeBord": {
       "titre": "Dashboard",
       "vide": {
         "titre": "No sales recorded",
         "phrase": "Today's sales, stock to watch and till sessions will show here from the first checkouts."
+      },
+      "chargement": "Loading today…",
+      "misAJour": "{{jour}}, right now. Updated at {{heure}}.",
+      "aTraiter": {
+        "titre": "To handle",
+        "urgents_one": "{{count}} urgent",
+        "urgents_other": "{{count}} urgent",
+        "aSurveiller_one": "{{count}} to watch",
+        "aSurveiller_other": "{{count}} to watch",
+        "rien": "Nothing to handle right now."
+      },
+      "enCeMoment": "Right now",
+      "vendu": {
+        "titre": "Sold today",
+        "a": "Sold today, at {{heure}}",
+        "comparaison": "versus last {{jour}} at the same time ({{montant}})",
+        "voir": "See sales",
+        "rienAvant": "Nothing sold last {{jour}} by this time"
+      },
+      "etablissement": "{{nom}} right now",
+      "calme": "No activity today",
+      "caissesOuvertes": "Open tills",
+      "aucuneCaisse": "No open till",
+      "depuis": "{{nom}}, since {{heure}}",
+      "depuisLe": "{{nom}}, since {{jour}}, {{heure}}",
+      "aucuneNote": "No open bill",
+      "notesOuvertes_one": "{{count}} open bill",
+      "notesOuvertes_other": "{{count}} open bills",
+      "plusAncienne": ", the oldest open for {{duree}} ({{note}})",
+      "aEncaisser": "{{montant}} to collect",
+      "points": {
+        "caisseOubliee": {
+          "titre": "Till open since another day",
+          "detail": "{{etablissement}}, {{caisse}}: opened {{jour}}, {{heure}} by {{par}}",
+          "action": "See the till"
+        },
+        "ecart": {
+          "titre": "Difference at closing: {{ecart}}",
+          "detail": "{{etablissement}}, {{caisse}} (Z no. {{numero}})",
+          "action": "See the Z"
+        },
+        "stockNegatif": {
+          "titre": "{{produit}} in negative stock ({{quantite}})",
+          "detail": "{{etablissement}}: a delivery probably needs entering",
+          "action": "See stock"
+        },
+        "rupture": {
+          "titre": "{{produit}} out of stock",
+          "detail": "{{etablissement}}: no longer sold at the till",
+          "action": "See stock"
+        },
+        "noteAncienne": {
+          "titre": "Bill open for {{duree}}: {{note}}",
+          "detail": "{{etablissement}}: forgotten, or left without paying?",
+          "action": ""
+        },
+        "annulations": {
+          "titre": "{{articles}} items cancelled after sending (−{{montant}})",
+          "detail": "Today, {{articlesDuServeur}} on {{serveur}}’s bills",
+          "action": "See activity"
+        },
+        "stockFaible": {
+          "detail": "{{produits}}",
+          "action": "See stock",
+          "titre_one": "Low stock: {{count}} product",
+          "titre_other": "Low stock: {{count}} products"
+        },
+        "ardoises": {
+          "titre": "Tabs to chase: {{montant}}",
+          "detail": "{{clients}} customers owe for more than 30 days",
+          "action": "See tabs"
+        }
       }
     }
   },
@@ -473,7 +547,8 @@
       "message": "Your receipt {{numero}} from {{entreprise}}: {{lien}}",
       "statut": "WhatsApp sending",
       "ouvert": "WhatsApp is open: just send the message."
-    }
+    },
+    "rembourseAvoir": "Refunded on {{date}} at {{heure}}, {{mode}} (credit note {{avoir}})"
   },
   "introuvable": {
     "titre": "Page not found",
@@ -987,7 +1062,11 @@
       "prixSansDroit": "Only an owner or an administrator changes prices.",
       "cree": "“{{nom}}” is added to the menu.",
       "modifie": "“{{nom}}” is saved.",
-      "chargement": "Loading the product…"
+      "chargement": "Loading the product…",
+      "coutRevient": "Cost price",
+      "coutRevientAide": "Optional. What a dish costs (ingredients, gas): used for the margin. A new cost applies to later sales.",
+      "margePlat": "Margin per dish: {{marge}}, i.e. {{taux}}% of the price before tax",
+      "coutInvalide": "Enter an amount, or leave empty."
     },
     "historiquePrix": "Price history",
     "historique": {
@@ -1222,7 +1301,8 @@
     "sansPlafond": "No limit",
     "reglementArdoise": "−{{montant}} in {{mode}}. Still owes {{solde}}.",
     "remboursementReparti": "−{{montant}} ({{repartition}}), {{ou}}. Reason: {{motif}}.",
-    "remboursementRepartiValide": "−{{montant}} ({{repartition}}), {{ou}}. Reason: {{motif}}. Approved by {{validateur}}"
+    "remboursementRepartiValide": "−{{montant}} ({{repartition}}), {{ou}}. Reason: {{motif}}. Approved by {{validateur}}",
+    "noteDuJour": "Bill of {{jour}}"
   },
   "salles": {
     "titre": "{{etablissement}} areas and tables",
@@ -1538,7 +1618,8 @@
         "comptage": "Count"
       },
       "ventesAvecArdoise_one": "Sales ({{count}} bill)",
-      "ventesAvecArdoise_other": "Sales ({{count}} bills)"
+      "ventesAvecArdoise_other": "Sales ({{count}} bills)",
+      "explication": "Explanation of the difference"
     },
     "comptage": "Cash count"
   },
@@ -1564,7 +1645,6 @@
     "faits": "Refunds",
     "badge": "Refunded",
     "validePar": "Approved by {{nom}}",
-    "horsJournee": "Bill from a past day: refund it from the back office.",
     "toutRembourse": "Every item on this bill has been refunded.",
     "rembourser": "Refund",
     "retour": "Back to the bill",
@@ -1604,7 +1684,22 @@
     "partEn": "{{mode}} {{montant}}",
     "validerSeul": "Refund {{montant}}",
     "validationTitreReparti": "Refund {{montant}}",
-    "ordre": "Split across the bill’s payment methods: tab first, then card and Mobile Money, cash last."
+    "ordre": "Split across the bill’s payment methods: tab first, then card and Mobile Money, cash last.",
+    "autreJour": {
+      "titre": "A bill from another day?",
+      "aide": "Enter the receipt number, or scan its QR code. Up to 30 days, with a manager’s approval.",
+      "champ": "Receipt number",
+      "retrouver": "Find",
+      "introuvable": "No receipt has this number in this venue.",
+      "badge": "Day of {{jour}}",
+      "avertissement": "Bill from another day: the money leaves today’s till and counts in its Z. A manager or the owner approves with their code."
+    },
+    "tropAncien": "Paid more than 30 days ago: it can no longer be refunded.",
+    "fait": {
+      "titre": "Refund done",
+      "montant": "{{montant}} given back to the customer",
+      "retour": "Back to bills"
+    }
   },
   "stock": {
     "titre": "Stock",
@@ -1630,6 +1725,7 @@
     "colonnes": {
       "produit": "Product",
       "quantite": "In stock",
+      "coutMoyen": "Average cost",
       "etat": "Status",
       "mouvement": "Last movement",
       "actions": "Actions"
@@ -1705,7 +1801,8 @@
       "aCompter": "Not counted yet.",
       "chargement": "Loading history…",
       "vide": "No movement yet.",
-      "liste": "Movements"
+      "liste": "Movements",
+      "coutUnitaire": "{{cout}} per unit"
     },
     "reception": {
       "action": "Receive a delivery",
@@ -1773,7 +1870,8 @@
       "SOUPLE": "The till sells even without stock at {{etablissement}}: negative stock points to an unrecorded delivery.",
       "AVERTISSEMENT": "At {{etablissement}}, the till warns when an item has no stock left, then sells once confirmed.",
       "STRICT": "At {{etablissement}}, the till refuses to sell an item with no stock left."
-    }
+    },
+    "coutNonRenseigne": "not set"
   },
   "ardoise": {
     "titre": "Tabs",
@@ -1894,5 +1992,164 @@
     "email": "Email",
     "adresse": "Address",
     "fait": "Company details saved."
+  },
+  "rapports": {
+    "periode": {
+      "titre": "Period",
+      "AUJOURDHUI": "Today",
+      "HIER": "Yesterday",
+      "SEPT_JOURS": "Last 7 days",
+      "CE_MOIS": "This month",
+      "MOIS_DERNIER": "Last month",
+      "DATES": "Pick dates",
+      "du": "from {{du}} to {{au}}",
+      "debut": "From",
+      "fin": "To"
+    },
+    "etablissement": "Venue",
+    "tousEtablissements": "All venues",
+    "exporter": "Export (CSV)",
+    "ventes": {
+      "titre": "Sales",
+      "phrase": "Paid bills, by till day: a bill paid after midnight counts for the day before.",
+      "chargement": "Computing sales…",
+      "parJour": "Revenue per day",
+      "parHeure": "Revenue per hour",
+      "jours": "Per day",
+      "heures": "Per hour",
+      "parProduit": "By product",
+      "produits": "Products",
+      "categories": "Categories",
+      "remisesSurNotes": "Amounts after item discounts. Whole-bill discounts: −{{montant}}, not split.",
+      "parMode": "By payment method",
+      "parServeur": "By server",
+      "serveur": "Server",
+      "notes": "Bills",
+      "montant": "Amount",
+      "parEtablissement": "By venue",
+      "dont": "of which {{nom}}",
+      "produit": "Product",
+      "quantite": "Qty",
+      "part": "Share",
+      "vide": {
+        "titre": "No sales in this period",
+        "phrase": "Pick another period, or another venue."
+      },
+      "cout": "Cost",
+      "marge": "Margin",
+      "taux": "Rate",
+      "coutInconnu": "cost unknown",
+      "surVendus_one": "on {{count}} sold",
+      "surVendus_other": "on {{count}} sold"
+    },
+    "indicateurs": {
+      "titre": "Key figures",
+      "chiffreAffaires": "Revenue",
+      "avant": "{{valeur}} before",
+      "notes": "Paid bills",
+      "panierMoyen": "Average bill",
+      "remises": "Discounts and freebies",
+      "partDesVentes": "{{part}}% of sales",
+      "remboursements": "Refunds",
+      "notesRemboursees_one": "{{count}} bill",
+      "notesRemboursees_other": "{{count}} bills",
+      "marge": "Gross margin",
+      "coutConnu": "on {{part}}% of revenue with a known cost"
+    },
+    "vigilance": {
+      "titre": "To watch",
+      "rien": "Nothing to report for this period.",
+      "remboursements": {
+        "titre": "Refunds: −{{montant}}",
+        "detail": "Refunded bills: {{notes}}"
+      },
+      "annulations": {
+        "titre": "{{articles}} items cancelled after sending (−{{montant}})",
+        "detail": "{{articlesDuServeur}} on {{serveur}}’s bills"
+      },
+      "remises": {
+        "titre": "Discounts rising: {{part}}% of sales",
+        "detail": "versus {{partAvant}}% the period before"
+      },
+      "ardoise": {
+        "titre": "{{montant}} sold on tab",
+        "detail": "Customers involved: {{clients}}"
+      }
+    },
+    "csv": {
+      "journee": "Day",
+      "total": "Total",
+      "categorie": "Category"
+    },
+    "caisses": {
+      "titre": "Tills",
+      "phrase": "Each till opening and its Z report, frozen at closing.",
+      "rapport": "Report",
+      "enCours": "Open",
+      "z": "Z no. {{numero}}",
+      "caisse": "Till",
+      "periode": "Period",
+      "ouverteLe": "Opened {{jour}}, {{heure}}",
+      "de": "{{jour}}, {{ouverture}} to {{cloture}}",
+      "par": "Closed by",
+      "ventes": "Sales",
+      "ecart": "Difference",
+      "voir": "View {{caisse}}",
+      "voirCourt": "View",
+      "ecartsSeulement": "Differences only",
+      "chargement": "Loading tills…",
+      "synthese": "Tills summary",
+      "cloturees": "Closed tills",
+      "ecarts": "Total difference",
+      "avecEcart_one": "{{count}} till with a difference",
+      "avecEcart_other": "{{count}} tills with a difference",
+      "ouvertes": "Still open",
+      "ecartsParJour": "Till differences per day",
+      "manque": "Short",
+      "surplus": "Over",
+      "juste": "Exact",
+      "aucune": "no closing",
+      "vide": {
+        "titre": "No till in this period",
+        "phrase": "Tills opened on the tablet show up here, with their Z report."
+      },
+      "liste": "Tills of the period",
+      "lecture": "A difference is read on cash: counted minus expected. The explanation entered at closing is in the details."
+    },
+    "detail": {
+      "titre": "Z report no. {{numero}}, {{caisse}}",
+      "titreEnCours": "{{caisse}}, open",
+      "ouverte": "{{etablissement}}. Opened {{jour}} at {{heure}} by {{nom}}",
+      "cloturee": "{{etablissement}}. Opened {{jour}} at {{ouverture}} by {{nom}}, closed at {{cloture}} by {{par}}",
+      "imprimer": "Print the Z",
+      "enCours": "Open till",
+      "z": "Z report",
+      "ventesEnCours_one": "Taken so far ({{count}} bill)",
+      "ventesEnCours_other": "Taken so far ({{count}} bills)",
+      "mouvements": "Cash movements",
+      "aucunMouvement": "No float, withdrawal or expense.",
+      "remboursements": "Refunds",
+      "aucunRemboursement": "No refund from this till.",
+      "parA": "{{heure}}, by {{nom}}",
+      "voirVentes": "See this day’s sales",
+      "remboursement": "{{note}}, {{motif}}"
+    }
+  },
+  "avoir": {
+    "titre": "CREDIT NOTE",
+    "duplicata": "CREDIT NOTE, COPY",
+    "ticket": "Credit note {{numero}}",
+    "numero": "Credit note no. {{numero}}",
+    "surRecu": "On receipt {{recu}} of {{date}}",
+    "motif": "Reason: {{motif}}",
+    "total": "REFUNDED",
+    "dontTva": "of which VAT",
+    "par": "Refunded by {{nom}}",
+    "parAccord": "Refunded by {{nom}}, approved by {{accord}}",
+    "signature": "Customer signature:",
+    "imprimer": "Print the credit note",
+    "reimprimer": "Reprint credit note {{numero}}",
+    "sans": "No credit note",
+    "numeroCourt": "Credit note {{numero}}"
   }
 }

@@ -56,6 +56,8 @@ describe('PageStock', () => {
     expect(lignes[0]).toHaveTextContent('−2')
     expect(lignes[1]).toHaveTextContent('Stock faible')
     expect(lignes[1]).toHaveTextContent('Réception, BL 2231')
+    expect(lignes[1]).toHaveTextContent(/650\sF/)
+    expect(lignes[0]).toHaveTextContent('non renseigné')
     expect(lignes[2]).toHaveTextContent('À compter')
     const politique = screen.getByRole('region', { name: 'Politique de stock' })
     expect(politique).toHaveTextContent('Souple')
@@ -100,6 +102,7 @@ describe('PageStock', () => {
     const historique = await screen.findByRole('dialog', { name: 'Historique de Flag 65 cl' })
     expect(await within(historique).findByText(/BL 2231/)).toBeVisible()
     expect(historique).toHaveTextContent('+24')
+    expect(historique).toHaveTextContent(/BL 2231, 700\sF l’unité/)
   })
 
   it('n’offre la réception qu’à qui en a le droit', async () => {

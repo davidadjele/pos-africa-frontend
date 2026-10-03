@@ -30,10 +30,10 @@
     "NOTE_NON_VIDE": "Cette note contient des articles : elle ne peut pas être fermée ainsi.",
     "NOTE_ENTAMEE": "Un paiement a déjà été encaissé sur cette note : elle ne se modifie plus.",
     "CAISSE_FERMEE": "La caisse de cette tablette n’est pas ouverte. Ouvrez-la avec son fond pour encaisser.",
-    "REMBOURSEMENT_HORS_JOURNEE": "Seules les notes de la journée en cours se remboursent à la caisse.",
     "PLAFOND_ARDOISE_DEPASSE": "Cette note ferait dépasser le plafond de l’ardoise du client. Confirmez le dépassement ou faites payer une partie maintenant.",
     "ARDOISE_NON_SOLDEE": "Ce client doit encore de l’argent : son ardoise reste ouverte tant qu’elle n’est pas soldée.",
-    "TABLE_INDISPONIBLE": "Cette table vient d’être retirée du plan (désactivée par un gérant). Le plan est à jour : choisissez une autre table."
+    "TABLE_INDISPONIBLE": "Cette table vient d’être retirée du plan (désactivée par un gérant). Le plan est à jour : choisissez une autre table.",
+    "REMBOURSEMENT_TROP_ANCIEN": "Une note encaissée il y a plus de 30 jours ne se rembourse plus."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Trop d’essais infructueux : le compte est verrouillé. Réessayez dans {{duree}}.",
@@ -404,13 +404,87 @@
       "aTraiter_one": "{{count}} produit à traiter",
       "aTraiter_other": "{{count}} produits à traiter",
       "ardoises": "Ardoises",
-      "entreprise": "Entreprise"
+      "entreprise": "Entreprise",
+      "ventes": "Ventes",
+      "caisses": "Caisses"
     },
     "tableauDeBord": {
       "titre": "Tableau de bord",
       "vide": {
         "titre": "Aucune vente enregistrée",
         "phrase": "Les ventes du jour, le stock à surveiller et les sessions de caisse s’afficheront ici dès les premiers encaissements."
+      },
+      "chargement": "Chargement de la journée…",
+      "misAJour": "{{jour}}, en ce moment. Mis à jour à {{heure}}.",
+      "aTraiter": {
+        "titre": "À traiter",
+        "urgents_one": "{{count}} urgent",
+        "urgents_other": "{{count}} urgents",
+        "aSurveiller_one": "{{count}} à surveiller",
+        "aSurveiller_other": "{{count}} à surveiller",
+        "rien": "Rien à traiter pour le moment."
+      },
+      "enCeMoment": "En ce moment",
+      "vendu": {
+        "titre": "Vendu aujourd’hui",
+        "a": "Vendu aujourd’hui, à {{heure}}",
+        "comparaison": "sur {{jour}} dernier à la même heure ({{montant}})",
+        "voir": "Voir les ventes",
+        "rienAvant": "Rien vendu {{jour}} dernier à cette heure"
+      },
+      "etablissement": "{{nom}} en ce moment",
+      "calme": "Aucune activité aujourd’hui",
+      "caissesOuvertes": "Caisses ouvertes",
+      "aucuneCaisse": "Aucune caisse ouverte",
+      "depuis": "{{nom}}, depuis {{heure}}",
+      "depuisLe": "{{nom}}, depuis le {{jour}}, {{heure}}",
+      "aucuneNote": "Aucune note ouverte",
+      "notesOuvertes_one": "{{count}} note ouverte",
+      "notesOuvertes_other": "{{count}} notes ouvertes",
+      "plusAncienne": ", la plus ancienne depuis {{duree}} ({{note}})",
+      "aEncaisser": "{{montant}} à encaisser",
+      "points": {
+        "caisseOubliee": {
+          "titre": "Caisse ouverte depuis un autre jour",
+          "detail": "{{etablissement}}, {{caisse}} : ouverte le {{jour}}, {{heure}} par {{par}}",
+          "action": "Voir la caisse"
+        },
+        "ecart": {
+          "titre": "Écart à la clôture : {{ecart}}",
+          "detail": "{{etablissement}}, {{caisse}} (Z n°{{numero}})",
+          "action": "Voir le Z"
+        },
+        "stockNegatif": {
+          "titre": "{{produit}} en stock négatif ({{quantite}})",
+          "detail": "{{etablissement}} : une livraison est sans doute à saisir",
+          "action": "Voir le stock"
+        },
+        "rupture": {
+          "titre": "{{produit}} en rupture",
+          "detail": "{{etablissement}} : plus en vente à la caisse",
+          "action": "Voir le stock"
+        },
+        "noteAncienne": {
+          "titre": "Note ouverte depuis {{duree}} : {{note}}",
+          "detail": "{{etablissement}} : oubliée, ou partie sans payer ?",
+          "action": ""
+        },
+        "annulations": {
+          "titre": "{{articles}} articles annulés après envoi (−{{montant}})",
+          "detail": "Aujourd’hui, dont {{articlesDuServeur}} sur les notes de {{serveur}}",
+          "action": "Voir l’activité"
+        },
+        "stockFaible": {
+          "detail": "{{produits}}",
+          "action": "Voir le stock",
+          "titre_one": "Stock faible : {{count}} produit",
+          "titre_other": "Stock faible : {{count}} produits"
+        },
+        "ardoises": {
+          "titre": "Ardoises à relancer : {{montant}}",
+          "detail": "{{clients}} clients doivent depuis plus de 30 jours",
+          "action": "Voir les ardoises"
+        }
       }
     }
   },
@@ -473,7 +547,8 @@
       "message": "Votre reçu {{numero}} de {{entreprise}} : {{lien}}",
       "statut": "Envoi WhatsApp",
       "ouvert": "WhatsApp est ouvert : il reste à envoyer le message."
-    }
+    },
+    "rembourseAvoir": "Remboursé le {{date}} à {{heure}}, {{mode}} (avoir {{avoir}})"
   },
   "introuvable": {
     "titre": "Page introuvable",
@@ -987,7 +1062,11 @@
       "prixSansDroit": "Seul un propriétaire ou un administrateur change les prix.",
       "cree": "« {{nom}} » est ajouté à la carte.",
       "modifie": "« {{nom}} » est enregistré.",
-      "chargement": "Chargement du produit…"
+      "chargement": "Chargement du produit…",
+      "coutRevient": "Coût de revient",
+      "coutRevientAide": "Facultatif. Ce que coûte un plat (ingrédients, gaz) : sert au calcul de la marge. Un nouveau coût vaut pour les ventes suivantes.",
+      "margePlat": "Marge par plat : {{marge}}, soit {{taux}} % du prix hors taxe",
+      "coutInvalide": "Saisissez un montant, ou laissez vide."
     },
     "historiquePrix": "Historique des prix",
     "historique": {
@@ -1222,7 +1301,8 @@
     "sansPlafond": "Sans plafond",
     "reglementArdoise": "−{{montant}} en {{mode}}. Doit encore {{solde}}.",
     "remboursementReparti": "−{{montant}} ({{repartition}}), {{ou}}. Motif : {{motif}}.",
-    "remboursementRepartiValide": "−{{montant}} ({{repartition}}), {{ou}}. Motif : {{motif}}. Validé par {{validateur}}"
+    "remboursementRepartiValide": "−{{montant}} ({{repartition}}), {{ou}}. Motif : {{motif}}. Validé par {{validateur}}",
+    "noteDuJour": "Note du {{jour}}"
   },
   "salles": {
     "titre": "Salles et tables de {{etablissement}}",
@@ -1538,7 +1618,8 @@
         "comptage": "Comptage"
       },
       "ventesAvecArdoise_one": "Ventes ({{count}} note)",
-      "ventesAvecArdoise_other": "Ventes ({{count}} notes)"
+      "ventesAvecArdoise_other": "Ventes ({{count}} notes)",
+      "explication": "Explication de l’écart"
     },
     "comptage": "Comptage des espèces"
   },
@@ -1564,7 +1645,6 @@
     "faits": "Remboursements",
     "badge": "Remboursé",
     "validePar": "Validé par {{nom}}",
-    "horsJournee": "Note d’une journée passée : son remboursement se fera depuis la gestion.",
     "toutRembourse": "Tous les articles de cette note ont été remboursés.",
     "rembourser": "Rembourser",
     "retour": "Retour à la note",
@@ -1604,7 +1684,22 @@
     "partEn": "{{mode}} {{montant}}",
     "validerSeul": "Rembourser {{montant}}",
     "validationTitreReparti": "Rembourser {{montant}}",
-    "ordre": "Réparti entre les modes de la note : l’ardoise d’abord, puis la carte et le Mobile Money, les espèces en dernier."
+    "ordre": "Réparti entre les modes de la note : l’ardoise d’abord, puis la carte et le Mobile Money, les espèces en dernier.",
+    "autreJour": {
+      "titre": "Une note d’un autre jour ?",
+      "aide": "Saisissez le numéro du reçu, ou scannez son QR code. Jusqu’à 30 jours, avec l’accord d’un gérant.",
+      "champ": "Numéro du reçu",
+      "retrouver": "Retrouver",
+      "introuvable": "Aucun reçu ne porte ce numéro dans cet établissement.",
+      "badge": "Journée du {{jour}}",
+      "avertissement": "Note d’un autre jour : l’argent sort de la caisse d’aujourd’hui et compte dans son Z. Un gérant ou le propriétaire l’accorde avec son code."
+    },
+    "tropAncien": "Encaissée il y a plus de 30 jours : elle ne se rembourse plus.",
+    "fait": {
+      "titre": "Remboursement fait",
+      "montant": "{{montant}} rendus au client",
+      "retour": "Retour aux notes"
+    }
   },
   "stock": {
     "titre": "Stock",
@@ -1630,6 +1725,7 @@
     "colonnes": {
       "produit": "Produit",
       "quantite": "En stock",
+      "coutMoyen": "Coût moyen",
       "etat": "État",
       "mouvement": "Dernier mouvement",
       "actions": "Actions"
@@ -1705,7 +1801,8 @@
       "aCompter": "Pas encore compté.",
       "chargement": "Chargement de l’historique…",
       "vide": "Aucun mouvement pour l’instant.",
-      "liste": "Mouvements"
+      "liste": "Mouvements",
+      "coutUnitaire": "{{cout}} l’unité"
     },
     "reception": {
       "action": "Réceptionner une livraison",
@@ -1773,7 +1870,8 @@
       "SOUPLE": "La caisse vend même sans stock à {{etablissement}} : un stock négatif signale une livraison non saisie.",
       "AVERTISSEMENT": "À {{etablissement}}, la caisse prévient quand un article n’a plus de stock, puis vend si on le confirme.",
       "STRICT": "À {{etablissement}}, la caisse refuse de vendre un article qui n’a plus de stock."
-    }
+    },
+    "coutNonRenseigne": "non renseigné"
   },
   "ardoise": {
     "titre": "Ardoises",
@@ -1894,5 +1992,164 @@
     "email": "E-mail",
     "adresse": "Adresse",
     "fait": "Identité de l’entreprise enregistrée."
+  },
+  "rapports": {
+    "periode": {
+      "titre": "Période",
+      "AUJOURDHUI": "Aujourd’hui",
+      "HIER": "Hier",
+      "SEPT_JOURS": "7 derniers jours",
+      "CE_MOIS": "Ce mois",
+      "MOIS_DERNIER": "Mois dernier",
+      "DATES": "Choisir les dates",
+      "du": "du {{du}} au {{au}}",
+      "debut": "Du",
+      "fin": "Au"
+    },
+    "etablissement": "Établissement",
+    "tousEtablissements": "Tous les établissements",
+    "exporter": "Exporter (CSV)",
+    "ventes": {
+      "titre": "Ventes",
+      "phrase": "Notes encaissées, par journée de caisse : une note payée après minuit compte pour la veille.",
+      "chargement": "Calcul des ventes…",
+      "parJour": "Chiffre d’affaires par jour",
+      "parHeure": "Chiffre d’affaires par heure",
+      "jours": "Par jour",
+      "heures": "Par heure",
+      "parProduit": "Par produit",
+      "produits": "Produits",
+      "categories": "Catégories",
+      "remisesSurNotes": "Montants après remise sur l’article. Remises sur les notes : −{{montant}}, non réparties.",
+      "parMode": "Par mode de paiement",
+      "parServeur": "Par serveur",
+      "serveur": "Serveur",
+      "notes": "Notes",
+      "montant": "Montant",
+      "parEtablissement": "Par établissement",
+      "dont": "dont {{nom}}",
+      "produit": "Produit",
+      "quantite": "Qté",
+      "part": "Part",
+      "vide": {
+        "titre": "Aucune vente sur cette période",
+        "phrase": "Choisissez une autre période, ou un autre établissement."
+      },
+      "cout": "Coût",
+      "marge": "Marge",
+      "taux": "Taux",
+      "coutInconnu": "coût inconnu",
+      "surVendus_one": "sur {{count}} vendu",
+      "surVendus_other": "sur {{count}} vendus"
+    },
+    "indicateurs": {
+      "titre": "Indicateurs",
+      "chiffreAffaires": "Chiffre d’affaires",
+      "avant": "{{valeur}} avant",
+      "notes": "Notes encaissées",
+      "panierMoyen": "Panier moyen",
+      "remises": "Remises et offerts",
+      "partDesVentes": "{{part}} % des ventes",
+      "remboursements": "Remboursements",
+      "notesRemboursees_one": "{{count}} note",
+      "notesRemboursees_other": "{{count}} notes",
+      "marge": "Marge brute",
+      "coutConnu": "sur {{part}} % du chiffre d’affaires au coût connu"
+    },
+    "vigilance": {
+      "titre": "À surveiller",
+      "rien": "Rien à signaler sur cette période.",
+      "remboursements": {
+        "titre": "Remboursements : −{{montant}}",
+        "detail": "Notes remboursées : {{notes}}"
+      },
+      "annulations": {
+        "titre": "{{articles}} articles annulés après envoi (−{{montant}})",
+        "detail": "dont {{articlesDuServeur}} sur les notes de {{serveur}}"
+      },
+      "remises": {
+        "titre": "Remises en hausse : {{part}} % des ventes",
+        "detail": "contre {{partAvant}} % la période d’avant"
+      },
+      "ardoise": {
+        "titre": "{{montant}} vendus sur l’ardoise",
+        "detail": "Clients concernés : {{clients}}"
+      }
+    },
+    "csv": {
+      "journee": "Journée",
+      "total": "Total",
+      "categorie": "Catégorie"
+    },
+    "caisses": {
+      "titre": "Caisses",
+      "phrase": "Chaque ouverture de caisse et son rapport Z, figé à la clôture.",
+      "rapport": "Rapport",
+      "enCours": "En cours",
+      "z": "Z n°{{numero}}",
+      "caisse": "Caisse",
+      "periode": "Période",
+      "ouverteLe": "Ouverte le {{jour}}, {{heure}}",
+      "de": "{{jour}}, {{ouverture}} à {{cloture}}",
+      "par": "Clôturée par",
+      "ventes": "Ventes",
+      "ecart": "Écart",
+      "voir": "Voir {{caisse}}",
+      "voirCourt": "Voir",
+      "ecartsSeulement": "Seulement les écarts",
+      "chargement": "Chargement des caisses…",
+      "synthese": "Synthèse des caisses",
+      "cloturees": "Caisses clôturées",
+      "ecarts": "Écarts cumulés",
+      "avecEcart_one": "{{count}} caisse avec écart",
+      "avecEcart_other": "{{count}} caisses avec écart",
+      "ouvertes": "Encore ouvertes",
+      "ecartsParJour": "Écarts de caisse par jour",
+      "manque": "Manque",
+      "surplus": "Surplus",
+      "juste": "Juste",
+      "aucune": "aucune clôture",
+      "vide": {
+        "titre": "Aucune caisse sur cette période",
+        "phrase": "Les caisses ouvertes depuis la tablette apparaissent ici, avec leur rapport Z."
+      },
+      "liste": "Caisses de la période",
+      "lecture": "Un écart se lit côté espèces : compté moins attendu. L’explication saisie à la clôture est dans le détail."
+    },
+    "detail": {
+      "titre": "Rapport Z n°{{numero}}, {{caisse}}",
+      "titreEnCours": "{{caisse}}, en cours",
+      "ouverte": "{{etablissement}}. Ouverte le {{jour}} à {{heure}} par {{nom}}",
+      "cloturee": "{{etablissement}}. Ouverte le {{jour}} à {{ouverture}} par {{nom}}, clôturée à {{cloture}} par {{par}}",
+      "imprimer": "Imprimer le Z",
+      "enCours": "Caisse en cours",
+      "z": "Rapport Z",
+      "ventesEnCours_one": "Encaissé jusqu’ici ({{count}} note)",
+      "ventesEnCours_other": "Encaissé jusqu’ici ({{count}} notes)",
+      "mouvements": "Mouvements de caisse",
+      "aucunMouvement": "Aucun apport, retrait ni dépense.",
+      "remboursements": "Remboursements",
+      "aucunRemboursement": "Aucun remboursement depuis cette caisse.",
+      "parA": "{{heure}}, par {{nom}}",
+      "voirVentes": "Voir les ventes de cette journée",
+      "remboursement": "{{note}}, {{motif}}"
+    }
+  },
+  "avoir": {
+    "titre": "AVOIR",
+    "duplicata": "AVOIR, DUPLICATA",
+    "ticket": "Avoir {{numero}}",
+    "numero": "Avoir n° {{numero}}",
+    "surRecu": "Sur le reçu {{recu}} du {{date}}",
+    "motif": "Motif : {{motif}}",
+    "total": "REMBOURSÉ",
+    "dontTva": "dont TVA",
+    "par": "Remboursé par {{nom}}",
+    "parAccord": "Remboursé par {{nom}}, accord de {{accord}}",
+    "signature": "Signature du client :",
+    "imprimer": "Imprimer l’avoir",
+    "reimprimer": "Réimprimer l’avoir {{numero}}",
+    "sans": "Sans avoir",
+    "numeroCourt": "Avoir {{numero}}"
   }
 }

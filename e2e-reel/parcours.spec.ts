@@ -1028,6 +1028,13 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await capturer(tablette, '58-rembourser-telephone')
   await tablette.setViewportSize({ width: 1280, height: 800 })
   await tablette.getByRole('button', { name: /^Rembourser 4\s500\sF en carte/ }).click()
+  // Le remboursement fait, l'avoir numéroté se remet au client avec l'argent.
+  const fait = tablette.getByRole('region', { name: 'Remboursement fait' })
+  await expect(fait).toContainText(/Avoir BE-AV-\d{6}/)
+  await capturer(tablette, '59-avoir')
+  await fait.getByRole('button', { name: 'Imprimer l’avoir' }).click()
+  await expect.poll(() => impressions(tablette)).toBe(3)
+  await fait.getByRole('button', { name: 'Retour aux notes' }).click()
   await expect(tablette.getByRole('region', { name: /, T6$/ })).toContainText(
     '1× Poulet braisé, carte',
   )
@@ -1035,7 +1042,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   // Le reçu en ligne de T6, rouvert par le client, mentionne le remboursement ; le reçu lui-même ne change pas.
   await client.goto(recuT6)
   await expect(client.getByRole('article', { name: /^Reçu BE-/ })).toContainText(
-    /Remboursé le .*, carte−4\s500/,
+    /Remboursé le .*, carte \(avoir BE-AV-\d{6}\)−4\s500/,
   )
   await capturer(client, '59-recu-en-ligne-rembourse')
   await telephoneClient.close()
@@ -1057,6 +1064,8 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await flag.click()
   await flag.click()
   await note.getByRole('button', { name: /Envoyer 2 articles/ }).click()
+  // Tant que l'envoi n'est pas fini, la ligne est encore un brouillon : son menu ne propose pas « Annuler ».
+  await expect(note.getByRole('button', { name: /Envoyer \d+ article/ })).toHaveCount(0)
   await tablette.getByRole('button', { name: 'Actions sur Flag 65 cl' }).click()
   await tablette
     .getByRole('dialog', { name: 'Flag 65 cl' })
@@ -1278,4 +1287,60 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     'Afi M. a dépassé le plafond de l’ardoise de Komlan D. à Bè Kpota',
   )
   await capturer(page, '40-activite-caisse')
+
+  // Le soir, Tanti regarde ses ventes de la semaine, puis ses caisses : l'écart du Z n°1 ressort tout de suite.
+  await navigation.getByRole('link', { name: 'Ventes' }).click()
+  const indicateurs = page.getByRole('list', { name: 'Indicateurs' })
+  await expect(indicateurs).toContainText('Chiffre d’affaires')
+  // Le Flag a été reçu à 650 : ses ventes ont un coût figé, la marge brute apparaît.
+  await expect(indicateurs).toContainText('Marge brute')
+  await expect(page.getByRole('list', { name: 'Chiffre d’affaires par jour' })).toBeVisible()
+  const vigilance = page.getByRole('region', { name: 'À surveiller' })
+  // Les écarts de caisse se suivent au tableau de bord et dans Caisses, plus dans les ventes.
+  await expect(vigilance).not.toContainText('Écarts de caisse')
+  await expect(vigilance).toContainText(/Remboursements : −/)
+  await expect(vigilance).toContainText(/vendus sur l’ardoise/)
+  await expect(page.getByRole('table', { name: 'Par produit' })).toContainText('Poulet braisé')
+  await capturer(page, '80-ventes')
+  await page.getByRole('button', { name: 'Par heure' }).click()
+  await expect(page.getByRole('list', { name: 'Chiffre d’affaires par heure' })).toBeVisible()
+  await page.getByRole('button', { name: 'Catégories' }).click()
+  await capturer(page, '80-ventes-heures-categories')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await capturer(page, '80-ventes-telephone')
+  await page.setViewportSize({ width: 1280, height: 800 })
+
+  await navigation.getByRole('link', { name: 'Caisses', exact: true }).click()
+  const listeCaisses = page.getByRole('table', { name: 'Caisses de la période' })
+  await expect(listeCaisses.getByRole('row', { name: /Z n°1/ })).toContainText('−500')
+  await expect(listeCaisses.getByRole('row', { name: /En cours/ })).toBeVisible()
+  await capturer(page, '81-caisses')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await capturer(page, '81-caisses-telephone')
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await listeCaisses.getByRole('row', { name: /Z n°1/ }).getByRole('link').click()
+  await expect(page.getByRole('heading', { name: /^Rapport Z n°1, / })).toBeVisible()
+  const detailZ = page.getByRole('region', { name: 'Rapport Z' })
+  await expect(detailZ).toContainText('Monnaie rendue en trop')
+  await expect(page.getByRole('region', { name: 'Mouvements de caisse' })).toContainText('−10 000')
+  await expect(page.getByRole('region', { name: 'Remboursements' })).toContainText(
+    'Article non conforme',
+  )
+  await capturer(page, '82-detail-z')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await capturer(page, '82-detail-z-telephone')
+  await page.setViewportSize({ width: 1280, height: 800 })
+
+  // Le tableau de bord : ce qui est à traiter, et ce qui se passe en ce moment à Bè Kpota.
+  await navigation.getByRole('link', { name: 'Tableau de bord' }).click()
+  await expect(page.getByRole('region', { name: 'Vendu aujourd’hui' })).toContainText(/F/)
+  const maintenant = page.getByRole('region', { name: 'Bè Kpota en ce moment' })
+  await expect(maintenant).toContainText('Caisses ouvertes')
+  await expect(maintenant).toContainText(/Afi M\., depuis/)
+  await expect(page.getByRole('region', { name: 'À traiter' })).toContainText(
+    /Écart à la clôture : −500/,
+  )
+  await capturer(page, '83-tableau-de-bord')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await capturer(page, '83-tableau-de-bord-telephone')
 })

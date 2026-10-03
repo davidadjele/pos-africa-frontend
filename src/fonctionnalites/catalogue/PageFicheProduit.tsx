@@ -30,7 +30,7 @@ import { COULEURS_CATEGORIE } from './couleurs'
 import { requeteCategories, requeteProduit, requeteTaxes } from './requetes'
 
 const TYPES: TypeProduit[] = ['PLAT', 'BOISSON', 'ARTICLE']
-const CHAMPS = ['nom', 'categorieId', 'type', 'prix', 'taxeId'] as const
+const CHAMPS = ['nom', 'categorieId', 'type', 'prix', 'taxeId', 'coutRevient'] as const
 
 const schema = z.object({
   nom: z.string().trim().min(1, 'validation.obligatoire').max(100, 'validation.tropLong'),
@@ -39,6 +39,7 @@ const schema = z.object({
   prix: z.string(),
   taxeId: z.string(),
   suiviStock: z.boolean(),
+  coutRevient: z.string(),
 })
 
 type Saisie = z.infer<typeof schema>
@@ -56,6 +57,7 @@ function valeursDe(
       prix: '',
       taxeId: taxeParDefaut,
       suiviStock: false,
+      coutRevient: '',
     }
   }
   return {
@@ -65,6 +67,10 @@ function valeursDe(
     prix: formaterMontant({ unitesMineures: produit.prix, devise }, { forme: 'nombre' }),
     taxeId: produit.taxe?.id ?? '',
     suiviStock: produit.suiviStock,
+    coutRevient:
+      produit.coutRevient === undefined
+        ? ''
+        : formaterMontant({ unitesMineures: produit.coutRevient, devise }, { forme: 'nombre' }),
   }
 }
 
@@ -142,18 +148,32 @@ function FormulaireProduit({
     resolver: zodResolver(schema),
     defaultValues: valeursDe(produit, devise, taxeParDefaut),
   })
-  const [prix, taxeId, categorieId, nom] = useWatch({
+  const [prix, taxeId, categorieId, nom, suiviStock, coutRevient] = useWatch({
     control,
-    name: ['prix', 'taxeId', 'categorieId', 'nom'],
+    name: ['prix', 'taxeId', 'categorieId', 'nom', 'suiviStock', 'coutRevient'],
   })
   const montant = lireMontant(prix, devise)
+  const cout = coutRevient.trim() === '' ? undefined : lireMontant(coutRevient, devise)
   const taxe = taxes.find((candidate) => candidate.id === taxeId)
   const categorie = categories.find((candidate) => candidate.id === categorieId)
+  const horsTaxe =
+    montant === null || taxe === undefined
+      ? montant
+      : montant - taxeIncluse(montant, taxe.tauxPointsDeBase)
 
   async function envoyer(saisie: Saisie) {
     const prixLu = lireMontant(saisie.prix, devise)
     if (prixLu === null || prixLu <= 0) {
       setError('prix', { type: 'validation', message: t('produits.fiche.prixInvalide') })
+      return
+    }
+    // Une boisson suivie prend le coût moyen de ses réceptions : son coût de revient ne sert pas.
+    const coutLu =
+      saisie.suiviStock || saisie.coutRevient.trim() === ''
+        ? undefined
+        : lireMontant(saisie.coutRevient, devise)
+    if (coutLu === null) {
+      setError('coutRevient', { type: 'validation', message: t('produits.fiche.coutInvalide') })
       return
     }
     setErreur(null)
@@ -165,6 +185,7 @@ function FormulaireProduit({
       prix: prixLu,
       ...(saisie.taxeId === '' ? {} : { taxeId: saisie.taxeId }),
       suiviStock: saisie.suiviStock,
+      ...(coutLu === undefined ? {} : { coutRevient: coutLu }),
       ...(version === undefined ? {} : { version }),
     }
     try {
@@ -314,6 +335,29 @@ function FormulaireProduit({
             <span className="text-legende text-attenue">{t('produits.fiche.suiviStockAide')}</span>
           </span>
         </label>
+        {!suiviStock && (
+          <div className="grid gap-4 md:grid-cols-2">
+            <ChampSaisie
+              libelle={t('produits.fiche.coutRevient')}
+              aide={
+                horsTaxe !== null && horsTaxe > 0 && cout !== undefined && cout !== null
+                  ? t('produits.fiche.margePlat', {
+                      marge: formaterMontant(
+                        { unitesMineures: horsTaxe - cout, devise },
+                        { forme: 'courte' },
+                      ),
+                      taux: String(Math.round(((horsTaxe - cout) / horsTaxe) * 100)),
+                    })
+                  : t('produits.fiche.coutRevientAide')
+              }
+              inputMode="decimal"
+              suffixe={symboleDe(devise)}
+              className="chiffres text-montant-ligne"
+              erreur={message(errors.coutRevient?.message)}
+              {...register('coutRevient')}
+            />
+          </div>
+        )}
         {erreur !== null && <AlerteErreur erreur={erreur} />}
         <div className="flex flex-wrap justify-end gap-2">
           <Link to="/gestion/produits" className={classesBouton('secondaire')}>
