@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { API, MOI_TANTI, ouvrir, sessionOuverte } from '../../../tests/application'
 import { serveurMsw } from '../../../tests/serveurMsw'
 import { BE_KPOTA } from '../stock/fixtures'
-import { HISTORIQUE, RAPPORT } from './fixtures'
+import { RAPPORT } from './fixtures'
 
 const PROPRIETAIRE = [...MOI_TANTI.permissions, 'RAPPORT_VENTES', 'RAPPORT_FINANCIER']
 
@@ -29,7 +29,6 @@ function rapportServi(rapport = RAPPORT) {
       demandes.push(new URL(request.url).searchParams)
       return HttpResponse.json(rapport)
     }),
-    http.get(`${API}/rapports/caisses`, () => HttpResponse.json(HISTORIQUE)),
   )
   return demandes
 }
@@ -64,7 +63,6 @@ describe('PageVentes', () => {
     const vigilance = screen.getByRole('region', { name: 'À surveiller' })
     const points = within(vigilance).getAllByRole('link')
     expect(points.map((point) => point.textContent)).toEqual([
-      expect.stringMatching(/^Écarts de caisse : −2\s100Caisses avec écart : 3 sur 5$/) as string,
       expect.stringMatching(/^Remboursements : −9\s000Notes remboursées : 2$/) as string,
       expect.stringMatching(
         /^6 articles annulés après envoi \(−6\s000\)dont 4 sur les notes de Kossi A\.$/,
@@ -74,7 +72,7 @@ describe('PageVentes', () => {
       ) as string,
       expect.stringMatching(/^87\s500 vendus sur l’ardoiseClients concernés : 3$/) as string,
     ])
-    expect(points[0]).toHaveAttribute('href', '/gestion/caisses')
+    expect(points[0]).toHaveAttribute('href', '/gestion/activite')
   })
 
   it('change de période et d’établissement, et passe aux catégories', async () => {
@@ -112,7 +110,7 @@ describe('PageVentes', () => {
     ).toHaveTextContent(/Espèces.*Mobile Money.*Carte.*Ardoise/)
   })
 
-  it('sans le rapport financier, ne parle pas des écarts de caisse', async () => {
+  it('laisse les caisses au tableau de bord, et cache leur menu sans le rapport financier', async () => {
     rapportServi()
     sessionOuverte({ ...MOI_TANTI, permissions: [...MOI_TANTI.permissions, 'RAPPORT_VENTES'] })
     ouvrir('/gestion/ventes')

@@ -1993,6 +1993,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/rapports/caisses/ouvertes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Les caisses encore ouvertes
+         * @description Quel que soit le jour de leur ouverture : une caisse restée ouverte depuis la veille a été oubliée. Dans le périmètre de la personne connectée.
+         */
+        get: operations["ouvertes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/rapports/caisses/{id}": {
         parameters: {
             query?: never;
@@ -2005,6 +2025,26 @@ export interface paths {
          * @description Son rapport Z une fois clôturée, sinon ses ventes en cours ; ses mouvements et ses remboursements. Erreurs : RESSOURCE_INTROUVABLE (404), ACCES_REFUSE (403) hors périmètre.
          */
         get: operations["detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/rapports/tableau-de-bord": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * La journée en cours
+         * @description Permission RAPPORT_VENTES. Par établissement du périmètre : vendu aujourd'hui, vendu le même jour de la semaine d'avant jusqu'à la même heure, notes encore ouvertes. Erreur : ACCES_REFUSE (403) hors périmètre.
+         */
+        get: operations["tableau"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2304,6 +2344,8 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         ARelancer: {
+            /** Format: int64 */
+            montant: number;
             /** Format: int32 */
             nombre: number;
         };
@@ -3162,6 +3204,26 @@ export interface components {
             nom: string;
             ville?: string;
         };
+        EtablissementDuJour: {
+            /** Format: int64 */
+            aEncaisser: number;
+            /** Format: int64 */
+            chiffreAffaires: number;
+            /** Format: int64 */
+            comparable: number;
+            /** Format: uuid */
+            etablissementId: string;
+            /** Format: date */
+            journee: string;
+            nom: string;
+            /** Format: int32 */
+            notes: number;
+            /** Format: int32 */
+            notesOuvertes: number;
+            /** Format: date-time */
+            plusAncienneLe?: string;
+            plusAncienneNote?: string;
+        };
         EtablissementRecu: {
             adresse?: string;
             enTete?: string;
@@ -3620,6 +3682,18 @@ export interface components {
             salles: components["schemas"]["SallePlan"][];
             sansTable: components["schemas"]["NoteOuverte"][];
         };
+        ProduitATraiter: {
+            etablissement: string;
+            /** Format: uuid */
+            etablissementId: string;
+            /** @enum {string} */
+            etat: "A_COMPTER" | "EN_STOCK" | "FAIBLE" | "RUPTURE" | "NEGATIF";
+            nom: string;
+            /** Format: uuid */
+            produitId: string;
+            /** Format: int32 */
+            quantite: number;
+        };
         ProduitResume: {
             actif: boolean;
             categorie: components["schemas"]["CategorieProduit"];
@@ -3920,6 +3994,7 @@ export interface components {
         StockATraiter: {
             /** Format: int32 */
             nombre: number;
+            produits: components["schemas"]["ProduitATraiter"][];
         };
         StockCaisse: {
             articles: components["schemas"]["ArticleEnCaisse"][];
@@ -3961,6 +4036,18 @@ export interface components {
             places: number;
             /** Format: int64 */
             version: number;
+        };
+        TableauDeBord: {
+            annulations: components["schemas"]["AnnulationsPeriode"];
+            /** Format: int64 */
+            chiffreAffaires: number;
+            /** Format: int64 */
+            comparable: number;
+            etablissements: components["schemas"]["EtablissementDuJour"][];
+            /** Format: date-time */
+            maintenant: string;
+            /** Format: int32 */
+            notes: number;
         };
         Taxe: {
             /** Format: int64 */
@@ -7941,6 +8028,35 @@ export interface operations {
             };
         };
     };
+    ouvertes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CaisseResume"][];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
     detail: {
         parameters: {
             query?: never;
@@ -7959,6 +8075,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DetailCaisse"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    tableau: {
+        parameters: {
+            query?: {
+                etablissementId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TableauDeBord"];
                 };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */

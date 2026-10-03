@@ -1,6 +1,12 @@
 import { keepPreviousData, queryOptions } from '@tanstack/react-query'
 import { appelerApi } from '../../partage/api/appelerApi'
-import type { DetailCaisse, HistoriqueCaisses, RapportVentes } from '../../partage/api/contrat'
+import type {
+  CaisseResume,
+  DetailCaisse,
+  HistoriqueCaisses,
+  RapportVentes,
+  TableauDeBord,
+} from '../../partage/api/contrat'
 import type { Periode } from './periodes'
 
 function parametres(
@@ -42,3 +48,18 @@ export function requeteDetailCaisse(ouvertureId: string) {
       appelerApi<DetailCaisse>(`/rapports/caisses/${ouvertureId}`, { signal }),
   })
 }
+
+export function requeteTableauDeBord(etablissementId: string) {
+  const recherche = etablissementId === '' ? '' : `?etablissementId=${etablissementId}`
+  return queryOptions({
+    queryKey: ['rapports', 'tableau-de-bord', etablissementId],
+    queryFn: ({ signal }) =>
+      appelerApi<TableauDeBord>(`/rapports/tableau-de-bord${recherche}`, { signal }),
+    placeholderData: keepPreviousData,
+  })
+}
+
+export const requeteCaissesOuvertes = queryOptions({
+  queryKey: ['rapports', 'caisses', 'ouvertes'],
+  queryFn: ({ signal }) => appelerApi<CaisseResume[]>('/rapports/caisses/ouvertes', { signal }),
+})

@@ -413,6 +413,76 @@
       "vide": {
         "titre": "No sales recorded",
         "phrase": "Today's sales, stock to watch and till sessions will show here from the first checkouts."
+      },
+      "chargement": "Loading today…",
+      "misAJour": "{{jour}}, right now. Updated at {{heure}}.",
+      "aTraiter": {
+        "titre": "To handle",
+        "urgents_one": "{{count}} urgent",
+        "urgents_other": "{{count}} urgent",
+        "aSurveiller_one": "{{count}} to watch",
+        "aSurveiller_other": "{{count}} to watch",
+        "rien": "Nothing to handle right now."
+      },
+      "enCeMoment": "Right now",
+      "vendu": {
+        "titre": "Sold today",
+        "a": "Sold today, at {{heure}}",
+        "comparaison": "versus last {{jour}} at the same time ({{montant}})",
+        "voir": "See sales"
+      },
+      "etablissement": "{{nom}} right now",
+      "calme": "No activity today",
+      "caissesOuvertes": "Open tills",
+      "aucuneCaisse": "No open till",
+      "depuis": "{{nom}}, since {{heure}}",
+      "depuisLe": "{{nom}}, since {{jour}}, {{heure}}",
+      "aucuneNote": "No open bill",
+      "notesOuvertes_one": "{{count}} open bill",
+      "notesOuvertes_other": "{{count}} open bills",
+      "plusAncienne": ", the oldest open for {{duree}} ({{note}})",
+      "aEncaisser": "{{montant}} to collect",
+      "points": {
+        "caisseOubliee": {
+          "titre": "Till open since another day",
+          "detail": "{{etablissement}}, {{caisse}}: opened {{jour}}, {{heure}} by {{par}}",
+          "action": "See the till"
+        },
+        "ecart": {
+          "titre": "Difference at closing: {{ecart}}",
+          "detail": "{{etablissement}}, {{caisse}} (Z no. {{numero}})",
+          "action": "See the Z"
+        },
+        "stockNegatif": {
+          "titre": "{{produit}} in negative stock ({{quantite}})",
+          "detail": "{{etablissement}}: a delivery probably needs entering",
+          "action": "See stock"
+        },
+        "rupture": {
+          "titre": "{{produit}} out of stock",
+          "detail": "{{etablissement}}: no longer sold at the till",
+          "action": "See stock"
+        },
+        "noteAncienne": {
+          "titre": "Bill open for {{duree}}: {{note}}",
+          "detail": "{{etablissement}}: forgotten, or left without paying?",
+          "action": ""
+        },
+        "annulations": {
+          "titre": "{{articles}} items cancelled after sending (−{{montant}})",
+          "detail": "Today, {{articlesDuServeur}} on {{serveur}}’s bills",
+          "action": "See activity"
+        },
+        "stockFaible": {
+          "titre": "Low stock: {{nombre}} products",
+          "detail": "{{produits}}",
+          "action": "See stock"
+        },
+        "ardoises": {
+          "titre": "Tabs to chase: {{montant}}",
+          "detail": "{{clients}} customers owe for more than 30 days",
+          "action": "See tabs"
+        }
       }
     }
   },
@@ -1956,10 +2026,6 @@
     "vigilance": {
       "titre": "To watch",
       "rien": "Nothing to report for this period.",
-      "ecarts": {
-        "titre": "Till differences: {{montant}}",
-        "detail": "Tills with a difference: {{avecEcart}} of {{cloturees}}"
-      },
       "remboursements": {
         "titre": "Refunds: −{{montant}}",
         "detail": "Refunded bills: {{notes}}"

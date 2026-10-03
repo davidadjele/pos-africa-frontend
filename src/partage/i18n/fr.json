@@ -413,6 +413,76 @@
       "vide": {
         "titre": "Aucune vente enregistrée",
         "phrase": "Les ventes du jour, le stock à surveiller et les sessions de caisse s’afficheront ici dès les premiers encaissements."
+      },
+      "chargement": "Chargement de la journée…",
+      "misAJour": "{{jour}}, en ce moment. Mis à jour à {{heure}}.",
+      "aTraiter": {
+        "titre": "À traiter",
+        "urgents_one": "{{count}} urgent",
+        "urgents_other": "{{count}} urgents",
+        "aSurveiller_one": "{{count}} à surveiller",
+        "aSurveiller_other": "{{count}} à surveiller",
+        "rien": "Rien à traiter pour le moment."
+      },
+      "enCeMoment": "En ce moment",
+      "vendu": {
+        "titre": "Vendu aujourd’hui",
+        "a": "Vendu aujourd’hui, à {{heure}}",
+        "comparaison": "sur {{jour}} dernier à la même heure ({{montant}})",
+        "voir": "Voir les ventes"
+      },
+      "etablissement": "{{nom}} en ce moment",
+      "calme": "Aucune activité aujourd’hui",
+      "caissesOuvertes": "Caisses ouvertes",
+      "aucuneCaisse": "Aucune caisse ouverte",
+      "depuis": "{{nom}}, depuis {{heure}}",
+      "depuisLe": "{{nom}}, depuis le {{jour}}, {{heure}}",
+      "aucuneNote": "Aucune note ouverte",
+      "notesOuvertes_one": "{{count}} note ouverte",
+      "notesOuvertes_other": "{{count}} notes ouvertes",
+      "plusAncienne": ", la plus ancienne depuis {{duree}} ({{note}})",
+      "aEncaisser": "{{montant}} à encaisser",
+      "points": {
+        "caisseOubliee": {
+          "titre": "Caisse ouverte depuis un autre jour",
+          "detail": "{{etablissement}}, {{caisse}} : ouverte le {{jour}}, {{heure}} par {{par}}",
+          "action": "Voir la caisse"
+        },
+        "ecart": {
+          "titre": "Écart à la clôture : {{ecart}}",
+          "detail": "{{etablissement}}, {{caisse}} (Z n°{{numero}})",
+          "action": "Voir le Z"
+        },
+        "stockNegatif": {
+          "titre": "{{produit}} en stock négatif ({{quantite}})",
+          "detail": "{{etablissement}} : une livraison est sans doute à saisir",
+          "action": "Voir le stock"
+        },
+        "rupture": {
+          "titre": "{{produit}} en rupture",
+          "detail": "{{etablissement}} : plus en vente à la caisse",
+          "action": "Voir le stock"
+        },
+        "noteAncienne": {
+          "titre": "Note ouverte depuis {{duree}} : {{note}}",
+          "detail": "{{etablissement}} : oubliée, ou partie sans payer ?",
+          "action": ""
+        },
+        "annulations": {
+          "titre": "{{articles}} articles annulés après envoi (−{{montant}})",
+          "detail": "Aujourd’hui, dont {{articlesDuServeur}} sur les notes de {{serveur}}",
+          "action": "Voir l’activité"
+        },
+        "stockFaible": {
+          "titre": "Stock faible : {{nombre}} produits",
+          "detail": "{{produits}}",
+          "action": "Voir le stock"
+        },
+        "ardoises": {
+          "titre": "Ardoises à relancer : {{montant}}",
+          "detail": "{{clients}} clients doivent depuis plus de 30 jours",
+          "action": "Voir les ardoises"
+        }
       }
     }
   },
@@ -1956,10 +2026,6 @@
     "vigilance": {
       "titre": "À surveiller",
       "rien": "Rien à signaler sur cette période.",
-      "ecarts": {
-        "titre": "Écarts de caisse : {{montant}}",
-        "detail": "Caisses avec écart : {{avecEcart}} sur {{cloturees}}"
-      },
       "remboursements": {
         "titre": "Remboursements : −{{montant}}",
         "detail": "Notes remboursées : {{notes}}"

@@ -1317,4 +1317,18 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await capturer(page, '82-detail-z')
   await page.setViewportSize({ width: 390, height: 844 })
   await capturer(page, '82-detail-z-telephone')
+  await page.setViewportSize({ width: 1280, height: 800 })
+
+  // Le tableau de bord : ce qui est à traiter, et ce qui se passe en ce moment à Bè Kpota.
+  await navigation.getByRole('link', { name: 'Tableau de bord' }).click()
+  await expect(page.getByRole('region', { name: 'Vendu aujourd’hui' })).toContainText(/F/)
+  const maintenant = page.getByRole('region', { name: 'Bè Kpota en ce moment' })
+  await expect(maintenant).toContainText('Caisses ouvertes')
+  await expect(maintenant).toContainText(/Afi M\., depuis/)
+  await expect(page.getByRole('region', { name: 'À traiter' })).toContainText(
+    /Écart à la clôture : −500/,
+  )
+  await capturer(page, '83-tableau-de-bord')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await capturer(page, '83-tableau-de-bord-telephone')
 })

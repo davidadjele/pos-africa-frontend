@@ -1,7 +1,7 @@
-import type { HistoriqueCaisses, RapportVentes } from '../../partage/api/contrat'
+import type { RapportVentes } from '../../partage/api/contrat'
 
 export type TonVigilance = 'danger' | 'alerte' | 'info'
-export type CleVigilance = 'ecarts' | 'remboursements' | 'annulations' | 'remises' | 'ardoise'
+export type CleVigilance = 'remboursements' | 'annulations' | 'remises' | 'ardoise'
 
 /** Un point à surveiller : la page le traduit à partir de sa clé et de ses valeurs. */
 export interface PointVigilance {
@@ -19,25 +19,11 @@ function partDesRemises(remises: number, chiffreAffaires: number): number {
 }
 
 /**
- * Ce qui mérite l'attention sur la période, du plus grave au moins grave. Les écarts de caisse n'y figurent que pour
- * qui a le rapport financier (l'historique des caisses est alors fourni).
+ * Ce qui mérite l'attention dans les ventes de la période, du plus grave au moins grave. Les caisses, le stock et
+ * les ardoises à relancer se suivent au tableau de bord.
  */
-export function pointsDeVigilance(
-  rapport: RapportVentes,
-  caisses: HistoriqueCaisses | undefined,
-): PointVigilance[] {
+export function pointsDeVigilance(rapport: RapportVentes): PointVigilance[] {
   const points: PointVigilance[] = []
-  if (caisses !== undefined && caisses.synthese.avecEcart > 0) {
-    points.push({
-      cle: 'ecarts',
-      ton: 'danger',
-      valeurs: {
-        montant: caisses.synthese.ecartCumule,
-        avecEcart: caisses.synthese.avecEcart,
-        cloturees: caisses.synthese.cloturees,
-      },
-    })
-  }
   const { annulations, indicateurs, precedent, ardoise } = rapport
   if (annulations.articles > 0) {
     points.push({

@@ -26,7 +26,7 @@ import {
   signe,
 } from './Graphiques'
 import { journeeCourante, periodeDe, variation, type ClePeriode, type Periode } from './periodes'
-import { requeteCaisses, requeteVentes } from './requetes'
+import { requeteVentes } from './requetes'
 import { pointsDeVigilance, type PointVigilance } from './vigilance'
 
 const PERIODES: ClePeriode[] = [
@@ -62,7 +62,7 @@ export function PageVentes({
   etablissement?: string | undefined
 }>) {
   const { t } = useTranslation()
-  const { moi, aLaPermission } = useSession()
+  const { moi } = useSession()
   const fuseauHoraire = moi?.entrepriseCourante?.fuseauHoraire ?? 'Africa/Lome'
   const devise = (moi?.entrepriseCourante?.devise ?? 'XOF') as Devise
   const journee = journeeCourante(fuseauHoraire)
@@ -75,8 +75,6 @@ export function PageVentes({
   const [regroupement, setRegroupement] = useState<'produits' | 'categories'>('produits')
   const etablissements = useQuery(requeteEtablissements(0))
   const ventes = useQuery(requeteVentes(periode, etablissementId))
-  const financier = aLaPermission('RAPPORT_FINANCIER')
-  const caisses = useQuery({ ...requeteCaisses(periode, etablissementId), enabled: financier })
   const nombre = (valeur: number) =>
     formaterMontant({ unitesMineures: valeur, devise }, { forme: 'nombre' })
   const courte = (valeur: number) =>
@@ -137,7 +135,7 @@ export function PageVentes({
       {ventes.data !== undefined && (
         <Rapport
           rapport={ventes.data}
-          points={pointsDeVigilance(ventes.data, financier ? caisses.data : undefined)}
+          points={pointsDeVigilance(ventes.data)}
           vue={vue}
           surVue={setVue}
           regroupement={regroupement}
@@ -176,8 +174,7 @@ function Rapport({
     for (const cleMontant of ['montant'] as const) {
       const montant = point.valeurs[cleMontant]
       if (typeof montant === 'number') {
-        valeurs[cleMontant] =
-          `${point.cle === 'ecarts' && montant < 0 ? '−' : ''}${nombre(Math.abs(montant))}`
+        valeurs[cleMontant] = nombre(Math.abs(montant))
       }
     }
     for (const clePart of ['part', 'partAvant'] as const) {

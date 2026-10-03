@@ -1,38 +1,18 @@
 import { Link } from '@tanstack/react-router'
-import { clsx } from 'clsx'
-import {
-  ChevronRight,
-  NotebookPen,
-  Percent,
-  RotateCcw,
-  Undo2,
-  Wallet,
-  type LucideIcon,
-} from 'lucide-react'
+import { NotebookPen, Percent, RotateCcw, Undo2, type LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import type { CleVigilance, PointVigilance, TonVigilance } from './vigilance'
+import { ListePoints } from './ListePoints'
+import type { CleVigilance, PointVigilance } from './vigilance'
 
 const ICONES: Record<CleVigilance, LucideIcon> = {
-  ecarts: Wallet,
   remboursements: RotateCcw,
   annulations: Undo2,
   remises: Percent,
   ardoise: NotebookPen,
 }
 
-/** Pastille pleine et vive : le niveau se lit avant le texte. */
-const FONDS: Record<TonVigilance, string> = {
-  danger: 'bg-danger-vif text-accent-texte',
-  alerte: 'bg-alerte text-encre',
-  info: 'bg-info text-accent-texte',
-}
-
-/** Où regarder ensuite : les caisses pour un écart, l'activité pour le reste. */
-const DESTINATIONS: Record<
-  CleVigilance,
-  '/gestion/caisses' | '/gestion/activite' | '/gestion/ardoises'
-> = {
-  ecarts: '/gestion/caisses',
+/** Où regarder ensuite : l'activité pour ce qui a été fait sur les notes, les ardoises pour le crédit. */
+const DESTINATIONS: Record<CleVigilance, '/gestion/activite' | '/gestion/ardoises'> = {
   remboursements: '/gestion/activite',
   annulations: '/gestion/activite',
   remises: '/gestion/activite',
@@ -57,46 +37,24 @@ export function ASurveiller({
         <h2 className="m-0 text-titre-carte text-encre">{t('rapports.vigilance.titre')}</h2>
         <span className="chiffres text-corps text-attenue">{points.length}</span>
       </div>
-      {points.length === 0 ? (
-        <p className="m-0 py-3 text-corps text-attenue">{t('rapports.vigilance.rien')}</p>
-      ) : (
-        <ul className="m-0 list-none p-0">
-          {points.map((point) => {
-            const Icone = ICONES[point.cle]
-            const valeurs = formater(point)
-            return (
-              <li key={point.cle} className="border-b border-trait last:border-b-0">
-                <Link
-                  to={DESTINATIONS[point.cle]}
-                  className="flex min-h-cible-caisse items-center gap-3 py-2 text-encre no-underline"
-                >
-                  <span
-                    aria-hidden="true"
-                    className={clsx(
-                      'flex size-9 shrink-0 items-center justify-center rounded-normal',
-                      FONDS[point.ton],
-                    )}
-                  >
-                    <Icone className="size-4" />
-                  </span>
-                  <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="text-corps-fort">
-                      {t(`rapports.vigilance.${point.cle}.titre`, valeurs)}
-                    </span>
-                    <span className="text-legende text-attenue">
-                      {t(`rapports.vigilance.${point.cle}.detail`, valeurs)}
-                    </span>
-                  </span>
-                  <ChevronRight
-                    aria-hidden="true"
-                    className="size-4 shrink-0 text-bordure-controle"
-                  />
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
-      )}
+      <ListePoints
+        vide={t('rapports.vigilance.rien')}
+        points={points.map((point) => {
+          const valeurs = formater(point)
+          return {
+            identifiant: point.cle,
+            ton: point.ton,
+            icone: ICONES[point.cle],
+            titre: t(`rapports.vigilance.${point.cle}.titre`, valeurs),
+            detail: t(`rapports.vigilance.${point.cle}.detail`, valeurs),
+            lien: (contenu, className) => (
+              <Link to={DESTINATIONS[point.cle]} className={className}>
+                {contenu}
+              </Link>
+            ),
+          }
+        })}
+      />
     </section>
   )
 }
