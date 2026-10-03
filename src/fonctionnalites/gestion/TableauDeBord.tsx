@@ -233,15 +233,15 @@ function Vendu({
   return (
     <section
       aria-label={t('gestion.tableauDeBord.vendu.titre')}
-      className="flex flex-wrap items-center gap-x-8 gap-y-3 rounded-moyen bg-barre-fond px-5 py-4 text-barre-texte"
+      className="flex flex-wrap items-center gap-x-8 gap-y-3 rounded-moyen bg-bandeau-fond px-5 py-4 text-bandeau-texte"
     >
       <div className="flex flex-col">
-        <span className="text-libelle text-barre-attenue">
+        <span className="text-libelle text-bandeau-attenue">
           {t('gestion.tableauDeBord.vendu.a', { heure })}
         </span>
         <span className="chiffres text-montant-total">{courte(chiffre)}</span>
       </div>
-      <span className="flex flex-wrap items-center gap-2 text-legende text-barre-attenue">
+      <span className="flex flex-wrap items-center gap-2 text-legende text-bandeau-attenue">
         {pourcent !== null && (
           <span
             className={clsx(
@@ -263,7 +263,7 @@ function Vendu({
       <Link
         to="/gestion/ventes"
         search={{ du: journee, au: journee }}
-        className="flex min-h-cible-min items-center rounded-normal border border-barre-trait px-3.5 text-libelle font-bold text-barre-texte"
+        className="flex min-h-cible-min items-center rounded-normal border border-bandeau-trait px-3.5 text-libelle font-bold text-bandeau-texte"
       >
         {t('gestion.tableauDeBord.vendu.voir')}
       </Link>

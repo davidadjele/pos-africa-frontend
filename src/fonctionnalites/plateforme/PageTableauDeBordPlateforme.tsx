@@ -168,7 +168,7 @@ function NotesParJour({ tableau }: Readonly<{ tableau: TableauDeBordPlateforme }
             title={`${jour.jour} : ${nombre(jour.notes)}`}
             className={clsx(
               'flex-1 rounded-t-petit',
-              rang === jours.length - 1 ? 'bg-barre-fond' : 'bg-graphique-carte',
+              rang === jours.length - 1 ? 'bg-accent' : 'bg-graphique-carte',
             )}
             style={{ height: `${String((jour.notes / plusHaut) * 100)}%` }}
           />

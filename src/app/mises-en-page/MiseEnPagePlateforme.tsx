@@ -7,7 +7,7 @@ import { MenuCompte } from './MenuCompte'
 function classesOnglet(actif: boolean) {
   return clsx(
     'inline-flex min-h-cible-min shrink-0 items-center border-b-2 px-1 text-libelle text-encre',
-    actif ? 'border-barre-fond font-bold' : 'border-transparent',
+    actif ? 'border-accent font-bold' : 'border-transparent',
   )
 }
 
@@ -37,7 +37,7 @@ export function MiseEnPagePlateforme() {
       </BarreHaute>
       <nav
         aria-label={t('plateforme.navigation.titre')}
-        className="flex gap-6 overflow-x-auto border-b border-trait bg-surface px-4 md:px-6"
+        className="sticky top-barre-hauteur z-20 flex gap-6 overflow-x-auto border-b border-trait bg-surface px-4 md:px-6"
       >
         {ONGLETS.map(({ chemin, cle }) => (
           <Link

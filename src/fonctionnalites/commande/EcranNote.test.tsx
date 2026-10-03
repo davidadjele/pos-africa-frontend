@@ -1,7 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { API, caisseOuverte } from '../../../tests/application'
 import {
   FLAG,
@@ -445,13 +445,53 @@ describe('EcranNote', () => {
       within(rail)
         .getAllByRole('button')
         .map((bouton) => bouton.textContent),
-    ).toEqual(['Tout2', 'Bières1', 'Grillades1'])
+    ).toEqual(['Tout2 produits', 'Bières1 produit', 'Grillades1 produit'])
     await userEvent.click(within(rail).getByRole('button', { name: /Grillades/ }))
     expect(within(produits).queryByText('Flag 65 cl')).not.toBeInTheDocument()
 
     await userEvent.click(within(rail).getByRole('button', { name: /Tout/ }))
     await userEvent.type(screen.getByRole('searchbox', { name: 'Rechercher un produit' }), 'flag')
     expect(within(produits).getAllByRole('listitem')).toHaveLength(1)
+  })
+
+  it('montre sur la tuile la quantité à envoyer, et en retire une avec « − »', async () => {
+    const demandes: { methode: string; corps: unknown }[] = []
+    noteServie({
+      ...NOTE_T4,
+      lignes: [
+        {
+          ...POULET_A_ENVOYER,
+          quantite: 2,
+        },
+      ],
+    })
+    serveurMsw.use(
+      http.put(`${API}/caisse/commandes/:id/lignes/:ligne`, async ({ request }) => {
+        demandes.push({ methode: 'PUT', corps: await request.json() })
+        return HttpResponse.json(NOTE_T4)
+      }),
+    )
+
+    const produits = await screen.findByRole('list', { name: 'Produits' })
+    const tuile = within(produits).getByRole('button', { name: /Poulet braisé/ })
+    expect(within(tuile).getByLabelText('2 sur la note')).toHaveTextContent('2')
+    await userEvent.click(within(produits).getByRole('button', { name: 'En retirer un' }))
+
+    await vi.waitFor(() => {
+      expect(demandes).toEqual([{ methode: 'PUT', corps: { quantite: 1 } }])
+    })
+  })
+
+  it('montre les notes ouvertes en bas, la note courante en évidence, pour passer d’une table à l’autre', async () => {
+    noteServie()
+    serveurMsw.use(http.get(`${API}/caisse/plan`, () => HttpResponse.json(PLAN)))
+
+    const ruban = await screen.findByRole('navigation', { name: 'Notes ouvertes' })
+    const t4 = within(ruban).getByRole('link', { name: /^T4/ })
+    expect(t4).toHaveAttribute('aria-current', 'page')
+    const t7 = within(ruban).getByRole('link', { name: /^T7/ })
+    expect(t7).toHaveTextContent('Essi D.')
+    expect(t7).toHaveAttribute('href', '/caisse/notes/c0000000-0000-4000-8000-000000000041')
   })
 
   it('dit quand la carte de l’établissement est vide', async () => {

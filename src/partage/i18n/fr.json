@@ -115,7 +115,12 @@
       "chargement": "Chargement de la carte…",
       "plusEnStock": "Plus en stock",
       "restants_one": "{{count}} restant",
-      "restants_other": "{{count}} restants"
+      "restants_other": "{{count}} restants",
+      "nombreProduits_one": "{{count}} produit",
+      "nombreProduits_other": "{{count}} produits",
+      "surLaNote_one": "{{count}} sur la note",
+      "surLaNote_other": "{{count}} sur la note",
+      "retirerUn": "En retirer un"
     },
     "note": {
       "titre": "Note en cours",
@@ -279,7 +284,13 @@
       "payee": "Payée",
       "enPreparation": "{{serveur}}, en préparation depuis {{heure}}",
       "aEncaisser": "À encaisser {{montant}}",
-      "aEncaisserCourt": "À encaisser"
+      "aEncaisserCourt": "À encaisser",
+      "legende": {
+        "titre": "Légende des couleurs",
+        "occupee": "Occupée",
+        "enAttente": "Articles à envoyer ou à servir",
+        "addition": "Addition demandée"
+      }
     },
     "ouverture": {
       "titreTable": "Ouvrir une note sur {{table}}",
@@ -385,6 +396,13 @@
       "revientAide": "Intact, pas ouvert",
       "perdu": "Perdu",
       "perduAide": "Ouvert, cassé, inutilisable"
+    },
+    "ruban": {
+      "titre": "Notes ouvertes",
+      "aEnvoyer": "À envoyer",
+      "aServir": "À servir",
+      "aRemettre": "À remettre",
+      "addition": "Addition demandée"
     }
   },
   "gestion": {

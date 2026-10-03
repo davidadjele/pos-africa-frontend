@@ -38,6 +38,7 @@ import { useValidation } from './useValidation'
 import { CarteCaisse } from './CarteCaisse'
 import { DialogueAnnulation, DialogueLigne } from './DialoguesLigne'
 import { ouEstLaNote, PanneauNote, type Rupture } from './PanneauNote'
+import { RubanNotes } from './RubanNotes'
 import {
   requeteCarteCaisse,
   requeteCommande,
@@ -86,6 +87,8 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
     clientRequetes.setQueryData<CommandeDetail>(requeteCommande(commandeId).queryKey, (actuelle) =>
       actuelle !== undefined && actuelle.version > reponse.version ? actuelle : reponse,
     )
+    // Le ruban des notes ouvertes suit la note en cours (montant, articles à envoyer).
+    void clientRequetes.invalidateQueries({ queryKey: requetePlan.queryKey })
   }
 
   function effacerMessages() {
@@ -339,192 +342,211 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
 
   // Une note entamée par un paiement ne se modifie plus : on l'encaisse jusqu'au bout.
   const modifiable = peutCommander && note.data.totalPaye === 0
+  const aEnvoyerParProduit: Partial<Record<string, number>> = {}
+  for (const ligne of note.data.lignes) {
+    if (ligne.statut === 'BROUILLON') {
+      aEnvoyerParProduit[ligne.produitId] =
+        (aEnvoyerParProduit[ligne.produitId] ?? 0) + ligne.quantite
+    }
+  }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
-        {refus !== null && <Alerte ton="danger">{refus}</Alerte>}
-        {confirmation !== null && <Alerte ton="succes">{confirmation}</Alerte>}
-        {erreur !== null && <AlerteErreur erreur={erreur} />}
-        {carte.isPending && <Chargement texte={t('caisse.carte.chargement')} />}
-        {carte.isError && <AlerteErreur erreur={carte.error} />}
-        {carte.data && (
-          <CarteCaisse
-            carte={carte.data}
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+          {refus !== null && <Alerte ton="danger">{refus}</Alerte>}
+          {confirmation !== null && <Alerte ton="succes">{confirmation}</Alerte>}
+          {erreur !== null && <AlerteErreur erreur={erreur} />}
+          {carte.isPending && <Chargement texte={t('caisse.carte.chargement')} />}
+          {carte.isError && <AlerteErreur erreur={carte.error} />}
+          {carte.data && (
+            <CarteCaisse
+              carte={carte.data}
+              devise={devise}
+              stock={stock.data}
+              quantites={modifiable ? aEnvoyerParProduit : {}}
+              surChoisir={(produit) => {
+                if (modifiable) choisir(produit)
+              }}
+              surRetirer={(produit) => {
+                // La dernière ligne à envoyer de ce produit : celle qu'on vient d'ajouter.
+                const derniere = note.data.lignes.findLast(
+                  (ligne) => ligne.statut === 'BROUILLON' && ligne.produitId === produit.produitId,
+                )
+                if (derniere !== undefined)
+                  void modifier(derniere, { quantite: derniere.quantite - 1 })
+              }}
+            />
+          )}
+        </div>
+        <PanneauNote
+          note={note.data}
+          devise={devise}
+          fuseauHoraire={fuseauHoraire}
+          modifiable={modifiable}
+          peutEncaisser={peutEncaisser}
+          peutServir={peutCommander && note.data.statut !== 'ANNULEE'}
+          surServir={(ligne) =>
+            void agir(() =>
+              appelerCaisse<CommandeDetail>(
+                `/caisse/commandes/${commandeId}/lignes/${ligne.id}/service`,
+                { methode: 'POST' },
+              ),
+            )
+          }
+          surServirTout={() =>
+            void agir(() =>
+              appelerCaisse<CommandeDetail>(`/caisse/commandes/${commandeId}/service`, {
+                methode: 'POST',
+              }),
+            )
+          }
+          surEncaisser={() =>
+            void naviguer({ to: '/caisse/notes/$commandeId/encaisser', params: { commandeId } })
+          }
+          ruptures={rupturesDe(carte.data, note.data.lignes)}
+          envoiEnCours={enCours && aAnnuler === null && aValider === null}
+          actions={
+            modifiable ? (
+              <ActionsNote
+                note={note.data}
+                devise={devise}
+                fuseauHoraire={fuseauHoraire}
+                peutTransferer={session?.permissions.includes('TABLE_TRANSFERER') ?? false}
+                plafond={droitsDe(session).plafond}
+                moi={{ id: session?.utilisateurId ?? '', nom: session?.nomCourt ?? '' }}
+                surNote={retenir}
+                surErreur={(echec) => {
+                  effacerMessages()
+                  setErreur(echec)
+                }}
+              />
+            ) : null
+          }
+          surRetirerAddition={() =>
+            void agir(() =>
+              appelerCaisse<CommandeDetail>(`/caisse/commandes/${commandeId}/addition`, {
+                methode: 'DELETE',
+              }),
+            )
+          }
+          surRevenir={() => void revenirAuPlan()}
+          surEnvoyer={(nombre) => void envoyer(nombre)}
+          surModifier={(ligne, demande) => void modifier(ligne, demande)}
+          surOuvrirLigne={setLigneActions}
+        />
+        {ligneActions !== null && (
+          <DialogueActionsLigne
+            ligne={ligneActions}
             devise={devise}
-            stock={stock.data}
-            surChoisir={(produit) => {
-              if (modifiable) choisir(produit)
+            fuseauHoraire={fuseauHoraire}
+            session={session}
+            surFermer={() => {
+              setLigneActions(null)
+            }}
+            surChoisir={(action) => {
+              choisirPourLaLigne(ligneActions, action)
+            }}
+          />
+        )}
+        {aRemiser !== null && (
+          <DialogueRemise
+            titre={t('caisse.remise.titreLigne', { produit: aRemiser.nomProduit })}
+            phrase={t('caisse.remise.phrase', { ou: ouEstLaNote(note.data, t) })}
+            base={aRemiser.montantBrut}
+            devise={devise}
+            plafond={droitsDe(session).plafond}
+            enCours={enCours}
+            surFermer={() => {
+              setARemiser(null)
+            }}
+            surAppliquer={(demande) => {
+              remiserLigne(aRemiser, demande)
+            }}
+          />
+        )}
+        {aOffrir !== null && (
+          <DialogueOffrir
+            ligne={aOffrir}
+            ou={ouEstLaNote(note.data, t)}
+            enCours={enCours}
+            surFermer={() => {
+              setAOffrir(null)
+            }}
+            surOffrir={(demande) => {
+              offrir(aOffrir, demande)
+            }}
+          />
+        )}
+        {validation.dialogue}
+        {ligneOuverte !== null && (
+          <DialogueLigne
+            ligne={ligneOuverte}
+            surFermer={() => {
+              setLigneOuverte(null)
+            }}
+            surEnregistrer={(demande) => {
+              setLigneOuverte(null)
+              void modifier(ligneOuverte, demande)
+            }}
+          />
+        )}
+        {sansStockAConfirmer !== null && (
+          <Dialogue
+            titre={t('caisse.stock.titre', { produit: sansStockAConfirmer.nom })}
+            consequence={t('caisse.stock.phrase')}
+            libelleAnnuler={t('caisse.stock.annuler')}
+            libelleConfirmer={t('caisse.stock.vendre')}
+            surAnnuler={() => {
+              setSansStockAConfirmer(null)
+            }}
+            surConfirmer={() => {
+              const produit = sansStockAConfirmer
+              setSansStockAConfirmer(null)
+              void ajouter(produit)
+            }}
+          />
+        )}
+        {aAnnuler !== null && (
+          <DialogueAnnulation
+            ligne={aAnnuler}
+            suiviEnStock={stockDuProduit(stock.data, aAnnuler.produitId) !== undefined}
+            ou={ouEstLaNote(note.data, t)}
+            fuseauHoraire={fuseauHoraire}
+            enCours={enCours}
+            surFermer={() => {
+              setAAnnuler(null)
+            }}
+            surAnnuler={(demande) => void annuler(aAnnuler, demande)}
+          />
+        )}
+        {aValider !== null && (
+          <DialogueValidationGerant
+            titre={t('caisse.note.annulation.validationTitre', {
+              count: aValider.demande.quantite,
+              produit: aValider.ligne.nomProduit,
+            })}
+            contexte={t('caisse.note.annulation.validationContexte', {
+              ou: ouEstLaNote(note.data, t),
+              demandeur: session?.nomCourt ?? '',
+              motif:
+                aValider.demande.motif === 'AUTRE' && aValider.demande.detail !== undefined
+                  ? aValider.demande.detail
+                  : t(`caisse.motifs.${aValider.demande.motif}`),
+            })}
+            permission="LIGNE_ANNULER_APRES_ENVOI"
+            objetId={aValider.ligne.id}
+            libelleAnnuler={t('caisse.note.annulation.garder')}
+            surValide={(validation) =>
+              void annuler(aValider.ligne, { ...aValider.demande, validationId: validation.id })
+            }
+            surAnnuler={() => {
+              setAValider(null)
             }}
           />
         )}
       </div>
-      <PanneauNote
-        note={note.data}
-        devise={devise}
-        fuseauHoraire={fuseauHoraire}
-        modifiable={modifiable}
-        peutEncaisser={peutEncaisser}
-        peutServir={peutCommander && note.data.statut !== 'ANNULEE'}
-        surServir={(ligne) =>
-          void agir(() =>
-            appelerCaisse<CommandeDetail>(
-              `/caisse/commandes/${commandeId}/lignes/${ligne.id}/service`,
-              { methode: 'POST' },
-            ),
-          )
-        }
-        surServirTout={() =>
-          void agir(() =>
-            appelerCaisse<CommandeDetail>(`/caisse/commandes/${commandeId}/service`, {
-              methode: 'POST',
-            }),
-          )
-        }
-        surEncaisser={() =>
-          void naviguer({ to: '/caisse/notes/$commandeId/encaisser', params: { commandeId } })
-        }
-        ruptures={rupturesDe(carte.data, note.data.lignes)}
-        envoiEnCours={enCours && aAnnuler === null && aValider === null}
-        actions={
-          modifiable ? (
-            <ActionsNote
-              note={note.data}
-              devise={devise}
-              fuseauHoraire={fuseauHoraire}
-              peutTransferer={session?.permissions.includes('TABLE_TRANSFERER') ?? false}
-              plafond={droitsDe(session).plafond}
-              moi={{ id: session?.utilisateurId ?? '', nom: session?.nomCourt ?? '' }}
-              surNote={retenir}
-              surErreur={(echec) => {
-                effacerMessages()
-                setErreur(echec)
-              }}
-            />
-          ) : null
-        }
-        surRetirerAddition={() =>
-          void agir(() =>
-            appelerCaisse<CommandeDetail>(`/caisse/commandes/${commandeId}/addition`, {
-              methode: 'DELETE',
-            }),
-          )
-        }
-        surRevenir={() => void revenirAuPlan()}
-        surEnvoyer={(nombre) => void envoyer(nombre)}
-        surModifier={(ligne, demande) => void modifier(ligne, demande)}
-        surOuvrirLigne={setLigneActions}
-      />
-      {ligneActions !== null && (
-        <DialogueActionsLigne
-          ligne={ligneActions}
-          devise={devise}
-          fuseauHoraire={fuseauHoraire}
-          session={session}
-          surFermer={() => {
-            setLigneActions(null)
-          }}
-          surChoisir={(action) => {
-            choisirPourLaLigne(ligneActions, action)
-          }}
-        />
-      )}
-      {aRemiser !== null && (
-        <DialogueRemise
-          titre={t('caisse.remise.titreLigne', { produit: aRemiser.nomProduit })}
-          phrase={t('caisse.remise.phrase', { ou: ouEstLaNote(note.data, t) })}
-          base={aRemiser.montantBrut}
-          devise={devise}
-          plafond={droitsDe(session).plafond}
-          enCours={enCours}
-          surFermer={() => {
-            setARemiser(null)
-          }}
-          surAppliquer={(demande) => {
-            remiserLigne(aRemiser, demande)
-          }}
-        />
-      )}
-      {aOffrir !== null && (
-        <DialogueOffrir
-          ligne={aOffrir}
-          ou={ouEstLaNote(note.data, t)}
-          enCours={enCours}
-          surFermer={() => {
-            setAOffrir(null)
-          }}
-          surOffrir={(demande) => {
-            offrir(aOffrir, demande)
-          }}
-        />
-      )}
-      {validation.dialogue}
-      {ligneOuverte !== null && (
-        <DialogueLigne
-          ligne={ligneOuverte}
-          surFermer={() => {
-            setLigneOuverte(null)
-          }}
-          surEnregistrer={(demande) => {
-            setLigneOuverte(null)
-            void modifier(ligneOuverte, demande)
-          }}
-        />
-      )}
-      {sansStockAConfirmer !== null && (
-        <Dialogue
-          titre={t('caisse.stock.titre', { produit: sansStockAConfirmer.nom })}
-          consequence={t('caisse.stock.phrase')}
-          libelleAnnuler={t('caisse.stock.annuler')}
-          libelleConfirmer={t('caisse.stock.vendre')}
-          surAnnuler={() => {
-            setSansStockAConfirmer(null)
-          }}
-          surConfirmer={() => {
-            const produit = sansStockAConfirmer
-            setSansStockAConfirmer(null)
-            void ajouter(produit)
-          }}
-        />
-      )}
-      {aAnnuler !== null && (
-        <DialogueAnnulation
-          ligne={aAnnuler}
-          suiviEnStock={stockDuProduit(stock.data, aAnnuler.produitId) !== undefined}
-          ou={ouEstLaNote(note.data, t)}
-          fuseauHoraire={fuseauHoraire}
-          enCours={enCours}
-          surFermer={() => {
-            setAAnnuler(null)
-          }}
-          surAnnuler={(demande) => void annuler(aAnnuler, demande)}
-        />
-      )}
-      {aValider !== null && (
-        <DialogueValidationGerant
-          titre={t('caisse.note.annulation.validationTitre', {
-            count: aValider.demande.quantite,
-            produit: aValider.ligne.nomProduit,
-          })}
-          contexte={t('caisse.note.annulation.validationContexte', {
-            ou: ouEstLaNote(note.data, t),
-            demandeur: session?.nomCourt ?? '',
-            motif:
-              aValider.demande.motif === 'AUTRE' && aValider.demande.detail !== undefined
-                ? aValider.demande.detail
-                : t(`caisse.motifs.${aValider.demande.motif}`),
-          })}
-          permission="LIGNE_ANNULER_APRES_ENVOI"
-          objetId={aValider.ligne.id}
-          libelleAnnuler={t('caisse.note.annulation.garder')}
-          surValide={(validation) =>
-            void annuler(aValider.ligne, { ...aValider.demande, validationId: validation.id })
-          }
-          surAnnuler={() => {
-            setAValider(null)
-          }}
-        />
-      )}
+      <RubanNotes noteCourante={commandeId} devise={devise} />
     </div>
   )
 }

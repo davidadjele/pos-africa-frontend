@@ -115,7 +115,12 @@
       "chargement": "Loading the menu…",
       "plusEnStock": "Out of stock",
       "restants_one": "{{count}} left",
-      "restants_other": "{{count}} left"
+      "restants_other": "{{count}} left",
+      "nombreProduits_one": "{{count}} product",
+      "nombreProduits_other": "{{count}} products",
+      "surLaNote_one": "{{count}} on the bill",
+      "surLaNote_other": "{{count}} on the bill",
+      "retirerUn": "Remove one"
     },
     "note": {
       "titre": "Current tab",
@@ -279,7 +284,13 @@
       "payee": "Paid",
       "enPreparation": "{{serveur}}, in preparation since {{heure}}",
       "aEncaisser": "To collect {{montant}}",
-      "aEncaisserCourt": "To collect"
+      "aEncaisserCourt": "To collect",
+      "legende": {
+        "titre": "Colour legend",
+        "occupee": "Occupied",
+        "enAttente": "Items to send or serve",
+        "addition": "Bill requested"
+      }
     },
     "ouverture": {
       "titreTable": "Open a tab on {{table}}",
@@ -385,6 +396,13 @@
       "revientAide": "Intact, unopened",
       "perdu": "Lost",
       "perduAide": "Opened, broken, unusable"
+    },
+    "ruban": {
+      "titre": "Open bills",
+      "aEnvoyer": "To send",
+      "aServir": "To serve",
+      "aRemettre": "To hand over",
+      "addition": "Bill requested"
     }
   },
   "gestion": {

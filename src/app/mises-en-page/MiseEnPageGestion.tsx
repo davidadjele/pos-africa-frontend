@@ -160,9 +160,9 @@ function Entree({
       <Link
         to={vers}
         activeOptions={{ exact: true }}
-        className="relative flex min-h-cible-min items-center gap-3 whitespace-nowrap rounded-normal px-3 text-[14px] text-encre hover:bg-fond aria-[current=page]:bg-accent-doux aria-[current=page]:font-semibold aria-[current=page]:text-accent-lisible"
+        className="relative flex min-h-cible-min items-center gap-3 whitespace-nowrap rounded-normal px-3 text-corps text-encre hover:bg-fond aria-[current=page]:bg-accent-doux aria-[current=page]:font-bold aria-[current=page]:text-accent-lisible"
       >
-        <Icone aria-hidden="true" size={18} />
+        <Icone aria-hidden="true" size={20} />
         {t(cle)}
         {nombre > 0 && (
           <span className="chiffres ml-auto min-w-5 rounded-petit bg-accent-vif px-1.5 text-center text-badge font-bold text-accent-texte">
@@ -197,7 +197,8 @@ export function MiseEnPageGestion() {
       <div className="flex flex-1 flex-col md:flex-row">
         <nav
           aria-label={t('commun.navigationPrincipale')}
-          className="shrink-0 border-b border-trait bg-surface md:w-58 md:border-r md:border-b-0"
+          // Fixe sous la barre : en ligne sur téléphone, en colonne qui défile seule sur grand écran.
+          className="sticky top-barre-hauteur z-20 shrink-0 border-b border-trait bg-surface md:h-[calc(100dvh-var(--barre-hauteur))] md:w-60 md:self-start md:overflow-y-auto md:border-r md:border-b-0"
         >
           <ul className="m-0 flex list-none gap-1 overflow-x-auto p-2 md:flex-col">
             {QUOTIDIEN.filter(visible).map((entree) => (
@@ -212,7 +213,7 @@ export function MiseEnPageGestion() {
             <Separateur />
             <li
               aria-hidden="true"
-              className="hidden px-3 pt-1 text-badge uppercase tracking-wide text-attenue md:block"
+              className="hidden px-3 pt-2 text-legende font-bold uppercase tracking-wide text-attenue md:block"
             >
               {t('gestion.menu.carte')}
             </li>

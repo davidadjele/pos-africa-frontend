@@ -16,7 +16,8 @@ export function BarreHaute({
   return (
     <header
       data-zone="barre"
-      className="flex h-barre-hauteur shrink-0 items-center gap-3 bg-barre-fond px-4 text-barre-texte sm:gap-5 sm:px-5"
+      // Collée en haut : elle reste visible quand la page défile.
+      className="sticky top-0 z-30 flex h-barre-hauteur shrink-0 items-center gap-3 border-b border-barre-trait bg-barre-fond px-4 text-barre-texte sm:gap-5 sm:px-5"
     >
       <span className="text-marque uppercase">TONTI</span>
       {contexte && (

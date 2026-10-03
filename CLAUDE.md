@@ -36,7 +36,7 @@ React + Vite + TypeScript, TanStack Router, TanStack Query (état serveur), Zust
 - En cas de conflit 409 : recharger la commande et informer l'utilisateur, sans écraser.
 
 ## Design : pro, pas « site IA »
-- Direction retenue : **Tonti**, avec la **palette de Gestion RH Africa** : navy `#00102B` pour la structure **et l'action principale** (une seule par écran, texte blanc), orange `#ED4F28` réservé au focus et aux compteurs, fond pierre `#F5F4F0`, surfaces blanches, statuts « readable » de Gestion RH Africa. Police **Neulis** (celle de Gestion RH Africa, fichiers OTF à copier depuis `../gestionrhafrica-v2-ui/public/fonts/`, auto-hébergés) pour tout le texte ; **Barlow Semi Condensed** pour les montants, prix, quantités et heures, car Neulis n'a pas de chiffres tabulaires. Rayon de 6 px.
+- Direction retenue : **Tonti**, avec la **palette de Gestion RH Africa** : navy `#00102B` pour **l'action principale** (une seule par écran, texte blanc) et le bandeau du chiffre du jour ; **barre haute blanche** (refonte d'octobre 2026), orange `#ED4F28` réservé au focus et aux compteurs, fond pierre `#F5F4F0`, surfaces blanches, statuts « readable » de Gestion RH Africa. Police **Neulis** (celle de Gestion RH Africa, fichiers OTF à copier depuis `../gestionrhafrica-v2-ui/public/fonts/`, auto-hébergés) pour tout le texte ; **Barlow Semi Condensed** pour les montants, prix, quantités et heures, car Neulis n'a pas de chiffres tabulaires. Rayon de 8 px (contrôles), 10 px (cartes et tuiles), 4 px (badges). En caisse : catégories en tuiles pastel (jetons `--categorie-*`), quantité −/+ sur la tuile du produit, ruban des notes ouvertes en bas.
 - **Un rebranding viendra** : couleurs et polices ne passent que par des jetons (`--font-texte`, `--font-chiffres`, `--accent`…), jamais en dur, pour être changées en un seul endroit. Référence : design system Tonti (claude.ai).
 - **Les couleurs de marque seront configurables par établissement** : le code ne référence que des jetons sémantiques (`--accent`, `--barre-fond`…), jamais une couleur en dur. Les couleurs de statut (succès, alerte, danger) restent fixes. La couleur du texte posé sur l'accent est calculée pour garder le contraste.
 - Références : logiciels de caisse professionnels (Toast, Square, Lightspeed, Loyverse). Des outils denses et efficaces, pas des landing pages.
@@ -50,7 +50,7 @@ React + Vite + TypeScript, TanStack Router, TanStack Query (état serveur), Zust
   - les pastilles rondes avec point et les « chips » arrondies : un statut est un badge **rectangulaire** teinté (rayon 4 px, 11–12 px, semi-gras), comme dans la référence visuelle ;
   - le point médian « · » comme séparateur (« Lomé · Bè Kpota ») : utiliser une virgule, un retour à la ligne ou la mise en page.
 - **Principes** :
-  - bordures fines plutôt qu'ombres, rayon de bordure 4–6 px ;
+  - bordures fines plutôt qu'ombres, rayon de bordure 8–10 px (4 px pour les badges) ;
   - **une seule** couleur d'accent, pour l'action principale ; couleurs sémantiques réservées aux statuts ;
   - cibles tactiles ≥ 48 px en caisse ; contraste fort (plein soleil, tablettes bas de gamme) ;
   - états vides, d'erreur et de chargement réellement conçus.
