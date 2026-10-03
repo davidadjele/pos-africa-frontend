@@ -30,6 +30,7 @@ const FICHE: FicheEntreprisePlateforme = {
   numeroFiscal: '1000123456',
   statut: 'ACTIVE',
   creeLe: '2026-09-28T10:15:00Z',
+  creePar: 'Kodjo Amegah',
   version: 2,
   aDejaVendu: true,
   tvaDepart: 1800,
@@ -73,6 +74,25 @@ function ficheServie(depart: FicheEntreprisePlateforme = FICHE) {
   let reactivations = 0
   serveurMsw.use(
     http.get(`${API}/plateforme/entreprises/${ID}`, () => HttpResponse.json(fiche)),
+    http.get(`${API}/plateforme/activite`, () =>
+      HttpResponse.json({
+        elements: [
+          {
+            id: 'a0000000-0000-4000-8000-000000000003',
+            type: 'ENTREPRISE_CREEE',
+            le: '2026-09-28T10:15:00Z',
+            detail: 'Maquis Chez Tanti',
+            entrepriseId: ID,
+            entrepriseNom: 'Maquis Chez Tanti',
+            auteurCompteId: 'c0000000-0000-4000-8000-00000000000a',
+            auteurNom: 'Kodjo Amegah',
+          },
+        ],
+        page: 0,
+        taille: 5,
+        total: 1,
+      }),
+    ),
     http.put(`${API}/plateforme/entreprises/${ID}`, async ({ request }) => {
       const demande = (await request.json()) as DemandeModificationPlateforme
       modifications.push(demande)
@@ -150,6 +170,20 @@ describe('PageFicheEntreprise', () => {
     expect(etablissements[1]).toHaveTextContent('BEBè KpotaLomé2')
     expect(etablissements[2]).toHaveTextContent('Aucune vente')
     expect(document.body).not.toHaveTextContent('FCFA')
+  })
+
+  it('dit qui a créé l’entreprise et montre l’activité récente de la plateforme', async () => {
+    ficheServie()
+    await ouvrirFiche()
+
+    expect(screen.getByText(/créée par Kodjo Amegah/)).toBeVisible()
+    const activite = await screen.findByRole('region', { name: 'Activité de la plateforme' })
+    expect(activite).toHaveTextContent('Création')
+    expect(activite).toHaveTextContent('Kodjo Amegah')
+    expect(within(activite).getByRole('link', { name: 'Tout voir' })).toHaveAttribute(
+      'href',
+      `/plateforme/activite?entrepriseId=${ID}`,
+    )
   })
 
   it('modifie le nom et le NIF, avec le pays et la devise figés depuis la première vente', async () => {

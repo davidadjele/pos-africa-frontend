@@ -2,6 +2,8 @@ import { queryOptions } from '@tanstack/react-query'
 import { appelerApi } from '../../partage/api/appelerApi'
 import type {
   ErreurPlateforme,
+  MembrePlateforme,
+  PageActivitePlateforme,
   FicheEntreprisePlateforme,
   PageEntreprisesPlateforme,
 } from '../../partage/api/contrat'
@@ -45,5 +47,34 @@ export function requeteErreurs(code: string | null) {
           : `/plateforme/erreurs?${new URLSearchParams({ code }).toString()}`,
         { signal },
       ),
+  })
+}
+
+export function requeteEquipe() {
+  return queryOptions({
+    queryKey: ['plateforme', 'equipe'],
+    queryFn: ({ signal }) => appelerApi<MembrePlateforme[]>('/plateforme/equipe', { signal }),
+  })
+}
+
+export interface FiltresActivite {
+  type?: string
+  auteur?: string
+  entrepriseId?: string
+  recherche?: string
+}
+
+export function requeteActivite(filtres: FiltresActivite, page: number, taille = TAILLE_PAGE) {
+  const parametres = new URLSearchParams({
+    ...filtres,
+    page: String(page),
+    taille: String(taille),
+  })
+  return queryOptions({
+    queryKey: ['plateforme', 'activite', filtres, page, taille],
+    queryFn: ({ signal }) =>
+      appelerApi<PageActivitePlateforme>(`/plateforme/activite?${parametres.toString()}`, {
+        signal,
+      }),
   })
 }

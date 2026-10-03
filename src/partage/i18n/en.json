@@ -792,12 +792,16 @@
         "secretLibelle": "Temporary password",
         "transmis": "I have passed on the password"
       },
-      "retour": "All businesses"
+      "retour": "All businesses",
+      "clienteDepuisPar": "Customer since {{date}}, created by {{nom}}.",
+      "toutVoir": "See all"
     },
     "navigation": {
       "titre": "Platform area",
       "entreprises": "Businesses",
-      "support": "Support"
+      "support": "Support",
+      "activite": "Activity",
+      "equipe": "Team"
     },
     "support": {
       "titre": "Support",
@@ -837,6 +841,86 @@
         "erreur": "Error",
         "action": "Action",
         "code": "Code"
+      }
+    },
+    "activite": {
+      "titre": "Platform activity",
+      "phrase": "What the team did, and who did it. Nothing is erased.",
+      "chargement": "Loading activity…",
+      "sansNom": "Unnamed member",
+      "equipe": "Team",
+      "vide": {
+        "titre": "No action",
+        "phrase": "No team action matches these filters."
+      },
+      "colonnes": {
+        "quand": "When",
+        "membre": "Member",
+        "action": "Action",
+        "entreprise": "Business",
+        "detail": "Details"
+      },
+      "filtres": {
+        "action": "Action",
+        "toutes": "All actions",
+        "membre": "Member",
+        "toute": "Whole team",
+        "entreprise": "Business",
+        "entrepriseExemple": "Business name"
+      },
+      "types": {
+        "ENTREPRISE_CREEE": "Created",
+        "ENTREPRISE_MODIFIEE": "Edited",
+        "ENTREPRISE_SUSPENDUE": "Suspended",
+        "ENTREPRISE_REACTIVEE": "Reactivated",
+        "MOT_DE_PASSE_REINITIALISE": "Password reset",
+        "MEMBRE_AJOUTE": "Member added",
+        "MEMBRE_DESACTIVE": "Member deactivated",
+        "MEMBRE_REACTIVE": "Member reactivated"
+      }
+    },
+    "equipe": {
+      "titre": "Platform team",
+      "phrase": "The people who run Tonti. Each signs in with their own email; their actions are recorded under their name.",
+      "ajouter": "Add a member",
+      "chargement": "Loading the team…",
+      "tableau": "Team members",
+      "colonnes": {
+        "nom": "Name",
+        "email": "Email",
+        "statut": "Status",
+        "connexion": "Last sign-in",
+        "ajout": "Added",
+        "actions": "Actions"
+      },
+      "vous": "You",
+      "actif": "Active",
+      "desactive": "Deactivated",
+      "motDePasseAChoisir": "Password to choose",
+      "premier": "First administrator",
+      "ajoutePar": "On {{date}}, by {{nom}}",
+      "motDePasse": "Password",
+      "motDePasseNomme": "Give {{nom}} a new password",
+      "desactiver": "Deactivate",
+      "desactiverNomme": "Deactivate {{nom}}",
+      "reactiver": "Reactivate",
+      "reactiverNomme": "Reactivate {{nom}}",
+      "regle": "You cannot deactivate yourself. A member is never deleted: the activity keeps their name.",
+      "secretPhrase": "Pass it on to the new member. It will not be shown again: they choose their own at first sign-in.",
+      "desactivation": {
+        "titre": "Deactivate {{nom}}?",
+        "consequence": "Their open sessions are closed and they can no longer sign in to the platform area. You can reactivate them.",
+        "confirmer": "Deactivate the member"
+      },
+      "ajout": {
+        "titre": "Add a team member",
+        "phrase": "They will be able to create, edit and suspend businesses, and give an owner a new password.",
+        "prenom": "First name",
+        "nom": "Last name",
+        "email": "Email",
+        "emailAide": "Their sign-in identifier.",
+        "manquant": "This field is required.",
+        "confirmer": "Add the member"
       }
     }
   },

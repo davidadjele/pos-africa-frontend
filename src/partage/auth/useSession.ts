@@ -77,5 +77,5 @@ export function useSession() {
 
 export function nomAffiche(moi: ReponseMoi): string {
   if (moi.utilisateur) return `${moi.utilisateur.prenom} ${moi.utilisateur.nom}`
-  return moi.compte.email ?? moi.compte.telephone ?? ''
+  return moi.compte.nom ?? moi.compte.email ?? moi.compte.telephone ?? ''
 }

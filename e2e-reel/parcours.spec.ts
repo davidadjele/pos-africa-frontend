@@ -1410,11 +1410,36 @@ test('L’équipe plateforme ouvre la fiche de Maquis Chez Tanti, la modifie et 
   await page.getByRole('button', { name: 'Réactiver l’entreprise' }).click()
   await expect(page.getByRole('status')).toContainText('Maquis Chez Tanti est de nouveau active.')
 
+  // L'équipe : un membre ajouté reçoit un mot de passe temporaire, affiché une seule fois.
+  await page.setViewportSize({ width: 1280, height: 800 })
+  const onglets = page.getByRole('navigation', { name: 'Espace plateforme' })
+  await onglets.getByRole('link', { name: 'Équipe' }).click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Équipe plateforme' })).toBeVisible()
+  await page.getByRole('button', { name: 'Ajouter un membre' }).click()
+  const ajout = page.getByRole('dialog', { name: 'Ajouter un membre à l’équipe' })
+  await ajout.getByLabel(/^Prénom/).fill('Akossiwa')
+  await ajout.getByLabel(/^Nom/).fill('Dogbe')
+  await ajout.getByLabel(/^E-mail/).fill(`akossiwa.${String(Date.now())}@tonti.africa`)
+  await ajout.getByRole('button', { name: 'Ajouter le membre' }).click()
+  const secretMembre = page.getByRole('dialog', {
+    name: 'Mot de passe temporaire de Akossiwa Dogbe',
+  })
+  await expect(secretMembre).toBeVisible()
+  await secretMembre.getByRole('button', { name: 'J’ai transmis le mot de passe' }).click()
+  await expect(page.getByRole('row', { name: /Akossiwa Dogbe/ })).toContainText(
+    'Mot de passe à choisir',
+  )
+  await capturer(page, '97-plateforme-equipe')
+
+  // L'activité : chaque action de l'équipe, avec son auteur.
+  await onglets.getByRole('link', { name: 'Activité' }).click()
+  const activite = page.getByRole('table', { name: 'Activité de la plateforme' })
+  await expect(activite).toContainText('Membre ajouté')
+  await expect(activite).toContainText('Suspension')
+  await capturer(page, '98-plateforme-activite')
+
   // Le support : les erreurs renvoyées pendant le parcours, puis un code introuvable.
-  await page
-    .getByRole('navigation', { name: 'Espace plateforme' })
-    .getByRole('link', { name: 'Support' })
-    .click()
+  await onglets.getByRole('link', { name: 'Support' }).click()
   await expect(page.getByRole('heading', { level: 1, name: 'Support' })).toBeVisible()
   await expect(page.getByRole('table', { name: 'Erreurs récentes' })).toContainText(
     'Maquis Chez Tanti',

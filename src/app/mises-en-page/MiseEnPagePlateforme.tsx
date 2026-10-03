@@ -6,16 +6,23 @@ import { MenuCompte } from './MenuCompte'
 
 function classesOnglet(actif: boolean) {
   return clsx(
-    'inline-flex min-h-cible-min items-center border-b-2 px-1 text-libelle text-encre',
+    'inline-flex min-h-cible-min shrink-0 items-center border-b-2 px-1 text-libelle text-encre',
     actif ? 'border-barre-fond font-bold' : 'border-transparent',
   )
 }
 
+const ONGLETS = [
+  { chemin: '/plateforme/activite', cle: 'activite' },
+  { chemin: '/plateforme/equipe', cle: 'equipe' },
+  { chemin: '/plateforme/support', cle: 'support' },
+] as const
+
 export function MiseEnPagePlateforme() {
   const { t } = useTranslation()
-  // La liste et les fiches d'entreprise forment un même onglet ; le support est à part.
-  const enSupport = useRouterState({
-    select: (etat) => etat.location.pathname.startsWith('/plateforme/support'),
+  // La liste et les fiches d'entreprise forment l'onglet « Entreprises » : tout ce qui n'est pas un autre onglet.
+  const ongletActif = useRouterState({
+    select: (etat) =>
+      ONGLETS.find(({ chemin }) => etat.location.pathname.startsWith(chemin))?.cle ?? 'entreprises',
   })
   return (
     <div className="flex min-h-dvh flex-col bg-fond">
@@ -24,22 +31,25 @@ export function MiseEnPagePlateforme() {
       </BarreHaute>
       <nav
         aria-label={t('plateforme.navigation.titre')}
-        className="flex gap-6 border-b border-trait bg-surface px-4 md:px-6"
+        className="flex gap-6 overflow-x-auto border-b border-trait bg-surface px-4 md:px-6"
       >
         <Link
           to="/plateforme"
-          aria-current={enSupport ? undefined : 'page'}
-          className={classesOnglet(!enSupport)}
+          aria-current={ongletActif === 'entreprises' ? 'page' : undefined}
+          className={classesOnglet(ongletActif === 'entreprises')}
         >
           {t('plateforme.navigation.entreprises')}
         </Link>
-        <Link
-          to="/plateforme/support"
-          aria-current={enSupport ? 'page' : undefined}
-          className={classesOnglet(enSupport)}
-        >
-          {t('plateforme.navigation.support')}
-        </Link>
+        {ONGLETS.map(({ chemin, cle }) => (
+          <Link
+            key={cle}
+            to={chemin}
+            aria-current={ongletActif === cle ? 'page' : undefined}
+            className={classesOnglet(ongletActif === cle)}
+          >
+            {t(`plateforme.navigation.${cle}`)}
+          </Link>
+        ))}
       </nav>
       <main className="mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-4 p-4 md:p-6">
         <Outlet />

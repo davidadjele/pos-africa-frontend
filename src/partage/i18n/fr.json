@@ -792,12 +792,16 @@
         "secretLibelle": "Mot de passe temporaire",
         "transmis": "J’ai transmis le mot de passe"
       },
-      "retour": "Toutes les entreprises"
+      "retour": "Toutes les entreprises",
+      "clienteDepuisPar": "Cliente depuis le {{date}}, créée par {{nom}}.",
+      "toutVoir": "Tout voir"
     },
     "navigation": {
       "titre": "Espace plateforme",
       "entreprises": "Entreprises",
-      "support": "Support"
+      "support": "Support",
+      "activite": "Activité",
+      "equipe": "Équipe"
     },
     "support": {
       "titre": "Support",
@@ -837,6 +841,86 @@
         "erreur": "Erreur",
         "action": "Action",
         "code": "Code"
+      }
+    },
+    "activite": {
+      "titre": "Activité de la plateforme",
+      "phrase": "Ce que l’équipe a fait, et qui l’a fait. Rien ne s’efface.",
+      "chargement": "Chargement de l’activité…",
+      "sansNom": "Membre sans nom",
+      "equipe": "Équipe",
+      "vide": {
+        "titre": "Aucune action",
+        "phrase": "Aucune action de l’équipe ne correspond à ces filtres."
+      },
+      "colonnes": {
+        "quand": "Quand",
+        "membre": "Membre",
+        "action": "Action",
+        "entreprise": "Entreprise",
+        "detail": "Détail"
+      },
+      "filtres": {
+        "action": "Action",
+        "toutes": "Toutes les actions",
+        "membre": "Membre",
+        "toute": "Toute l’équipe",
+        "entreprise": "Entreprise",
+        "entrepriseExemple": "Nom de l’entreprise"
+      },
+      "types": {
+        "ENTREPRISE_CREEE": "Création",
+        "ENTREPRISE_MODIFIEE": "Modification",
+        "ENTREPRISE_SUSPENDUE": "Suspension",
+        "ENTREPRISE_REACTIVEE": "Réactivation",
+        "MOT_DE_PASSE_REINITIALISE": "Mot de passe redonné",
+        "MEMBRE_AJOUTE": "Membre ajouté",
+        "MEMBRE_DESACTIVE": "Membre désactivé",
+        "MEMBRE_REACTIVE": "Membre réactivé"
+      }
+    },
+    "equipe": {
+      "titre": "Équipe plateforme",
+      "phrase": "Les personnes qui administrent Tonti. Chacune se connecte avec son propre e-mail ; ses actions sont tracées à son nom.",
+      "ajouter": "Ajouter un membre",
+      "chargement": "Chargement de l’équipe…",
+      "tableau": "Membres de l’équipe",
+      "colonnes": {
+        "nom": "Nom",
+        "email": "E-mail",
+        "statut": "Statut",
+        "connexion": "Dernière connexion",
+        "ajout": "Ajouté",
+        "actions": "Actions"
+      },
+      "vous": "Vous",
+      "actif": "Actif",
+      "desactive": "Désactivé",
+      "motDePasseAChoisir": "Mot de passe à choisir",
+      "premier": "Premier administrateur",
+      "ajoutePar": "Le {{date}}, par {{nom}}",
+      "motDePasse": "Mot de passe",
+      "motDePasseNomme": "Redonner un mot de passe à {{nom}}",
+      "desactiver": "Désactiver",
+      "desactiverNomme": "Désactiver {{nom}}",
+      "reactiver": "Réactiver",
+      "reactiverNomme": "Réactiver {{nom}}",
+      "regle": "On ne peut pas se désactiver soi-même. Un membre n’est jamais supprimé : l’activité garde son nom.",
+      "secretPhrase": "Transmettez-le au nouveau membre. Il ne sera plus affiché : il en choisira un à sa première connexion.",
+      "desactivation": {
+        "titre": "Désactiver {{nom}} ?",
+        "consequence": "Ses sessions ouvertes sont coupées et il ne pourra plus se connecter à l’espace plateforme. Vous pourrez le réactiver.",
+        "confirmer": "Désactiver le membre"
+      },
+      "ajout": {
+        "titre": "Ajouter un membre à l’équipe",
+        "phrase": "Il pourra créer, modifier et suspendre des entreprises, et redonner un mot de passe à un propriétaire.",
+        "prenom": "Prénom",
+        "nom": "Nom",
+        "email": "E-mail",
+        "emailAide": "Son identifiant de connexion.",
+        "manquant": "Ce champ est obligatoire.",
+        "confirmer": "Ajouter le membre"
       }
     }
   },

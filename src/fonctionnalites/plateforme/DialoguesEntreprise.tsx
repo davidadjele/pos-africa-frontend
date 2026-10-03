@@ -210,34 +210,33 @@ export function DialogueSuspension({
 }
 
 /**
- * Redonner un mot de passe au propriétaire, en deux temps : vérifier qui appelle, puis montrer le mot de passe
- * une seule fois. Il n'est gardé nulle part : fermer la fenêtre l'efface.
+ * Redonner un mot de passe temporaire (propriétaire ou membre de l'équipe), en deux temps : confirmer, puis le
+ * montrer une seule fois. Il n'est gardé nulle part : fermer la fenêtre l'efface.
  */
 export function DialogueMotDePasse({
-  entrepriseId,
-  proprietaire,
+  nom,
+  chemin,
+  avertissement,
+  consequences,
   surFermer,
 }: Readonly<{
-  entrepriseId: string
-  proprietaire: FicheEntreprisePlateforme['proprietaires'][number]
+  nom: string
+  chemin: string
+  /** Ce qu'il faut vérifier avant de générer, s'il y a lieu. */
+  avertissement?: string
+  consequences: string[]
   surFermer: () => void
 }>) {
   const { t } = useTranslation()
   const [temporaire, setTemporaire] = useState<MotDePasseTemporaire | null>(null)
   const [enCours, setEnCours] = useState(false)
   const [erreur, setErreur] = useState<unknown>(null)
-  const nom = `${proprietaire.prenom} ${proprietaire.nom}`
 
   async function generer() {
     setEnCours(true)
     setErreur(null)
     try {
-      setTemporaire(
-        await appelerApi<MotDePasseTemporaire>(
-          `/plateforme/entreprises/${entrepriseId}/proprietaires/${proprietaire.compteId}/mot-de-passe`,
-          { methode: 'POST' },
-        ),
-      )
+      setTemporaire(await appelerApi<MotDePasseTemporaire>(chemin, { methode: 'POST' }))
     } catch (echec) {
       setErreur(echec)
     } finally {
@@ -274,21 +273,11 @@ export function DialogueMotDePasse({
       surConfirmer={() => void generer()}
     >
       {erreur !== null && <AlerteErreur erreur={erreur} />}
-      <Alerte ton="alerte">
-        {t('plateforme.fiche.motDePasse.verifier', {
-          contact: proprietaire.telephone ?? proprietaire.email ?? '',
-        })}
-      </Alerte>
+      {avertissement !== undefined && <Alerte ton="alerte">{avertissement}</Alerte>}
       <ul className="m-0 flex list-disc flex-col gap-1 pl-5 text-corps text-encre">
-        <li>{t('plateforme.fiche.motDePasse.consequenceSessions')}</li>
-        {proprietaire.autresEntreprises.length > 0 && (
-          <li>
-            {t('plateforme.fiche.motDePasse.consequenceAutres', {
-              entreprises: proprietaire.autresEntreprises.join(', '),
-            })}
-          </li>
-        )}
-        <li>{t('plateforme.fiche.motDePasse.consequenceTrace')}</li>
+        {consequences.map((consequence) => (
+          <li key={consequence}>{consequence}</li>
+        ))}
       </ul>
     </Dialogue>
   )

@@ -23,7 +23,8 @@ import {
   DialogueMotDePasse,
   DialogueSuspension,
 } from './DialoguesEntreprise'
-import { FUSEAU_APPAREIL, requeteFicheEntreprise } from './requetes'
+import { detailActivite, tonActivite } from './activite'
+import { FUSEAU_APPAREIL, requeteActivite, requeteFicheEntreprise } from './requetes'
 
 type Ouvert = 'modification' | 'suspension' | 'reactivation' | null
 type Etablissement = FicheEntreprisePlateforme['etablissements'][number]
@@ -125,9 +126,14 @@ export function PageFicheEntreprise({ entrepriseId }: Readonly<{ entrepriseId: s
             </BadgeStatut>
           </div>
           <p className="m-0 text-legende text-attenue">
-            {t('plateforme.fiche.clienteDepuis', {
-              date: formaterDate(donnees.creeLe, FUSEAU_APPAREIL),
-            })}
+            {donnees.creePar === undefined
+              ? t('plateforme.fiche.clienteDepuis', {
+                  date: formaterDate(donnees.creeLe, FUSEAU_APPAREIL),
+                })
+              : t('plateforme.fiche.clienteDepuisPar', {
+                  date: formaterDate(donnees.creeLe, FUSEAU_APPAREIL),
+                  nom: donnees.creePar,
+                })}
           </p>
         </div>
         {donnees.statut === 'ACTIVE' ? (
@@ -187,6 +193,8 @@ export function PageFicheEntreprise({ entrepriseId }: Readonly<{ entrepriseId: s
       </div>
 
       <Etablissements fiche={donnees} />
+
+      <ActiviteRecente entrepriseId={entrepriseId} />
 
       {ouvert === 'modification' && (
         <DialogueModifierEntreprise
@@ -378,8 +386,22 @@ function Proprietaires({ fiche }: Readonly<{ fiche: FicheEntreprisePlateforme }>
       ))}
       {choisi !== null && (
         <DialogueMotDePasse
-          entrepriseId={fiche.id}
-          proprietaire={choisi}
+          nom={`${choisi.prenom} ${choisi.nom}`}
+          chemin={`/plateforme/entreprises/${fiche.id}/proprietaires/${choisi.compteId}/mot-de-passe`}
+          avertissement={t('plateforme.fiche.motDePasse.verifier', {
+            contact: choisi.telephone ?? choisi.email ?? '',
+          })}
+          consequences={[
+            t('plateforme.fiche.motDePasse.consequenceSessions'),
+            ...(choisi.autresEntreprises.length > 0
+              ? [
+                  t('plateforme.fiche.motDePasse.consequenceAutres', {
+                    entreprises: choisi.autresEntreprises.join(', '),
+                  }),
+                ]
+              : []),
+            t('plateforme.fiche.motDePasse.consequenceTrace'),
+          ]}
           surFermer={() => {
             setChoisi(null)
             void clientRequetes.invalidateQueries({
@@ -388,6 +410,54 @@ function Proprietaires({ fiche }: Readonly<{ fiche: FicheEntreprisePlateforme }>
           }}
         />
       )}
+    </section>
+  )
+}
+
+/** Les dernières actions de l'équipe sur cette entreprise ; l'écran Activité les montre toutes. */
+function ActiviteRecente({ entrepriseId }: Readonly<{ entrepriseId: string }>) {
+  const { t } = useTranslation()
+  const activite = useQuery(requeteActivite({ entrepriseId }, 0, 5))
+  return (
+    <section
+      aria-labelledby="fiche-activite"
+      className="flex flex-col gap-2 rounded-moyen border border-trait bg-surface p-4"
+    >
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 id="fiche-activite" className="m-0 text-titre-section text-encre">
+          {t('plateforme.activite.titre')}
+        </h2>
+        <Link
+          to="/plateforme/activite"
+          search={{ entrepriseId }}
+          className="text-libelle text-encre underline"
+        >
+          {t('plateforme.fiche.toutVoir')}
+        </Link>
+      </div>
+      {activite.isError && <AlerteErreur erreur={activite.error} />}
+      {activite.data?.total === 0 && (
+        <p className="m-0 text-corps text-attenue">{t('plateforme.activite.vide.titre')}</p>
+      )}
+      <ul className="m-0 flex list-none flex-col p-0">
+        {activite.data?.elements.map((entree) => (
+          <li
+            key={entree.id}
+            className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-trait py-2 not-first:border-t"
+          >
+            <span className="w-40 shrink-0 text-legende text-attenue">
+              {formaterDateHeure(entree.le, FUSEAU_APPAREIL)}
+            </span>
+            <BadgeStatut ton={tonActivite(entree.type)}>
+              {t(`plateforme.activite.types.${entree.type}`)}
+            </BadgeStatut>
+            <span className="text-corps text-encre">{detailActivite(entree, t)}</span>
+            <span className="ml-auto text-legende text-attenue">
+              {entree.auteurNom ?? t('plateforme.activite.sansNom')}
+            </span>
+          </li>
+        ))}
+      </ul>
     </section>
   )
 }
