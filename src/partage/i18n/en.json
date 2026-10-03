@@ -876,7 +876,8 @@
         "MOT_DE_PASSE_REINITIALISE": "Password reset",
         "MEMBRE_AJOUTE": "Member added",
         "MEMBRE_DESACTIVE": "Member deactivated",
-        "MEMBRE_REACTIVE": "Member reactivated"
+        "MEMBRE_REACTIVE": "Member reactivated",
+        "MEMBRE_ROLE_CHANGE": "Role changed"
       }
     },
     "equipe": {
@@ -899,13 +900,9 @@
       "motDePasseAChoisir": "Password to choose",
       "premier": "First administrator",
       "ajoutePar": "On {{date}}, by {{nom}}",
-      "motDePasse": "Password",
-      "motDePasseNomme": "Give {{nom}} a new password",
       "desactiver": "Deactivate",
-      "desactiverNomme": "Deactivate {{nom}}",
       "reactiver": "Reactivate",
-      "reactiverNomme": "Reactivate {{nom}}",
-      "regle": "You cannot deactivate yourself. A member is never deleted: the activity keeps their name.",
+      "regle": "A lead manages the team; a lead is never deactivated or reset from here, and there is always one. A member is never deleted: the activity keeps their name.",
       "secretPhrase": "Pass it on to the new member. It will not be shown again: they choose their own at first sign-in.",
       "desactivation": {
         "titre": "Deactivate {{nom}}?",
@@ -921,6 +918,28 @@
         "emailAide": "Their sign-in identifier.",
         "manquant": "This field is required.",
         "confirmer": "Add the member"
+      },
+      "responsable": "Lead",
+      "actionsNomme": "More actions for {{nom}}",
+      "retirerRole": "Remove the lead role",
+      "nommerResponsable": "Make lead",
+      "redonnerMotDePasse": "Give a new password",
+      "regleMembre": "Only a lead manages the team: you manage businesses and support.",
+      "role": {
+        "RESPONSABLE": {
+          "titre": "Make {{nom}} a lead?",
+          "consequence": "They will manage the team: add and deactivate members, give them new passwords, name other leads. They can no longer be deactivated or reset from the interface.",
+          "confirmer": "Make lead"
+        },
+        "MEMBRE": {
+          "titre": "Remove the lead role from {{nom}}?",
+          "consequence": "They will still manage businesses and support, but no longer the team. The team always keeps at least one lead.",
+          "confirmer": "Remove the role"
+        }
+      },
+      "roles": {
+        "RESPONSABLE": "Lead",
+        "MEMBRE": "Member"
       }
     }
   },

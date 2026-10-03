@@ -77,4 +77,26 @@ describe('PageActivitePlateforme', () => {
       )
     })
   })
+
+  it('traduit le rôle d’un changement de rôle', async () => {
+    serveurMsw.use(
+      http.get(`${API}/plateforme/activite`, () =>
+        HttpResponse.json({
+          elements: [
+            { ...AJOUT, type: 'MEMBRE_ROLE_CHANGE', detail: 'Akossiwa Dogbe : RESPONSABLE' },
+          ],
+          page: 0,
+          taille: 50,
+          total: 1,
+        }),
+      ),
+      http.get(`${API}/plateforme/equipe`, () => HttpResponse.json(EQUIPE)),
+    )
+    sessionOuverte(MOI_ADMIN)
+    ouvrir('/plateforme/activite')
+
+    const tableau = await screen.findByRole('table', { name: 'Activité de la plateforme' })
+    expect(tableau).toHaveTextContent('Rôle changé')
+    expect(tableau).toHaveTextContent('Akossiwa Dogbe : Responsable')
+  })
 })

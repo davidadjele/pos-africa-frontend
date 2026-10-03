@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { KeyRound, Plus, RotateCw } from 'lucide-react'
+import { KeyRound, Plus, RotateCcw, RotateCw, ShieldCheck, ShieldOff, UserX } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appelerApi } from '../../partage/api/appelerApi'
@@ -13,6 +13,7 @@ import { ChampSaisie } from '../../partage/ui/ChampSaisie'
 import { Chargement } from '../../partage/ui/Chargement'
 import { CodeSecret } from '../../partage/ui/CodeSecret'
 import { Dialogue } from '../../partage/ui/Dialogue'
+import { MenuActions, type ActionMenu } from '../../partage/ui/MenuActions'
 import { Tableau, type ColonneTableau } from '../../partage/ui/Tableau'
 import { DialogueMotDePasse } from './DialoguesEntreprise'
 import { FUSEAU_APPAREIL, requeteEquipe } from './requetes'
@@ -22,16 +23,21 @@ type Ouvert =
   | { type: 'ajoute'; resultat: MembreAjoute }
   | { type: 'desactivation'; membre: MembrePlateforme }
   | { type: 'motDePasse'; membre: MembrePlateforme }
+  | { type: 'role'; membre: MembrePlateforme; role: MembrePlateforme['role'] }
   | null
 
 const nomDe = (membre: Pick<MembrePlateforme, 'prenom' | 'nom'>) =>
   `${membre.prenom} ${membre.nom}`.trim()
 
-/** L'équipe plateforme : un seul rôle, des membres nommés ; on ne supprime jamais, on désactive. */
+/**
+ * L'équipe plateforme : seul un responsable la gère, et un responsable n'est jamais désactivé ni réinitialisé
+ * d'ici. Le serveur l'impose ; l'écran masque seulement ce qui serait refusé. On ne supprime jamais, on désactive.
+ */
 export function PageEquipe() {
   const { t } = useTranslation()
   const clientRequetes = useQueryClient()
   const equipe = useQuery(requeteEquipe())
+  const responsable = equipe.data?.find((membre) => membre.vous)?.role === 'RESPONSABLE'
   const [ouvert, setOuvert] = useState<Ouvert>(null)
   const [erreurAction, setErreurAction] = useState<unknown>(null)
 
@@ -39,15 +45,71 @@ export function PageEquipe() {
     void clientRequetes.invalidateQueries({ queryKey: requeteEquipe().queryKey })
   }
 
-  async function agir(membre: MembrePlateforme, action: 'desactivation' | 'reactivation') {
+  async function agir(
+    membre: MembrePlateforme,
+    action: 'desactivation' | 'reactivation' | 'role',
+    corps?: { role: MembrePlateforme['role'] },
+  ) {
     setErreurAction(null)
     try {
-      await appelerApi(`/plateforme/equipe/${membre.compteId}/${action}`, { methode: 'POST' })
+      await appelerApi(`/plateforme/equipe/${membre.compteId}/${action}`, {
+        methode: 'POST',
+        ...(corps === undefined ? {} : { corps }),
+      })
       setOuvert(null)
       rafraichir()
     } catch (echec) {
       setErreurAction(echec)
     }
+  }
+
+  /** Un responsable ne propose que le retrait de son rôle : ni désactivation, ni mot de passe. */
+  function actionsDe(m: MembrePlateforme): ActionMenu[] {
+    if (m.role === 'RESPONSABLE')
+      return [
+        {
+          libelle: t('plateforme.equipe.retirerRole'),
+          icone: ShieldOff,
+          surChoisir: () => {
+            setErreurAction(null)
+            setOuvert({ type: 'role', membre: m, role: 'MEMBRE' })
+          },
+        },
+      ]
+    if (!m.actif)
+      return [
+        {
+          libelle: t('plateforme.equipe.reactiver'),
+          icone: RotateCcw,
+          surChoisir: () => void agir(m, 'reactivation'),
+        },
+      ]
+    return [
+      {
+        libelle: t('plateforme.equipe.nommerResponsable'),
+        icone: ShieldCheck,
+        surChoisir: () => {
+          setErreurAction(null)
+          setOuvert({ type: 'role', membre: m, role: 'RESPONSABLE' })
+        },
+      },
+      {
+        libelle: t('plateforme.equipe.redonnerMotDePasse'),
+        icone: KeyRound,
+        surChoisir: () => {
+          setOuvert({ type: 'motDePasse', membre: m })
+        },
+      },
+      {
+        libelle: t('plateforme.equipe.desactiver'),
+        icone: UserX,
+        ton: 'danger',
+        surChoisir: () => {
+          setErreurAction(null)
+          setOuvert({ type: 'desactivation', membre: m })
+        },
+      },
+    ]
   }
 
   const colonnes: ColonneTableau<MembrePlateforme>[] = [
@@ -58,6 +120,9 @@ export function PageEquipe() {
         <>
           <span className="flex flex-wrap items-baseline gap-2">
             <span className="font-semibold">{nomDe(m)}</span>
+            {m.role === 'RESPONSABLE' && (
+              <BadgeStatut ton="info">{t('plateforme.equipe.responsable')}</BadgeStatut>
+            )}
             {m.vous && (
               <span className="text-legende text-attenue">{t('plateforme.equipe.vous')}</span>
             )}
@@ -101,37 +166,11 @@ export function PageEquipe() {
       cle: 'actions',
       entete: t('plateforme.equipe.colonnes.actions'),
       rendu: (m) =>
-        m.vous ? null : (
-          <span className="flex justify-end gap-2">
-            <Bouton
-              icone={KeyRound}
-              // L'icône suffit à côté de « Désactiver » : le nom complet est lu et montré au survol.
-              aria-label={t('plateforme.equipe.motDePasseNomme', { nom: nomDe(m) })}
-              title={t('plateforme.equipe.motDePasseNomme', { nom: nomDe(m) })}
-              onClick={() => {
-                setOuvert({ type: 'motDePasse', membre: m })
-              }}
-            ></Bouton>
-            {m.actif ? (
-              <Bouton
-                variante="danger"
-                aria-label={t('plateforme.equipe.desactiverNomme', { nom: nomDe(m) })}
-                onClick={() => {
-                  setErreurAction(null)
-                  setOuvert({ type: 'desactivation', membre: m })
-                }}
-              >
-                {t('plateforme.equipe.desactiver')}
-              </Bouton>
-            ) : (
-              <Bouton
-                aria-label={t('plateforme.equipe.reactiverNomme', { nom: nomDe(m) })}
-                onClick={() => void agir(m, 'reactivation')}
-              >
-                {t('plateforme.equipe.reactiver')}
-              </Bouton>
-            )}
-          </span>
+        !responsable || m.vous ? null : (
+          <MenuActions
+            libelle={t('plateforme.equipe.actionsNomme', { nom: nomDe(m) })}
+            actions={actionsDe(m)}
+          />
         ),
     },
   ]
@@ -143,15 +182,17 @@ export function PageEquipe() {
           <h1 className="m-0 text-titre-page text-encre">{t('plateforme.equipe.titre')}</h1>
           <p className="m-0 mt-1 text-legende text-attenue">{t('plateforme.equipe.phrase')}</p>
         </div>
-        <Bouton
-          variante="principal"
-          icone={Plus}
-          onClick={() => {
-            setOuvert({ type: 'ajout' })
-          }}
-        >
-          {t('plateforme.equipe.ajouter')}
-        </Bouton>
+        {responsable && (
+          <Bouton
+            variante="principal"
+            icone={Plus}
+            onClick={() => {
+              setOuvert({ type: 'ajout' })
+            }}
+          >
+            {t('plateforme.equipe.ajouter')}
+          </Bouton>
+        )}
       </div>
 
       {equipe.isPending && <Chargement texte={t('plateforme.equipe.chargement')} />}
@@ -174,7 +215,9 @@ export function PageEquipe() {
           cleLigne={(m) => m.compteId}
         />
       )}
-      <p className="m-0 text-legende text-attenue">{t('plateforme.equipe.regle')}</p>
+      <p className="m-0 text-legende text-attenue">
+        {t(responsable ? 'plateforme.equipe.regle' : 'plateforme.equipe.regleMembre')}
+      </p>
 
       {ouvert?.type === 'ajout' && (
         <DialogueAjoutMembre
@@ -218,6 +261,20 @@ export function PageEquipe() {
             setOuvert(null)
           }}
           surConfirmer={() => void agir(ouvert.membre, 'desactivation')}
+        >
+          {erreurAction !== null && <AlerteErreur erreur={erreurAction} />}
+        </Dialogue>
+      )}
+      {ouvert?.type === 'role' && (
+        <Dialogue
+          titre={t(`plateforme.equipe.role.${ouvert.role}.titre`, { nom: nomDe(ouvert.membre) })}
+          consequence={t(`plateforme.equipe.role.${ouvert.role}.consequence`)}
+          libelleAnnuler={t('commun.annuler')}
+          libelleConfirmer={t(`plateforme.equipe.role.${ouvert.role}.confirmer`)}
+          surAnnuler={() => {
+            setOuvert(null)
+          }}
+          surConfirmer={() => void agir(ouvert.membre, 'role', { role: ouvert.role })}
         >
           {erreurAction !== null && <AlerteErreur erreur={erreurAction} />}
         </Dialogue>

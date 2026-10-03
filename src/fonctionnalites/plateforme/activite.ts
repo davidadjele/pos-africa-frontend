@@ -12,6 +12,7 @@ export const TYPES_ACTIVITE = [
   'MEMBRE_AJOUTE',
   'MEMBRE_DESACTIVE',
   'MEMBRE_REACTIVE',
+  'MEMBRE_ROLE_CHANGE',
 ] as const
 
 const TONS: Record<string, TonStatut> = {
@@ -31,6 +32,13 @@ export function detailActivite(entree: EntreeActivitePlateforme, t: TFunction): 
   const detail = entree.detail ?? ''
   // À la création, le détail répète le nom de l'entreprise, déjà dans sa colonne.
   if (detail === entree.entrepriseNom) return ''
+  if (entree.type === 'MEMBRE_ROLE_CHANGE') {
+    // « Akossiwa Dogbe : RESPONSABLE » : le rôle en clair.
+    const [nom = '', role = ''] = detail.split(' : ')
+    if (role !== 'RESPONSABLE' && role !== 'MEMBRE') return detail
+    const libelle = t(`plateforme.equipe.roles.${role}`)
+    return `${nom} : ${libelle}`
+  }
   if (entree.type !== 'ENTREPRISE_SUSPENDUE') return detail
   const [raison = '', ...reste] = detail.split(' : ')
   const connue = RAISONS.find((candidate) => candidate === raison)

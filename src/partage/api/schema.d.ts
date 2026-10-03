@@ -1987,7 +1987,7 @@ export interface paths {
         get: operations["lister_2"];
         put?: never;
         /**
-         * Ajouter un membre
+         * Ajouter un membre (responsable seulement)
          * @description Un mot de passe temporaire est renvoyé une seule fois ; le membre le remplace à sa première connexion. Un e-mail déjà utilisé par un compte est refusé (REQUETE_INVALIDE sur email).
          */
         post: operations["ajouter"];
@@ -2007,8 +2007,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Désactiver un membre
-         * @description Ses sessions tombent. Jamais soi-même (REQUETE_INVALIDE).
+         * Désactiver un membre (responsable seulement)
+         * @description Ses sessions tombent. Jamais un responsable, ni donc soi-même (REQUETE_INVALIDE) ; ACCES_REFUSE (403) pour un membre.
          */
         post: operations["desactiver_2"];
         delete?: never;
@@ -2027,8 +2027,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Redonner un mot de passe temporaire à un membre
-         * @description Affiché une seule fois. Erreur : RESSOURCE_INTROUVABLE (404) hors de l'équipe.
+         * Redonner un mot de passe temporaire à un membre (responsable seulement)
+         * @description Affiché une seule fois. Jamais à un responsable (REQUETE_INVALIDE) : son secours passe par le serveur. Erreurs : RESSOURCE_INTROUVABLE (404) hors de l'équipe, ACCES_REFUSE (403) pour un membre.
          */
         post: operations["redonnerMotDePasse"];
         delete?: never;
@@ -2046,8 +2046,28 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Réactiver un membre */
+        /** Réactiver un membre (responsable seulement) */
         post: operations["reactiver_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plateforme/equipe/{compteId}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Nommer responsable, ou retirer ce rôle (responsable seulement)
+         * @description Il reste toujours un responsable actif : retirer le rôle du dernier est refusé (REQUETE_INVALIDE). Erreur : ACCES_REFUSE (403) pour un membre.
+         */
+        post: operations["changerRole"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3229,6 +3249,10 @@ export interface components {
             /** Format: uuid */
             validationId?: string;
         };
+        DemandeRolePlateforme: {
+            /** @enum {string} */
+            role: "RESPONSABLE" | "MEMBRE";
+        };
         DemandeSalle: {
             /** @example Terrasse */
             nom: string;
@@ -3826,6 +3850,8 @@ export interface components {
             motDePasseAChanger: boolean;
             nom: string;
             prenom: string;
+            /** @enum {string} */
+            role: "RESPONSABLE" | "MEMBRE";
             vous: boolean;
         };
         ModeRemboursable: {
@@ -8553,6 +8579,39 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    changerRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                compteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeRolePlateforme"];
+            };
+        };
         responses: {
             /** @description No Content */
             204: {

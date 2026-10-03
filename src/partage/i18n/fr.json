@@ -876,7 +876,8 @@
         "MOT_DE_PASSE_REINITIALISE": "Mot de passe redonné",
         "MEMBRE_AJOUTE": "Membre ajouté",
         "MEMBRE_DESACTIVE": "Membre désactivé",
-        "MEMBRE_REACTIVE": "Membre réactivé"
+        "MEMBRE_REACTIVE": "Membre réactivé",
+        "MEMBRE_ROLE_CHANGE": "Rôle changé"
       }
     },
     "equipe": {
@@ -899,13 +900,9 @@
       "motDePasseAChoisir": "Mot de passe à choisir",
       "premier": "Premier administrateur",
       "ajoutePar": "Le {{date}}, par {{nom}}",
-      "motDePasse": "Mot de passe",
-      "motDePasseNomme": "Redonner un mot de passe à {{nom}}",
       "desactiver": "Désactiver",
-      "desactiverNomme": "Désactiver {{nom}}",
       "reactiver": "Réactiver",
-      "reactiverNomme": "Réactiver {{nom}}",
-      "regle": "On ne peut pas se désactiver soi-même. Un membre n’est jamais supprimé : l’activité garde son nom.",
+      "regle": "Un responsable gère l’équipe ; il n’est jamais désactivé ni réinitialisé d’ici, et il en reste toujours un. Un membre n’est jamais supprimé : l’activité garde son nom.",
       "secretPhrase": "Transmettez-le au nouveau membre. Il ne sera plus affiché : il en choisira un à sa première connexion.",
       "desactivation": {
         "titre": "Désactiver {{nom}} ?",
@@ -921,6 +918,28 @@
         "emailAide": "Son identifiant de connexion.",
         "manquant": "Ce champ est obligatoire.",
         "confirmer": "Ajouter le membre"
+      },
+      "responsable": "Responsable",
+      "actionsNomme": "Plus d’actions pour {{nom}}",
+      "retirerRole": "Retirer le rôle de responsable",
+      "nommerResponsable": "Nommer responsable",
+      "redonnerMotDePasse": "Redonner un mot de passe",
+      "regleMembre": "Seul un responsable gère l’équipe : vous gérez les entreprises et le support.",
+      "role": {
+        "RESPONSABLE": {
+          "titre": "Nommer {{nom}} responsable ?",
+          "consequence": "Il pourra gérer l’équipe : ajouter et désactiver des membres, leur redonner un mot de passe, nommer d’autres responsables. Il ne pourra plus être désactivé ni réinitialisé depuis l’interface.",
+          "confirmer": "Nommer responsable"
+        },
+        "MEMBRE": {
+          "titre": "Retirer le rôle de responsable à {{nom}} ?",
+          "consequence": "Il gérera toujours les entreprises et le support, mais plus l’équipe. L’équipe garde toujours au moins un responsable.",
+          "confirmer": "Retirer le rôle"
+        }
+      },
+      "roles": {
+        "RESPONSABLE": "Responsable",
+        "MEMBRE": "Membre"
       }
     }
   },
