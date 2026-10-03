@@ -798,10 +798,11 @@
     },
     "navigation": {
       "titre": "Espace plateforme",
+      "tableau": "Tableau de bord",
       "entreprises": "Entreprises",
-      "support": "Support",
       "activite": "Activité",
-      "equipe": "Équipe"
+      "equipe": "Équipe",
+      "support": "Support"
     },
     "support": {
       "titre": "Support",
@@ -941,6 +942,33 @@
         "RESPONSABLE": "Responsable",
         "MEMBRE": "Membre"
       }
+    },
+    "tableau": {
+      "titre": "Tableau de bord",
+      "phrase": "Des comptes, jamais de montants : les chiffres d’affaires restent aux clients. Mis à jour toutes les 5 minutes.",
+      "chargement": "Chargement du tableau de bord…",
+      "indicateurs": "Indicateurs",
+      "actives": "Entreprises actives",
+      "nouvellesSemaine_one": "+{{count}} cette semaine",
+      "nouvellesSemaine_other": "+{{count}} cette semaine",
+      "suspendues": "Suspendues",
+      "etablissements": "Établissements",
+      "tablettes": "Tablettes en service",
+      "notesHier": "Notes encaissées hier",
+      "variation": "{{signe}}{{valeur}} % sur la semaine d’avant",
+      "erreurs": "Erreurs internes, 24 h",
+      "erreursDetail": "À regarder dans Support",
+      "parJour": "Notes encaissées par jour",
+      "parJourPhrase": "30 derniers jours, tous clients",
+      "parJourResume": "Notes encaissées par jour sur 30 jours : {{total}} au total",
+      "aRelancer": "À relancer",
+      "aRelancerPhrase": "Actives sans vente depuis 7 jours, ou nouvelles sans première vente après 3 jours.",
+      "aRelancerVide": "Personne à relancer pour l’instant.",
+      "derniereVente": "Dernière vente le {{date}}",
+      "nouvelles": "Nouvelles entreprises",
+      "nouvellesPhrase": "7 derniers jours",
+      "nouvellesVide": "Aucune nouvelle entreprise cette semaine.",
+      "premiereVente": "Première vente le {{date}}"
     }
   },
   "formulaireEntreprise": {

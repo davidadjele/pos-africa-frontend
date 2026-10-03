@@ -2094,6 +2094,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/plateforme/tableau-de-bord": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Le tableau de bord de la plateforme
+         * @description Indicateurs, notes encaissées par jour sur 30 jours, entreprises à relancer (7 jours sans vente, ou aucune vente 3 jours après la création) et nouvelles entreprises de la semaine. Aucun montant.
+         */
+        get: operations["tableauDeBord"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/produits": {
         parameters: {
             query?: never;
@@ -3457,6 +3477,19 @@ export interface components {
             id: string;
             nom: string;
         };
+        EntrepriseARelancer: {
+            /** Format: date-time */
+            creeLe: string;
+            /** Format: date-time */
+            derniereVenteLe?: string;
+            email?: string;
+            /** Format: uuid */
+            id: string;
+            nom: string;
+            pays: string;
+            proprietaire?: string;
+            telephone?: string;
+        };
         EntrepriseAccessible: {
             /** Format: uuid */
             id: string;
@@ -3711,6 +3744,24 @@ export interface components {
             nom: string;
             numeroFiscal?: string;
             telephone?: string;
+        };
+        IndicateursPlateforme: {
+            /** Format: int64 */
+            actives: number;
+            /** Format: int64 */
+            erreursInternes24h: number;
+            /** Format: int64 */
+            etablissements: number;
+            /** Format: int64 */
+            notesHier: number;
+            /** Format: int64 */
+            notesSemaineAvant: number;
+            /** Format: int64 */
+            nouvellesSemaine: number;
+            /** Format: int64 */
+            suspendues: number;
+            /** Format: int64 */
+            tablettes: number;
         };
         IndicateursVentes: {
             /** Format: int64 */
@@ -3974,6 +4025,22 @@ export interface components {
             total: number;
             /** Format: int64 */
             totalPaye: number;
+        };
+        NotesDuJourPlateforme: {
+            /** Format: date */
+            jour: string;
+            /** Format: int64 */
+            notes: number;
+        };
+        NouvelleEntreprisePlateforme: {
+            /** Format: date-time */
+            creeLe: string;
+            /** Format: uuid */
+            id: string;
+            nom: string;
+            pays: string;
+            /** Format: date-time */
+            premiereVenteLe?: string;
         };
         OperateurMobileMoney: {
             code: string;
@@ -4490,6 +4557,12 @@ export interface components {
             maintenant: string;
             /** Format: int32 */
             notes: number;
+        };
+        TableauDeBordPlateforme: {
+            aRelancer: components["schemas"]["EntrepriseARelancer"][];
+            indicateurs: components["schemas"]["IndicateursPlateforme"];
+            nouvelles: components["schemas"]["NouvelleEntreprisePlateforme"][];
+            parJour: components["schemas"]["NotesDuJourPlateforme"][];
         };
         Taxe: {
             /** Format: int64 */
@@ -8649,6 +8722,35 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErreurPlateforme"][];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    tableauDeBord: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TableauDeBordPlateforme"];
                 };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */

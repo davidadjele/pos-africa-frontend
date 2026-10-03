@@ -36,6 +36,7 @@ import { PageEquipe } from '../fonctionnalites/plateforme/PageEquipe'
 import { PageFicheEntreprise } from '../fonctionnalites/plateforme/PageFicheEntreprise'
 import { PageNouvelleEntreprise } from '../fonctionnalites/plateforme/PageNouvelleEntreprise'
 import { PageSupport } from '../fonctionnalites/plateforme/PageSupport'
+import { PageTableauDeBordPlateforme } from '../fonctionnalites/plateforme/PageTableauDeBordPlateforme'
 import { PageRecu } from '../fonctionnalites/recu/PageRecu'
 import { PageCaisses } from '../fonctionnalites/rapports/PageCaisses'
 import { PageDetailCaisse } from '../fonctionnalites/rapports/PageDetailCaisse'
@@ -412,6 +413,12 @@ const nouvelleEntreprise = createRoute({
   component: PageNouvelleEntreprise,
 })
 
+const tableauDeBordPlateforme = createRoute({
+  getParentRoute: () => plateforme,
+  path: '/tableau-de-bord',
+  component: PageTableauDeBordPlateforme,
+})
+
 const equipe = createRoute({
   getParentRoute: () => plateforme,
   path: '/equipe',
@@ -488,6 +495,7 @@ const arbre = racine.addChildren([
     ficheClient,
   ]),
   plateforme.addChildren([
+    tableauDeBordPlateforme,
     plateformeAccueil,
     nouvelleEntreprise,
     ficheEntreprise,

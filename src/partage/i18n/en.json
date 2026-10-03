@@ -798,10 +798,11 @@
     },
     "navigation": {
       "titre": "Platform area",
+      "tableau": "Dashboard",
       "entreprises": "Businesses",
-      "support": "Support",
       "activite": "Activity",
-      "equipe": "Team"
+      "equipe": "Team",
+      "support": "Support"
     },
     "support": {
       "titre": "Support",
@@ -941,6 +942,33 @@
         "RESPONSABLE": "Lead",
         "MEMBRE": "Member"
       }
+    },
+    "tableau": {
+      "titre": "Dashboard",
+      "phrase": "Counts, never amounts: revenue stays with customers. Updated every 5 minutes.",
+      "chargement": "Loading the dashboard…",
+      "indicateurs": "Indicators",
+      "actives": "Active businesses",
+      "nouvellesSemaine_one": "+{{count}} this week",
+      "nouvellesSemaine_other": "+{{count}} this week",
+      "suspendues": "Suspended",
+      "etablissements": "Locations",
+      "tablettes": "Tablets in use",
+      "notesHier": "Bills paid yesterday",
+      "variation": "{{signe}}{{valeur}}% vs the week before",
+      "erreurs": "Internal errors, 24 h",
+      "erreursDetail": "Look into Support",
+      "parJour": "Bills paid per day",
+      "parJourPhrase": "Last 30 days, all customers",
+      "parJourResume": "Bills paid per day over 30 days: {{total}} in total",
+      "aRelancer": "To follow up",
+      "aRelancerPhrase": "Active with no sale for 7 days, or new with no first sale after 3 days.",
+      "aRelancerVide": "Nobody to follow up for now.",
+      "derniereVente": "Last sale on {{date}}",
+      "nouvelles": "New businesses",
+      "nouvellesPhrase": "Last 7 days",
+      "nouvellesVide": "No new business this week.",
+      "premiereVente": "First sale on {{date}}"
     }
   },
   "formulaireEntreprise": {

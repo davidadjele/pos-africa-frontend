@@ -124,6 +124,16 @@ async function premiereConnexion(
   await remplacerMotDePasse(page, identifiant, temporaire, choisi)
 }
 
+/** L'administrateur arrive sur le tableau de bord ; la liste des entreprises est l'onglet suivant. */
+async function ouvrirEntreprisesPlateforme(page: Page) {
+  await expect(page).toHaveURL(/\/plateforme\/tableau-de-bord$/)
+  await page
+    .getByRole('navigation', { name: 'Espace plateforme' })
+    .getByRole('link', { name: 'Entreprises' })
+    .click()
+  await expect(page).toHaveURL(/\/plateforme$/)
+}
+
 /** @returns le mot de passe temporaire du propriétaire, s'il n'avait pas encore de compte */
 async function creerEntreprise(
   page: Page,
@@ -169,7 +179,7 @@ test('l’admin crée Maquis Chez Tanti, puis Tanti gère ses établissements', 
 
   // L'administrateur de la plateforme crée l'entreprise, son propriétaire et Bè Kpota.
   await seConnecter(page, ADMIN.identifiant, ADMIN.motDePasse)
-  await expect(page).toHaveURL(/\/plateforme$/)
+  await ouvrirEntreprisesPlateforme(page)
   await expect(page.getByRole('banner')).toContainText('Administration de la plateforme')
   const temporaire = await creerEntreprise(page, {
     nom: 'Maquis Chez Tanti',
@@ -214,7 +224,7 @@ test('l’admin crée Maquis Chez Tanti, puis Tanti gère ses établissements', 
 
 test('un compte à plusieurs entreprises choisit la sienne après connexion', async ({ page }) => {
   await seConnecter(page, ADMIN.identifiant, ADMIN.motDePasse)
-  await expect(page).toHaveURL(/\/plateforme$/)
+  await ouvrirEntreprisesPlateforme(page)
   await creerEntreprise(page, {
     nom: 'Bar Le Flamboyant',
     etablissement: 'Tokoin',
@@ -1350,7 +1360,20 @@ test('L’équipe plateforme ouvre la fiche de Maquis Chez Tanti, la modifie et 
 }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   await seConnecter(page, ADMIN.identifiant, ADMIN.motDePasse)
-  await expect(page).toHaveURL(/\/plateforme$/)
+  // Le tableau de bord : des comptes, jamais de montants ; Maquis Chez Tanti a vendu, il n'est pas à relancer.
+  await expect(page).toHaveURL(/\/plateforme\/tableau-de-bord$/)
+  await expect(page.getByRole('list', { name: 'Indicateurs' })).toContainText('Entreprises actives')
+  await expect(page.getByRole('region', { name: 'À relancer' })).not.toContainText(
+    'Maquis Chez Tanti',
+  )
+  await capturer(page, '89-plateforme-tableau-de-bord')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await capturer(page, '89-plateforme-tableau-de-bord-telephone')
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page
+    .getByRole('navigation', { name: 'Espace plateforme' })
+    .getByRole('link', { name: 'Entreprises' })
+    .click()
 
   // La recherche porte aussi sur le propriétaire ; la liste ne montre qu'une date de vente, aucun montant.
   await page.getByRole('searchbox', { name: 'Rechercher' }).fill('Tanti')

@@ -12,18 +12,24 @@ function classesOnglet(actif: boolean) {
 }
 
 const ONGLETS = [
+  { chemin: '/plateforme/tableau-de-bord', cle: 'tableau' },
+  { chemin: '/plateforme', cle: 'entreprises' },
   { chemin: '/plateforme/activite', cle: 'activite' },
   { chemin: '/plateforme/equipe', cle: 'equipe' },
   { chemin: '/plateforme/support', cle: 'support' },
 ] as const
 
+/** « Entreprises » couvre la liste et les fiches : tout ce qu'aucun autre onglet ne revendique. */
+function ongletDe(chemin: string): (typeof ONGLETS)[number]['cle'] {
+  return (
+    ONGLETS.find((onglet) => onglet.cle !== 'entreprises' && chemin.startsWith(onglet.chemin))
+      ?.cle ?? 'entreprises'
+  )
+}
+
 export function MiseEnPagePlateforme() {
   const { t } = useTranslation()
-  // La liste et les fiches d'entreprise forment l'onglet « Entreprises » : tout ce qui n'est pas un autre onglet.
-  const ongletActif = useRouterState({
-    select: (etat) =>
-      ONGLETS.find(({ chemin }) => etat.location.pathname.startsWith(chemin))?.cle ?? 'entreprises',
-  })
+  const ongletActif = useRouterState({ select: (etat) => ongletDe(etat.location.pathname) })
   return (
     <div className="flex min-h-dvh flex-col bg-fond">
       <BarreHaute contexte={{ titre: t('plateforme.titreBarre') }}>
@@ -33,13 +39,6 @@ export function MiseEnPagePlateforme() {
         aria-label={t('plateforme.navigation.titre')}
         className="flex gap-6 overflow-x-auto border-b border-trait bg-surface px-4 md:px-6"
       >
-        <Link
-          to="/plateforme"
-          aria-current={ongletActif === 'entreprises' ? 'page' : undefined}
-          className={classesOnglet(ongletActif === 'entreprises')}
-        >
-          {t('plateforme.navigation.entreprises')}
-        </Link>
         {ONGLETS.map(({ chemin, cle }) => (
           <Link
             key={cle}

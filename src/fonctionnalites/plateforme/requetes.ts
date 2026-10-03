@@ -4,6 +4,7 @@ import type {
   ErreurPlateforme,
   MembrePlateforme,
   PageActivitePlateforme,
+  TableauDeBordPlateforme,
   FicheEntreprisePlateforme,
   PageEntreprisesPlateforme,
 } from '../../partage/api/contrat'
@@ -76,5 +77,15 @@ export function requeteActivite(filtres: FiltresActivite, page: number, taille =
       appelerApi<PageActivitePlateforme>(`/plateforme/activite?${parametres.toString()}`, {
         signal,
       }),
+  })
+}
+
+/** Rafraîchi toutes les 5 minutes tant que la page reste ouverte. */
+export function requeteTableauDeBordPlateforme() {
+  return queryOptions({
+    queryKey: ['plateforme', 'tableau-de-bord'],
+    queryFn: ({ signal }) =>
+      appelerApi<TableauDeBordPlateforme>('/plateforme/tableau-de-bord', { signal }),
+    refetchInterval: 5 * 60 * 1000,
   })
 }
