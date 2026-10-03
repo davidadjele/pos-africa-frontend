@@ -27,7 +27,7 @@ React + Vite + TypeScript, TanStack Router, TanStack Query (état serveur), Zust
 - Tout appel réseau passe par `appelerApi` ; toute erreur est une `ErreurApi`. Un nouveau `CodeErreur` backend s'ajoute à `CODES_ERREUR` et à `fr.json`/`en.json` (un test le vérifie). `RESEAU_INDISPONIBLE` est le seul code propre au client.
 - `localStorage` et `sessionStorage` interdits dans le code applicatif (règle ESLint).
 - PWA : mise à jour sur demande (bandeau « Recharger »), jamais de rechargement d'office pendant un encaissement. Aucune mise en cache des appels API.
-- Avant la production : ajouter l'origine de l'API à `connect-src` dans `vercel.json`.
+- L'API est appelée par la réécriture `/api` de `vercel.json` (backend Render `https://tonti-api.onrender.com`) : même origine, `connect-src 'self'` suffit. Ne l'ouvrir que si le navigateur devait appeler l'API directement.
 - **Montants** : entiers en unités mineures + devise, formatés par un seul utilitaire (`12 500 F CFA`) avec des chiffres tabulaires. Jamais d'arithmétique en `number` flottant sur des montants.
 - **Access token en mémoire uniquement**, jamais dans localStorage ou sessionStorage. Refresh silencieux au démarrage, et un seul refresh à la fois.
 - Interdit : `dangerouslySetInnerHTML` (vérifié par lint). CSP stricte dans `vercel.json`.

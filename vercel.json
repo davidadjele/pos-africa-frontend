@@ -4,7 +4,7 @@
   "rewrites": [
     {
       "source": "/api/:chemin*",
-      "destination": "https://api.tonti.africa/:chemin*"
+      "destination": "https://tonti-api.onrender.com/:chemin*"
     },
     {
       "source": "/((?!assets/|polices/|icones/|api/).*)",

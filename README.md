@@ -57,5 +57,5 @@ paire de clés JWT de dev du backend, et les ports 5432 et 8080 libres. Captures
 les tests e2e échouent si une ressource viole la CSP.
 
 L'URL du backend de production est à un seul endroit : la destination de la première réécriture de
-`vercel.json` (`https://api.tonti.africa/:chemin*`, à ajuster). Variables à définir côté backend et
+`vercel.json` (`https://tonti-api.onrender.com/:chemin*`). Variables à définir côté backend et
 vérifications après déploiement : `../pos-africa-backend/docs/deploiement.md`.
