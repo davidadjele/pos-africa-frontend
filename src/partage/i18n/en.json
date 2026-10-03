@@ -403,6 +403,15 @@
       "aServir": "To serve",
       "aRemettre": "To hand over",
       "addition": "Bill requested"
+    },
+    "telephone": {
+      "continuer": "Keep ordering",
+      "resume_one": "{{count}} item",
+      "resume_other": "{{count}} items",
+      "resumeAEnvoyer_one": "{{count}} item, {{aEnvoyer}} to send",
+      "resumeAEnvoyer_other": "{{count}} items, {{aEnvoyer}} to send",
+      "voir": "See the bill",
+      "voirEtEnvoyer": "See the bill and send"
     }
   },
   "gestion": {

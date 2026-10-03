@@ -1,7 +1,8 @@
 import type { TFunction } from 'i18next'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { RotateCw } from 'lucide-react'
+import { ArrowLeft, RotateCw } from 'lucide-react'
+import { clsx } from 'clsx'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { appelerCaisse } from '../../partage/api/appelerCaisse'
@@ -16,7 +17,7 @@ import type {
   LigneNote,
 } from '../../partage/api/contrat'
 import { formaterHeure } from '../../partage/dates/formaterDate'
-import type { Devise } from '../../partage/montants/formaterMontant'
+import { formaterMontant, type Devise } from '../../partage/montants/formaterMontant'
 import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
 import { Bouton } from '../../partage/ui/Bouton'
 import { Chargement } from '../../partage/ui/Chargement'
@@ -72,6 +73,8 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
   const [refus, setRefus] = useState<string | null>(null)
   const [confirmation, setConfirmation] = useState<string | null>(null)
   const [enCours, setEnCours] = useState(false)
+  // Sur téléphone, la carte et la note se relaient en plein écran ; sur tablette, elles sont côte à côte.
+  const [noteOuverte, setNoteOuverte] = useState(false)
   const [ligneOuverte, setLigneOuverte] = useState<LigneNote | null>(null)
   const [aAnnuler, setAAnnuler] = useState<LigneNote | null>(null)
   const [aValider, setAValider] = useState<{ ligne: LigneNote; demande: DemandeAnnulation } | null>(
@@ -342,6 +345,12 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
 
   // Une note entamée par un paiement ne se modifie plus : on l'encaisse jusqu'au bout.
   const modifiable = peutCommander && note.data.totalPaye === 0
+  const articles = note.data.lignes
+    .filter((ligne) => ligne.statut !== 'ANNULEE')
+    .reduce((somme, ligne) => somme + ligne.quantite, 0)
+  const aEnvoyer = note.data.lignes
+    .filter((ligne) => ligne.statut === 'BROUILLON')
+    .reduce((somme, ligne) => somme + ligne.quantite, 0)
   const aEnvoyerParProduit: Partial<Record<string, number>> = {}
   for (const ligne of note.data.lignes) {
     if (ligne.statut === 'BROUILLON') {
@@ -353,8 +362,12 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
-        {/* Sur téléphone, la note prend la place : la rangée de catégories garde au moins sa hauteur. */}
-        <div className="flex min-h-14 min-w-0 flex-1 flex-col gap-3 lg:min-h-0">
+        <div
+          className={clsx(
+            'min-h-0 min-w-0 flex-1 flex-col gap-3 lg:flex',
+            noteOuverte ? 'hidden' : 'flex',
+          )}
+        >
           {refus !== null && <Alerte ton="danger">{refus}</Alerte>}
           {confirmation !== null && <Alerte ton="succes">{confirmation}</Alerte>}
           {erreur !== null && <AlerteErreur erreur={erreur} />}
@@ -380,62 +393,88 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
             />
           )}
         </div>
-        <PanneauNote
-          note={note.data}
+        <BarreNoteTelephone
+          visible={!noteOuverte}
+          articles={articles}
+          aEnvoyer={aEnvoyer}
+          total={note.data.total}
           devise={devise}
-          fuseauHoraire={fuseauHoraire}
-          modifiable={modifiable}
-          peutEncaisser={peutEncaisser}
-          peutServir={peutCommander && note.data.statut !== 'ANNULEE'}
-          surServir={(ligne) =>
-            void agir(() =>
-              appelerCaisse<CommandeDetail>(
-                `/caisse/commandes/${commandeId}/lignes/${ligne.id}/service`,
-                { methode: 'POST' },
-              ),
-            )
-          }
-          surServirTout={() =>
-            void agir(() =>
-              appelerCaisse<CommandeDetail>(`/caisse/commandes/${commandeId}/service`, {
-                methode: 'POST',
-              }),
-            )
-          }
-          surEncaisser={() =>
-            void naviguer({ to: '/caisse/notes/$commandeId/encaisser', params: { commandeId } })
-          }
-          ruptures={rupturesDe(carte.data, note.data.lignes)}
-          envoiEnCours={enCours && aAnnuler === null && aValider === null}
-          actions={
-            modifiable ? (
-              <ActionsNote
-                note={note.data}
-                devise={devise}
-                fuseauHoraire={fuseauHoraire}
-                peutTransferer={session?.permissions.includes('TABLE_TRANSFERER') ?? false}
-                plafond={droitsDe(session).plafond}
-                moi={{ id: session?.utilisateurId ?? '', nom: session?.nomCourt ?? '' }}
-                surNote={retenir}
-                surErreur={(echec) => {
-                  effacerMessages()
-                  setErreur(echec)
-                }}
-              />
-            ) : null
-          }
-          surRetirerAddition={() =>
-            void agir(() =>
-              appelerCaisse<CommandeDetail>(`/caisse/commandes/${commandeId}/addition`, {
-                methode: 'DELETE',
-              }),
-            )
-          }
-          surRevenir={() => void revenirAuPlan()}
-          surEnvoyer={(nombre) => void envoyer(nombre)}
-          surModifier={(ligne, demande) => void modifier(ligne, demande)}
-          surOuvrirLigne={setLigneActions}
+          surOuvrir={() => {
+            setNoteOuverte(true)
+          }}
         />
+        <div
+          className={clsx(
+            'min-h-0 flex-1 flex-col gap-2 lg:flex lg:flex-none',
+            noteOuverte ? 'flex' : 'hidden',
+          )}
+        >
+          <Bouton
+            icone={ArrowLeft}
+            className="self-start lg:hidden"
+            onClick={() => {
+              setNoteOuverte(false)
+            }}
+          >
+            {t('caisse.telephone.continuer')}
+          </Bouton>
+          <PanneauNote
+            note={note.data}
+            devise={devise}
+            fuseauHoraire={fuseauHoraire}
+            modifiable={modifiable}
+            peutEncaisser={peutEncaisser}
+            peutServir={peutCommander && note.data.statut !== 'ANNULEE'}
+            surServir={(ligne) =>
+              void agir(() =>
+                appelerCaisse<CommandeDetail>(
+                  `/caisse/commandes/${commandeId}/lignes/${ligne.id}/service`,
+                  { methode: 'POST' },
+                ),
+              )
+            }
+            surServirTout={() =>
+              void agir(() =>
+                appelerCaisse<CommandeDetail>(`/caisse/commandes/${commandeId}/service`, {
+                  methode: 'POST',
+                }),
+              )
+            }
+            surEncaisser={() =>
+              void naviguer({ to: '/caisse/notes/$commandeId/encaisser', params: { commandeId } })
+            }
+            ruptures={rupturesDe(carte.data, note.data.lignes)}
+            envoiEnCours={enCours && aAnnuler === null && aValider === null}
+            actions={
+              modifiable ? (
+                <ActionsNote
+                  note={note.data}
+                  devise={devise}
+                  fuseauHoraire={fuseauHoraire}
+                  peutTransferer={session?.permissions.includes('TABLE_TRANSFERER') ?? false}
+                  plafond={droitsDe(session).plafond}
+                  moi={{ id: session?.utilisateurId ?? '', nom: session?.nomCourt ?? '' }}
+                  surNote={retenir}
+                  surErreur={(echec) => {
+                    effacerMessages()
+                    setErreur(echec)
+                  }}
+                />
+              ) : null
+            }
+            surRetirerAddition={() =>
+              void agir(() =>
+                appelerCaisse<CommandeDetail>(`/caisse/commandes/${commandeId}/addition`, {
+                  methode: 'DELETE',
+                }),
+              )
+            }
+            surRevenir={() => void revenirAuPlan()}
+            surEnvoyer={(nombre) => void envoyer(nombre)}
+            surModifier={(ligne, demande) => void modifier(ligne, demande)}
+            surOuvrirLigne={setLigneActions}
+          />
+        </div>
         {ligneActions !== null && (
           <DialogueActionsLigne
             ligne={ligneActions}
@@ -602,4 +641,52 @@ function messageRefusEnvoi(
     })
   }
   return t('caisse.note.refusEnvoiSansDetail', { produit })
+}
+
+/**
+ * Sur téléphone, la carte occupe l'écran ; cette barre, collée en bas, rappelle le total et ouvre la note. Une seule
+ * action principale : voir la note, où l'on envoie et encaisse.
+ */
+function BarreNoteTelephone({
+  visible,
+  articles,
+  aEnvoyer,
+  total,
+  devise,
+  surOuvrir,
+}: Readonly<{
+  visible: boolean
+  articles: number
+  aEnvoyer: number
+  total: number
+  devise: Devise
+  surOuvrir: () => void
+}>) {
+  const { t } = useTranslation()
+  return (
+    <div
+      className={clsx(
+        'sticky bottom-0 z-10 -mx-4 -mb-4 flex-col gap-2 border-t border-trait bg-surface p-3 lg:hidden',
+        visible ? 'flex' : 'hidden',
+      )}
+    >
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-libelle text-attenue">
+          {aEnvoyer > 0
+            ? t('caisse.telephone.resumeAEnvoyer', { count: articles, aEnvoyer })
+            : t('caisse.telephone.resume', { count: articles })}
+        </span>
+        <span className="chiffres text-montant-total text-encre">
+          {formaterMontant({ unitesMineures: total, devise }, { forme: 'courte' })}
+        </span>
+      </div>
+      <Bouton
+        variante="principal"
+        className="min-h-bouton-encaisser text-titre-carte"
+        onClick={surOuvrir}
+      >
+        {aEnvoyer > 0 ? t('caisse.telephone.voirEtEnvoyer') : t('caisse.telephone.voir')}
+      </Bouton>
+    </div>
+  )
 }

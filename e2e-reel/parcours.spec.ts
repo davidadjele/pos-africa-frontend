@@ -844,9 +844,13 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await expect(note).toContainText('Réclamation, validé par Afi M.')
   await expect(note).toContainText('4 000 FCFA')
   await capturer(tablette, '38-note-remisee')
+  // Sur téléphone, la carte occupe l'écran ; la barre du bas rappelle le total et ouvre la note.
   await tablette.setViewportSize({ width: 390, height: 844 })
-  await note.scrollIntoViewIfNeeded()
+  await capturer(tablette, '38-commande-telephone')
+  await tablette.getByRole('button', { name: 'Voir la note' }).click()
+  await expect(note).toBeVisible()
   await capturer(tablette, '38-note-remisee-telephone')
+  await tablette.getByRole('button', { name: 'Continuer la commande' }).click()
   await tablette.setViewportSize({ width: 1280, height: 800 })
   await note.getByRole('button', { name: 'Plan de salle' }).click()
 

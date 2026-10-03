@@ -494,6 +494,14 @@ describe('EcranNote', () => {
     expect(t7).toHaveAttribute('href', '/caisse/notes/c0000000-0000-4000-8000-000000000041')
   })
 
+  it('sur téléphone, rappelle le total en bas et ouvre la note en plein écran', async () => {
+    noteServie()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Voir la note et envoyer' }))
+    expect(screen.getByText(/articles, 2 à envoyer/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Continuer la commande' })).toBeInTheDocument()
+  })
+
   it('dit quand la carte de l’établissement est vide', async () => {
     noteServie(NOTE_T4, [])
 

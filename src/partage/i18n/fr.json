@@ -403,6 +403,15 @@
       "aServir": "À servir",
       "aRemettre": "À remettre",
       "addition": "Addition demandée"
+    },
+    "telephone": {
+      "continuer": "Continuer la commande",
+      "resume_one": "{{count}} article",
+      "resume_other": "{{count}} articles",
+      "resumeAEnvoyer_one": "{{count}} article, {{aEnvoyer}} à envoyer",
+      "resumeAEnvoyer_other": "{{count}} articles, {{aEnvoyer}} à envoyer",
+      "voir": "Voir la note",
+      "voirEtEnvoyer": "Voir la note et envoyer"
     }
   },
   "gestion": {
