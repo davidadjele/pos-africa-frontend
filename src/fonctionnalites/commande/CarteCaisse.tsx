@@ -149,14 +149,17 @@ function OngletCategorie({
       aria-pressed={actif}
       onClick={surChoisir}
       className={clsx(
-        'flex min-h-18 min-w-36 shrink-0 flex-col justify-between gap-1 rounded-moyen border-2 px-3.5 py-2.5 text-left',
+        'flex min-h-cible-min shrink-0 flex-col justify-center gap-1 rounded-moyen border-2 px-3.5 text-left md:min-h-18 md:min-w-28 md:justify-between md:py-2',
         teinte === undefined ? 'bg-surface text-encre' : [teinte.fond, teinte.texte],
         actif ? 'border-accent' : 'border-transparent',
         teinte === undefined && !actif && 'border-trait',
       )}
     >
-      <span className="text-titre-carte leading-tight">{libelle}</span>
-      <span className="text-legende opacity-80">
+      <span className="whitespace-nowrap text-corps-fort leading-tight md:text-titre-carte">
+        {libelle}
+      </span>
+      {/* Sur téléphone, la place manque : le nom seul. */}
+      <span className="hidden text-legende opacity-80 md:block">
         {t('caisse.carte.nombreProduits', { count: nombre })}
       </span>
     </button>
@@ -211,7 +214,7 @@ function Tuile({
           surChoisir(ligne)
         }}
         className={clsx(
-          'flex min-h-33 w-full flex-col gap-2 rounded-moyen border p-3.5 text-left',
+          'flex min-h-38 w-full flex-col gap-2 rounded-moyen border p-3.5 text-left',
           bloquee ? 'border-trait bg-fond opacity-60' : 'bg-surface hover:bg-fond',
           surLaNote ? 'border-2 border-accent' : !bloquee && 'border-trait',
         )}
@@ -232,7 +235,7 @@ function Tuile({
         <span className="chiffres text-montant-tuile text-encre">
           {formaterMontant({ unitesMineures: ligne.prix, devise }, { forme: 'nombre' })}
         </span>
-        <span className={clsx('mt-auto flex min-h-6 justify-end', surLaNote && 'pl-13')}>
+        <span className={clsx('mt-auto flex min-h-11 items-end justify-end', surLaNote && 'pl-13')}>
           {badge}
         </span>
       </button>

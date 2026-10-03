@@ -353,7 +353,8 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+        {/* Sur téléphone, la note prend la place : la rangée de catégories garde au moins sa hauteur. */}
+        <div className="flex min-h-14 min-w-0 flex-1 flex-col gap-3 lg:min-h-0">
           {refus !== null && <Alerte ton="danger">{refus}</Alerte>}
           {confirmation !== null && <Alerte ton="succes">{confirmation}</Alerte>}
           {erreur !== null && <AlerteErreur erreur={erreur} />}
