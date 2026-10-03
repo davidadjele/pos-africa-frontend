@@ -658,6 +658,7 @@
         "pays": "Country",
         "etablissements": "Venues",
         "statut": "Status",
+        "derniereVente": "Last sale",
         "actions": "Actions"
       },
       "creeeLe": "Created on {{date}}",
@@ -666,9 +667,7 @@
         "SUSPENDUE": "Suspended"
       },
       "suspendre": "Suspend",
-      "suspendreNomme": "Suspend {{nom}}",
       "reactiver": "Reactivate",
-      "reactiverNomme": "Reactivate {{nom}}",
       "chargement": "Loading businesses…",
       "vide": {
         "titre": "No business",
@@ -689,11 +688,94 @@
         "annuler": "Leave suspended",
         "confirmer": "Reactivate the business",
         "faite": "{{nom}} is active again."
+      },
+      "aucuneVente": "No sale yet",
+      "signaux": {
+        "SANS_VENTE": "No sale for 7 days",
+        "NOUVELLE": "New"
+      },
+      "ouvrir": "Open",
+      "ouvrirNomme": "Open {{nom}}",
+      "rechercher": "Search",
+      "rechercherExemple": "Business or owner name, phone, email",
+      "aucunResultat": {
+        "titre": "No business found",
+        "phrase": "Nothing matches “{{recherche}}”. Check the spelling, or search for the owner’s phone."
       }
     },
     "nouvelle": {
       "titre": "New business",
       "retour": "Back to businesses"
+    },
+    "fiche": {
+      "chargement": "Loading the business…",
+      "clienteDepuis": "Customer since {{date}}.",
+      "modifier": "Edit",
+      "conflit": "This business was changed in the meantime: the page now shows its latest details. Make your changes again.",
+      "jamais": "Never",
+      "nonRenseigne": "Not set",
+      "identite": "Identity",
+      "pays": "Country",
+      "devise": "Currency",
+      "numeroFiscal": "Tax number",
+      "tvaDepart": "Initial VAT",
+      "proprietaire_one": "Owner",
+      "proprietaire_other": "Owners",
+      "nom": "Name",
+      "telephone": "Phone",
+      "email": "Email",
+      "derniereConnexion": "Last sign-in",
+      "utilisation": {
+        "titre": "Usage",
+        "utilisateurs": "Active users",
+        "avecBackOffice_one": "{{count}} with back-office access",
+        "avecBackOffice_other": "{{count}} with back-office access",
+        "tablettes": "Tablets",
+        "revoquees_one": "{{count}} revoked",
+        "revoquees_other": "{{count}} revoked",
+        "notes": "Bills paid, 7 days",
+        "semainePrecedente": "vs {{nombre}} the week before",
+        "derniereConnexion": "Last back-office sign-in"
+      },
+      "etablissements": {
+        "titre": "Locations",
+        "tableau": "Locations of the business",
+        "code": "Code",
+        "nom": "Name",
+        "ville": "City",
+        "tablettes": "Tablets",
+        "derniereVente": "Last sale",
+        "statut": "Status",
+        "actif": "Active",
+        "inactif": "Deactivated"
+      },
+      "modification": {
+        "titre": "Edit {{nom}}",
+        "phrase": "The change is recorded in the platform activity.",
+        "nom": "Business name",
+        "nomManquant": "Enter the business name.",
+        "numeroFiscal": "Tax number",
+        "numeroFiscalAide": "Printed on receipts and Z reports.",
+        "pays": "Country",
+        "devise": "Currency",
+        "figes": "Country and currency are locked since the first sale: amounts already paid and phone numbers depend on them.",
+        "faite": "Changes saved."
+      },
+      "suspension": {
+        "titre": "Suspension",
+        "raison": "Reason",
+        "precision": "Details",
+        "precisionExemple": "E.g. closed for works until 15 November",
+        "precisionAide": "Shown on the page and in the platform activity.",
+        "precisionManquante": "Give the reason.",
+        "depuis": "Suspended on {{date}}.",
+        "raisons": {
+          "DEMANDE_CLIENT": "Customer request",
+          "IMPAYE": "Unpaid",
+          "ABUS": "Abuse or fraud",
+          "AUTRE": "Other"
+        }
+      }
     }
   },
   "formulaireEntreprise": {

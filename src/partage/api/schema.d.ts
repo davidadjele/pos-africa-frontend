@@ -1225,7 +1225,7 @@ export interface paths {
          * Modifier une catégorie
          * @description Erreurs : RESSOURCE_INTROUVABLE, CONFLIT_MODIFICATION, REQUETE_INVALIDE.
          */
-        put: operations["modifier_6"];
+        put: operations["modifier_7"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1283,7 +1283,7 @@ export interface paths {
         /** L'identité de l'entreprise */
         get: operations["identite"];
         /** Modifier le numéro fiscal, le téléphone, l'e-mail ou l'adresse de l'entreprise */
-        put: operations["modifier_5"];
+        put: operations["modifier_6"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1445,12 +1445,12 @@ export interface paths {
             cookie?: never;
         };
         /** Un client et les derniers mouvements de son ardoise */
-        get: operations["fiche"];
+        get: operations["fiche_1"];
         /**
          * Modifier un client
          * @description Un changement de plafond est tracé comme action critique.
          */
-        put: operations["modifier_4"];
+        put: operations["modifier_5"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1670,7 +1670,7 @@ export interface paths {
          * Modifier un établissement
          * @description Permission ETABLISSEMENT_GERER. Erreurs : RESSOURCE_INTROUVABLE (404), CONFLIT_MODIFICATION (409, version dépassée), CODE_ETABLISSEMENT_DEJA_UTILISE (409).
          */
-        put: operations["modifier_3"];
+        put: operations["modifier_4"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1786,7 +1786,7 @@ export interface paths {
          * Modifier un employé et remplacer ses rôles
          * @description Erreurs : CONFLIT_MODIFICATION (version dépassée), ACCES_REFUSE (hors périmètre, soi-même, propriétaire), REQUETE_INVALIDE.
          */
-        put: operations["modifier_2"];
+        put: operations["modifier_3"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1858,7 +1858,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Lister les entreprises, les plus récentes d'abord */
+        /**
+         * Lister les entreprises, les plus récentes d'abord
+         * @description recherche : dans le nom de l'entreprise, ou le nom, le téléphone ou l'e-mail de son propriétaire. La dernière vente est une date : la plateforme ne voit aucun montant.
+         */
         get: operations["lister_2"];
         put?: never;
         /**
@@ -1866,6 +1869,30 @@ export interface paths {
          * @description Si le propriétaire a déjà un compte (même téléphone ou e-mail), il est rattaché et garde son mot de passe ; sinon un compte est créé avec un mot de passe temporaire, renvoyé une seule fois (motDePasseTemporaire), que le propriétaire remplacera à sa première connexion.
          */
         post: operations["creer_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plateforme/entreprises/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * La fiche d'une entreprise
+         * @description Identité, propriétaires, établissements et compteurs d'utilisation : aucun montant de vente. Erreur : RESSOURCE_INTROUVABLE (404).
+         */
+        get: operations["fiche"];
+        /**
+         * Modifier le nom, le numéro fiscal, le pays ou la devise
+         * @description Pays et devise refusés (REQUETE_INVALIDE sur le champ) s'ils changent après la première vente. Erreur : CONFLIT_MODIFICATION (409, version dépassée).
+         */
+        put: operations["modifier_2"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1899,8 +1926,8 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Suspendre une entreprise
-         * @description Plus aucune connexion ; les jetons en cours tombent.
+         * Suspendre une entreprise, avec sa raison
+         * @description Plus aucune connexion ; les jetons en cours tombent. La raison AUTRE exige une précision.
          */
         post: operations["suspendre"];
         delete?: never;
@@ -2861,6 +2888,18 @@ export interface components {
             version: number;
             ville?: string;
         };
+        DemandeModificationPlateforme: {
+            /** @example XOF */
+            devise: string;
+            /** @example Maquis Chez Tanti */
+            nom: string;
+            /** @example 1000123456 */
+            numeroFiscal?: string;
+            /** @example TG */
+            pays: string;
+            /** Format: int64 */
+            version: number;
+        };
         DemandeMouvement: {
             /** Format: int64 */
             montant: number;
@@ -3057,6 +3096,12 @@ export interface components {
         DemandeSeuilStock: {
             /** Format: int32 */
             seuil: number;
+        };
+        DemandeSuspension: {
+            /** @example Relancé deux fois en septembre */
+            precision?: string;
+            /** @enum {string} */
+            raison: "DEMANDE_CLIENT" | "IMPAYE" | "ABUS" | "AUTRE";
         };
         DemandeTable: {
             /** @example T4 */
@@ -3255,6 +3300,9 @@ export interface components {
         EntreprisePlateforme: {
             /** Format: date-time */
             creeLe: string;
+            /** Format: date-time */
+            derniereVenteLe?: string;
+            devise: string;
             /** Format: uuid */
             id: string;
             nom: string;
@@ -3313,6 +3361,18 @@ export interface components {
             /** Format: date-time */
             plusAncienneLe?: string;
             plusAncienneNote?: string;
+        };
+        EtablissementPlateforme: {
+            actif: boolean;
+            code: string;
+            /** Format: date-time */
+            derniereVenteLe?: string;
+            /** Format: uuid */
+            id: string;
+            nom: string;
+            /** Format: int64 */
+            tablettes: number;
+            ville?: string;
         };
         EtablissementRecu: {
             adresse?: string;
@@ -3417,6 +3477,27 @@ export interface components {
         FicheClient: {
             client: components["schemas"]["ClientArdoise"];
             ecritures: components["schemas"]["EcritureArdoise"][];
+        };
+        FicheEntreprisePlateforme: {
+            aDejaVendu: boolean;
+            /** Format: date-time */
+            creeLe: string;
+            devise: string;
+            etablissements: components["schemas"]["EtablissementPlateforme"][];
+            /** Format: uuid */
+            id: string;
+            nom: string;
+            numeroFiscal?: string;
+            pays: string;
+            proprietaires: components["schemas"]["ProprietairePlateforme"][];
+            /** @enum {string} */
+            statut: "ACTIVE" | "SUSPENDUE";
+            suspension?: components["schemas"]["SuspensionPlateforme"];
+            /** Format: int32 */
+            tvaDepart?: number;
+            utilisation: components["schemas"]["UtilisationPlateforme"];
+            /** Format: int64 */
+            version: number;
         };
         HistoriqueCaisses: {
             caisses: components["schemas"]["CaisseResume"][];
@@ -3821,6 +3902,14 @@ export interface components {
             /** Format: uuid */
             utilisateurId: string;
         };
+        ProprietairePlateforme: {
+            /** Format: date-time */
+            derniereConnexionLe?: string;
+            email?: string;
+            nom: string;
+            prenom: string;
+            telephone?: string;
+        };
         RapportVentes: {
             annulations: components["schemas"]["AnnulationsPeriode"];
             ardoise: components["schemas"]["ArdoisePeriode"];
@@ -4106,6 +4195,13 @@ export interface components {
             /** @enum {string} */
             politique: "SOUPLE" | "AVERTISSEMENT" | "STRICT";
         };
+        SuspensionPlateforme: {
+            /** Format: date-time */
+            le: string;
+            precision?: string;
+            /** @enum {string} */
+            raison: "DEMANDE_CLIENT" | "IMPAYE" | "ABUS" | "AUTRE";
+        };
         SyntheseCaisses: {
             /** Format: int32 */
             avecEcart: number;
@@ -4186,6 +4282,25 @@ export interface components {
             tauxPointsDeBase: number;
             /** Format: int64 */
             version: number;
+        };
+        UtilisationPlateforme: {
+            /** Format: int64 */
+            avecBackOffice: number;
+            /** Format: date-time */
+            derniereConnexionLe?: string;
+            derniereConnexionPar?: string;
+            /** Format: date-time */
+            derniereVenteLe?: string;
+            /** Format: int64 */
+            notesSemainePrecedente: number;
+            /** Format: int64 */
+            notesSeptJours: number;
+            /** Format: int64 */
+            tablettes: number;
+            /** Format: int64 */
+            tablettesRevoquees: number;
+            /** Format: int64 */
+            utilisateursActifs: number;
         };
         ValidationAccordee: {
             /** Format: date-time */
@@ -6505,7 +6620,7 @@ export interface operations {
             };
         };
     };
-    modifier_6: {
+    modifier_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -6627,7 +6742,7 @@ export interface operations {
             };
         };
     };
-    modifier_5: {
+    modifier_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -6976,7 +7091,7 @@ export interface operations {
             };
         };
     };
-    fiche: {
+    fiche_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -7008,7 +7123,7 @@ export interface operations {
             };
         };
     };
-    modifier_4: {
+    modifier_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -7446,7 +7561,7 @@ export interface operations {
             };
         };
     };
-    modifier_3: {
+    modifier_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -7705,7 +7820,7 @@ export interface operations {
             };
         };
     };
-    modifier_2: {
+    modifier_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -7832,6 +7947,7 @@ export interface operations {
     lister_2: {
         parameters: {
             query?: {
+                recherche?: string;
                 page?: number;
                 taille?: number;
             };
@@ -7894,6 +8010,72 @@ export interface operations {
             };
         };
     };
+    fiche: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FicheEntreprisePlateforme"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    modifier_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeModificationPlateforme"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FicheEntreprisePlateforme"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
     reactiver_2: {
         parameters: {
             query?: never;
@@ -7932,7 +8114,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeSuspension"];
+            };
+        };
         responses: {
             /** @description No Content */
             204: {

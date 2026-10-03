@@ -1344,3 +1344,59 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await page.setViewportSize({ width: 390, height: 844 })
   await capturer(page, '83-tableau-de-bord-telephone')
 })
+
+test('L’équipe plateforme ouvre la fiche de Maquis Chez Tanti, la modifie et la suspend', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await seConnecter(page, ADMIN.identifiant, ADMIN.motDePasse)
+  await expect(page).toHaveURL(/\/plateforme$/)
+
+  // La recherche porte aussi sur le propriétaire ; la liste ne montre qu'une date de vente, aucun montant.
+  await page.getByRole('searchbox', { name: 'Rechercher' }).fill('Tanti')
+  await page.getByRole('searchbox', { name: 'Rechercher' }).press('Enter')
+  const ligne = page.getByRole('row', { name: /Maquis Chez Tanti/ })
+  await expect(ligne).toContainText('Togo, XOF')
+  await expect(ligne).not.toContainText('Aucune vente')
+  await capturer(page, '90-plateforme-liste')
+  await ligne.getByRole('link', { name: 'Ouvrir la fiche de Maquis Chez Tanti' }).click()
+
+  await expect(page.getByRole('heading', { level: 1, name: 'Maquis Chez Tanti' })).toBeVisible()
+  await expect(page.getByRole('list', { name: 'Utilisation' })).toContainText(
+    'Notes encaissées, 7 jours',
+  )
+  await expect(page.getByRole('region', { name: 'Propriétaire' })).toContainText('Tanti')
+  await expect(page.getByRole('table', { name: 'Établissements de l’entreprise' })).toContainText(
+    'Bè Kpota',
+  )
+  await capturer(page, '91-plateforme-fiche')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await capturer(page, '91-plateforme-fiche-telephone')
+  await page.setViewportSize({ width: 1280, height: 800 })
+
+  // Pays et devise sont figés : Maquis Chez Tanti a déjà vendu.
+  await page.getByRole('button', { name: 'Modifier' }).click()
+  const modification = page.getByRole('dialog', { name: 'Modifier Maquis Chez Tanti' })
+  await expect(modification.getByLabel('Devise')).toBeDisabled()
+  await modification.getByLabel(/^Numéro fiscal/).fill('1000123456')
+  await capturer(page, '92-plateforme-modifier')
+  await modification.getByRole('button', { name: 'Enregistrer' }).click()
+  await expect(page.getByRole('status')).toContainText('Les modifications sont enregistrées.')
+  await expect(page.getByRole('region', { name: 'Identité' })).toContainText('1000123456')
+
+  await page.getByRole('button', { name: 'Suspendre' }).click()
+  const suspension = page.getByRole('dialog', { name: 'Suspendre Maquis Chez Tanti ?' })
+  await suspension.getByLabel(/^Raison/).selectOption({ label: 'Demande du client' })
+  await suspension.getByLabel(/^Précision/).fill('Fermeture pour travaux')
+  await capturer(page, '93-plateforme-suspendre')
+  await suspension.getByRole('button', { name: 'Suspendre l’entreprise' }).click()
+  await expect(page.getByRole('region', { name: 'Suspension' })).toContainText(
+    'Demande du client : Fermeture pour travaux',
+  )
+  await capturer(page, '94-plateforme-suspendue')
+
+  // Réactivée aussitôt : le parcours peut être rejoué sur la même base.
+  await page.getByRole('button', { name: 'Réactiver' }).click()
+  await page.getByRole('button', { name: 'Réactiver l’entreprise' }).click()
+  await expect(page.getByRole('status')).toContainText('Maquis Chez Tanti est de nouveau active.')
+})

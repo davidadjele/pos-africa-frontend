@@ -658,6 +658,7 @@
         "pays": "Pays",
         "etablissements": "Établissements",
         "statut": "Statut",
+        "derniereVente": "Dernière vente",
         "actions": "Actions"
       },
       "creeeLe": "Créée le {{date}}",
@@ -666,9 +667,7 @@
         "SUSPENDUE": "Suspendue"
       },
       "suspendre": "Suspendre",
-      "suspendreNomme": "Suspendre {{nom}}",
       "reactiver": "Réactiver",
-      "reactiverNomme": "Réactiver {{nom}}",
       "chargement": "Chargement des entreprises…",
       "vide": {
         "titre": "Aucune entreprise",
@@ -689,11 +688,94 @@
         "annuler": "Laisser suspendue",
         "confirmer": "Réactiver l’entreprise",
         "faite": "{{nom}} est de nouveau active."
+      },
+      "aucuneVente": "Aucune vente",
+      "signaux": {
+        "SANS_VENTE": "Sans vente depuis 7 jours",
+        "NOUVELLE": "Nouvelle"
+      },
+      "ouvrir": "Ouvrir la fiche",
+      "ouvrirNomme": "Ouvrir la fiche de {{nom}}",
+      "rechercher": "Rechercher",
+      "rechercherExemple": "Nom de l’entreprise ou du propriétaire, téléphone, e-mail",
+      "aucunResultat": {
+        "titre": "Aucune entreprise trouvée",
+        "phrase": "Rien ne correspond à « {{recherche}} ». Vérifiez l’orthographe, ou cherchez le téléphone du propriétaire."
       }
     },
     "nouvelle": {
       "titre": "Nouvelle entreprise",
       "retour": "Retour aux entreprises"
+    },
+    "fiche": {
+      "chargement": "Chargement de la fiche…",
+      "clienteDepuis": "Cliente depuis le {{date}}.",
+      "modifier": "Modifier",
+      "conflit": "Cette entreprise a été modifiée entre-temps : la fiche montre maintenant ses informations à jour. Refaites vos changements.",
+      "jamais": "Jamais",
+      "nonRenseigne": "Non renseigné",
+      "identite": "Identité",
+      "pays": "Pays",
+      "devise": "Devise",
+      "numeroFiscal": "Numéro fiscal (NIF)",
+      "tvaDepart": "TVA de départ",
+      "proprietaire_one": "Propriétaire",
+      "proprietaire_other": "Propriétaires",
+      "nom": "Nom",
+      "telephone": "Téléphone",
+      "email": "E-mail",
+      "derniereConnexion": "Dernière connexion",
+      "utilisation": {
+        "titre": "Utilisation",
+        "utilisateurs": "Utilisateurs actifs",
+        "avecBackOffice_one": "dont {{count}} avec accès au back-office",
+        "avecBackOffice_other": "dont {{count}} avec accès au back-office",
+        "tablettes": "Tablettes",
+        "revoquees_one": "dont {{count}} révoquée",
+        "revoquees_other": "dont {{count}} révoquées",
+        "notes": "Notes encaissées, 7 jours",
+        "semainePrecedente": "contre {{nombre}} la semaine d’avant",
+        "derniereConnexion": "Dernière connexion au back-office"
+      },
+      "etablissements": {
+        "titre": "Établissements",
+        "tableau": "Établissements de l’entreprise",
+        "code": "Code",
+        "nom": "Nom",
+        "ville": "Ville",
+        "tablettes": "Tablettes",
+        "derniereVente": "Dernière vente",
+        "statut": "Statut",
+        "actif": "Actif",
+        "inactif": "Désactivé"
+      },
+      "modification": {
+        "titre": "Modifier {{nom}}",
+        "phrase": "La modification est tracée dans l’activité de la plateforme.",
+        "nom": "Nom de l’entreprise",
+        "nomManquant": "Indiquez le nom de l’entreprise.",
+        "numeroFiscal": "Numéro fiscal (NIF)",
+        "numeroFiscalAide": "Imprimé sur les reçus et les rapports Z.",
+        "pays": "Pays",
+        "devise": "Devise",
+        "figes": "Pays et devise ne changent plus depuis la première vente : les montants déjà encaissés et les numéros de téléphone en dépendent.",
+        "faite": "Les modifications sont enregistrées."
+      },
+      "suspension": {
+        "titre": "Suspension",
+        "raison": "Raison",
+        "precision": "Précision",
+        "precisionExemple": "Ex. : fermeture pour travaux jusqu’au 15 novembre",
+        "precisionAide": "Visible sur la fiche et dans l’activité de la plateforme.",
+        "precisionManquante": "Précisez la raison.",
+        "depuis": "Suspendue le {{date}}.",
+        "raisons": {
+          "DEMANDE_CLIENT": "Demande du client",
+          "IMPAYE": "Impayé",
+          "ABUS": "Abus ou fraude",
+          "AUTRE": "Autre"
+        }
+      }
     }
   },
   "formulaireEntreprise": {

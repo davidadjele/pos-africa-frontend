@@ -31,6 +31,7 @@ import { TableauDeBord } from '../fonctionnalites/gestion/TableauDeBord'
 import { PageInscription } from '../fonctionnalites/inscription/PageInscription'
 import { PagePersonnel } from '../fonctionnalites/personnel/PagePersonnel'
 import { PageEntreprises } from '../fonctionnalites/plateforme/PageEntreprises'
+import { PageFicheEntreprise } from '../fonctionnalites/plateforme/PageFicheEntreprise'
 import { PageNouvelleEntreprise } from '../fonctionnalites/plateforme/PageNouvelleEntreprise'
 import { PageRecu } from '../fonctionnalites/recu/PageRecu'
 import { PageCaisses } from '../fonctionnalites/rapports/PageCaisses'
@@ -408,6 +409,15 @@ const nouvelleEntreprise = createRoute({
   component: PageNouvelleEntreprise,
 })
 
+const ficheEntreprise = createRoute({
+  getParentRoute: () => plateforme,
+  path: '/entreprises/$entrepriseId',
+  component: function RouteFicheEntreprise() {
+    const { entrepriseId } = ficheEntreprise.useParams()
+    return <PageFicheEntreprise key={entrepriseId} entrepriseId={entrepriseId} />
+  },
+})
+
 const recu = createRoute({
   getParentRoute: () => racine,
   path: '/r/$jeton',
@@ -447,7 +457,7 @@ const arbre = racine.addChildren([
     entreprise,
     ficheClient,
   ]),
-  plateforme.addChildren([plateformeAccueil, nouvelleEntreprise]),
+  plateforme.addChildren([plateformeAccueil, nouvelleEntreprise, ficheEntreprise]),
   recu,
 ])
 
