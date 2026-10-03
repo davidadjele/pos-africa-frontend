@@ -1,11 +1,13 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { clsx } from 'clsx'
-import { ArrowLeft, RotateCw } from 'lucide-react'
+import { ArrowLeft, Printer, RotateCw } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { appelerCaisse } from '../../partage/api/appelerCaisse'
+import { ErreurApi } from '../../partage/api/ErreurApi'
 import type {
+  AvoirCaisse,
   DemandeRemboursement,
   EtatRemboursement,
   ModePaiement,
@@ -30,6 +32,8 @@ import { ChoixRetourStock } from '../commande/DialoguesLigne'
 import { requeteStockCaisse, stockDuProduit } from '../commande/requetes'
 import { ChoixArticles, ChoixOperateur } from './ChoixArticles'
 import { ORDRE_REMBOURSEMENT, repartirRemboursement } from './repartition'
+import { formaterJournee } from '../rapports/periodes'
+import { TicketAvoir } from './TicketAvoir'
 import { TicketRecu } from './TicketRecu'
 import { useImpression } from '../../partage/impression/useImpression'
 import { requeteNotesEncaissees, requeteOuvertureCaisse, requeteRemboursement } from './requetes'
@@ -97,6 +101,7 @@ export function NotesEncaissees({
       <RembourserNote
         commandeId={aRembourser}
         devise={devise}
+        fuseauHoraire={fuseauHoraire}
         surFermer={() => {
           setARembourser(null)
         }}
@@ -126,6 +131,11 @@ export function NotesEncaissees({
             {t('remboursement.nombre', { count: notes.data.length })}
           </span>
         </div>
+        <AutreJour
+          surTrouvee={(note) => {
+            setChoisie(note.id)
+          }}
+        />
         {notes.data.length === 0 ? (
           <div className="p-6">
             <EtatVide
@@ -201,8 +211,9 @@ export function NotesEncaissees({
 function RembourserNote({
   commandeId,
   devise,
+  fuseauHoraire,
   surFermer,
-}: Readonly<{ commandeId: string; devise: Devise; surFermer: () => void }>) {
+}: Readonly<{ commandeId: string; devise: Devise; fuseauHoraire: string; surFermer: () => void }>) {
   const { t } = useTranslation()
   const etat = useQuery(requeteRemboursement(commandeId))
   const { data: caisse } = useQuery(requeteOuvertureCaisse)
@@ -213,10 +224,107 @@ function RembourserNote({
       etat={etat.data}
       titre={titreDe(etat.data, t)}
       devise={devise}
+      fuseauHoraire={fuseauHoraire}
       operateurs={caisse?.operateurs ?? []}
       surFermer={surFermer}
     />
   )
+}
+
+/** Une note d'un autre jour, retrouvée par le numéro de son reçu ou le lien de son QR code. */
+function AutreJour({ surTrouvee }: Readonly<{ surTrouvee: (note: NoteEncaissee) => void }>) {
+  const { t } = useTranslation()
+  const [saisie, setSaisie] = useState('')
+  const [enCours, setEnCours] = useState(false)
+  const [erreur, setErreur] = useState<unknown>(null)
+  const introuvable = erreur instanceof ErreurApi && erreur.statut === 404
+
+  async function retrouver() {
+    setEnCours(true)
+    setErreur(null)
+    try {
+      surTrouvee(
+        await appelerCaisse<NoteEncaissee>(
+          `/caisse/notes-encaissees/recherche?recu=${encodeURIComponent(saisie.trim())}`,
+        ),
+      )
+    } catch (echec) {
+      setErreur(echec)
+    } finally {
+      setEnCours(false)
+    }
+  }
+
+  return (
+    <form
+      aria-label={t('remboursement.autreJour.titre')}
+      onSubmit={(evenement) => {
+        evenement.preventDefault()
+        void retrouver()
+      }}
+      className="flex flex-col gap-2 border-b border-trait bg-fond px-4 py-3"
+    >
+      <span className="text-corps-fort text-encre">{t('remboursement.autreJour.titre')}</span>
+      <span className="text-legende text-attenue">{t('remboursement.autreJour.aide')}</span>
+      <div className="flex flex-wrap items-start gap-2">
+        <div className="min-w-48 flex-1">
+          <ChampSaisie
+            libelle={t('remboursement.autreJour.champ')}
+            libelleMasque
+            placeholder="BE-000127"
+            autoComplete="off"
+            value={saisie}
+            erreur={introuvable ? t('remboursement.autreJour.introuvable') : undefined}
+            onChange={(evenement) => {
+              setSaisie(evenement.target.value)
+            }}
+          />
+        </div>
+        <Bouton type="submit" enCours={enCours} disabled={saisie.trim() === ''}>
+          {t('remboursement.autreJour.retrouver')}
+        </Bouton>
+      </div>
+      {erreur !== null && !introuvable && <AlerteErreur erreur={erreur} />}
+    </form>
+  )
+}
+
+/** L'avoir d'un remboursement, imprimé par le navigateur : l'original, puis des duplicatas. */
+function useImpressionAvoir(
+  devise: Devise,
+  fuseauHoraire: string,
+  operateurs: OperateurMobileMoney[],
+) {
+  const { imprimer, zone } = useImpression()
+  const [etat, setEtat] = useState<{ enCours: boolean; erreur: unknown }>({
+    enCours: false,
+    erreur: null,
+  })
+
+  async function imprimerAvoir(operationId: string) {
+    setEtat({ enCours: true, erreur: null })
+    try {
+      const avoir = await appelerCaisse<AvoirCaisse>(
+        `/caisse/remboursements/${operationId}/avoir/impressions`,
+        { methode: 'POST' },
+      )
+      imprimer(
+        <TicketAvoir
+          avoir={avoir}
+          operateurs={operateurs}
+          devise={devise}
+          fuseauHoraire={fuseauHoraire}
+        />,
+      )
+      setEtat({ enCours: false, erreur: null })
+      return true
+    } catch (echec) {
+      setEtat({ enCours: false, erreur: echec })
+      return false
+    }
+  }
+
+  return { imprimerAvoir, ...etat, zone }
 }
 
 function titreDe(etat: EtatRemboursement, t: TFunction) {
@@ -239,6 +347,7 @@ function DetailNote({
   const etat = useQuery(requeteRemboursement(commandeId))
   const { data: caisse } = useQuery(requeteOuvertureCaisse)
   const { imprimer, zone } = useImpression()
+  const avoirs = useImpressionAvoir(devise, fuseauHoraire, caisse?.operateurs ?? [])
   const [impression, setImpression] = useState<{ enCours: boolean; erreur: unknown }>({
     enCours: false,
     erreur: null,
@@ -281,6 +390,13 @@ function DetailNote({
       aria-label={titre}
       className="flex shrink-0 flex-col gap-1 rounded-moyen border border-trait bg-surface p-5 lg:w-[420px] lg:overflow-y-auto"
     >
+      {note.autreJour && (
+        <span className="self-start">
+          <BadgeStatut ton="alerte">
+            {t('remboursement.autreJour.badge', { jour: formaterJournee(note.journee) })}
+          </BadgeStatut>
+        </span>
+      )}
       <h2 className="m-0 text-titre-section text-encre">{titre}</h2>
       <ul className="m-0 mt-2 list-none p-0">
         {note.articles.map((article) => (
@@ -324,6 +440,16 @@ function DetailNote({
                     ? ''
                     : `. ${t('remboursement.validePar', { nom: remboursement.approuvePar })}`}
                 </span>
+                {remboursement.avoir !== undefined && (
+                  <button
+                    type="button"
+                    onClick={() => void avoirs.imprimerAvoir(remboursement.id)}
+                    className="mt-1 flex min-h-cible-min items-center gap-1.5 self-start text-libelle font-bold text-encre"
+                  >
+                    <Printer aria-hidden="true" className="size-4" />
+                    {t('avoir.reimprimer', { numero: remboursement.avoir })}
+                  </button>
+                )}
               </span>
               <span className="chiffres text-montant-ligne text-encre">
                 −{nombre(remboursement.montant)}
@@ -334,6 +460,8 @@ function DetailNote({
       )}
       <span className="mt-auto pt-4" />
       {impression.erreur !== null && <AlerteErreur erreur={impression.erreur} />}
+      {avoirs.erreur !== null && <AlerteErreur erreur={avoirs.erreur} />}
+      {avoirs.zone}
       <Bouton
         className="min-h-cible-caisse"
         enCours={impression.enCours}
@@ -348,7 +476,7 @@ function DetailNote({
         </Bouton>
       ) : (
         <p className="m-0 text-legende text-attenue">
-          {t(note.remboursable ? 'remboursement.toutRembourse' : 'remboursement.horsJournee')}
+          {t(note.remboursable ? 'remboursement.toutRembourse' : 'remboursement.tropAncien')}
         </p>
       )}
     </section>
@@ -391,12 +519,14 @@ function Rembourser({
   etat,
   titre,
   devise,
+  fuseauHoraire,
   operateurs,
   surFermer,
 }: Readonly<{
   etat: EtatRemboursement
   titre: string
   devise: Devise
+  fuseauHoraire: string
   operateurs: OperateurMobileMoney[]
   surFermer: () => void
 }>) {
@@ -419,6 +549,7 @@ function Rembourser({
   const [id] = useState(() => globalThis.crypto.randomUUID())
   const [enCours, setEnCours] = useState(false)
   const [erreur, setErreur] = useState<unknown>(null)
+  const [fait, setFait] = useState<EtatRemboursement['remboursements'][number] | null>(null)
   const courte = (valeur: number) =>
     formaterMontant({ unitesMineures: valeur, devise }, { forme: 'courte' })
   // Le remboursement se calcule comme le paiement par articles : ce qui est déjà remboursé est « réglé ».
@@ -482,7 +613,8 @@ function Rembourser({
             corps: validationId === undefined ? demande : { ...demande, validationId },
           }),
         {
-          permission: 'PAIEMENT_REMBOURSER',
+          // Une note d'un autre jour demande l'accord de l'encadrement, pas seulement le droit de rembourser.
+          permission: etat.autreJour ? 'REMBOURSEMENT_JOURNEE_PASSEE' : 'PAIEMENT_REMBOURSER',
           objetId: etat.commandeId,
           titre:
             libelleRepartition === null
@@ -502,13 +634,29 @@ function Rembourser({
         clientRequetes.setQueryData(requeteRemboursement(etat.commandeId).queryKey, nouvel)
         void clientRequetes.invalidateQueries({ queryKey: requeteNotesEncaissees.queryKey })
         void clientRequetes.invalidateQueries({ queryKey: ['caisse', 'situation'] })
-        surFermer()
+        setFait(
+          nouvel.remboursements.find((remboursement) => remboursement.id === id) ??
+            nouvel.remboursements.at(-1) ??
+            null,
+        )
       }
     } catch (echec) {
       setErreur(echec)
     } finally {
       setEnCours(false)
     }
+  }
+
+  if (fait !== null) {
+    return (
+      <FinRemboursement
+        remboursement={fait}
+        devise={devise}
+        fuseauHoraire={fuseauHoraire}
+        operateurs={operateurs}
+        surFermer={surFermer}
+      />
+    )
   }
 
   return (
@@ -524,6 +672,14 @@ function Rembourser({
           {t('remboursement.titreRembourser', { note: titre })}
         </h2>
       </div>
+      {etat.autreJour && (
+        <p className="m-0 flex flex-col gap-1 rounded-normal border border-alerte-bord bg-alerte-fond px-3 py-2 text-corps text-alerte-texte">
+          <span className="font-bold">
+            {t('remboursement.autreJour.badge', { jour: formaterJournee(etat.journee) })}
+          </span>
+          {t('remboursement.autreJour.avertissement')}
+        </p>
+      )}
       {erreur !== null && <AlerteErreur erreur={erreur} />}
       <div className="grid gap-5 lg:grid-cols-2">
         <ChoixArticles
@@ -671,6 +827,80 @@ function Rembourser({
         </Bouton>
       </div>
       {validation.dialogue}
+    </section>
+  )
+}
+
+/** Le remboursement fait : on remet l'avoir au client, ou on s'en passe, comme pour le reçu. */
+function FinRemboursement({
+  remboursement,
+  devise,
+  fuseauHoraire,
+  operateurs,
+  surFermer,
+}: Readonly<{
+  remboursement: EtatRemboursement['remboursements'][number]
+  devise: Devise
+  fuseauHoraire: string
+  operateurs: OperateurMobileMoney[]
+  surFermer: () => void
+}>) {
+  const { t } = useTranslation()
+  const { imprimerAvoir, enCours, erreur, zone } = useImpressionAvoir(
+    devise,
+    fuseauHoraire,
+    operateurs,
+  )
+  const [imprime, setImprime] = useState(false)
+  return (
+    <section
+      aria-label={t('remboursement.fait.titre')}
+      className="mx-auto flex w-full max-w-[560px] flex-col items-center gap-3.5 rounded-moyen border border-trait bg-surface p-8 text-center"
+    >
+      <BadgeStatut ton="succes">{t('remboursement.fait.titre')}</BadgeStatut>
+      <h2 className="m-0 text-titre-page text-encre">
+        {t('remboursement.fait.montant', {
+          montant: formaterMontant(
+            { unitesMineures: remboursement.montant, devise },
+            { forme: 'courte' },
+          ),
+        })}
+      </h2>
+      {remboursement.avoir !== undefined && (
+        <span className="text-titre-carte text-encre">
+          {t('avoir.numeroCourt', { numero: remboursement.avoir })}
+        </span>
+      )}
+      {erreur !== null && <AlerteErreur erreur={erreur} />}
+      {imprime || remboursement.avoir === undefined ? (
+        <Bouton
+          variante="principal"
+          className="min-h-bouton-encaisser w-full text-titre-carte"
+          onClick={surFermer}
+        >
+          {t('remboursement.fait.retour')}
+        </Bouton>
+      ) : (
+        <div className="grid w-full gap-2 sm:grid-cols-2">
+          <Bouton
+            variante="principal"
+            icone={Printer}
+            className="min-h-bouton-encaisser text-titre-carte"
+            enCours={enCours}
+            onClick={() =>
+              void imprimerAvoir(remboursement.id).then((reussi) => {
+                setImprime(reussi)
+              })
+            }
+          >
+            {t('avoir.imprimer')}
+          </Bouton>
+          <Bouton className="min-h-bouton-encaisser text-titre-carte" onClick={surFermer}>
+            {t('avoir.sans')}
+          </Bouton>
+        </div>
+      )}
+      {zone}
     </section>
   )
 }

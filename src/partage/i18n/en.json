@@ -30,10 +30,10 @@
     "NOTE_NON_VIDE": "This tab has items: it cannot be closed this way.",
     "NOTE_ENTAMEE": "A payment has already been taken on this tab: it can no longer be changed.",
     "CAISSE_FERMEE": "The till on this tablet is not open. Open it with its float to take payments.",
-    "REMBOURSEMENT_HORS_JOURNEE": "Only today’s bills can be refunded at the till.",
     "PLAFOND_ARDOISE_DEPASSE": "This bill would take the customer over their tab limit. Confirm going over, or have part of it paid now.",
     "ARDOISE_NON_SOLDEE": "This customer still owes money: the tab stays open until it is settled.",
-    "TABLE_INDISPONIBLE": "This table was just removed from the floor plan (deactivated by a manager). The plan is up to date: choose another table."
+    "TABLE_INDISPONIBLE": "This table was just removed from the floor plan (deactivated by a manager). The plan is up to date: choose another table.",
+    "REMBOURSEMENT_TROP_ANCIEN": "A bill paid more than 30 days ago can no longer be refunded."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Too many failed attempts: the account is locked. Try again in {{duree}}.",
@@ -547,7 +547,8 @@
       "message": "Your receipt {{numero}} from {{entreprise}}: {{lien}}",
       "statut": "WhatsApp sending",
       "ouvert": "WhatsApp is open: just send the message."
-    }
+    },
+    "rembourseAvoir": "Refunded on {{date}} at {{heure}}, {{mode}} (credit note {{avoir}})"
   },
   "introuvable": {
     "titre": "Page not found",
@@ -1296,7 +1297,8 @@
     "sansPlafond": "No limit",
     "reglementArdoise": "−{{montant}} in {{mode}}. Still owes {{solde}}.",
     "remboursementReparti": "−{{montant}} ({{repartition}}), {{ou}}. Reason: {{motif}}.",
-    "remboursementRepartiValide": "−{{montant}} ({{repartition}}), {{ou}}. Reason: {{motif}}. Approved by {{validateur}}"
+    "remboursementRepartiValide": "−{{montant}} ({{repartition}}), {{ou}}. Reason: {{motif}}. Approved by {{validateur}}",
+    "noteDuJour": "Bill of {{jour}}"
   },
   "salles": {
     "titre": "{{etablissement}} areas and tables",
@@ -1639,7 +1641,6 @@
     "faits": "Refunds",
     "badge": "Refunded",
     "validePar": "Approved by {{nom}}",
-    "horsJournee": "Bill from a past day: refund it from the back office.",
     "toutRembourse": "Every item on this bill has been refunded.",
     "rembourser": "Refund",
     "retour": "Back to the bill",
@@ -1679,7 +1680,22 @@
     "partEn": "{{mode}} {{montant}}",
     "validerSeul": "Refund {{montant}}",
     "validationTitreReparti": "Refund {{montant}}",
-    "ordre": "Split across the bill’s payment methods: tab first, then card and Mobile Money, cash last."
+    "ordre": "Split across the bill’s payment methods: tab first, then card and Mobile Money, cash last.",
+    "autreJour": {
+      "titre": "A bill from another day?",
+      "aide": "Enter the receipt number, or scan its QR code. Up to 30 days, with a manager’s approval.",
+      "champ": "Receipt number",
+      "retrouver": "Find",
+      "introuvable": "No receipt has this number in this venue.",
+      "badge": "Day of {{jour}}",
+      "avertissement": "Bill from another day: the money leaves today’s till and counts in its Z. A manager or the owner approves with their code."
+    },
+    "tropAncien": "Paid more than 30 days ago: it can no longer be refunded.",
+    "fait": {
+      "titre": "Refund done",
+      "montant": "{{montant}} given back to the customer",
+      "retour": "Back to bills"
+    }
   },
   "stock": {
     "titre": "Stock",
@@ -2103,5 +2119,22 @@
       "voirVentes": "See this day’s sales",
       "remboursement": "{{note}}, {{motif}}"
     }
+  },
+  "avoir": {
+    "titre": "CREDIT NOTE",
+    "duplicata": "CREDIT NOTE, COPY",
+    "ticket": "Credit note {{numero}}",
+    "numero": "Credit note no. {{numero}}",
+    "surRecu": "On receipt {{recu}} of {{date}}",
+    "motif": "Reason: {{motif}}",
+    "total": "REFUNDED",
+    "dontTva": "of which VAT",
+    "par": "Refunded by {{nom}}",
+    "parAccord": "Refunded by {{nom}}, approved by {{accord}}",
+    "signature": "Customer signature:",
+    "imprimer": "Print the credit note",
+    "reimprimer": "Reprint credit note {{numero}}",
+    "sans": "No credit note",
+    "numeroCourt": "Credit note {{numero}}"
   }
 }

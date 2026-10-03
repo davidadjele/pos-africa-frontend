@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw'
 import { describe, expect, it, vi } from 'vitest'
 import { API, caisseOuverte } from '../../../tests/application'
 import { serveurMsw } from '../../../tests/serveurMsw'
-import { RECU } from './fixturesRecu'
+import { AVOIR, RECU } from './fixturesRecu'
 import type {
   DemandeRemboursement,
   EtatRemboursement,
@@ -67,6 +67,8 @@ const A_REMBOURSER: EtatRemboursement = {
   total: 13_500,
   rembourse: 0,
   remboursable: true,
+  autreJour: false,
+  journee: '2026-09-29',
   articles: [
     {
       ligneId: POULETS,
@@ -110,6 +112,7 @@ const REMBOURSEE: EtatRemboursement = {
       remboursePar: 'Yawa T.',
       approuvePar: 'Afi M.',
       rembourseLe: '2026-09-29T21:20:00Z',
+      avoir: 'BE-AV-000001',
     },
   ],
 }
@@ -199,6 +202,11 @@ describe('Notes encaissées', () => {
     }
     await userEvent.click(within(validation).getByRole('button', { name: 'Valider' }))
 
+    const fait = await screen.findByRole('region', { name: 'Remboursement fait' })
+    expect(fait).toHaveTextContent(/4\s500\sF rendus au client/)
+    expect(fait).toHaveTextContent('Avoir BE-AV-000001')
+    await userEvent.click(within(fait).getByRole('button', { name: 'Sans avoir' }))
+
     const detail = await screen.findByRole('region', { name: 'n°42, T4' })
     expect(await within(detail).findByText(/1× Poulet braisé, espèces/)).toBeVisible()
     expect(detail).toHaveTextContent('Validé par Afi M.')
@@ -285,6 +293,132 @@ describe('Notes encaissées', () => {
     await screen.findByRole('dialog', { name: /^Rembourser 1\s200\sF/ })
     expect(recus[0]).toMatchObject({ montant: 1200 })
     expect(recus[0]).not.toHaveProperty('mode')
+  })
+
+  it('rembourse une note d’un autre jour retrouvée par son reçu, avec l’accord d’un gérant', async () => {
+    const recus = notesServies({ ...EN_ESPECES, autreJour: true, journee: '2026-09-26' })
+    const validations: unknown[] = []
+    const recherches: string[] = []
+    serveurMsw.use(
+      http.get(`${API}/caisse/notes-encaissees/recherche`, ({ request }) => {
+        recherches.push(new URL(request.url).searchParams.get('recu') ?? '')
+        return HttpResponse.json({ ...NOTES[0], journee: '2026-09-26' })
+      }),
+      http.post(`${API}/caisse/validations`, async ({ request }) => {
+        validations.push(await request.json())
+        return HttpResponse.json(
+          { id: 'a1b20000-0000-4000-8000-000000000009', expireLe: '2026-09-29T21:30:00Z' },
+          { status: 201 },
+        )
+      }),
+    )
+    caisseOuverte('/caisse/tiroir', { permissions: CAISSIER })
+
+    await userEvent.click(await screen.findByRole('tab', { name: 'Notes encaissées' }))
+    const autreJour = screen.getByRole('form', { name: 'Une note d’un autre jour ?' })
+    await userEvent.type(within(autreJour).getByLabelText('Numéro du reçu'), 'BE-000127')
+    await userEvent.click(within(autreJour).getByRole('button', { name: 'Retrouver' }))
+
+    const detail = await screen.findByRole('region', { name: 'n°42, T4' })
+    expect(recherches).toEqual(['BE-000127'])
+    expect(await within(detail).findByText('Journée du sam. 26 sept.')).toBeVisible()
+    await userEvent.click(within(detail).getByRole('button', { name: 'Rembourser' }))
+    expect(screen.getByText(/l’argent sort de la caisse d’aujourd’hui/)).toBeVisible()
+    await userEvent.click(
+      within(screen.getByRole('list', { name: 'Articles à rembourser' })).getByRole('button', {
+        name: 'Un Poulet braisé de plus',
+      }),
+    )
+    await userEvent.click(screen.getByRole('radio', { name: 'Article non conforme' }))
+    await userEvent.click(screen.getByRole('button', { name: /^Rembourser 4\s500\sF en espèces/ }))
+    const validation = await screen.findByRole('dialog', { name: /^Rembourser 4\s500\sF/ })
+    await userEvent.click(await within(validation).findByRole('button', { name: /Afi M\./ }))
+    for (const chiffre of '5937') {
+      await userEvent.click(within(validation).getByRole('button', { name: chiffre }))
+    }
+    await userEvent.click(within(validation).getByRole('button', { name: 'Valider' }))
+
+    await screen.findByRole('region', { name: 'Remboursement fait' })
+    expect(validations[0]).toMatchObject({
+      permission: 'REMBOURSEMENT_JOURNEE_PASSEE',
+      objetId: NOTE_42,
+    })
+    expect(recus).toHaveLength(2)
+  })
+
+  it('dit qu’aucun reçu ne porte ce numéro, ou qu’une note est trop ancienne', async () => {
+    notesServies({ ...A_REMBOURSER, remboursable: false, autreJour: true, journee: '2026-08-20' })
+    serveurMsw.use(
+      http.get(`${API}/caisse/notes-encaissees/recherche`, () =>
+        HttpResponse.json(
+          { statut: 404, code: 'RESSOURCE_INTROUVABLE', message: 'x', traceId: 't' },
+          { status: 404 },
+        ),
+      ),
+    )
+    caisseOuverte('/caisse/tiroir', { permissions: CAISSIER })
+
+    await userEvent.click(await screen.findByRole('tab', { name: 'Notes encaissées' }))
+    const autreJour = screen.getByRole('form', { name: 'Une note d’un autre jour ?' })
+    await userEvent.type(within(autreJour).getByLabelText('Numéro du reçu'), 'BE-999999')
+    await userEvent.click(within(autreJour).getByRole('button', { name: 'Retrouver' }))
+    expect(
+      await within(autreJour).findByText('Aucun reçu ne porte ce numéro dans cet établissement.'),
+    ).toBeVisible()
+
+    await userEvent.click(screen.getByRole('button', { name: /n°42, T4/ }))
+    expect(
+      await screen.findByText('Encaissée il y a plus de 30 jours : elle ne se rembourse plus.'),
+    ).toBeVisible()
+  })
+
+  it('imprime l’avoir à la fin du remboursement, puis le réimprime depuis la note', async () => {
+    notesServies(EN_ESPECES)
+    const imprimer = vi.spyOn(window, 'print').mockImplementation(() => undefined)
+    const impressions: string[] = []
+    serveurMsw.use(
+      http.post(`${API}/caisse/remboursements/:id/avoir/impressions`, ({ params }) => {
+        impressions.push(String(params.id))
+        return HttpResponse.json({ ...AVOIR, duplicata: impressions.length > 1 })
+      }),
+    )
+    caisseOuverte('/caisse/tiroir', { permissions: CAISSIER })
+
+    await userEvent.click(await screen.findByRole('tab', { name: 'Notes encaissées' }))
+    await userEvent.click(await screen.findByRole('button', { name: /n°42, T4/ }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Rembourser' }))
+    await userEvent.click(
+      within(screen.getByRole('list', { name: 'Articles à rembourser' })).getByRole('button', {
+        name: 'Un Poulet braisé de plus',
+      }),
+    )
+    await userEvent.click(screen.getByRole('radio', { name: 'Article non conforme' }))
+    await userEvent.click(screen.getByRole('button', { name: /^Rembourser 4\s500\sF en espèces/ }))
+    const validation = await screen.findByRole('dialog', { name: /^Rembourser 4\s500\sF/ })
+    await userEvent.click(await within(validation).findByRole('button', { name: /Afi M\./ }))
+    for (const chiffre of '5937') {
+      await userEvent.click(within(validation).getByRole('button', { name: chiffre }))
+    }
+    await userEvent.click(within(validation).getByRole('button', { name: 'Valider' }))
+
+    const fait = await screen.findByRole('region', { name: 'Remboursement fait' })
+    await userEvent.click(within(fait).getByRole('button', { name: 'Imprimer l’avoir' }))
+    await vi.waitFor(() => {
+      expect(imprimer).toHaveBeenCalledOnce()
+    })
+    expect(document.querySelector('.zone-impression')).toHaveTextContent('Avoir n° BE-AV-000001')
+    expect(document.querySelector('.zone-impression')).toHaveTextContent('Sur le reçu BE-000127')
+    await userEvent.click(within(fait).getByRole('button', { name: 'Retour aux notes' }))
+
+    const detail = await screen.findByRole('region', { name: 'n°42, T4' })
+    await userEvent.click(
+      within(detail).getByRole('button', { name: 'Réimprimer l’avoir BE-AV-000001' }),
+    )
+    await vi.waitFor(() => {
+      expect(imprimer).toHaveBeenCalledTimes(2)
+    })
+    expect(impressions).toHaveLength(2)
+    imprimer.mockRestore()
   })
 
   it('réimprime le reçu d’une note, marqué duplicata', async () => {

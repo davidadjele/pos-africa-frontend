@@ -1,4 +1,4 @@
-import type { RecuCaisse, RecuEnLigne } from '../../partage/api/contrat'
+import type { AvoirCaisse, RecuCaisse, RecuEnLigne } from '../../partage/api/contrat'
 
 export const RECU: RecuCaisse = {
   numero: 'BE-000127',
@@ -48,4 +48,24 @@ export const RECU_EN_LIGNE: RecuEnLigne = {
     { code: 'TMONEY', libelle: 'T-Money (Yas)' },
   ],
   remboursements: [],
+}
+
+export const AVOIR: AvoirCaisse = {
+  numero: 'BE-AV-000001',
+  duplicata: false,
+  emisLe: '2026-09-29T21:20:00Z',
+  entreprise: 'Maquis Chez Tanti',
+  numeroFiscal: '1000123456',
+  etablissement: RECU.etablissement,
+  largeur: 80,
+  recu: 'BE-000127',
+  recuEmisLe: '2026-09-29T21:05:00Z',
+  note: 'n°42, T4',
+  lignes: [{ quantite: 1, nom: 'Poulet braisé', montant: 4500, offert: false }],
+  motif: 'ARTICLE_NON_CONFORME',
+  total: 4500,
+  tva: 686,
+  parts: [{ mode: 'ESPECES', montant: 4500 }],
+  remboursePar: 'Yawa T.',
+  approuvePar: 'Afi M.',
 }

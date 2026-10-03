@@ -30,10 +30,10 @@
     "NOTE_NON_VIDE": "Cette note contient des articles : elle ne peut pas être fermée ainsi.",
     "NOTE_ENTAMEE": "Un paiement a déjà été encaissé sur cette note : elle ne se modifie plus.",
     "CAISSE_FERMEE": "La caisse de cette tablette n’est pas ouverte. Ouvrez-la avec son fond pour encaisser.",
-    "REMBOURSEMENT_HORS_JOURNEE": "Seules les notes de la journée en cours se remboursent à la caisse.",
     "PLAFOND_ARDOISE_DEPASSE": "Cette note ferait dépasser le plafond de l’ardoise du client. Confirmez le dépassement ou faites payer une partie maintenant.",
     "ARDOISE_NON_SOLDEE": "Ce client doit encore de l’argent : son ardoise reste ouverte tant qu’elle n’est pas soldée.",
-    "TABLE_INDISPONIBLE": "Cette table vient d’être retirée du plan (désactivée par un gérant). Le plan est à jour : choisissez une autre table."
+    "TABLE_INDISPONIBLE": "Cette table vient d’être retirée du plan (désactivée par un gérant). Le plan est à jour : choisissez une autre table.",
+    "REMBOURSEMENT_TROP_ANCIEN": "Une note encaissée il y a plus de 30 jours ne se rembourse plus."
   },
   "erreursAvecDelai": {
     "COMPTE_VERROUILLE": "Trop d’essais infructueux : le compte est verrouillé. Réessayez dans {{duree}}.",
@@ -547,7 +547,8 @@
       "message": "Votre reçu {{numero}} de {{entreprise}} : {{lien}}",
       "statut": "Envoi WhatsApp",
       "ouvert": "WhatsApp est ouvert : il reste à envoyer le message."
-    }
+    },
+    "rembourseAvoir": "Remboursé le {{date}} à {{heure}}, {{mode}} (avoir {{avoir}})"
   },
   "introuvable": {
     "titre": "Page introuvable",
@@ -1296,7 +1297,8 @@
     "sansPlafond": "Sans plafond",
     "reglementArdoise": "−{{montant}} en {{mode}}. Doit encore {{solde}}.",
     "remboursementReparti": "−{{montant}} ({{repartition}}), {{ou}}. Motif : {{motif}}.",
-    "remboursementRepartiValide": "−{{montant}} ({{repartition}}), {{ou}}. Motif : {{motif}}. Validé par {{validateur}}"
+    "remboursementRepartiValide": "−{{montant}} ({{repartition}}), {{ou}}. Motif : {{motif}}. Validé par {{validateur}}",
+    "noteDuJour": "Note du {{jour}}"
   },
   "salles": {
     "titre": "Salles et tables de {{etablissement}}",
@@ -1639,7 +1641,6 @@
     "faits": "Remboursements",
     "badge": "Remboursé",
     "validePar": "Validé par {{nom}}",
-    "horsJournee": "Note d’une journée passée : son remboursement se fera depuis la gestion.",
     "toutRembourse": "Tous les articles de cette note ont été remboursés.",
     "rembourser": "Rembourser",
     "retour": "Retour à la note",
@@ -1679,7 +1680,22 @@
     "partEn": "{{mode}} {{montant}}",
     "validerSeul": "Rembourser {{montant}}",
     "validationTitreReparti": "Rembourser {{montant}}",
-    "ordre": "Réparti entre les modes de la note : l’ardoise d’abord, puis la carte et le Mobile Money, les espèces en dernier."
+    "ordre": "Réparti entre les modes de la note : l’ardoise d’abord, puis la carte et le Mobile Money, les espèces en dernier.",
+    "autreJour": {
+      "titre": "Une note d’un autre jour ?",
+      "aide": "Saisissez le numéro du reçu, ou scannez son QR code. Jusqu’à 30 jours, avec l’accord d’un gérant.",
+      "champ": "Numéro du reçu",
+      "retrouver": "Retrouver",
+      "introuvable": "Aucun reçu ne porte ce numéro dans cet établissement.",
+      "badge": "Journée du {{jour}}",
+      "avertissement": "Note d’un autre jour : l’argent sort de la caisse d’aujourd’hui et compte dans son Z. Un gérant ou le propriétaire l’accorde avec son code."
+    },
+    "tropAncien": "Encaissée il y a plus de 30 jours : elle ne se rembourse plus.",
+    "fait": {
+      "titre": "Remboursement fait",
+      "montant": "{{montant}} rendus au client",
+      "retour": "Retour aux notes"
+    }
   },
   "stock": {
     "titre": "Stock",
@@ -2103,5 +2119,22 @@
       "voirVentes": "Voir les ventes de cette journée",
       "remboursement": "{{note}}, {{motif}}"
     }
+  },
+  "avoir": {
+    "titre": "AVOIR",
+    "duplicata": "AVOIR, DUPLICATA",
+    "ticket": "Avoir {{numero}}",
+    "numero": "Avoir n° {{numero}}",
+    "surRecu": "Sur le reçu {{recu}} du {{date}}",
+    "motif": "Motif : {{motif}}",
+    "total": "REMBOURSÉ",
+    "dontTva": "dont TVA",
+    "par": "Remboursé par {{nom}}",
+    "parAccord": "Remboursé par {{nom}}, accord de {{accord}}",
+    "signature": "Signature du client :",
+    "imprimer": "Imprimer l’avoir",
+    "reimprimer": "Réimprimer l’avoir {{numero}}",
+    "sans": "Sans avoir",
+    "numeroCourt": "Avoir {{numero}}"
   }
 }

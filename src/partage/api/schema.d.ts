@@ -816,8 +816,9 @@ export interface paths {
         /**
          * Rembourser des articles d'une note encaissée
          * @description Dans un mode où la note a été payée, sans dépasser ce qui y a été payé. Sans le droit \
-         *     PAIEMENT_REMBOURSER, la validation d'un gérant est requise. Erreurs : VALIDATION_REQUISE (403), \
-         *     CAISSE_FERMEE (409), REMBOURSEMENT_HORS_JOURNEE (409).
+         *     PAIEMENT_REMBOURSER (REMBOURSEMENT_JOURNEE_PASSEE pour une note d'un autre jour), la validation d'un \
+         *     gérant est requise. Émet l'avoir du remboursement. Erreurs : VALIDATION_REQUISE (403), \
+         *     CAISSE_FERMEE (409), REMBOURSEMENT_TROP_ANCIEN (409) au-delà de 30 jours.
          */
         post: operations["rembourser"];
         delete?: never;
@@ -974,6 +975,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/caisse/notes-encaissees/recherche": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Retrouver une note d'un autre jour
+         * @description Par le numéro de son reçu (« BE-000127 ») ou le lien de son QR code, dans l'établissement de la caisse. \
+         *     Erreur : RESSOURCE_INTROUVABLE (404).
+         */
+        get: operations["rechercher"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/caisse/ouverture": {
         parameters: {
             query?: never;
@@ -1007,6 +1029,46 @@ export interface paths {
         get: operations["plan"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/remboursements/{id}/avoir": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * L'avoir d'un remboursement
+         * @description Marqué duplicata s'il a déjà été imprimé.
+         */
+        get: operations["avoir"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/caisse/remboursements/{id}/avoir/impressions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Imprimer l'avoir
+         * @description La première impression est l'original, les suivantes des duplicatas.
+         */
+        post: operations["imprimerAvoir"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2441,6 +2503,32 @@ export interface components {
             /** Format: int32 */
             quantite: number;
         };
+        AvoirCaisse: {
+            approuvePar?: string;
+            detail?: string;
+            duplicata: boolean;
+            /** Format: date-time */
+            emisLe: string;
+            entreprise: string;
+            etablissement: components["schemas"]["EtablissementRecu"];
+            /** Format: int32 */
+            largeur: number;
+            lignes: components["schemas"]["Ligne"][];
+            /** @enum {string} */
+            motif: "ERREUR_ENCAISSEMENT" | "ARTICLE_NON_CONFORME" | "ARTICLE_NON_SERVI" | "AUTRE";
+            note: string;
+            numero: string;
+            numeroFiscal?: string;
+            parts: components["schemas"]["PartRemboursement"][];
+            recu?: string;
+            /** Format: date-time */
+            recuEmisLe?: string;
+            remboursePar: string;
+            /** Format: int64 */
+            total: number;
+            /** Format: int64 */
+            tva: number;
+        };
         CaisseResume: {
             caisse: string;
             /** Format: date-time */
@@ -3017,7 +3105,7 @@ export interface components {
              * @example LIGNE_ANNULER_APRES_ENVOI
              * @enum {string}
              */
-            permission: "COMMANDE_CREER" | "LIGNE_ANNULER_APRES_ENVOI" | "TABLE_TRANSFERER" | "REMISE_APPLIQUER" | "REMISE_AU_DELA_PLAFOND" | "ARTICLE_OFFRIR" | "PAIEMENT_ENCAISSER" | "PAIEMENT_REMBOURSER" | "CAISSE_OUVRIR" | "CAISSE_FERMER" | "CAISSE_MOUVEMENT" | "STOCK_RECEPTIONNER" | "STOCK_AJUSTER" | "CATALOGUE_GERER" | "PRIX_MODIFIER" | "RAPPORT_VENTES" | "RAPPORT_FINANCIER" | "CLIENT_CREDIT" | "PERSONNEL_GERER" | "ETABLISSEMENT_GERER" | "BACK_OFFICE" | "APPAREIL_GERER" | "DISPONIBILITE_GERER" | "ACTIVITE_CONSULTER" | "SALLE_GERER";
+            permission: "COMMANDE_CREER" | "LIGNE_ANNULER_APRES_ENVOI" | "TABLE_TRANSFERER" | "REMISE_APPLIQUER" | "REMISE_AU_DELA_PLAFOND" | "ARTICLE_OFFRIR" | "PAIEMENT_ENCAISSER" | "PAIEMENT_REMBOURSER" | "CAISSE_OUVRIR" | "CAISSE_FERMER" | "CAISSE_MOUVEMENT" | "STOCK_RECEPTIONNER" | "STOCK_AJUSTER" | "CATALOGUE_GERER" | "PRIX_MODIFIER" | "RAPPORT_VENTES" | "RAPPORT_FINANCIER" | "CLIENT_CREDIT" | "PERSONNEL_GERER" | "ETABLISSEMENT_GERER" | "BACK_OFFICE" | "APPAREIL_GERER" | "DISPONIBILITE_GERER" | "ACTIVITE_CONSULTER" | "SALLE_GERER" | "REMBOURSEMENT_JOURNEE_PASSEE";
             /** @example 5937 */
             pin: string;
             /** Format: uuid */
@@ -3278,8 +3366,11 @@ export interface components {
         };
         EtatRemboursement: {
             articles: components["schemas"]["ArticleARembourser"][];
+            autreJour: boolean;
             /** Format: uuid */
             commandeId: string;
+            /** Format: date */
+            journee: string;
             modes: components["schemas"]["ModeRemboursable"][];
             /** Format: int32 */
             numero: number;
@@ -3830,6 +3921,7 @@ export interface components {
             par: string;
         };
         RemboursementEnLigne: {
+            avoir?: string;
             /** Format: date-time */
             le: string;
             /** @enum {string} */
@@ -3840,6 +3932,7 @@ export interface components {
         RemboursementResume: {
             approuvePar?: string;
             articles: components["schemas"]["ArticlePaye"][];
+            avoir?: string;
             detail?: string;
             /** Format: uuid */
             id: string;
@@ -5960,6 +6053,37 @@ export interface operations {
             };
         };
     };
+    rechercher: {
+        parameters: {
+            query: {
+                recu: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoteEncaissee"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
     etat_1: {
         parameters: {
             query?: never;
@@ -6038,6 +6162,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlanDeSalle"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    avoir: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AvoirCaisse"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    imprimerAvoir: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AvoirCaisse"];
                 };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
@@ -6141,7 +6327,7 @@ export interface operations {
     validateurs: {
         parameters: {
             query: {
-                permission: "COMMANDE_CREER" | "LIGNE_ANNULER_APRES_ENVOI" | "TABLE_TRANSFERER" | "REMISE_APPLIQUER" | "REMISE_AU_DELA_PLAFOND" | "ARTICLE_OFFRIR" | "PAIEMENT_ENCAISSER" | "PAIEMENT_REMBOURSER" | "CAISSE_OUVRIR" | "CAISSE_FERMER" | "CAISSE_MOUVEMENT" | "STOCK_RECEPTIONNER" | "STOCK_AJUSTER" | "CATALOGUE_GERER" | "PRIX_MODIFIER" | "RAPPORT_VENTES" | "RAPPORT_FINANCIER" | "CLIENT_CREDIT" | "PERSONNEL_GERER" | "ETABLISSEMENT_GERER" | "BACK_OFFICE" | "APPAREIL_GERER" | "DISPONIBILITE_GERER" | "ACTIVITE_CONSULTER" | "SALLE_GERER";
+                permission: "COMMANDE_CREER" | "LIGNE_ANNULER_APRES_ENVOI" | "TABLE_TRANSFERER" | "REMISE_APPLIQUER" | "REMISE_AU_DELA_PLAFOND" | "ARTICLE_OFFRIR" | "PAIEMENT_ENCAISSER" | "PAIEMENT_REMBOURSER" | "CAISSE_OUVRIR" | "CAISSE_FERMER" | "CAISSE_MOUVEMENT" | "STOCK_RECEPTIONNER" | "STOCK_AJUSTER" | "CATALOGUE_GERER" | "PRIX_MODIFIER" | "RAPPORT_VENTES" | "RAPPORT_FINANCIER" | "CLIENT_CREDIT" | "PERSONNEL_GERER" | "ETABLISSEMENT_GERER" | "BACK_OFFICE" | "APPAREIL_GERER" | "DISPONIBILITE_GERER" | "ACTIVITE_CONSULTER" | "SALLE_GERER" | "REMBOURSEMENT_JOURNEE_PASSEE";
             };
             header?: never;
             path?: never;

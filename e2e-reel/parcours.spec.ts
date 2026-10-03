@@ -1028,6 +1028,13 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await capturer(tablette, '58-rembourser-telephone')
   await tablette.setViewportSize({ width: 1280, height: 800 })
   await tablette.getByRole('button', { name: /^Rembourser 4\s500\sF en carte/ }).click()
+  // Le remboursement fait, l'avoir numéroté se remet au client avec l'argent.
+  const fait = tablette.getByRole('region', { name: 'Remboursement fait' })
+  await expect(fait).toContainText(/Avoir BE-AV-\d{6}/)
+  await capturer(tablette, '59-avoir')
+  await fait.getByRole('button', { name: 'Imprimer l’avoir' }).click()
+  await expect.poll(() => impressions(tablette)).toBe(3)
+  await fait.getByRole('button', { name: 'Retour aux notes' }).click()
   await expect(tablette.getByRole('region', { name: /, T6$/ })).toContainText(
     '1× Poulet braisé, carte',
   )
@@ -1035,7 +1042,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   // Le reçu en ligne de T6, rouvert par le client, mentionne le remboursement ; le reçu lui-même ne change pas.
   await client.goto(recuT6)
   await expect(client.getByRole('article', { name: /^Reçu BE-/ })).toContainText(
-    /Remboursé le .*, carte−4\s500/,
+    /Remboursé le .*, carte \(avoir BE-AV-\d{6}\)−4\s500/,
   )
   await capturer(client, '59-recu-en-ligne-rembourse')
   await telephoneClient.close()
@@ -1057,6 +1064,8 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await flag.click()
   await flag.click()
   await note.getByRole('button', { name: /Envoyer 2 articles/ }).click()
+  // Tant que l'envoi n'est pas fini, la ligne est encore un brouillon : son menu ne propose pas « Annuler ».
+  await expect(note.getByRole('button', { name: /Envoyer \d+ article/ })).toHaveCount(0)
   await tablette.getByRole('button', { name: 'Actions sur Flag 65 cl' }).click()
   await tablette
     .getByRole('dialog', { name: 'Flag 65 cl' })
