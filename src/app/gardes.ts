@@ -1,7 +1,12 @@
 import { queryOptions, type QueryClient } from '@tanstack/react-query'
 import { redirect } from '@tanstack/react-router'
 import { appelerApi } from '../partage/api/appelerApi'
-import type { ConfigurationPublique, Portee, ReponseMoi } from '../partage/api/contrat'
+import type {
+  AppareilCourant,
+  ConfigurationPublique,
+  Portee,
+  ReponseMoi,
+} from '../partage/api/contrat'
 import { ErreurApi } from '../partage/api/ErreurApi'
 import { effacerJetonAcces } from '../partage/api/jetonAcces'
 import { demarrerSession } from '../partage/auth/session'
@@ -77,8 +82,19 @@ export async function exigerChoixEntreprise(clientRequetes: QueryClient): Promis
 
 /** Espace caisse : réservé à une tablette enregistrée (cookie d'appareil), pas à une session du back-office. */
 export async function exigerTablette(clientRequetes: QueryClient): Promise<void> {
+  const appareil = await appareilEnregistre(clientRequetes)
+  if (appareil.type === 'CUISINE') throw redirect({ to: '/cuisine', replace: true })
+}
+
+/** L'écran cuisine, réservé à une tablette enregistrée comme « Cuisine ». */
+export async function exigerTabletteCuisine(clientRequetes: QueryClient): Promise<void> {
+  const appareil = await appareilEnregistre(clientRequetes)
+  if (appareil.type !== 'CUISINE') throw redirect({ to: '/caisse', replace: true })
+}
+
+async function appareilEnregistre(clientRequetes: QueryClient): Promise<AppareilCourant> {
   try {
-    await clientRequetes.query(requeteAppareil)
+    return await clientRequetes.query(requeteAppareil)
   } catch (erreur) {
     if (erreur instanceof ErreurApi && erreur.statut === 401) {
       throw redirect({ to: '/enregistrement-tablette', replace: true })
@@ -87,15 +103,21 @@ export async function exigerTablette(clientRequetes: QueryClient): Promise<void>
   }
 }
 
+/** Chaque tablette a son écran : la caisse, ou l'écran cuisine. */
+export function ecranDe(appareil: AppareilCourant): '/caisse' | '/cuisine' {
+  return appareil.type === 'CUISINE' ? '/cuisine' : '/caisse'
+}
+
 /** Écran d'enregistrement : une tablette déjà enregistrée va directement à sa caisse. */
 export async function redirigerSiTabletteEnregistree(clientRequetes: QueryClient): Promise<void> {
+  let appareil: AppareilCourant
   try {
-    await clientRequetes.query(requeteAppareil)
+    appareil = await clientRequetes.query(requeteAppareil)
   } catch (erreur) {
     if (erreur instanceof ErreurApi && erreur.statut === 401) return
     throw erreur
   }
-  throw redirect({ to: '/caisse', replace: true })
+  throw redirect({ to: ecranDe(appareil), replace: true })
 }
 
 export async function exigerInscriptionOuverte(clientRequetes: QueryClient): Promise<void> {

@@ -80,8 +80,13 @@ const REVIENNENT_EN_STOCK = new Set<MotifAnnulation>([
   'EPUISE_CUISINE',
 ])
 
-export function retourParDefaut(motif: MotifAnnulation): boolean {
-  return REVIENNENT_EN_STOCK.has(motif)
+/** Un plat que la cuisine a commencé ne revient pas intact : il est perdu par défaut. */
+export function retourParDefaut(motif: MotifAnnulation, commence = false): boolean {
+  return !commence && REVIENNENT_EN_STOCK.has(motif)
+}
+
+export function estCommencee(ligne: LigneNote): boolean {
+  return ligne.commenceeLe !== undefined || ligne.preteLe !== undefined
 }
 
 export function DialogueAnnulation({
@@ -106,7 +111,8 @@ export function DialogueAnnulation({
   const [quantite, setQuantite] = useState(1)
   const choix = useChoixMotif<MotifAnnulation>()
   const [retour, setRetour] = useState<boolean | null>(null)
-  const revient = retour ?? (choix.motif !== null && retourParDefaut(choix.motif))
+  const commencee = estCommencee(ligne)
+  const revient = retour ?? (choix.motif !== null && retourParDefaut(choix.motif, commencee))
 
   return (
     <Dialogue
@@ -142,6 +148,7 @@ export function DialogueAnnulation({
         <ChoixRetourStock
           libelle={t('caisse.stock.article')}
           revient={revient}
+          commence={commencee}
           surChoisir={setRetour}
         />
       )}
@@ -153,12 +160,20 @@ export function DialogueAnnulation({
 export function ChoixRetourStock({
   libelle,
   revient,
+  commence = false,
   surChoisir,
-}: Readonly<{ libelle: string; revient: boolean; surChoisir: (revient: boolean) => void }>) {
+}: Readonly<{
+  libelle: string
+  revient: boolean
+  /** La cuisine a commencé : on dit pourquoi « Perdu » est proposé. */
+  commence?: boolean
+  surChoisir: (revient: boolean) => void
+}>) {
   const { t } = useTranslation()
   return (
     <div role="radiogroup" aria-label={libelle} className="flex flex-col gap-2">
       <span className="text-libelle text-encre">{libelle}</span>
+      {commence && <span className="text-legende text-attenue">{t('caisse.stock.commence')}</span>}
       <div className="grid grid-cols-2 gap-2">
         {([true, false] as const).map((valeur) => (
           <button

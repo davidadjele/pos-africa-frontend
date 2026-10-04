@@ -16,7 +16,7 @@ import type {
 } from '../../partage/api/contrat'
 import { formaterHeure } from '../../partage/dates/formaterDate'
 import { formaterMontant, type Devise } from '../../partage/montants/formaterMontant'
-import { AlerteErreur } from '../../partage/ui/Alerte'
+import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
 import { BadgeStatut } from '../../partage/ui/BadgeStatut'
 import { Bouton } from '../../partage/ui/Bouton'
 import { ChampSaisie } from '../../partage/ui/ChampSaisie'
@@ -28,24 +28,31 @@ import { numeroEtCanal } from './PanneauNote'
 import { requeteAppareil } from '../tablette/requetes'
 import { dureeDepuis } from './duree'
 import { requeteCommande, requetePlan } from './requetes'
+import { pasEncorePret } from './service'
 
 type Ouverture = { canal: 'SUR_PLACE'; table: TablePlan; salle: string } | { canal: 'EMPORTER' }
 
 /** Accueil de la caisse : les tables et leur note ouverte, la vente au comptoir et à emporter. */
 /** À envoyer prime sur l'addition demandée : l'un et l'autre se voient à leur bordure. */
-/** La couleur dit l'état d'un coup d'œil : libre, occupée, articles en attente, addition demandée. */
-function couleurDeTable(occupee: boolean, enAttente: boolean, addition: boolean): string {
-  if (!occupee) return 'border border-trait bg-surface'
-  if (enAttente) return 'border-2 border-alerte-bord bg-alerte-fond'
-  return addition
-    ? 'border-2 border-info bg-info-fond'
-    : 'border border-bordure-controle bg-accent-doux'
+/**
+ * La couleur dit l'état d'un coup d'œil : libre, occupée, articles à envoyer, plats prêts que la
+ * cuisine attend de voir partir, articles en attente, addition demandée.
+ */
+function couleurDeTable(note: NoteOuverte | undefined): string {
+  if (note === undefined) return 'border border-trait bg-surface'
+  if (note.aEnvoyer > 0) return 'border-2 border-alerte-bord bg-alerte-fond'
+  if (note.prets > 0) return 'border-2 border-succes-vif bg-succes-fond'
+  if (note.aServir > 0) return 'border-2 border-alerte-bord bg-alerte-fond'
+  return note.additionDemandeeLe === undefined
+    ? 'border border-bordure-controle bg-accent-doux'
+    : 'border-2 border-info bg-info-fond'
 }
 
 function LegendeTables() {
   const { t } = useTranslation()
   const etats = [
     { cle: 'occupee', classes: 'border-bordure-controle bg-accent-doux' },
+    { cle: 'prets', classes: 'border-succes-vif bg-succes-fond' },
     { cle: 'enAttente', classes: 'border-alerte-bord bg-alerte-fond' },
     { cle: 'addition', classes: 'border-info bg-info-fond' },
   ] as const
@@ -324,7 +331,7 @@ function TuileTable({
   // Articles pris mais pas partis en préparation : couleur d'alerte, l'accent reste à l'action principale.
   const classes = clsx(
     'flex min-h-38 w-full flex-col justify-between gap-2 rounded-moyen p-3.5 text-left text-encre',
-    couleurDeTable(note !== undefined, aEnvoyer > 0 || (note?.aServir ?? 0) > 0, addition),
+    couleurDeTable(note),
   )
   const contenu =
     note === undefined ? (
@@ -353,7 +360,13 @@ function TuileTable({
         </span>
         <span className="flex flex-col items-start gap-1">
           {addition && <BadgeStatut ton="info">{t('caisse.plan.additionDemandee')}</BadgeStatut>}
-          {note.aServir > 0 && (
+          {note.prets > 0 && (
+            <BadgeStatut ton="succes">{t('caisse.plan.prets', { count: note.prets })}</BadgeStatut>
+          )}
+          {note.cuisine !== undefined && (
+            <BadgeStatut ton="neutre">{t(`caisse.plan.cuisine.${note.cuisine}`)}</BadgeStatut>
+          )}
+          {note.aServir > 0 && note.prets === 0 && note.cuisine === undefined && (
             <BadgeStatut ton="neutre">
               {t('caisse.plan.badgeAServir', { count: note.aServir })}
             </BadgeStatut>
@@ -718,13 +731,18 @@ function SuiviDuService({
 }>) {
   const { t } = useTranslation()
   const [aRemettre, setARemettre] = useState<NoteEnService | null>(null)
-  const tables = enService.filter((note) => note.canal === 'SUR_PLACE')
+  // Les plats prêts d'abord : ils refroidissent pendant qu'on attend.
+  const tables = enService
+    .filter((note) => note.canal === 'SUR_PLACE')
+    .sort((a, b) => Number(b.prets > 0) - Number(a.prets > 0))
   const sansTable = enService.filter((note) => note.canal !== 'SUR_PLACE')
   const detail = (note: NoteEnService) =>
-    t('caisse.plan.enPreparation', {
-      serveur: note.serveur,
-      heure: formaterHeure(note.aServirDepuis, fuseauHoraire),
-    })
+    note.prets > 0
+      ? t('caisse.plan.aApporter', { serveur: note.serveur })
+      : t('caisse.plan.enPreparation', {
+          serveur: note.serveur,
+          heure: formaterHeure(note.aServirDepuis, fuseauHoraire),
+        })
   return (
     <>
       {tables.length > 0 && (
@@ -746,9 +764,15 @@ function SuiviDuService({
                     <span className="text-legende text-attenue">{detail(note)}</span>
                   </span>
                   {note.payee && <BadgeStatut ton="succes">{t('caisse.plan.payee')}</BadgeStatut>}
-                  <BadgeStatut ton="neutre">
-                    {t('caisse.plan.badgeAServir', { count: note.aServir })}
-                  </BadgeStatut>
+                  {note.prets > 0 ? (
+                    <BadgeStatut ton="succes">
+                      {t('caisse.plan.pretsCourt', { count: note.prets })}
+                    </BadgeStatut>
+                  ) : (
+                    <BadgeStatut ton="neutre">
+                      {t('caisse.plan.badgeAServir', { count: note.aServir })}
+                    </BadgeStatut>
+                  )}
                 </Link>
               </li>
             ))}
@@ -862,6 +886,16 @@ function DialogueRemettre({
       surConfirmer={() => void remettre()}
     >
       {erreur !== null && <AlerteErreur erreur={erreur} />}
+      {lignes.some(pasEncorePret) && (
+        <Alerte ton="alerte">
+          {t('caisse.remettre.avantCuisine', {
+            articles: lignes
+              .filter(pasEncorePret)
+              .map((ligne) => `${String(ligne.quantite)} ${ligne.nomProduit}`)
+              .join(', '),
+          })}
+        </Alerte>
+      )}
       {detail.isPending ? (
         <Chargement texte={t('caisse.remettre.chargement')} />
       ) : (

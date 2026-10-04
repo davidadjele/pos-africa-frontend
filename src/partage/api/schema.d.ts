@@ -104,6 +104,106 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/appareil/cuisine": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Les bons à préparer et ceux prêts depuis moins d'une heure
+         * @description Interrogé toutes les 5 secondes par l'écran cuisine.
+         */
+        get: operations["ecran"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/appareil/cuisine/bons/{envoiId}/debut": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Commencer un bon
+         * @description Erreur : RESSOURCE_INTROUVABLE (bon d'un autre établissement).
+         */
+        post: operations["commencer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/appareil/cuisine/bons/{envoiId}/pret": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Tout le bon est prêt
+         * @description Erreur : RESSOURCE_INTROUVABLE.
+         */
+        post: operations["marquerPret"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/appareil/cuisine/bons/{envoiId}/rappel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rappeler un bon marqué prêt par erreur
+         * @description Les articles pas encore servis reviennent en préparation. Erreur : RESSOURCE_INTROUVABLE.
+         */
+        post: operations["rappeler"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/appareil/cuisine/lignes/{ligneId}/pret": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Un article est prêt
+         * @description Erreur : RESSOURCE_INTROUVABLE.
+         */
+        post: operations["marquerArticlePret"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/appareil/personnel": {
         parameters: {
             query?: never;
@@ -208,8 +308,8 @@ export interface paths {
         };
         get?: never;
         /**
-         * Renommer une tablette
-         * @description Erreur : CONFLIT_MODIFICATION (409, version dépassée).
+         * Renommer une tablette ou changer son usage
+         * @description Sans type, la tablette garde le sien. Erreur : CONFLIT_MODIFICATION (409, version dépassée).
          */
         put: operations["renommer"];
         post?: never;
@@ -2638,6 +2738,8 @@ export interface components {
             /** Format: uuid */
             id: string;
             nom: string;
+            /** @enum {string} */
+            type: "CAISSE" | "CUISINE";
         };
         AppareilResume: {
             /** Format: date-time */
@@ -2648,6 +2750,8 @@ export interface components {
             id: string;
             nom: string;
             revoquee: boolean;
+            /** @enum {string} */
+            type: "CAISSE" | "CUISINE";
             /** Format: int64 */
             version: number;
         };
@@ -2696,6 +2800,21 @@ export interface components {
             /** Format: int32 */
             rembourses: number;
         };
+        ArticleCuisine: {
+            /** Format: date-time */
+            annuleeLe?: string;
+            /** Format: uuid */
+            ligneId: string;
+            nom: string;
+            note?: string;
+            /** Format: date-time */
+            preteLe?: string;
+            /** Format: int32 */
+            quantite: number;
+            serviPar?: string;
+            /** Format: date-time */
+            servieLe?: string;
+        };
         ArticleEnCaisse: {
             faible: boolean;
             /** Format: uuid */
@@ -2734,6 +2853,29 @@ export interface components {
             /** Format: int64 */
             tva: number;
         };
+        BonCuisine: {
+            articles: components["schemas"]["ArticleCuisine"][];
+            /** @enum {string} */
+            canal: "SUR_PLACE" | "COMPTOIR" | "EMPORTER";
+            clientNom?: string;
+            /** Format: uuid */
+            commandeId: string;
+            /** Format: date-time */
+            commenceLe?: string;
+            /** Format: int32 */
+            couverts?: number;
+            /** Format: uuid */
+            envoiId: string;
+            /** Format: date-time */
+            envoyeLe: string;
+            /** Format: int32 */
+            numero: number;
+            /** Format: date-time */
+            preteLe?: string;
+            salle?: string;
+            serveur: string;
+            table?: string;
+        };
         CaisseResume: {
             caisse: string;
             /** Format: date-time */
@@ -2761,6 +2903,7 @@ export interface components {
         CategorieCarte: {
             /** @enum {string} */
             couleur: "OCRE" | "BRIQUE" | "FEUILLE" | "LAGUNE" | "PRUNE" | "SABLE" | "MENTHE" | "ARDOISE";
+            envoyeeEnCuisine: boolean;
             /** Format: uuid */
             id: string;
             nom: string;
@@ -2778,6 +2921,7 @@ export interface components {
             active: boolean;
             /** @enum {string} */
             couleur: "OCRE" | "BRIQUE" | "FEUILLE" | "LAGUNE" | "PRUNE" | "SABLE" | "MENTHE" | "ARDOISE";
+            envoyeeEnCuisine: boolean;
             /** Format: uuid */
             id: string;
             /** Format: int64 */
@@ -2910,6 +3054,7 @@ export interface components {
         DemandeCategorie: {
             /** @enum {string} */
             couleur: "OCRE" | "BRIQUE" | "FEUILLE" | "LAGUNE" | "PRUNE" | "SABLE" | "MENTHE" | "ARDOISE";
+            envoyeeEnCuisine?: boolean;
             /** @example Bières */
             nom: string;
             /** Format: int64 */
@@ -2948,6 +3093,8 @@ export interface components {
             etablissementId: string;
             /** @example Caisse 1, bar */
             nom: string;
+            /** @enum {string} */
+            type?: "CAISSE" | "CUISINE";
         };
         DemandeComptage: {
             /** Format: int64 */
@@ -3262,6 +3409,8 @@ export interface components {
         };
         DemandeRenommageAppareil: {
             nom: string;
+            /** @enum {string} */
+            type?: "CAISSE" | "CUISINE";
             /** Format: int64 */
             version: number;
         };
@@ -3423,6 +3572,10 @@ export interface components {
             nom: string;
             /** Format: uuid */
             produitId: string;
+        };
+        EcranCuisine: {
+            aPreparer: components["schemas"]["BonCuisine"][];
+            prets: components["schemas"]["BonCuisine"][];
         };
         EcritureArdoise: {
             autorisePar?: string;
@@ -3828,8 +3981,11 @@ export interface components {
             annulationValideePar?: string;
             /** Format: date-time */
             annuleeLe?: string;
+            /** Format: date-time */
+            commenceeLe?: string;
             detailAnnulation?: string;
             detailRemise?: string;
+            enCuisine: boolean;
             /** Format: date-time */
             envoyeeLe?: string;
             /** Format: uuid */
@@ -3845,6 +4001,8 @@ export interface components {
             nomProduit: string;
             note?: string;
             offert: boolean;
+            /** Format: date-time */
+            preteLe?: string;
             /** Format: int64 */
             prixUnitaire: number;
             /** Format: uuid */
@@ -3965,6 +4123,8 @@ export interface components {
             /** Format: int32 */
             numero: number;
             payee: boolean;
+            /** Format: int32 */
+            prets: number;
             serveur: string;
             table?: string;
         };
@@ -4013,6 +4173,10 @@ export interface components {
             clientNom?: string;
             /** Format: int32 */
             couverts?: number;
+            /** @enum {string} */
+            cuisine?: "EN_ATTENTE" | "EN_PREPARATION";
+            /** Format: date-time */
+            enCuisineDepuis?: string;
             /** Format: uuid */
             id: string;
             mienne: boolean;
@@ -4020,6 +4184,8 @@ export interface components {
             numero: number;
             /** Format: date-time */
             ouverteLe: string;
+            /** Format: int32 */
+            prets: number;
             serveur: string;
             /** Format: int64 */
             total: number;
@@ -4896,6 +5062,159 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ResultatPriseDeCaisse"];
                 };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    ecran: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EcranCuisine"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    commencer: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Demande-Tonti": "1";
+            };
+            path: {
+                envoiId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    marquerPret: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Demande-Tonti": "1";
+            };
+            path: {
+                envoiId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    rappeler: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Demande-Tonti": "1";
+            };
+            path: {
+                envoiId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    marquerArticlePret: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Demande-Tonti": "1";
+            };
+            path: {
+                ligneId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
             default: {

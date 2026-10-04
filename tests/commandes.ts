@@ -11,12 +11,14 @@ export const BIERES = {
   nom: 'Bières',
   couleur: 'FEUILLE',
   ordre: 1,
+  envoyeeEnCuisine: false,
 } as const
 export const GRILLADES = {
   id: 'ca000000-0000-4000-8000-000000000001',
   nom: 'Grillades',
   couleur: 'OCRE',
   ordre: 2,
+  envoyeeEnCuisine: true,
 } as const
 
 export const FLAG: LigneCarteEtablissement = {
@@ -55,6 +57,7 @@ export const NOTE_T4_RESUME: NoteOuverte = {
   aEnvoyer: 2,
   totalPaye: 0,
   aServir: 0,
+  prets: 0,
 }
 export const NOTE_COMPTOIR: NoteOuverte = {
   id: 'c0000000-0000-4000-8000-000000000043',
@@ -67,6 +70,7 @@ export const NOTE_COMPTOIR: NoteOuverte = {
   aEnvoyer: 0,
   totalPaye: 0,
   aServir: 0,
+  prets: 0,
 }
 
 export const TERRASSE_ID = '5a000000-0000-4000-8000-000000000001'
@@ -122,6 +126,7 @@ export const FLAG_ENVOYE: LigneNote = {
   montantBrut: 1200,
   remise: 0,
   offert: false,
+  enCuisine: false,
 }
 
 export const POULET_A_ENVOYER: LigneNote = {
@@ -136,6 +141,7 @@ export const POULET_A_ENVOYER: LigneNote = {
   montantBrut: 9000,
   remise: 0,
   offert: false,
+  enCuisine: false,
 }
 
 /** T4 : un Flag envoyé en cuisine plus tôt, deux poulets pas encore envoyés. */

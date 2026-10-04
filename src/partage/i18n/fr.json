@@ -236,7 +236,11 @@
       "motifValide": "{{motif}}, validé par {{nom}}",
       "encaisserReste": "Encaisser le reste",
       "parCaissier": "Un caissier encaisse cette note.",
-      "entamee": "{{paye}} déjà payés : la note ne se modifie plus."
+      "entamee": "{{paye}} déjà payés : la note ne se modifie plus.",
+      "valider_one": "Valider {{count}} article",
+      "valider_other": "Valider {{count}} articles",
+      "valide_one": "{{count}} article validé à {{heure}}.",
+      "valide_other": "{{count}} articles validés à {{heure}}."
     },
     "canaux": {
       "SUR_PLACE": "Sur place",
@@ -288,9 +292,19 @@
       "legende": {
         "titre": "Légende des couleurs",
         "occupee": "Occupée",
+        "prets": "Plats prêts à servir",
         "enAttente": "Articles à envoyer ou à servir",
         "addition": "Addition demandée"
-      }
+      },
+      "prets_one": "{{count}} prêt à servir",
+      "prets_other": "{{count}} prêts à servir",
+      "pretsCourt_one": "{{count}} prêt",
+      "pretsCourt_other": "{{count}} prêts",
+      "cuisine": {
+        "EN_ATTENTE": "En attente en cuisine",
+        "EN_PREPARATION": "En préparation"
+      },
+      "aApporter": "{{serveur}}, plats prêts à apporter"
     },
     "ouverture": {
       "titreTable": "Ouvrir une note sur {{table}}",
@@ -378,12 +392,19 @@
       "servi": "Servi",
       "serviPour": "Servi : {{produit}}",
       "serviA": "servi à {{heure}}",
-      "depuis": "en préparation depuis {{heure}}"
+      "depuis": "en préparation depuis {{heure}}",
+      "avantCuisine": {
+        "titre": "Servir avant la cuisine ?",
+        "phrase": "La cuisine ne les a pas encore marqués prêts. Elle verra qu’ils sont servis, et par qui.",
+        "attendre": "Attendre la cuisine",
+        "confirmer": "Marquer servi quand même"
+      }
     },
     "remettre": {
       "titre": "Remettre {{numero}} au client ?",
       "phrase": "{{ou}}. Vérifiez les articles avant de remettre.",
-      "chargement": "Chargement des articles…"
+      "chargement": "Chargement des articles…",
+      "avantCuisine": "La cuisine n’a pas encore marqué prêt : {{articles}}. Elle verra que la commande est remise, et par qui."
     },
     "stock": {
       "titre": "{{produit}} n’est plus en stock",
@@ -395,14 +416,16 @@
       "revient": "Revient en stock",
       "revientAide": "Intact, pas ouvert",
       "perdu": "Perdu",
-      "perduAide": "Ouvert, cassé, inutilisable"
+      "perduAide": "Ouvert, cassé, inutilisable",
+      "commence": "La cuisine l’a déjà commencé : il est compté perdu, sauf si vous choisissez autrement."
     },
     "ruban": {
       "titre": "Notes ouvertes",
       "aEnvoyer": "À envoyer",
       "aServir": "À servir",
       "aRemettre": "À remettre",
-      "addition": "Addition demandée"
+      "addition": "Addition demandée",
+      "prets": "Prêt à servir"
     },
     "telephone": {
       "continuer": "Continuer la commande",
@@ -1189,14 +1212,13 @@
       "etablissement": "Établissement",
       "activite": "Dernière activité",
       "statut": "Statut",
-      "actions": "Actions"
+      "actions": "Actions",
+      "usage": "Usage"
     },
     "statut": {
       "active": "Active",
       "revoquee": "Révoquée"
     },
-    "renommer": "Renommer",
-    "renommerNomme": "Renommer {{nom}}",
     "revoquer": "Révoquer",
     "plusDActions": "Plus d’actions pour {{nom}}",
     "vide": {
@@ -1207,7 +1229,12 @@
       "etablissement": "Établissement",
       "nom": "Nom de la caisse",
       "nomAide": "Tel que le personnel le verra, par exemple « Caisse 1, bar ».",
-      "generer": "Générer le code"
+      "generer": "Générer le code",
+      "usage": "Usage",
+      "usageAide": {
+        "CAISSE": "Le personnel s’y connecte avec son PIN pour prendre les commandes et encaisser.",
+        "CUISINE": "Affiche les bons envoyés en cuisine, sans PIN. Un seul écran cuisine par établissement."
+      }
     },
     "code": {
       "titre": "Code d’enregistrement",
@@ -1229,10 +1256,16 @@
       "faite": "« {{nom}} » est révoquée."
     },
     "renommage": {
-      "titre": "Renommer « {{nom}} »",
-      "consequence": "Le nouveau nom s’affiche sur la tablette et dans cette liste.",
-      "fait": "La tablette s’appelle maintenant « {{nom}} »."
-    }
+      "titre": "Modifier « {{nom}} »",
+      "consequence": "Le nom s’affiche sur la tablette et dans cette liste. Changer l’usage la fait passer de la caisse à l’écran cuisine, ou l’inverse, à son prochain chargement.",
+      "fait": "La tablette « {{nom}} » est modifiée."
+    },
+    "types": {
+      "CAISSE": "Caisse",
+      "CUISINE": "Écran cuisine"
+    },
+    "modifier": "Modifier",
+    "modifierNomme": "Modifier {{nom}}"
   },
   "couleurs": {
     "OCRE": "Ocre",
@@ -1404,7 +1437,10 @@
     "annuler": "Annuler",
     "regle": "Une catégorie qui contient des produits actifs ne se désactive pas : déplacez ou désactivez d’abord ses produits.",
     "enUsage_one": "« {{nom}} » contient encore {{count}} produit actif : déplacez-le vers une autre catégorie ou désactivez-le d’abord.",
-    "enUsage_other": "« {{nom}} » contient encore {{count}} produits actifs : déplacez-les vers une autre catégorie ou désactivez-les d’abord."
+    "enUsage_other": "« {{nom}} » contient encore {{count}} produits actifs : déplacez-les vers une autre catégorie ou désactivez-les d’abord.",
+    "enCuisine": "Envoyée en cuisine",
+    "enCuisineAide": "Ses articles apparaissent sur l’écran cuisine. Décochez pour les boissons servies au bar.",
+    "pasEnCuisine": "Pas en cuisine"
   },
   "carteEtablissement": {
     "titre": "Carte de {{etablissement}}",
@@ -2453,5 +2489,40 @@
     "reimprimer": "Réimprimer l’avoir {{numero}}",
     "sans": "Sans avoir",
     "numeroCourt": "Avoir {{numero}}"
+  },
+  "cuisine": {
+    "bons": "Bons",
+    "onglets": {
+      "aPreparer": "À préparer",
+      "prets": "Prêts"
+    },
+    "bon": "Bon {{repere}}",
+    "chargement": "Chargement des bons…",
+    "son": "Son des nouveaux bons",
+    "sonActif": "Son actif",
+    "sonCoupe": "Son coupé",
+    "aJour": "À jour à {{heure}}",
+    "horsLigne": "Connexion perdue depuis {{heure}}, nouvel essai…",
+    "enPreparation": "En préparation",
+    "commencer": "Commencer",
+    "toutPret": "Tout est prêt",
+    "pret": "Prêt",
+    "servi": "Servi",
+    "articlePret": "{{nom}} : prêt",
+    "annuleA": "Annulé à {{heure}}",
+    "preteA": "Prêt à {{heure}}",
+    "rappeler": "Rappeler",
+    "vide": {
+      "aPreparer": {
+        "titre": "Rien à préparer",
+        "phrase": "Les bons envoyés par la caisse s’affichent ici, les plus anciens d’abord. Un bip annonce chaque nouveau bon."
+      },
+      "prets": {
+        "titre": "Aucun bon prêt dans l’heure",
+        "phrase": "Un bon marqué prêt reste ici une heure : vous pouvez le rappeler s’il a été marqué par erreur."
+      }
+    },
+    "serviPar": "Servi par {{nom}}",
+    "serviA": "Servi à {{heure}}"
   }
 }

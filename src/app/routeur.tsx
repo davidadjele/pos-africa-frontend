@@ -41,6 +41,7 @@ import { PageRecu } from '../fonctionnalites/recu/PageRecu'
 import { PageCaisses } from '../fonctionnalites/rapports/PageCaisses'
 import { PageDetailCaisse } from '../fonctionnalites/rapports/PageDetailCaisse'
 import { PageVentes } from '../fonctionnalites/rapports/PageVentes'
+import { EcranCuisine } from '../fonctionnalites/cuisine/EcranCuisine'
 import { PageEnregistrementTablette } from '../fonctionnalites/tablette/PageEnregistrementTablette'
 import { PageTablettes } from '../fonctionnalites/tablette/PageTablettes'
 import {
@@ -49,6 +50,7 @@ import {
   exigerMotDePasseTemporaire,
   exigerPortee,
   exigerTablette,
+  exigerTabletteCuisine,
   redirigerSiSessionOuverte,
   redirigerSiTabletteEnregistree,
 } from './gardes'
@@ -120,6 +122,13 @@ const caisse = createRoute({
   path: '/caisse',
   beforeLoad: ({ context }) => exigerTablette(context.clientRequetes),
   component: MiseEnPageCaisse,
+})
+
+const cuisine = createRoute({
+  getParentRoute: () => racine,
+  path: '/cuisine',
+  beforeLoad: ({ context }) => exigerTabletteCuisine(context.clientRequetes),
+  component: EcranCuisine,
 })
 
 const enregistrementTablette = createRoute({
@@ -472,6 +481,7 @@ const arbre = racine.addChildren([
   inscription,
   caisse.addChildren([caisseAccueil, caisseTiroir, caisseNote, caisseEncaissement]),
   enregistrementTablette,
+  cuisine,
   gestion.addChildren([
     gestionAccueil,
     etablissements,

@@ -40,6 +40,7 @@ import { CarteCaisse } from './CarteCaisse'
 import { DialogueAnnulation, DialogueLigne } from './DialoguesLigne'
 import { ouEstLaNote, PanneauNote, type Rupture } from './PanneauNote'
 import { RubanNotes } from './RubanNotes'
+import { envoiVersLaCuisine, pasEncorePret } from './service'
 import {
   requeteCarteCaisse,
   requeteCommande,
@@ -64,6 +65,7 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
   const peutEncaisser = session?.permissions.includes('PAIEMENT_ENCAISSER') ?? false
   const note = useQuery(requeteCommande(commandeId))
   const carte = useQuery(requeteCarteCaisse)
+  const versLaCuisine = envoiVersLaCuisine(note.data?.lignes ?? [], carte.data)
   const stock = useQuery(requeteStockCaisse)
   // Politique « avertissement » : l'article sans stock attend la confirmation avant d'être ajouté.
   const [sansStockAConfirmer, setSansStockAConfirmer] = useState<LigneCarteEtablissement | null>(
@@ -77,6 +79,10 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
   const [noteOuverte, setNoteOuverte] = useState(false)
   const [ligneOuverte, setLigneOuverte] = useState<LigneNote | null>(null)
   const [aAnnuler, setAAnnuler] = useState<LigneNote | null>(null)
+  const [servirAvantCuisine, setServirAvantCuisine] = useState<{
+    lignes: LigneNote[]
+    servir: () => void
+  } | null>(null)
   const [aValider, setAValider] = useState<{ ligne: LigneNote; demande: DemandeAnnulation } | null>(
     null,
   )
@@ -104,6 +110,26 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
   async function carteAJour(): Promise<LigneCarteEtablissement[]> {
     await clientRequetes.refetchQueries({ queryKey: requeteCarteCaisse.queryKey })
     return clientRequetes.getQueryData<LigneCarteEtablissement[]>(requeteCarteCaisse.queryKey) ?? []
+  }
+
+  /**
+   * Servir ce que la cuisine n'a pas encore marqué prêt reste permis (le cuisinier oublie parfois de
+   * toucher « Prêt »), mais se confirme : sinon la cuisine arrêterait un plat servi par erreur.
+   */
+  async function confirmerSiCuisine(lignes: LigneNote[], servir: () => void) {
+    if (!lignes.some(pasEncorePret)) {
+      servir()
+      return
+    }
+    // La note affichée peut dater d'avant « Tout est prêt » : on la relit avant de déranger le serveur.
+    const ids = new Set(lignes.map((ligne) => ligne.id))
+    const fraiches = await clientRequetes
+      .query({ ...requeteCommande(commandeId), staleTime: 0 })
+      .then((fraiche) => fraiche.lignes.filter((ligne) => ids.has(ligne.id)))
+      .catch(() => lignes)
+    const pasPrets = fraiches.filter(pasEncorePret)
+    if (pasPrets.length === 0) servir()
+    else setServirAvantCuisine({ lignes: pasPrets, servir })
   }
 
   async function agir(action: () => Promise<CommandeDetail>) {
@@ -176,7 +202,7 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
         .sort((a, b) => a.localeCompare(b))
         .at(-1)
       setConfirmation(
-        t('caisse.note.envoye', {
+        t(versLaCuisine ? 'caisse.note.envoye' : 'caisse.note.valide', {
           count: nombre,
           heure:
             derniers === undefined || derniers === '' ? '' : formaterHeure(derniers, fuseauHoraire),
@@ -425,21 +451,29 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
             modifiable={modifiable}
             peutEncaisser={peutEncaisser}
             peutServir={peutCommander && note.data.statut !== 'ANNULEE'}
-            surServir={(ligne) =>
-              void agir(() =>
-                appelerCaisse<CommandeDetail>(
-                  `/caisse/commandes/${commandeId}/lignes/${ligne.id}/service`,
-                  { methode: 'POST' },
-                ),
+            surServir={(ligne) => {
+              void confirmerSiCuisine(
+                [ligne],
+                () =>
+                  void agir(() =>
+                    appelerCaisse<CommandeDetail>(
+                      `/caisse/commandes/${commandeId}/lignes/${ligne.id}/service`,
+                      { methode: 'POST' },
+                    ),
+                  ),
               )
-            }
-            surServirTout={() =>
-              void agir(() =>
-                appelerCaisse<CommandeDetail>(`/caisse/commandes/${commandeId}/service`, {
-                  methode: 'POST',
-                }),
+            }}
+            surServirTout={() => {
+              void confirmerSiCuisine(
+                note.data.lignes,
+                () =>
+                  void agir(() =>
+                    appelerCaisse<CommandeDetail>(`/caisse/commandes/${commandeId}/service`, {
+                      methode: 'POST',
+                    }),
+                  ),
               )
-            }
+            }}
             surEncaisser={() =>
               void naviguer({ to: '/caisse/notes/$commandeId/encaisser', params: { commandeId } })
             }
@@ -470,6 +504,7 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
               )
             }
             surRevenir={() => void revenirAuPlan()}
+            versLaCuisine={versLaCuisine}
             surEnvoyer={(nombre) => void envoyer(nombre)}
             surModifier={(ligne, demande) => void modifier(ligne, demande)}
             surOuvrirLigne={setLigneActions}
@@ -530,6 +565,30 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
               void modifier(ligneOuverte, demande)
             }}
           />
+        )}
+        {servirAvantCuisine !== null && (
+          <Dialogue
+            titre={t('caisse.service.avantCuisine.titre')}
+            consequence={t('caisse.service.avantCuisine.phrase')}
+            libelleAnnuler={t('caisse.service.avantCuisine.attendre')}
+            libelleConfirmer={t('caisse.service.avantCuisine.confirmer')}
+            surAnnuler={() => {
+              setServirAvantCuisine(null)
+            }}
+            surConfirmer={() => {
+              const { servir } = servirAvantCuisine
+              setServirAvantCuisine(null)
+              servir()
+            }}
+          >
+            <ul className="m-0 flex list-none flex-col gap-1.5 rounded-normal bg-fond px-3.5 py-3 text-corps text-encre">
+              {servirAvantCuisine.lignes.map((ligne) => (
+                <li key={ligne.id}>
+                  <span className="chiffres">{ligne.quantite}</span> {ligne.nomProduit}
+                </li>
+              ))}
+            </ul>
+          </Dialogue>
         )}
         {sansStockAConfirmer !== null && (
           <Dialogue

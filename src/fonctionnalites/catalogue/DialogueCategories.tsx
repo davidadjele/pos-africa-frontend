@@ -13,6 +13,7 @@ import { ChampSaisie } from '../../partage/ui/ChampSaisie'
 import { Chargement } from '../../partage/ui/Chargement'
 import { MenuActions } from '../../partage/ui/MenuActions'
 import { usePiegeFocus } from '../../partage/ui/usePiegeFocus'
+import { Case } from '../../partage/ui/Case'
 import { COULEURS_CATEGORIE, PALETTE } from './couleurs'
 import { requeteCategories } from './requetes'
 
@@ -128,6 +129,9 @@ export function DialogueCategories({ surFermer }: Readonly<{ surFermer: () => vo
                 </span>
                 <CarreCategorie couleur={categorie.couleur} taille="grand" />
                 <span className="flex-1 text-corps-fort text-encre">{categorie.nom}</span>
+                {!categorie.envoyeeEnCuisine && (
+                  <BadgeStatut ton="neutre">{t('categories.pasEnCuisine')}</BadgeStatut>
+                )}
                 {!categorie.active && (
                   <BadgeStatut ton="neutre">{t('categories.desactivee')}</BadgeStatut>
                 )}
@@ -198,6 +202,7 @@ function FormulaireCategorie({
   const id = useId()
   const [nom, setNom] = useState(categorie?.nom ?? '')
   const [couleur, setCouleur] = useState<CouleurCategorie>(categorie?.couleur ?? 'OCRE')
+  const [enCuisine, setEnCuisine] = useState(categorie?.envoyeeEnCuisine ?? true)
   const [erreurNom, setErreurNom] = useState<string | undefined>(undefined)
   const [enCours, setEnCours] = useState(false)
   const [erreur, setErreur] = useState<unknown>(null)
@@ -213,6 +218,7 @@ function FormulaireCategorie({
     const corps: DemandeCategorie = {
       nom: nom.trim(),
       couleur,
+      envoyeeEnCuisine: enCuisine,
       ...(categorie === null ? {} : { version: categorie.version }),
     }
     try {
@@ -221,6 +227,7 @@ function FormulaireCategorie({
         corps,
       })
       setNom('')
+      setEnCuisine(true)
       setEnCours(false)
       surEnregistre()
     } catch (refus) {
@@ -291,6 +298,14 @@ function FormulaireCategorie({
           </div>
         </fieldset>
       </div>
+      <Case
+        libelle={t('categories.enCuisine')}
+        aide={t('categories.enCuisineAide')}
+        checked={enCuisine}
+        onChange={(evenement) => {
+          setEnCuisine(evenement.target.checked)
+        }}
+      />
       {erreur !== null && <AlerteErreur erreur={erreur} />}
       <div className="flex justify-end gap-2">
         {categorie !== null && <Bouton onClick={surAnnuler}>{t('categories.annuler')}</Bouton>}

@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it, vi } from 'vitest'
@@ -407,6 +407,101 @@ describe('EcranNote', () => {
     expect(await within(note).findByText(/servi à 19:21/)).toBeVisible()
     expect(within(note).queryByRole('button', { name: 'Tout servi' })).not.toBeInTheDocument()
     expect(lignes).toEqual([FLAG_ENVOYE.id])
+  })
+
+  it('valide sans parler de préparation une note qui ne va pas en cuisine', async () => {
+    const flag = {
+      ...POULET_A_ENVOYER,
+      id: 'flag-brouillon',
+      produitId: FLAG.produitId,
+      nomProduit: 'Flag 65 cl',
+      quantite: 1,
+    }
+    noteServie({ ...NOTE_T4, lignes: [flag] })
+
+    const note = await noteEnCours()
+    expect(within(note).getByRole('button', { name: 'Valider 1 article' })).toBeVisible()
+    expect(within(note).queryByRole('button', { name: /en préparation/ })).toBeNull()
+  })
+
+  it('demande confirmation avant de servir ce que la cuisine n’a pas marqué prêt', async () => {
+    const pouletEnCuisine = {
+      ...FLAG_ENVOYE,
+      id: '1e000000-0000-4000-8000-000000000009',
+      produitId: POULET_A_ENVOYER.produitId,
+      nomProduit: 'Poulet braisé',
+      quantite: 2,
+      enCuisine: true,
+    }
+    let servis = 0
+    serveurMsw.use(
+      http.post(`${API}/caisse/commandes/${NOTE_T4.id}/service`, () => {
+        servis++
+        return HttpResponse.json({ ...NOTE_T4, lignes: [FLAG_ENVOYE, pouletEnCuisine] })
+      }),
+    )
+    noteServie({ ...NOTE_T4, lignes: [FLAG_ENVOYE, pouletEnCuisine] })
+
+    const note = await noteEnCours()
+    await userEvent.click(within(note).getByRole('button', { name: 'Tout servi' }))
+    const dialogue = screen.getByRole('dialog', { name: 'Servir avant la cuisine ?' })
+    expect(dialogue).toHaveTextContent('2 Poulet braisé')
+    expect(dialogue).toHaveTextContent('Elle verra qu’ils sont servis, et par qui.')
+    await userEvent.click(within(dialogue).getByRole('button', { name: 'Attendre la cuisine' }))
+    expect(servis).toBe(0)
+
+    await userEvent.click(within(note).getByRole('button', { name: 'Servi : Poulet braisé' }))
+    await userEvent.click(
+      within(screen.getByRole('dialog', { name: 'Servir avant la cuisine ?' })).getByRole(
+        'button',
+        { name: 'Attendre la cuisine' },
+      ),
+    )
+    expect(servis).toBe(0)
+    await userEvent.click(within(note).getByRole('button', { name: 'Tout servi' }))
+    await userEvent.click(
+      within(screen.getByRole('dialog', { name: 'Servir avant la cuisine ?' })).getByRole(
+        'button',
+        { name: 'Marquer servi quand même' },
+      ),
+    )
+    await waitFor(() => {
+      expect(servis).toBe(1)
+    })
+  })
+
+  it('relit la note avant de demander : la cuisine a pu finir entre-temps', async () => {
+    const poulet = {
+      ...FLAG_ENVOYE,
+      id: '1e000000-0000-4000-8000-000000000009',
+      nomProduit: 'Poulet braisé',
+      enCuisine: true,
+    }
+    let lectures = 0
+    let servis = 0
+    serveurMsw.use(
+      http.get(`${API}/caisse/carte`, () => HttpResponse.json([FLAG, POULET])),
+      http.get(`${API}/caisse/plan`, () => HttpResponse.json(PLAN)),
+      http.get(`${API}/caisse/commandes/${NOTE_T4.id}`, () => {
+        lectures++
+        // La première lecture date d'avant « Tout est prêt » ; la cuisine a fini depuis.
+        const pret = lectures > 1 ? { preteLe: '2026-09-29T19:20:00Z' } : {}
+        return HttpResponse.json({ ...NOTE_T4, lignes: [{ ...poulet, ...pret }] })
+      }),
+      http.post(`${API}/caisse/commandes/${NOTE_T4.id}/service`, () => {
+        servis++
+        return HttpResponse.json(NOTE_T4)
+      }),
+    )
+    caisseOuverte(`/caisse/notes/${NOTE_T4.id}`)
+
+    const note = await noteEnCours()
+    await userEvent.click(within(note).getByRole('button', { name: 'Tout servi' }))
+
+    await waitFor(() => {
+      expect(servis).toBe(1)
+    })
+    expect(screen.queryByRole('dialog', { name: 'Servir avant la cuisine ?' })).toBeNull()
   })
 
   it('remet au client une commande payée du comptoir', async () => {

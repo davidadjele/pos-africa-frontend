@@ -27,12 +27,14 @@ const BIERES = {
   nom: 'Bières',
   couleur: 'FEUILLE',
   ordre: 1,
+  envoyeeEnCuisine: false,
 } as const
 const GRILLADES = {
   id: 'ca000000-0000-4000-8000-000000000001',
   nom: 'Grillades',
   couleur: 'OCRE',
   ordre: 2,
+  envoyeeEnCuisine: true,
 } as const
 
 const FLAG: LigneCarteEtablissement = {
