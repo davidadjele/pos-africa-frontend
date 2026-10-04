@@ -388,12 +388,19 @@
       "servi": "Servi",
       "serviPour": "Servi : {{produit}}",
       "serviA": "servi à {{heure}}",
-      "depuis": "en préparation depuis {{heure}}"
+      "depuis": "en préparation depuis {{heure}}",
+      "avantCuisine": {
+        "titre": "Servir avant la cuisine ?",
+        "phrase": "La cuisine ne les a pas encore marqués prêts. Elle verra qu’ils sont servis, et par qui.",
+        "attendre": "Attendre la cuisine",
+        "confirmer": "Marquer servi quand même"
+      }
     },
     "remettre": {
       "titre": "Remettre {{numero}} au client ?",
       "phrase": "{{ou}}. Vérifiez les articles avant de remettre.",
-      "chargement": "Chargement des articles…"
+      "chargement": "Chargement des articles…",
+      "avantCuisine": "La cuisine n’a pas encore marqué prêt : {{articles}}. Elle verra que la commande est remise, et par qui."
     },
     "stock": {
       "titre": "{{produit}} n’est plus en stock",
@@ -2510,6 +2517,7 @@
         "titre": "Aucun bon prêt dans l’heure",
         "phrase": "Un bon marqué prêt reste ici une heure : vous pouvez le rappeler s’il a été marqué par erreur."
       }
-    }
+    },
+    "serviPar": "Servi par {{nom}}"
   }
 }

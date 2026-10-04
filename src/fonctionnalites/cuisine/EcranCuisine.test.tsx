@@ -176,6 +176,7 @@ describe('EcranCuisine', () => {
           articles: BON_PRET.articles.map((article) => ({
             ...article,
             servieLe: '2026-10-03T21:40:00Z',
+            serviPar: 'Kossi A.',
           })),
         },
       ],
@@ -184,7 +185,7 @@ describe('EcranCuisine', () => {
 
     await userEvent.click(await screen.findByRole('tab', { name: /Prêts/ }))
     const t4 = screen.getByRole('region', { name: 'Bon T4' })
-    expect(t4).toHaveTextContent('Servi')
+    expect(t4).toHaveTextContent('Servi par Kossi A.')
     expect(within(t4).queryByRole('button', { name: 'Rappeler' })).toBeNull()
   })
 

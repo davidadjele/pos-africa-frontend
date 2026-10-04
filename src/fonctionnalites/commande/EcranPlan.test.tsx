@@ -196,7 +196,10 @@ describe('EcranPlan', () => {
           ...NOTE_VIDE,
           canal: 'EMPORTER',
           clientNom: 'Yao',
-          lignes: [FLAG_ENVOYE],
+          lignes: [
+            FLAG_ENVOYE,
+            { ...FLAG_ENVOYE, id: 'poulet', nomProduit: 'Poulet braisé', enCuisine: true },
+          ],
         }),
       ),
       http.post(`${API}/caisse/commandes/${NOTE_VIDE.id}/service`, () => {
@@ -217,6 +220,7 @@ describe('EcranPlan', () => {
     await userEvent.click(within(aRemettre).getByRole('button', { name: 'Remise au client' }))
     const dialogue = screen.getByRole('dialog', { name: 'Remettre n°44 au client ?' })
     expect(await within(dialogue).findByText('1× Flag 65 cl')).toBeVisible()
+    expect(dialogue).toHaveTextContent('La cuisine n’a pas encore marqué prêt : 1 Poulet braisé.')
     await userEvent.click(within(dialogue).getByRole('button', { name: 'Remise au client' }))
 
     await vi.waitFor(() => {

@@ -356,7 +356,13 @@ function Article({
   const sorti = article.preteLe !== undefined || article.servieLe !== undefined
   let etat = null
   if (article.servieLe !== undefined) {
-    etat = <BadgeStatut ton="succes">{t('cuisine.servi')}</BadgeStatut>
+    etat = (
+      <BadgeStatut ton="succes">
+        {article.serviPar === undefined
+          ? t('cuisine.servi')
+          : t('cuisine.serviPar', { nom: article.serviPar })}
+      </BadgeStatut>
+    )
   } else if (article.preteLe !== undefined) {
     etat = <BadgeStatut ton="succes">{t('cuisine.pret')}</BadgeStatut>
   } else if (!annule && !pret) {

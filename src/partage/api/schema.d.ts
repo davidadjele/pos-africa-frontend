@@ -2811,6 +2811,7 @@ export interface components {
             preteLe?: string;
             /** Format: int32 */
             quantite: number;
+            serviPar?: string;
             /** Format: date-time */
             servieLe?: string;
         };

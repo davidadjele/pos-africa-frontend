@@ -16,7 +16,7 @@ import type {
 } from '../../partage/api/contrat'
 import { formaterHeure } from '../../partage/dates/formaterDate'
 import { formaterMontant, type Devise } from '../../partage/montants/formaterMontant'
-import { AlerteErreur } from '../../partage/ui/Alerte'
+import { Alerte, AlerteErreur } from '../../partage/ui/Alerte'
 import { BadgeStatut } from '../../partage/ui/BadgeStatut'
 import { Bouton } from '../../partage/ui/Bouton'
 import { ChampSaisie } from '../../partage/ui/ChampSaisie'
@@ -28,6 +28,7 @@ import { numeroEtCanal } from './PanneauNote'
 import { requeteAppareil } from '../tablette/requetes'
 import { dureeDepuis } from './duree'
 import { requeteCommande, requetePlan } from './requetes'
+import { pasEncorePret } from './service'
 
 type Ouverture = { canal: 'SUR_PLACE'; table: TablePlan; salle: string } | { canal: 'EMPORTER' }
 
@@ -885,6 +886,16 @@ function DialogueRemettre({
       surConfirmer={() => void remettre()}
     >
       {erreur !== null && <AlerteErreur erreur={erreur} />}
+      {lignes.some(pasEncorePret) && (
+        <Alerte ton="alerte">
+          {t('caisse.remettre.avantCuisine', {
+            articles: lignes
+              .filter(pasEncorePret)
+              .map((ligne) => `${String(ligne.quantite)} ${ligne.nomProduit}`)
+              .join(', '),
+          })}
+        </Alerte>
+      )}
       {detail.isPending ? (
         <Chargement texte={t('caisse.remettre.chargement')} />
       ) : (
