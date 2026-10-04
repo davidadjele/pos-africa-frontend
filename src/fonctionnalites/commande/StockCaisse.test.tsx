@@ -101,4 +101,41 @@ describe('Le stock à la caisse', () => {
     await screen.findByRole('region', { name: 'Note en cours' })
     expect(annulations).toEqual([{ quantite: 1, motif: 'NON_SERVIE', retourEnStock: false }])
   })
+
+  it('compte perdu par défaut un article que la cuisine a commencé', async () => {
+    noteAvecStock(
+      {
+        politique: 'SOUPLE',
+        articles: [{ produitId: FLAG.produitId, quantite: 12, faible: false }],
+      },
+      GERANT,
+    )
+    // Après l'ouverture de la caisse : cette réponse prend le pas sur la note par défaut.
+    serveurMsw.use(
+      http.get(`${API}/caisse/commandes/${NOTE_T4.id}`, () =>
+        HttpResponse.json({
+          ...NOTE_T4,
+          lignes: NOTE_T4.lignes.map((ligne) =>
+            ligne.id === FLAG_ENVOYE.id
+              ? { ...ligne, enCuisine: true, commenceeLe: '2026-09-29T19:05:00Z' }
+              : ligne,
+          ),
+        }),
+      ),
+    )
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Actions sur Flag 65 cl' }))
+    await userEvent.click(
+      within(screen.getByRole('dialog', { name: 'Flag 65 cl' })).getByRole('button', {
+        name: /^Annuler/,
+      }),
+    )
+    const annulation = screen.getByRole('dialog', { name: 'Annuler Flag 65 cl ?' })
+    await userEvent.click(
+      within(annulation).getByRole('radio', { name: 'Le client a changé d’avis' }),
+    )
+    const stock = within(annulation).getByRole('radiogroup', { name: 'L’article' })
+    expect(within(stock).getByRole('radio', { name: /Perdu/ })).toBeChecked()
+    expect(annulation).toHaveTextContent('La cuisine l’a déjà commencé')
+  })
 })

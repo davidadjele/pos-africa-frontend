@@ -22,7 +22,7 @@ import { MenuActions, type ActionMenu } from '../../partage/ui/MenuActions'
 import { usePiegeFocus } from '../../partage/ui/usePiegeFocus'
 import { DialogueValidationGerant } from '../validation/DialogueValidationGerant'
 import { ChoixMotif, libelleMotif, useChoixMotif } from './ChoixMotif'
-import { ChoixRetourStock, retourParDefaut } from './DialoguesLigne'
+import { ChoixRetourStock, estCommencee, retourParDefaut } from './DialoguesLigne'
 import { DialogueRemise, libelleRemise } from './DialoguesRemise'
 import { requetePlan, requeteStockCaisse, stockDuProduit } from './requetes'
 import { useValidation } from './useValidation'
@@ -606,7 +606,8 @@ function DialogueAnnulationNote({
       ligne.statut === 'ENVOYEE' && stockDuProduit(stock.data, ligne.produitId) !== undefined,
   )
   const [retour, setRetour] = useState<boolean | null>(null)
-  const revient = retour ?? (choix.motif !== null && retourParDefaut(choix.motif))
+  const commencee = note.lignes.some(estCommencee)
+  const revient = retour ?? (choix.motif !== null && retourParDefaut(choix.motif, commencee))
   const somme = (statut: 'ENVOYEE' | 'BROUILLON') => {
     const lignes = note.lignes.filter((ligne) => ligne.statut === statut)
     return {
@@ -661,6 +662,7 @@ function DialogueAnnulationNote({
         <ChoixRetourStock
           libelle={t('caisse.stock.articles')}
           revient={revient}
+          commence={commencee}
           surChoisir={setRetour}
         />
       )}

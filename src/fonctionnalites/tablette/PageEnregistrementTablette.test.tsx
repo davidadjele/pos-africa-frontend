@@ -42,6 +42,24 @@ describe('PageEnregistrementTablette', () => {
     expect(await screen.findByRole('banner')).toHaveTextContent('Bè Kpota, Caisse 1, bar')
   })
 
+  it('ouvre l’écran cuisine d’une tablette enregistrée comme cuisine', async () => {
+    const cuisine = { ...CAISSE_BAR, nom: 'Cuisine', type: 'CUISINE' as const }
+    serveurMsw.use(
+      http.post(`${API}/appareil/appairage`, () => {
+        tablette(cuisine)
+        return HttpResponse.json(cuisine)
+      }),
+      http.get(`${API}/appareil/cuisine`, () => HttpResponse.json({ aPreparer: [], prets: [] })),
+    )
+    const { routeur } = await ouvrirEnregistrement()
+
+    await taper('482915')
+
+    await waitFor(() => {
+      expect(routeur.state.location.pathname).toBe('/cuisine')
+    })
+  })
+
   it('efface le code refusé et dit quoi faire', async () => {
     serveurMsw.use(
       http.post(`${API}/appareil/appairage`, () =>

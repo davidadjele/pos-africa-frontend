@@ -108,15 +108,21 @@ describe('PageProduits', () => {
     await userEvent.click(
       await within(dialogue).findByRole('button', { name: 'Descendre Grillades' }),
     )
+    const bieres = within(dialogue).getByText('Bières').closest('li')
+    expect(bieres).toHaveTextContent('Pas en cuisine')
     const formulaire = within(dialogue).getByRole('form', { name: 'Nouvelle catégorie' })
     await userEvent.type(within(formulaire).getByLabelText(/^Nom/), 'Vins et spiritueux')
     await userEvent.click(within(formulaire).getByRole('radio', { name: 'Prune' }))
+    await userEvent.click(within(formulaire).getByRole('checkbox', { name: 'Envoyée en cuisine' }))
     await userEvent.click(within(formulaire).getByRole('button', { name: 'Ajouter la catégorie' }))
 
     await waitFor(() => {
       expect(envois).toEqual([
         { chemin: '/categories/ordre', corps: { ids: [BIERES.id, GRILLADES.id] } },
-        { chemin: '/categories', corps: { nom: 'Vins et spiritueux', couleur: 'PRUNE' } },
+        {
+          chemin: '/categories',
+          corps: { nom: 'Vins et spiritueux', couleur: 'PRUNE', envoyeeEnCuisine: false },
+        },
       ])
     })
   })

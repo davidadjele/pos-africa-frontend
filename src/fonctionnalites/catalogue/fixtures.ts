@@ -15,6 +15,7 @@ export const GRILLADES: CategorieResume = {
   couleur: 'OCRE',
   ordre: 1,
   active: true,
+  envoyeeEnCuisine: true,
   nbProduits: 1,
   version: 0,
 }
@@ -25,6 +26,7 @@ export const BIERES: CategorieResume = {
   couleur: 'FEUILLE',
   ordre: 2,
   active: true,
+  envoyeeEnCuisine: false,
   nbProduits: 1,
   version: 0,
 }

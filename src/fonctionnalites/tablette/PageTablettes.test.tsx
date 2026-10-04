@@ -20,10 +20,17 @@ const BE_KPOTA: EtablissementResume = {
 const CAISSE_BAR: AppareilResume = {
   id: '7c2a0000-0000-4000-8000-000000000001',
   nom: 'Caisse 1, bar',
+  type: 'CAISSE',
   etablissementId: BE_KPOTA.id,
   derniereActiviteLe: '2026-09-28T20:41:00Z',
   revoquee: false,
   version: 0,
+}
+const CUISINE: AppareilResume = {
+  ...CAISSE_BAR,
+  id: '7c2a0000-0000-4000-8000-000000000003',
+  nom: 'Cuisine',
+  type: 'CUISINE',
 }
 const ANCIENNE: AppareilResume = {
   ...CAISSE_BAR,
@@ -37,7 +44,12 @@ function backendSimule({ statutsDuCode = ['EN_ATTENTE'] }: { statutsDuCode?: str
   const statuts = [...statutsDuCode]
   serveurMsw.use(
     http.get(`${API}/appareils`, () =>
-      HttpResponse.json({ elements: [CAISSE_BAR, ANCIENNE], page: 0, taille: 50, total: 2 }),
+      HttpResponse.json({
+        elements: [CAISSE_BAR, CUISINE, ANCIENNE],
+        page: 0,
+        taille: 50,
+        total: 3,
+      }),
     ),
     http.get(`${API}/etablissements`, () =>
       HttpResponse.json({ elements: [BE_KPOTA], page: 0, taille: 50, total: 1 }),
@@ -100,6 +112,10 @@ describe('PageTablettes', () => {
     expect(bar).toHaveTextContent('Bè Kpota')
     expect(bar).toHaveTextContent('28/09/2026, 20:41')
     expect(bar).toHaveTextContent('Active')
+    expect(bar).toHaveTextContent('Caisse')
+    expect(within(tableau).getByRole('row', { name: /^Cuisine/ })).toHaveTextContent(
+      'Écran cuisine',
+    )
     const ancienne = within(tableau).getByRole('row', { name: /Ancienne tablette/ })
     expect(ancienne).toHaveTextContent('Révoquée')
     expect(within(ancienne).queryByRole('button')).not.toBeInTheDocument()
@@ -121,7 +137,11 @@ describe('PageTablettes', () => {
     expect(within(panneau).getByText('482')).toBeVisible()
     expect(within(panneau).getByText('915')).toBeVisible()
     expect(panneau).toHaveTextContent('Valable encore')
-    expect(requetes[0]?.corps).toEqual({ etablissementId: BE_KPOTA.id, nom: 'Caisse 2, terrasse' })
+    expect(requetes[0]?.corps).toEqual({
+      etablissementId: BE_KPOTA.id,
+      nom: 'Caisse 2, terrasse',
+      type: 'CAISSE',
+    })
 
     expect(
       await screen.findByText(
@@ -130,6 +150,24 @@ describe('PageTablettes', () => {
         { timeout: 5000 },
       ),
     ).toBeVisible()
+  })
+
+  it('enregistre une tablette comme écran cuisine', async () => {
+    const requetes = backendSimule()
+    await ouvrirTablettes()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Enregistrer une tablette' }))
+    const formulaire = await screen.findByRole('form', { name: 'Enregistrer une tablette' })
+    await userEvent.selectOptions(within(formulaire).getByLabelText(/^Usage/), 'Écran cuisine')
+    await userEvent.type(within(formulaire).getByLabelText(/^Nom de la caisse/), 'Cuisine')
+    await userEvent.click(within(formulaire).getByRole('button', { name: 'Générer le code' }))
+
+    await screen.findByRole('region', { name: 'Code d’enregistrement' })
+    expect(requetes[0]?.corps).toEqual({
+      etablissementId: BE_KPOTA.id,
+      nom: 'Cuisine',
+      type: 'CUISINE',
+    })
   })
 
   it('annule un code dont on n’a plus besoin', async () => {
@@ -170,22 +208,21 @@ describe('PageTablettes', () => {
     expect(await screen.findByText('« Caisse 1, bar » est révoquée.')).toBeVisible()
   })
 
-  it('renomme une tablette en envoyant sa version', async () => {
+  it('renomme une tablette ou change son usage, en envoyant sa version', async () => {
     const requetes = backendSimule()
     await ouvrirTablettes()
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Renommer Caisse 1, bar' }))
-    const dialogue = await screen.findByRole('dialog', { name: 'Renommer « Caisse 1, bar »' })
+    await userEvent.click(await screen.findByRole('button', { name: 'Modifier Caisse 1, bar' }))
+    const dialogue = await screen.findByRole('dialog', { name: 'Modifier « Caisse 1, bar »' })
     const champ = within(dialogue).getByLabelText(/^Nom de la caisse/)
     await userEvent.clear(champ)
     await userEvent.type(champ, 'Caisse du bar')
-    await userEvent.click(within(dialogue).getByRole('button', { name: 'Renommer' }))
+    await userEvent.selectOptions(within(dialogue).getByLabelText(/^Usage/), 'Écran cuisine')
+    await userEvent.click(within(dialogue).getByRole('button', { name: 'Enregistrer' }))
 
     await waitFor(() => {
-      expect(requetes[0]?.corps).toEqual({ nom: 'Caisse du bar', version: 0 })
+      expect(requetes[0]?.corps).toEqual({ nom: 'Caisse du bar', type: 'CUISINE', version: 0 })
     })
-    expect(
-      await screen.findByText('La tablette s’appelle maintenant « Caisse du bar ».'),
-    ).toBeVisible()
+    expect(await screen.findByText('La tablette « Caisse du bar » est modifiée.')).toBeVisible()
   })
 })

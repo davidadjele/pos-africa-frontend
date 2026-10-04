@@ -461,9 +461,16 @@ test('Tanti compose sa carte : taxe, catégories, produits et changement de prix
     const formulaire = dialogue.getByRole('form', { name: 'Nouvelle catégorie' })
     await formulaire.getByLabel(/^Nom/).fill(nom)
     await formulaire.getByText(couleur, { exact: true }).click()
+    // Les bières sont servies au bar : elles ne passent pas par l'écran cuisine.
+    if (nom === 'Bières') {
+      await formulaire.getByRole('checkbox', { name: 'Envoyée en cuisine' }).uncheck()
+    }
     await formulaire.getByRole('button', { name: 'Ajouter la catégorie' }).click()
     await expect(dialogue.getByRole('list', { name: 'Catégories' })).toContainText(nom)
   }
+  await expect(dialogue.getByRole('listitem').filter({ hasText: 'Bières' })).toContainText(
+    'Pas en cuisine',
+  )
   await dialogue.getByRole('button', { name: 'Monter Bières' }).click()
   await expect(dialogue.getByRole('listitem').first()).toContainText('Bières')
   await capturer(page, '17-categories')
@@ -1357,6 +1364,111 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await capturer(page, '83-tableau-de-bord')
   await page.setViewportSize({ width: 390, height: 844 })
   await capturer(page, '83-tableau-de-bord-telephone')
+})
+
+/** Génère un code d'enregistrement depuis la page Tablettes de la gestion et le renvoie. */
+async function codeDeTablette(page: Page, nom: string, usage = 'Caisse'): Promise<string> {
+  await page.getByRole('button', { name: 'Enregistrer une tablette' }).click()
+  const formulaire = page.getByRole('form', { name: 'Enregistrer une tablette' })
+  await formulaire.getByLabel(/^Établissement/).selectOption({ label: 'Bè Kpota' })
+  await formulaire.getByLabel(/^Usage/).selectOption({ label: usage })
+  await formulaire.getByLabel(/^Nom de la caisse/).fill(nom)
+  await formulaire.getByRole('button', { name: 'Générer le code' }).click()
+  return (
+    (await page
+      .getByRole('region', { name: 'Code d’enregistrement' })
+      .locator('[data-code]')
+      .textContent()) ?? ''
+  ).replace(/\D/g, '')
+}
+
+test('La cuisine de Bè Kpota reçoit les bons, les commence et les marque prêts ; Kossi le voit', async ({
+  page,
+  browser,
+}) => {
+  await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
+  await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
+  const navigation = page.getByRole('navigation', { name: 'Navigation principale' })
+  await navigation.getByRole('link', { name: 'Tablettes' }).click()
+
+  // Une tablette de la cuisine, enregistrée comme écran cuisine : pas de PIN, elle va droit aux bons.
+  const codeCuisine = await codeDeTablette(page, 'Cuisine', 'Écran cuisine')
+  await capturer(page, '84-tablette-cuisine-code')
+  const contexteCuisine = await browser.newContext({ viewport: { width: 1280, height: 960 } })
+  const cuisine = await contexteCuisine.newPage()
+  await cuisine.goto('/caisse')
+  await taperCode(cuisine, codeCuisine)
+  await expect(cuisine).toHaveURL(/\/cuisine$/)
+  await expect(cuisine.getByRole('banner')).toContainText('Bè Kpota, Cuisine')
+  const panneau = page.getByRole('region', { name: 'Code d’enregistrement' })
+  await expect(panneau).toContainText('La tablette « Cuisine » est enregistrée.')
+  await panneau.getByRole('button', { name: 'Terminer' }).click()
+  await expect(
+    page.getByRole('table', { name: 'Tablettes de l’entreprise' }).getByRole('row', {
+      name: /^Cuisine/,
+    }),
+  ).toContainText('Écran cuisine')
+
+  // Kossi prend une nouvelle caisse de la salle et envoie deux poulets sur une table libre.
+  const codeCaisse = await codeDeTablette(page, 'Caisse 3, salle')
+  const contexteCaisse = await browser.newContext({ viewport: { width: 1280, height: 800 } })
+  const caisse = await contexteCaisse.newPage()
+  await caisse.goto('/caisse')
+  await taperCode(caisse, codeCaisse)
+  await caisse.getByRole('button', { name: /Kossi A\./ }).click()
+  await taperCode(caisse, '4827')
+  await caisse.getByRole('button', { name: 'Ouvrir la caisse' }).click()
+  const tables = caisse.getByRole('list', { name: 'Tables' })
+  const libre = tables.getByRole('button', { name: /, libre$/ }).first()
+  const table = ((await libre.getAttribute('aria-label')) ?? '').split(',')[0] ?? ''
+  await libre.click()
+  await caisse
+    .getByRole('dialog', { name: `Ouvrir une note sur ${table}` })
+    .getByRole('button', { name: 'Ouvrir la note' })
+    .click()
+  const note = caisse.getByRole('region', { name: 'Note en cours' })
+  const carte = caisse.getByRole('list', { name: 'Produits' })
+  await carte.getByRole('button', { name: /Poulet braisé/ }).click()
+  await carte.getByRole('button', { name: /Poulet braisé/ }).click()
+  await expect(note).toContainText('9 000 FCFA')
+  await note.getByRole('button', { name: /Envoyer 2 articles/ }).click()
+  await note.getByRole('button', { name: 'Plan de salle' }).click()
+  const tuile = tables.getByRole('button', { name: new RegExp(`^${table}, note de`) })
+  await expect(tuile).toContainText('En attente en cuisine')
+
+  // La cuisine voit le bon arriver, le commence : le serveur sait que c'est en préparation.
+  const bon = cuisine.getByRole('region', { name: `Bon ${table}` })
+  await expect(bon).toContainText('Poulet braisé', { timeout: 10_000 })
+  await expect(bon).toContainText('Kossi A.')
+  await capturer(cuisine, '85-cuisine-bons')
+  await bon.getByRole('button', { name: 'Commencer' }).click()
+  await expect(bon).toContainText('En préparation')
+  await capturer(cuisine, '86-cuisine-en-preparation')
+  await expect(tuile).toContainText('En préparation', { timeout: 20_000 })
+  await capturer(caisse, '87-plan-en-preparation')
+
+  // « Tout est prêt » : le bon passe dans « Prêts », la table devient verte côté caisse.
+  await bon.getByRole('button', { name: 'Tout est prêt' }).click()
+  await expect(bon).toHaveCount(0)
+  await expect(tuile).toContainText('2 prêts à servir', { timeout: 20_000 })
+  await expect(
+    caisse.getByRole('list', { name: 'À servir' }).getByRole('link').first(),
+  ).toContainText('2 prêts')
+  await capturer(caisse, '88-plan-prets-a-servir')
+  await cuisine.getByRole('tab', { name: /Prêts/ }).click()
+  await expect(bon.getByRole('button', { name: 'Rappeler' })).toBeVisible()
+  await capturer(cuisine, '89-cuisine-prets')
+  await cuisine.setViewportSize({ width: 390, height: 844 })
+  await cuisine.getByRole('tab', { name: /À préparer/ }).click()
+  await capturer(cuisine, '85-cuisine-telephone')
+
+  // Kossi sert la table : plus rien à apporter.
+  await tuile.click()
+  await note.getByRole('button', { name: 'Tout servi' }).click()
+  await note.getByRole('button', { name: 'Plan de salle' }).click()
+  await expect(tuile).not.toContainText('prêts à servir')
+  await contexteCuisine.close()
+  await contexteCaisse.close()
 })
 
 test('L’équipe plateforme ouvre la fiche de Maquis Chez Tanti, la modifie et la suspend', async ({

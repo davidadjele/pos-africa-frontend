@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { ecranDe } from '../../app/gardes'
 import { appelerApi } from '../../partage/api/appelerApi'
 import type { AppareilCourant } from '../../partage/api/contrat'
 import { AlerteErreur } from '../../partage/ui/Alerte'
@@ -38,7 +39,7 @@ export function PageEnregistrementTablette() {
         corps: { code: complet },
       })
       clientRequetes.setQueryData(['appareil'], appareil)
-      await navigate({ to: '/caisse', replace: true })
+      await navigate({ to: ecranDe(appareil), replace: true })
     } catch (refus) {
       setErreur(refus)
       setCode('')

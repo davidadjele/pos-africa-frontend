@@ -53,6 +53,7 @@ export const MOI_ADMIN: ReponseMoi = {
 export const CAISSE_BAR: AppareilCourant = {
   id: '7c2a0000-0000-4000-8000-000000000001',
   nom: 'Caisse 1, bar',
+  type: 'CAISSE',
   entreprise: { ...MAQUIS, devise: 'XOF' },
   etablissement: {
     id: '9a1f0c2e-0000-4b8e-8f6a-000000000001',

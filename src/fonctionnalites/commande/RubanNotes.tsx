@@ -16,6 +16,7 @@ interface Entree {
 /** Ce qui attend sur la note, du plus pressé au moins pressé ; rien si tout est à jour. */
 function etatDe(note: NoteOuverte): { cle: string; ton: TonStatut } | null {
   if (note.aEnvoyer > 0) return { cle: 'aEnvoyer', ton: 'alerte' }
+  if (note.prets > 0) return { cle: 'prets', ton: 'succes' }
   if (note.aServir > 0) {
     return { cle: note.canal === 'SUR_PLACE' ? 'aServir' : 'aRemettre', ton: 'alerte' }
   }

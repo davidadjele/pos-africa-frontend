@@ -106,6 +106,60 @@ describe('EcranPlan', () => {
     )
   })
 
+  it('remonte au serveur ce que la cuisine a prêt, et où elle en est', async () => {
+    const plan = structuredClone(PLAN)
+    const [, t4, t7] = plan.salles[0]?.tables ?? []
+    if (t4?.note !== undefined) Object.assign(t4.note, { aEnvoyer: 0, aServir: 3, prets: 3 })
+    if (t7?.note !== undefined) {
+      Object.assign(t7.note, {
+        aServir: 4,
+        cuisine: 'EN_PREPARATION',
+        enCuisineDepuis: '2026-09-29T20:30:00Z',
+      })
+    }
+    plan.enService = [
+      {
+        id: t7?.note?.id ?? '',
+        numero: 41,
+        canal: 'SUR_PLACE',
+        table: 'T7',
+        serveur: 'Essi D.',
+        aServir: 4,
+        aServirDepuis: '2026-09-29T20:30:00Z',
+        payee: false,
+        prets: 0,
+      },
+      {
+        id: NOTE_T4.id,
+        numero: 42,
+        canal: 'SUR_PLACE',
+        table: 'T4',
+        serveur: 'Kossi A.',
+        aServir: 3,
+        aServirDepuis: '2026-09-29T20:40:00Z',
+        payee: false,
+        prets: 3,
+      },
+    ]
+    planServi(plan)
+    caisseOuverte('/caisse')
+
+    const tables = await screen.findByRole('list', { name: 'Tables' })
+    const tuileT4 = within(tables).getByRole('button', { name: /T4/ })
+    expect(tuileT4).toHaveTextContent('3 prêts à servir')
+    expect(tuileT4).toHaveClass('bg-succes-fond')
+    expect(within(tables).getByRole('button', { name: /T7/ })).toHaveTextContent('En préparation')
+    expect(screen.getByRole('list', { name: 'Légende des couleurs' })).toHaveTextContent(
+      'Plats prêts à servir',
+    )
+    const aServir = screen.getByRole('list', { name: 'À servir' })
+    const lignes = within(aServir).getAllByRole('link')
+    expect(lignes[0]).toHaveTextContent('T4')
+    expect(lignes[0]).toHaveTextContent('3 prêts')
+    expect(lignes[0]).toHaveTextContent('Kossi A., plats prêts à apporter')
+    expect(lignes[1]).toHaveTextContent('T7')
+  })
+
   it('suit les tables à servir et les commandes à remettre, même payées', async () => {
     const plan = structuredClone(PLAN)
     const t4 = plan.salles[0]?.tables[1]
@@ -120,6 +174,7 @@ describe('EcranPlan', () => {
         aServir: 2,
         aServirDepuis: '2026-09-29T19:40:00Z',
         payee: false,
+        prets: 0,
       },
       {
         id: NOTE_VIDE.id,
@@ -130,6 +185,7 @@ describe('EcranPlan', () => {
         aServir: 1,
         aServirDepuis: '2026-09-29T20:39:00Z',
         payee: true,
+        prets: 0,
       },
     ]
     planServi(plan)
@@ -211,6 +267,7 @@ describe('EcranPlan', () => {
           aServir: 1,
           aServirDepuis: '2026-09-29T20:40:00Z',
           payee: false,
+          prets: 0,
         },
       ],
     })

@@ -9,6 +9,7 @@ import type {
   EtablissementResume,
   PageAppareils,
   StatutCode,
+  TypeAppareil,
 } from '../../partage/api/contrat'
 import { useSession } from '../../partage/auth/useSession'
 import { formaterDateHeure } from '../../partage/dates/formaterDate'
@@ -71,6 +72,11 @@ export function PageTablettes() {
       rendu: (a) => <span className="font-semibold">{a.nom}</span>,
     },
     {
+      cle: 'usage',
+      entete: t('tablettes.colonnes.usage'),
+      rendu: (a) => t(`tablettes.types.${a.type}`),
+    },
+    {
       cle: 'etablissement',
       entete: t('tablettes.colonnes.etablissement'),
       rendu: (a) => nomsEtablissements.get(a.etablissementId) ?? '…',
@@ -99,13 +105,13 @@ export function PageTablettes() {
           <div className="flex justify-end gap-2">
             <Bouton
               icone={Pencil}
-              aria-label={t('tablettes.renommerNomme', { nom: a.nom })}
+              aria-label={t('tablettes.modifierNomme', { nom: a.nom })}
               onClick={() => {
                 setConfirmation(null)
                 setARenommer(a)
               }}
             >
-              {t('tablettes.renommer')}
+              {t('tablettes.modifier')}
             </Bouton>
             <MenuActions
               libelle={t('tablettes.plusDActions', { nom: a.nom })}
@@ -257,6 +263,7 @@ function FormulaireCode({
   const idTitre = useId()
   const [etablissementId, setEtablissementId] = useState(etablissements[0]?.id ?? '')
   const [nom, setNom] = useState('')
+  const [type, setType] = useState<TypeAppareil>('CAISSE')
   const [erreurNom, setErreurNom] = useState<string | undefined>()
   const [enCours, setEnCours] = useState(false)
   const [erreur, setErreur] = useState<unknown>(null)
@@ -271,7 +278,7 @@ function FormulaireCode({
     try {
       const code = await appelerApi<CodeGenere>('/appareils/codes', {
         methode: 'POST',
-        corps: { etablissementId, nom: nom.trim() },
+        corps: { etablissementId, nom: nom.trim(), type },
       })
       surGenere(code, nom.trim())
     } catch (refus) {
@@ -307,6 +314,7 @@ function FormulaireCode({
             setEtablissementId(evenement.target.value)
           }}
         />
+        <ChampUsage valeur={type} surChanger={setType} />
         <ChampSaisie
           libelle={t('tablettes.formulaire.nom')}
           obligatoire
@@ -328,6 +336,28 @@ function FormulaireCode({
         </Bouton>
       </div>
     </form>
+  )
+}
+
+const TYPES: TypeAppareil[] = ['CAISSE', 'CUISINE']
+
+/** Caisse prise par PIN, ou écran cuisine sans PIN. */
+function ChampUsage({
+  valeur,
+  surChanger,
+}: Readonly<{ valeur: TypeAppareil; surChanger: (type: TypeAppareil) => void }>) {
+  const { t } = useTranslation()
+  return (
+    <ChampSelection
+      libelle={t('tablettes.formulaire.usage')}
+      obligatoire
+      aide={t(`tablettes.formulaire.usageAide.${valeur}`)}
+      value={valeur}
+      options={TYPES.map((type) => ({ valeur: type, libelle: t(`tablettes.types.${type}`) }))}
+      onChange={(evenement) => {
+        surChanger(evenement.target.value as TypeAppareil)
+      }}
+    />
   )
 }
 
@@ -474,6 +504,7 @@ function DialogueRenommage({
 }>) {
   const { t } = useTranslation()
   const [nom, setNom] = useState(appareil.nom)
+  const [type, setType] = useState<TypeAppareil>(appareil.type)
   const [enCours, setEnCours] = useState(false)
   const [erreur, setErreur] = useState<unknown>(null)
 
@@ -483,7 +514,7 @@ function DialogueRenommage({
     try {
       const renomme = await appelerApi<AppareilResume>(`/appareils/${appareil.id}`, {
         methode: 'PUT',
-        corps: { nom: nom.trim(), version: appareil.version },
+        corps: { nom: nom.trim(), type, version: appareil.version },
       })
       surRenomme(renomme.nom)
     } catch (refus) {
@@ -497,7 +528,7 @@ function DialogueRenommage({
       titre={t('tablettes.renommage.titre', { nom: appareil.nom })}
       consequence={t('tablettes.renommage.consequence')}
       libelleAnnuler={t('commun.annuler')}
-      libelleConfirmer={t('tablettes.renommer')}
+      libelleConfirmer={t('commun.enregistrer')}
       enCours={enCours}
       surAnnuler={surFermer}
       surConfirmer={() => void renommer()}
@@ -511,6 +542,7 @@ function DialogueRenommage({
           setNom(evenement.target.value)
         }}
       />
+      <ChampUsage valeur={type} surChanger={setType} />
       {erreur !== null && <AlerteErreur erreur={erreur} />}
     </Dialogue>
   )

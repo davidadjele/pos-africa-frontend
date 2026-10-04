@@ -288,9 +288,19 @@
       "legende": {
         "titre": "Colour legend",
         "occupee": "Occupied",
+        "prets": "Dishes ready to serve",
         "enAttente": "Items to send or serve",
         "addition": "Bill requested"
-      }
+      },
+      "prets_one": "{{count}} ready to serve",
+      "prets_other": "{{count}} ready to serve",
+      "pretsCourt_one": "{{count}} ready",
+      "pretsCourt_other": "{{count}} ready",
+      "cuisine": {
+        "EN_ATTENTE": "Waiting in kitchen",
+        "EN_PREPARATION": "In preparation"
+      },
+      "aApporter": "{{serveur}}, dishes ready to take out"
     },
     "ouverture": {
       "titreTable": "Open a tab on {{table}}",
@@ -395,14 +405,16 @@
       "revient": "Back in stock",
       "revientAide": "Intact, unopened",
       "perdu": "Lost",
-      "perduAide": "Opened, broken, unusable"
+      "perduAide": "Opened, broken, unusable",
+      "commence": "The kitchen has already started it: it counts as lost unless you choose otherwise."
     },
     "ruban": {
       "titre": "Open bills",
       "aEnvoyer": "To send",
       "aServir": "To serve",
       "aRemettre": "To hand over",
-      "addition": "Bill requested"
+      "addition": "Bill requested",
+      "prets": "Ready to serve"
     },
     "telephone": {
       "continuer": "Keep ordering",
@@ -1189,14 +1201,13 @@
       "etablissement": "Venue",
       "activite": "Last activity",
       "statut": "Status",
-      "actions": "Actions"
+      "actions": "Actions",
+      "usage": "Use"
     },
     "statut": {
       "active": "Active",
       "revoquee": "Revoked"
     },
-    "renommer": "Rename",
-    "renommerNomme": "Rename {{nom}}",
     "revoquer": "Revoke",
     "plusDActions": "More actions for {{nom}}",
     "vide": {
@@ -1207,7 +1218,12 @@
       "etablissement": "Venue",
       "nom": "Till name",
       "nomAide": "As staff will see it, for example “Till 1, bar”.",
-      "generer": "Generate the code"
+      "generer": "Generate the code",
+      "usage": "Use",
+      "usageAide": {
+        "CAISSE": "Staff sign in with their PIN to take orders and collect payments.",
+        "CUISINE": "Shows tickets sent to the kitchen, no PIN needed. One kitchen screen per location."
+      }
     },
     "code": {
       "titre": "Registration code",
@@ -1229,10 +1245,16 @@
       "faite": "“{{nom}}” is revoked."
     },
     "renommage": {
-      "titre": "Rename “{{nom}}”",
-      "consequence": "The new name shows on the tablet and in this list.",
-      "fait": "The tablet is now called “{{nom}}”."
-    }
+      "titre": "Edit “{{nom}}”",
+      "consequence": "The name shows on the tablet and in this list. Changing its use switches it between till and kitchen screen when it next reloads.",
+      "fait": "Tablet “{{nom}}” updated."
+    },
+    "types": {
+      "CAISSE": "Till",
+      "CUISINE": "Kitchen screen"
+    },
+    "modifier": "Edit",
+    "modifierNomme": "Edit {{nom}}"
   },
   "couleurs": {
     "OCRE": "Ochre",
@@ -1404,7 +1426,10 @@
     "annuler": "Cancel",
     "regle": "A category that contains active products cannot be disabled: move or disable its products first.",
     "enUsage_one": "“{{nom}}” still contains {{count}} active product: move it to another category or disable it first.",
-    "enUsage_other": "“{{nom}}” still contains {{count}} active products: move them to another category or disable them first."
+    "enUsage_other": "“{{nom}}” still contains {{count}} active products: move them to another category or disable them first.",
+    "enCuisine": "Sent to the kitchen",
+    "enCuisineAide": "Its items appear on the kitchen screen. Untick for drinks served at the bar.",
+    "pasEnCuisine": "Not to kitchen"
   },
   "carteEtablissement": {
     "titre": "{{etablissement}} menu",
@@ -2453,5 +2478,38 @@
     "reimprimer": "Reprint credit note {{numero}}",
     "sans": "No credit note",
     "numeroCourt": "Credit note {{numero}}"
+  },
+  "cuisine": {
+    "bons": "Tickets",
+    "onglets": {
+      "aPreparer": "To prepare",
+      "prets": "Ready"
+    },
+    "bon": "Ticket {{repere}}",
+    "chargement": "Loading tickets…",
+    "son": "Sound for new tickets",
+    "sonActif": "Sound on",
+    "sonCoupe": "Sound off",
+    "aJour": "Up to date at {{heure}}",
+    "horsLigne": "Connection lost since {{heure}}, retrying…",
+    "enPreparation": "In preparation",
+    "commencer": "Start",
+    "toutPret": "All ready",
+    "pret": "Ready",
+    "servi": "Served",
+    "articlePret": "{{nom}}: ready",
+    "annuleA": "Cancelled at {{heure}}",
+    "preteA": "Ready at {{heure}}",
+    "rappeler": "Recall",
+    "vide": {
+      "aPreparer": {
+        "titre": "Nothing to prepare",
+        "phrase": "Tickets sent from the till appear here, oldest first. A beep announces each new ticket."
+      },
+      "prets": {
+        "titre": "No ticket ready in the last hour",
+        "phrase": "A ticket marked ready stays here for an hour: you can recall it if it was marked by mistake."
+      }
+    }
   }
 }
