@@ -40,6 +40,7 @@ export function PanneauNote({
   peutServir,
   surServir,
   surServirTout,
+  versLaCuisine = true,
   surEncaisser,
   actions,
   surRetirerAddition,
@@ -66,6 +67,8 @@ export function PanneauNote({
   peutServir: boolean
   surServir: (ligne: LigneNote) => void
   surServirTout: () => void
+  /** Rien pour la cuisine : le bouton dit « Valider », pas « en préparation ». */
+  versLaCuisine?: boolean
   surModifier: (ligne: LigneNote, demande: DemandeLigne) => void
   surOuvrirLigne: (ligne: LigneNote) => void
 }>) {
@@ -257,7 +260,9 @@ export function PanneauNote({
                 surEnvoyer(aEnvoyer)
               }}
             >
-              {t('caisse.note.envoyer', { count: aEnvoyer })}
+              {t(versLaCuisine ? 'caisse.note.envoyer' : 'caisse.note.valider', {
+                count: aEnvoyer,
+              })}
             </Bouton>
           )}
           <Bouton

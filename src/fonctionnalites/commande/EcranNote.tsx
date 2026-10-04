@@ -40,7 +40,7 @@ import { CarteCaisse } from './CarteCaisse'
 import { DialogueAnnulation, DialogueLigne } from './DialoguesLigne'
 import { ouEstLaNote, PanneauNote, type Rupture } from './PanneauNote'
 import { RubanNotes } from './RubanNotes'
-import { pasEncorePret } from './service'
+import { envoiVersLaCuisine, pasEncorePret } from './service'
 import {
   requeteCarteCaisse,
   requeteCommande,
@@ -65,6 +65,7 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
   const peutEncaisser = session?.permissions.includes('PAIEMENT_ENCAISSER') ?? false
   const note = useQuery(requeteCommande(commandeId))
   const carte = useQuery(requeteCarteCaisse)
+  const versLaCuisine = envoiVersLaCuisine(note.data?.lignes ?? [], carte.data)
   const stock = useQuery(requeteStockCaisse)
   // Politique « avertissement » : l'article sans stock attend la confirmation avant d'être ajouté.
   const [sansStockAConfirmer, setSansStockAConfirmer] = useState<LigneCarteEtablissement | null>(
@@ -191,7 +192,7 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
         .sort((a, b) => a.localeCompare(b))
         .at(-1)
       setConfirmation(
-        t('caisse.note.envoye', {
+        t(versLaCuisine ? 'caisse.note.envoye' : 'caisse.note.valide', {
           count: nombre,
           heure:
             derniers === undefined || derniers === '' ? '' : formaterHeure(derniers, fuseauHoraire),
@@ -493,6 +494,7 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
               )
             }
             surRevenir={() => void revenirAuPlan()}
+            versLaCuisine={versLaCuisine}
             surEnvoyer={(nombre) => void envoyer(nombre)}
             surModifier={(ligne, demande) => void modifier(ligne, demande)}
             surOuvrirLigne={setLigneActions}

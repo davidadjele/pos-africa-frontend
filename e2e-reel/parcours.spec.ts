@@ -1084,9 +1084,10 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await capturer(tablette, '67-tuile-stock-faible')
   await flag.click()
   await flag.click()
-  await note.getByRole('button', { name: /Envoyer 2 articles/ }).click()
+  // Les bières se servent au bar : rien ne part en cuisine, la caisse dit « Valider ».
+  await note.getByRole('button', { name: 'Valider 2 articles' }).click()
   // Tant que l'envoi n'est pas fini, la ligne est encore un brouillon : son menu ne propose pas « Annuler ».
-  await expect(note.getByRole('button', { name: /Envoyer \d+ article/ })).toHaveCount(0)
+  await expect(note.getByRole('button', { name: /Valider \d+ article/ })).toHaveCount(0)
   await tablette.getByRole('button', { name: 'Actions sur Flag 65 cl' }).click()
   await tablette
     .getByRole('dialog', { name: 'Flag 65 cl' })

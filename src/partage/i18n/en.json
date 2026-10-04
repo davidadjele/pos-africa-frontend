@@ -236,7 +236,11 @@
       "motifValide": "{{motif}}, approved by {{nom}}",
       "encaisserReste": "Take the rest",
       "parCaissier": "A cashier takes payment for this tab.",
-      "entamee": "{{paye}} already paid: the tab can no longer be changed."
+      "entamee": "{{paye}} already paid: the tab can no longer be changed.",
+      "valider_one": "Confirm {{count}} item",
+      "valider_other": "Confirm {{count}} items",
+      "valide_one": "{{count}} item confirmed at {{heure}}.",
+      "valide_other": "{{count}} items confirmed at {{heure}}."
     },
     "canaux": {
       "SUR_PLACE": "Dine-in",

@@ -236,7 +236,11 @@
       "motifValide": "{{motif}}, validé par {{nom}}",
       "encaisserReste": "Encaisser le reste",
       "parCaissier": "Un caissier encaisse cette note.",
-      "entamee": "{{paye}} déjà payés : la note ne se modifie plus."
+      "entamee": "{{paye}} déjà payés : la note ne se modifie plus.",
+      "valider_one": "Valider {{count}} article",
+      "valider_other": "Valider {{count}} articles",
+      "valide_one": "{{count}} article validé à {{heure}}.",
+      "valide_other": "{{count}} articles validés à {{heure}}."
     },
     "canaux": {
       "SUR_PLACE": "Sur place",

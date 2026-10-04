@@ -2903,6 +2903,7 @@ export interface components {
         CategorieCarte: {
             /** @enum {string} */
             couleur: "OCRE" | "BRIQUE" | "FEUILLE" | "LAGUNE" | "PRUNE" | "SABLE" | "MENTHE" | "ARDOISE";
+            envoyeeEnCuisine: boolean;
             /** Format: uuid */
             id: string;
             nom: string;

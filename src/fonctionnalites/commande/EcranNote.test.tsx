@@ -409,6 +409,21 @@ describe('EcranNote', () => {
     expect(lignes).toEqual([FLAG_ENVOYE.id])
   })
 
+  it('valide sans parler de préparation une note qui ne va pas en cuisine', async () => {
+    const flag = {
+      ...POULET_A_ENVOYER,
+      id: 'flag-brouillon',
+      produitId: FLAG.produitId,
+      nomProduit: 'Flag 65 cl',
+      quantite: 1,
+    }
+    noteServie({ ...NOTE_T4, lignes: [flag] })
+
+    const note = await noteEnCours()
+    expect(within(note).getByRole('button', { name: 'Valider 1 article' })).toBeVisible()
+    expect(within(note).queryByRole('button', { name: /en préparation/ })).toBeNull()
+  })
+
   it('demande confirmation avant de servir ce que la cuisine n’a pas marqué prêt', async () => {
     const pouletEnCuisine = {
       ...FLAG_ENVOYE,
