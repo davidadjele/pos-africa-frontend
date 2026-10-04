@@ -307,7 +307,13 @@ function Bon({
           <>
             <span className="flex-1 text-libelle text-attenue">
               {bon.preteLe !== undefined &&
-                t('cuisine.preteA', { heure: formaterHeure(bon.preteLe, fuseauHoraire) })}
+                // Servi par la salle sans que la cuisine l'ait marqué prêt : on ne dit pas « Prêt ».
+                t(
+                  bon.articles.some((article) => article.preteLe !== undefined)
+                    ? 'cuisine.preteA'
+                    : 'cuisine.serviA',
+                  { heure: formaterHeure(bon.preteLe, fuseauHoraire) },
+                )}
             </span>
             {/* Tout servi : il n'y a plus rien à rappeler en cuisine. */}
             {bon.articles.some(

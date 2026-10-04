@@ -470,6 +470,40 @@ describe('EcranNote', () => {
     })
   })
 
+  it('relit la note avant de demander : la cuisine a pu finir entre-temps', async () => {
+    const poulet = {
+      ...FLAG_ENVOYE,
+      id: '1e000000-0000-4000-8000-000000000009',
+      nomProduit: 'Poulet braisé',
+      enCuisine: true,
+    }
+    let lectures = 0
+    let servis = 0
+    serveurMsw.use(
+      http.get(`${API}/caisse/carte`, () => HttpResponse.json([FLAG, POULET])),
+      http.get(`${API}/caisse/plan`, () => HttpResponse.json(PLAN)),
+      http.get(`${API}/caisse/commandes/${NOTE_T4.id}`, () => {
+        lectures++
+        // La première lecture date d'avant « Tout est prêt » ; la cuisine a fini depuis.
+        const pret = lectures > 1 ? { preteLe: '2026-09-29T19:20:00Z' } : {}
+        return HttpResponse.json({ ...NOTE_T4, lignes: [{ ...poulet, ...pret }] })
+      }),
+      http.post(`${API}/caisse/commandes/${NOTE_T4.id}/service`, () => {
+        servis++
+        return HttpResponse.json(NOTE_T4)
+      }),
+    )
+    caisseOuverte(`/caisse/notes/${NOTE_T4.id}`)
+
+    const note = await noteEnCours()
+    await userEvent.click(within(note).getByRole('button', { name: 'Tout servi' }))
+
+    await waitFor(() => {
+      expect(servis).toBe(1)
+    })
+    expect(screen.queryByRole('dialog', { name: 'Servir avant la cuisine ?' })).toBeNull()
+  })
+
   it('remet au client une commande payée du comptoir', async () => {
     let remise = false
     const payee = {

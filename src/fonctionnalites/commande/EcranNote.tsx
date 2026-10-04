@@ -116,8 +116,18 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
    * Servir ce que la cuisine n'a pas encore marqué prêt reste permis (le cuisinier oublie parfois de
    * toucher « Prêt »), mais se confirme : sinon la cuisine arrêterait un plat servi par erreur.
    */
-  function confirmerSiCuisine(lignes: LigneNote[], servir: () => void) {
-    const pasPrets = lignes.filter(pasEncorePret)
+  async function confirmerSiCuisine(lignes: LigneNote[], servir: () => void) {
+    if (!lignes.some(pasEncorePret)) {
+      servir()
+      return
+    }
+    // La note affichée peut dater d'avant « Tout est prêt » : on la relit avant de déranger le serveur.
+    const ids = new Set(lignes.map((ligne) => ligne.id))
+    const fraiches = await clientRequetes
+      .query({ ...requeteCommande(commandeId), staleTime: 0 })
+      .then((fraiche) => fraiche.lignes.filter((ligne) => ids.has(ligne.id)))
+      .catch(() => lignes)
+    const pasPrets = fraiches.filter(pasEncorePret)
     if (pasPrets.length === 0) servir()
     else setServirAvantCuisine({ lignes: pasPrets, servir })
   }
@@ -442,7 +452,7 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
             peutEncaisser={peutEncaisser}
             peutServir={peutCommander && note.data.statut !== 'ANNULEE'}
             surServir={(ligne) => {
-              confirmerSiCuisine(
+              void confirmerSiCuisine(
                 [ligne],
                 () =>
                   void agir(() =>
@@ -454,7 +464,7 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
               )
             }}
             surServirTout={() => {
-              confirmerSiCuisine(
+              void confirmerSiCuisine(
                 note.data.lignes,
                 () =>
                   void agir(() =>

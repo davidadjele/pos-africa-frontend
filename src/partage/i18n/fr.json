@@ -2522,6 +2522,7 @@
         "phrase": "Un bon marqué prêt reste ici une heure : vous pouvez le rappeler s’il a été marqué par erreur."
       }
     },
-    "serviPar": "Servi par {{nom}}"
+    "serviPar": "Servi par {{nom}}",
+    "serviA": "Servi à {{heure}}"
   }
 }

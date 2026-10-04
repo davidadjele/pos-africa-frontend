@@ -187,6 +187,35 @@ describe('EcranCuisine', () => {
     const t4 = screen.getByRole('region', { name: 'Bon T4' })
     expect(t4).toHaveTextContent('Servi par Kossi A.')
     expect(within(t4).queryByRole('button', { name: 'Rappeler' })).toBeNull()
+    expect(t4).toHaveTextContent('Prêt à 21:38')
+  })
+
+  it('dit « Servi à » d’un bon servi sans avoir été marqué prêt', async () => {
+    tablette(CUISINE)
+    cuisineServie({
+      aPreparer: [],
+      prets: [
+        {
+          ...BON_PRET,
+          preteLe: '2026-10-03T21:40:00Z',
+          articles: [
+            {
+              ligneId: '1e000000-0000-4000-8000-000000000041',
+              nom: 'Alloco',
+              quantite: 2,
+              servieLe: '2026-10-03T21:40:00Z',
+              serviPar: 'Afi M.',
+            },
+          ],
+        },
+      ],
+    })
+    ouvrir('/cuisine')
+
+    await userEvent.click(await screen.findByRole('tab', { name: /Prêts/ }))
+    const t4 = screen.getByRole('region', { name: 'Bon T4' })
+    expect(t4).toHaveTextContent('Servi à 21:40')
+    expect(t4).not.toHaveTextContent('Prêt à')
   })
 
   it('dit quand il n’y a rien à préparer', async () => {

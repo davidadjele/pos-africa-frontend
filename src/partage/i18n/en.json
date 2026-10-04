@@ -2522,6 +2522,7 @@
         "phrase": "A ticket marked ready stays here for an hour: you can recall it if it was marked by mistake."
       }
     },
-    "serviPar": "Served by {{nom}}"
+    "serviPar": "Served by {{nom}}",
+    "serviA": "Served at {{heure}}"
   }
 }
