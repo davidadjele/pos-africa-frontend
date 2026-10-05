@@ -456,7 +456,10 @@
       "ardoises": "Tabs",
       "entreprise": "Company",
       "ventes": "Sales",
-      "caisses": "Tills"
+      "caisses": "Tills",
+      "reglages": "Settings",
+      "rapports": "Reports",
+      "ouvrir": "Menu"
     },
     "tableauDeBord": {
       "titre": "Dashboard",

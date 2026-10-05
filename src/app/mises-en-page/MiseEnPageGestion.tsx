@@ -1,190 +1,81 @@
-import { Link, Outlet } from '@tanstack/react-router'
-import {
-  Activity,
-  Building2,
-  ChartColumn,
-  LayoutDashboard,
-  Landmark,
-  LayoutGrid,
-  NotebookPen,
-  Percent,
-  Store,
-  TabletSmartphone,
-  Package,
-  Users,
-  UtensilsCrossed,
-  Wallet,
-  type LucideIcon,
-} from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { Link, Outlet, useRouterState } from '@tanstack/react-router'
+import { clsx } from 'clsx'
+import { Menu, X } from 'lucide-react'
+import { useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useSession, type Permission } from '../../partage/auth/useSession'
+import { useSession } from '../../partage/auth/useSession'
 import { nomPays } from '../../partage/referentiel/pays'
 import { AlerteErreur } from '../../partage/ui/Alerte'
 import { BarreHaute } from '../../partage/ui/BarreHaute'
 import { requeteARelancer } from '../../fonctionnalites/ardoise/requetes'
 import { requeteStockATraiter } from '../../fonctionnalites/stock/requetes'
 import { MenuCompte } from './MenuCompte'
+import {
+  ongletDe,
+  ongletsVisibles,
+  sectionDe,
+  sectionsVisibles,
+  type Compteur,
+  type Onglet,
+} from './navigationGestion'
 
-interface EntreeNavigation {
-  vers:
-    | '/gestion'
-    | '/caisse'
-    | '/gestion/activite'
-    | '/gestion/produits'
-    | '/gestion/carte-etablissement'
-    | '/gestion/taxes'
-    | '/gestion/etablissements'
-    | '/gestion/salles'
-    | '/gestion/personnel'
-    | '/gestion/tablettes'
-    | '/gestion/stock'
-    | '/gestion/ventes'
-    | '/gestion/caisses'
-    | '/gestion/ardoises'
-    | '/gestion/entreprise'
-  cle: string
-  icone: LucideIcon
-  /** Entrée masquée sans l'une de ces permissions : l'écran ne servirait qu'à afficher un refus. */
-  permission?: Permission | Permission[]
-  /** Nombre à côté de l'entrée : ce qui attend une action. */
-  compteur?: 'stock' | 'ardoises'
+/** Ce qui attend une action, par compteur ; une requête ne part que si un onglet visible l'affiche. */
+function useCompteurs(actifs: ReadonlySet<Compteur>): Record<Compteur, number> {
+  const stock = useQuery({ ...requeteStockATraiter, enabled: actifs.has('stock') })
+  const ardoises = useQuery({ ...requeteARelancer, enabled: actifs.has('ardoises') })
+  return { stock: stock.data?.nombre ?? 0, ardoises: ardoises.data?.nombre ?? 0 }
 }
 
-const QUOTIDIEN: EntreeNavigation[] = [
-  { vers: '/gestion', cle: 'gestion.menu.tableauDeBord', icone: LayoutDashboard },
-  { vers: '/caisse', cle: 'gestion.menu.caisse', icone: Store },
-  {
-    vers: '/gestion/ventes',
-    cle: 'gestion.menu.ventes',
-    icone: ChartColumn,
-    permission: 'RAPPORT_VENTES',
-  },
-  {
-    vers: '/gestion/caisses',
-    cle: 'gestion.menu.caisses',
-    icone: Wallet,
-    permission: 'RAPPORT_FINANCIER',
-  },
-  {
-    vers: '/gestion/activite',
-    cle: 'gestion.menu.activite',
-    icone: Activity,
-    permission: 'ACTIVITE_CONSULTER',
-  },
-  {
-    vers: '/gestion/stock',
-    cle: 'gestion.menu.stock',
-    icone: Package,
-    permission: ['STOCK_RECEPTIONNER', 'STOCK_AJUSTER'],
-    compteur: 'stock',
-  },
-  {
-    vers: '/gestion/ardoises',
-    cle: 'gestion.menu.ardoises',
-    icone: NotebookPen,
-    permission: 'CLIENT_CREDIT',
-    compteur: 'ardoises',
-  },
-]
-
-// La carte : consultable par tout le back-office, les taxes seulement par qui les règle.
-const CARTE: EntreeNavigation[] = [
-  { vers: '/gestion/produits', cle: 'gestion.menu.produits', icone: UtensilsCrossed },
-  { vers: '/gestion/carte-etablissement', cle: 'gestion.menu.parEtablissement', icone: Store },
-  {
-    vers: '/gestion/taxes',
-    cle: 'gestion.menu.taxes',
-    icone: Percent,
-    permission: 'CATALOGUE_GERER',
-  },
-]
-
-// Réglages en bas, séparés des actions quotidiennes.
-const REGLAGES: EntreeNavigation[] = [
-  {
-    vers: '/gestion/entreprise',
-    cle: 'gestion.menu.entreprise',
-    icone: Landmark,
-    permission: 'ETABLISSEMENT_GERER',
-  },
-  {
-    vers: '/gestion/etablissements',
-    cle: 'gestion.menu.etablissements',
-    icone: Building2,
-    permission: 'ETABLISSEMENT_GERER',
-  },
-  {
-    vers: '/gestion/salles',
-    cle: 'gestion.menu.salles',
-    icone: LayoutGrid,
-    permission: 'SALLE_GERER',
-  },
-  {
-    vers: '/gestion/personnel',
-    cle: 'gestion.menu.personnel',
-    icone: Users,
-    permission: 'PERSONNEL_GERER',
-  },
-  {
-    vers: '/gestion/tablettes',
-    cle: 'gestion.menu.tablettes',
-    icone: TabletSmartphone,
-    permission: 'APPAREIL_GERER',
-  },
-]
-
-function Separateur() {
+function Pastille({ nombre }: Readonly<{ nombre: number }>) {
+  const { t } = useTranslation()
+  if (nombre === 0) return null
   return (
-    <li
-      aria-hidden="true"
-      className="mx-1 w-px self-stretch bg-trait md:mx-0 md:my-1 md:h-px md:w-auto"
-    />
+    <span className="chiffres ml-auto min-w-5 rounded-petit bg-accent-vif px-1.5 text-center text-badge font-bold text-accent-texte">
+      <span className="sr-only">, {t('gestion.menu.aTraiter', { count: nombre })} </span>
+      <span aria-hidden="true">{nombre}</span>
+    </span>
   )
 }
 
-function Entree({
-  vers,
-  cle,
-  icone: Icone,
-  compteur,
-}: Readonly<Omit<EntreeNavigation, 'permission'>>) {
-  const { t } = useTranslation()
-  const aTraiter = useQuery({ ...requeteStockATraiter, enabled: compteur === 'stock' })
-  const aRelancer = useQuery({ ...requeteARelancer, enabled: compteur === 'ardoises' })
-  const nombres = { stock: aTraiter.data?.nombre ?? 0, ardoises: aRelancer.data?.nombre ?? 0 }
-  const nombre = compteur === undefined ? 0 : nombres[compteur]
-  return (
-    <li>
-      <Link
-        to={vers}
-        activeOptions={{ exact: true }}
-        className="relative flex min-h-cible-min items-center gap-3 whitespace-nowrap rounded-normal px-3 text-corps text-encre hover:bg-fond aria-[current=page]:bg-accent-doux aria-[current=page]:font-bold aria-[current=page]:text-accent-lisible"
-      >
-        <Icone aria-hidden="true" size={20} />
-        {t(cle)}
-        {nombre > 0 && (
-          <span className="chiffres ml-auto min-w-5 rounded-petit bg-accent-vif px-1.5 text-center text-badge font-bold text-accent-texte">
-            <span className="sr-only">, {t('gestion.menu.aTraiter', { count: nombre })} </span>
-            <span aria-hidden="true">{nombre}</span>
-          </span>
-        )}
-      </Link>
-    </li>
+function total(onglets: readonly Onglet[], nombres: Record<Compteur, number>): number {
+  return onglets.reduce(
+    (somme, { compteur }) => somme + (compteur === undefined ? 0 : nombres[compteur]),
+    0,
   )
 }
 
 export function MiseEnPageGestion() {
   const { t, i18n } = useTranslation()
   const { moi, aLaPermission } = useSession()
-  const visible = (entree: EntreeNavigation) =>
-    entree.permission === undefined ||
-    (Array.isArray(entree.permission)
-      ? entree.permission.some((permission) => aLaPermission(permission))
-      : aLaPermission(entree.permission))
+  const chemin = useRouterState({ select: (etat) => etat.location.pathname })
   const [erreurChangement, setErreurChangement] = useState<unknown>(null)
+  const [menuOuvert, setMenuOuvert] = useState(false)
+  const idMenu = useId()
+  const sections = sectionsVisibles(aLaPermission)
+  const nombres = useCompteurs(
+    new Set(
+      sections.flatMap((section) =>
+        section.visibles.flatMap(({ compteur }) => (compteur === undefined ? [] : [compteur])),
+      ),
+    ),
+  )
+  const active = sectionDe(chemin)
+  const onglets = active === undefined ? [] : ongletsVisibles(active, aLaPermission)
+  const ongletActif = active === undefined ? undefined : ongletDe(chemin, active)
   const entreprise = moi?.entrepriseCourante
+
+  useEffect(() => {
+    if (!menuOuvert) return
+    const surTouche = (evenement: KeyboardEvent) => {
+      if (evenement.key === 'Escape') setMenuOuvert(false)
+    }
+    document.addEventListener('keydown', surTouche)
+    return () => {
+      document.removeEventListener('keydown', surTouche)
+    }
+  }, [menuOuvert])
+
   return (
     <div className="flex min-h-dvh flex-col bg-fond">
       <BarreHaute
@@ -197,48 +88,87 @@ export function MiseEnPageGestion() {
       <div className="flex flex-1 flex-col md:flex-row">
         <nav
           aria-label={t('commun.navigationPrincipale')}
-          // Fixe sous la barre : en ligne sur téléphone, en colonne qui défile seule sur grand écran.
+          // Fixe sous la barre : une ligne « Menu » sur téléphone, une colonne qui défile seule sur grand écran.
           className="sticky top-barre-hauteur z-20 shrink-0 border-b border-trait bg-surface md:h-[calc(100dvh-var(--barre-hauteur))] md:w-60 md:self-start md:overflow-y-auto md:border-r md:border-b-0"
         >
-          <ul className="m-0 flex list-none gap-1 overflow-x-auto p-2 md:flex-col">
-            {QUOTIDIEN.filter(visible).map((entree) => (
-              <Entree
-                key={entree.vers}
-                vers={entree.vers}
-                cle={entree.cle}
-                icone={entree.icone}
-                {...(entree.compteur === undefined ? {} : { compteur: entree.compteur })}
-              />
-            ))}
-            <Separateur />
-            <li
-              aria-hidden="true"
-              className="hidden px-3 pt-2 text-legende font-bold uppercase tracking-wide text-attenue md:block"
-            >
-              {t('gestion.menu.carte')}
-            </li>
-            {CARTE.filter(visible).map((entree) => (
-              <Entree
-                key={entree.vers}
-                vers={entree.vers}
-                cle={entree.cle}
-                icone={entree.icone}
-                {...(entree.compteur === undefined ? {} : { compteur: entree.compteur })}
-              />
-            ))}
-            <Separateur />
-            {REGLAGES.filter(visible).map((entree) => (
-              <Entree
-                key={entree.vers}
-                vers={entree.vers}
-                cle={entree.cle}
-                icone={entree.icone}
-                {...(entree.compteur === undefined ? {} : { compteur: entree.compteur })}
-              />
-            ))}
+          <button
+            type="button"
+            aria-expanded={menuOuvert}
+            aria-controls={idMenu}
+            onClick={() => {
+              setMenuOuvert(!menuOuvert)
+            }}
+            className="flex min-h-cible-min w-full items-center gap-3 px-4 text-corps font-semibold text-encre md:hidden"
+          >
+            {menuOuvert ? (
+              <X aria-hidden="true" size={20} />
+            ) : (
+              <Menu aria-hidden="true" size={20} />
+            )}
+            <span className="sr-only">{t('gestion.menu.ouvrir')}</span>
+            <span aria-hidden="true">
+              {active === undefined ? t('gestion.menu.ouvrir') : t(`gestion.menu.${active.cle}`)}
+            </span>
+          </button>
+          <ul
+            id={idMenu}
+            className={clsx(
+              'm-0 list-none flex-col gap-1 p-2 md:flex',
+              menuOuvert ? 'flex border-t border-trait' : 'hidden',
+            )}
+          >
+            {sections.map((section) => {
+              const Icone = section.icone
+              const courante = section.cle === active?.cle
+              return (
+                <li key={section.cle}>
+                  <Link
+                    to={section.vers}
+                    activeOptions={{ exact: true }}
+                    aria-current={courante ? 'page' : undefined}
+                    // Sur téléphone, le menu se referme en changeant de page.
+                    onClick={() => {
+                      setMenuOuvert(false)
+                    }}
+                    className={clsx(
+                      'flex min-h-cible-min items-center gap-3 whitespace-nowrap rounded-normal px-3 text-corps text-encre',
+                      courante ? 'bg-accent-doux font-bold text-accent-lisible' : 'hover:bg-fond',
+                    )}
+                  >
+                    <Icone aria-hidden="true" size={20} />
+                    {t(`gestion.menu.${section.cle}`)}
+                    <Pastille nombre={total(section.visibles, nombres)} />
+                  </Link>
+                </li>
+              )
+            })}
           </ul>
         </nav>
         <main className="flex min-w-0 flex-1 flex-col gap-4 p-4 md:p-6">
+          {active !== undefined && onglets.length > 1 && (
+            <nav
+              aria-label={t(`gestion.menu.${active.cle}`)}
+              className="-mx-4 -mt-4 flex gap-6 overflow-x-auto border-b border-trait bg-surface px-4 md:-mx-6 md:-mt-6 md:px-6"
+            >
+              {onglets.map((onglet) => (
+                <Link
+                  key={onglet.vers}
+                  to={onglet.vers}
+                  activeOptions={{ exact: true }}
+                  aria-current={onglet.vers === ongletActif?.vers ? 'page' : undefined}
+                  className={clsx(
+                    'inline-flex min-h-cible-min shrink-0 items-center gap-2 border-b-2 px-1 text-libelle text-encre',
+                    onglet.vers === ongletActif?.vers
+                      ? 'border-accent font-bold'
+                      : 'border-transparent',
+                  )}
+                >
+                  {t(`gestion.menu.${onglet.cle}`)}
+                  {onglet.compteur !== undefined && <Pastille nombre={nombres[onglet.compteur]} />}
+                </Link>
+              ))}
+            </nav>
+          )}
           {erreurChangement !== null && <AlerteErreur erreur={erreurChangement} />}
           <Outlet />
         </main>

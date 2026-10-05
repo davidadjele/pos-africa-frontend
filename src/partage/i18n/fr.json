@@ -456,7 +456,10 @@
       "ardoises": "Ardoises",
       "entreprise": "Entreprise",
       "ventes": "Ventes",
-      "caisses": "Caisses"
+      "caisses": "Caisses",
+      "reglages": "Réglages",
+      "rapports": "Rapports",
+      "ouvrir": "Menu"
     },
     "tableauDeBord": {
       "titre": "Tableau de bord",

@@ -45,7 +45,12 @@ describe('PageArdoises', () => {
     ardoisesServies()
     const tableau = await ouvrirArdoises()
 
-    expect(screen.getByRole('link', { name: /Ardoises/ })).toHaveAttribute('aria-current', 'page')
+    // Seul onglet permis de « Ventes » : pas de barre d'onglets, l'entrée du menu suffit.
+    const menu = screen.getByRole('navigation', { name: 'Navigation principale' })
+    expect(within(menu).getByRole('link', { name: /Ventes/ })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
     const chiffres = screen.getByRole('region', { name: 'Résumé des ardoises' })
     expect(chiffres).toHaveTextContent(/À recevoir56\s000\sF2 clients/)
     expect(chiffres).toHaveTextContent(/À relancer38\s000\sF1 client, dette de plus de 30 jours/)

@@ -129,6 +129,21 @@ async function verifierSansDefilementHorizontal(page: Page) {
   expect(debordement).toBeLessThanOrEqual(0)
 }
 
+/** Le menu de la gestion : une entrée, puis l'onglet de la page s'il y en a plusieurs. Sur téléphone, ouvre le menu. */
+async function allerA(page: Page, section: string, onglet?: string) {
+  const menu = page.getByRole('navigation', { name: 'Navigation principale' })
+  // Juste après une connexion, la page n'est pas encore affichée : on attend le menu avant de regarder.
+  await menu.waitFor()
+  const bouton = menu.getByRole('button', { name: 'Menu' })
+  if (await bouton.isVisible()) await bouton.click()
+  // Le nom peut finir par un compteur (« Stock, 2 produits à traiter ») : on ne regarde que le début.
+  await menu.getByRole('link', { name: new RegExp(`^${section}`) }).click()
+  const onglets = page.getByRole('navigation', { name: section })
+  if (onglet !== undefined && (await onglets.count()) > 0) {
+    await onglets.getByRole('link', { name: new RegExp(`^${onglet}`) }).click()
+  }
+}
+
 test('sans session, l’accueil mène à la connexion', async ({ page }) => {
   const erreurs = surveillerErreursConsole(page)
   await simulerApi(page, { connecte: false })
@@ -154,10 +169,7 @@ test('le propriétaire se connecte et retrouve ses établissements', async ({ pa
 
   await expect(page).toHaveURL(/\/gestion$/)
   await expect(page.getByRole('banner')).toContainText('Maquis Chez Tanti')
-  await page
-    .getByRole('navigation', { name: 'Navigation principale' })
-    .getByRole('link', { name: 'Établissements' })
-    .click()
+  await allerA(page, 'Réglages', 'Établissements')
   await expect(page.getByRole('table', { name: 'Établissements de l’entreprise' })).toContainText(
     'Bè Kpota',
   )
@@ -172,6 +184,9 @@ test('la gestion présente sa navigation et mène à la caisse', async ({ page }
 
   await expect(page.getByRole('heading', { level: 1, name: 'Tableau de bord' })).toBeVisible()
   const navigation = page.getByRole('navigation', { name: 'Navigation principale' })
+  // Sur téléphone, les entrées sont derrière le bouton « Menu ».
+  const bouton = navigation.getByRole('button', { name: 'Menu' })
+  if (await bouton.isVisible()) await bouton.click()
   await expect(navigation.getByRole('link', { name: 'Tableau de bord' })).toHaveAttribute(
     'aria-current',
     'page',
