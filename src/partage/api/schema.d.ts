@@ -2367,6 +2367,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/produits/{id}/variantes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ajouter une variante à un produit
+         * @description Un produit à part entière (prix, stock, coût, rapports), nommé « Poulet braisé, Demi », qui reprend la catégorie, la taxe et les options du parent. Erreurs : RESSOURCE_INTROUVABLE, REQUETE_INVALIDE (nom déjà pris, produit qui est lui-même une variante).
+         */
+        post: operations["ajouterVariante"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/produits/{id}/variantes/{varianteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Modifier une variante
+         * @description PRIX_MODIFIER pour changer le prix. Erreurs : RESSOURCE_INTROUVABLE, CONFLIT_MODIFICATION, REQUETE_INVALIDE, ACCES_REFUSE.
+         */
+        put: operations["modifierVariante"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/public/configuration": {
         parameters: {
             query?: never;
@@ -3611,6 +3651,19 @@ export interface components {
             /** Format: uuid */
             validateurId: string;
         };
+        DemandeVariante: {
+            /** Format: int64 */
+            coutRevient?: number;
+            /** @example Demi */
+            libelle: string;
+            /**
+             * Format: int64
+             * @example 3000
+             */
+            prix: number;
+            /** Format: int64 */
+            version?: number;
+        };
         DetailCaisse: {
             caisse: components["schemas"]["CaisseResume"];
             mouvements: components["schemas"]["MouvementResume"][];
@@ -4091,9 +4144,12 @@ export interface components {
             /** Format: date-time */
             epuiseLe?: string;
             epuisePar?: string;
+            libelleVariante?: string;
             nom: string;
             nomTaxe?: string;
             options: components["schemas"]["GroupeCarte"][];
+            /** Format: uuid */
+            parentId?: string;
             /** Format: int64 */
             prix: number;
             /** Format: int64 */
@@ -4506,13 +4562,17 @@ export interface components {
             groupesOptionIds: string[];
             /** Format: uuid */
             id: string;
+            libelleVariante?: string;
             nom: string;
+            /** Format: uuid */
+            parentId?: string;
             /** Format: int64 */
             prix: number;
             suiviStock: boolean;
             taxe?: components["schemas"]["TaxeProduit"];
             /** @enum {string} */
             type: "PLAT" | "BOISSON" | "ARTICLE";
+            variantes: components["schemas"]["VarianteResume"][];
             /** Format: int64 */
             version: number;
         };
@@ -4942,6 +5002,18 @@ export interface components {
             expireLe: string;
             /** Format: uuid */
             id: string;
+        };
+        VarianteResume: {
+            actif: boolean;
+            /** Format: int64 */
+            coutRevient?: number;
+            /** Format: uuid */
+            id: string;
+            libelle: string;
+            /** Format: int64 */
+            prix: number;
+            /** Format: int64 */
+            version: number;
         };
         VentesCaisse: {
             /** Format: int64 */
@@ -9579,6 +9651,77 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    ajouterVariante: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeVariante"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProduitResume"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    modifierVariante: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                varianteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeVariante"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProduitResume"];
+                };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
             default: {

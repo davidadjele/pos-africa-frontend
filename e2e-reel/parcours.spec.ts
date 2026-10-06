@@ -1533,6 +1533,19 @@ test('Tanti crée des options, les attache aux côtelettes, et Kossi les choisit
   }
   await capturer(page, '91-fiche-options')
 
+  // Deux variantes : 2 ou 4 côtelettes, chacune à son prix.
+  const variantes = page.getByRole('region', { name: 'Variantes' })
+  for (const [libelle, prix] of [
+    ['2 pièces', '5000'],
+    ['4 pièces', '9000'],
+  ] as const) {
+    await variantes.getByLabel(/^Nouvelle variante/).fill(libelle)
+    await variantes.getByLabel(/^Prix de la variante/).fill(prix)
+    await variantes.getByRole('button', { name: 'Ajouter la variante' }).click()
+    await expect(variantes.getByRole('row', { name: new RegExp(libelle) })).toBeVisible()
+  }
+  await capturer(page, '91-fiche-variantes')
+
   // Kossi, sur une nouvelle caisse : la cuisson est demandée avant l'ajout, le supplément s'ajoute au prix.
   await allerA(page, 'Réglages', 'Tablettes')
   const codeCaisse = await codeDeTablette(page, 'Caisse 4, grill')
@@ -1545,23 +1558,31 @@ test('Tanti crée des options, les attache aux côtelettes, et Kossi les choisit
   await caisse.getByRole('button', { name: 'Ouvrir la caisse' }).click()
   await caisse.getByRole('button', { name: 'Vente au comptoir' }).click()
   const note = caisse.getByRole('region', { name: 'Note en cours' })
+  const tuile = caisse.getByRole('list', { name: 'Produits' }).getByRole('button', {
+    name: /Côtelettes d’agneau/,
+  })
+  await expect(tuile).toContainText('dès')
+  await tuile.click()
+  // D'abord la variante, puis les options du produit.
+  await capturer(caisse, '92-caisse-variantes')
   await caisse
-    .getByRole('list', { name: 'Produits' })
-    .getByRole('button', { name: /Côtelettes d’agneau/ })
+    .getByRole('dialog', { name: 'Côtelettes d’agneau' })
+    .getByRole('button', { name: /4 pièces/ })
     .click()
-  const panneau = caisse.getByRole('dialog', { name: 'Côtelettes d’agneau' })
+  const panneau = caisse.getByRole('dialog', { name: 'Côtelettes d’agneau, 4 pièces' })
   await panneau.getByRole('button', { name: /^Ajouter/ }).click()
   await expect(panneau).toContainText('Choisissez : Cuisson.')
   await panneau.getByRole('button', { name: /À point/ }).click()
   await panneau.getByRole('button', { name: /Œuf/ }).click()
-  await expect(panneau.getByRole('button', { name: /^Ajouter/ })).toContainText('5 200')
+  await expect(panneau.getByRole('button', { name: /^Ajouter/ })).toContainText('9 200')
   await capturer(caisse, '92-caisse-options')
   await caisse.setViewportSize({ width: 390, height: 844 })
   await capturer(caisse, '92-caisse-options-telephone')
   await caisse.setViewportSize({ width: 1280, height: 800 })
   await panneau.getByRole('button', { name: /^Ajouter/ }).click()
   await expect(note).toContainText('Œuf +200')
-  await expect(note).toContainText('5 200 FCFA')
+  await expect(note).toContainText('9 200 FCFA')
+  await expect(note).toContainText('Côtelettes d’agneau, 4 pièces')
   await capturer(caisse, '93-note-options')
   await note.getByRole('button', { name: /Envoyer 1 article/ }).click()
   await expect(note.getByRole('button', { name: /Envoyer \d+ article/ })).toHaveCount(0)

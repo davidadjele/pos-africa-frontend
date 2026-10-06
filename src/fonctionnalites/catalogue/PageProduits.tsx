@@ -80,7 +80,12 @@ export function PageProduits({ recherche }: Readonly<{ recherche: RechercheProdu
       entete: t('produits.colonnes.produit'),
       rendu: (produit) => (
         <>
-          <span className="block font-semibold">{produit.nom}</span>
+          <span className="flex flex-wrap items-center gap-2 font-semibold">
+            {produit.nom}
+            {produit.parentId !== undefined && (
+              <BadgeStatut ton="neutre">{t('variantes.badge')}</BadgeStatut>
+            )}
+          </span>
           <span className="text-legende text-attenue">
             {t(`typesProduit.${produit.type}`)}
             {/* Sur téléphone, la colonne Catégorie est masquée : elle passe sous le nom. */}
@@ -106,7 +111,15 @@ export function PageProduits({ recherche }: Readonly<{ recherche: RechercheProdu
       numerique: true,
       rendu: (produit) => (
         <span className="chiffres text-montant-ligne">
-          {formaterMontant({ unitesMineures: produit.prix, devise }, { forme: 'courte' })}
+          {/* Un produit à variantes se vend au prix de chacune : la moins chère d'abord. */}
+          {produit.variantes[0] === undefined
+            ? formaterMontant({ unitesMineures: produit.prix, devise }, { forme: 'courte' })
+            : t('variantes.des', {
+                prix: formaterMontant(
+                  { unitesMineures: produit.variantes[0].prix, devise },
+                  { forme: 'courte' },
+                ),
+              })}
         </span>
       ),
     },
@@ -167,7 +180,8 @@ export function PageProduits({ recherche }: Readonly<{ recherche: RechercheProdu
             {peutGerer && (
               <Link
                 to="/gestion/produits/$produitId"
-                params={{ produitId: produit.id }}
+                // Une variante se modifie depuis la fiche de son produit.
+                params={{ produitId: produit.parentId ?? produit.id }}
                 aria-label={t('produits.modifierNomme', { nom: produit.nom })}
                 className={classesBouton('secondaire')}
               >

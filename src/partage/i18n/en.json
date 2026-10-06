@@ -120,7 +120,8 @@
       "nombreProduits_other": "{{count}} products",
       "surLaNote_one": "{{count}} on the bill",
       "surLaNote_other": "{{count}} on the bill",
-      "retirerUn": "Remove one"
+      "retirerUn": "Remove one",
+      "des": "from"
     },
     "note": {
       "titre": "Current tab",
@@ -2639,5 +2640,32 @@
       "ajouter": "Add a group",
       "choisir": "Choose a group…"
     }
+  },
+  "variantes": {
+    "titre": "Variants",
+    "phrase": "Versions of the same dish, each with its own price, cost and stock: half and whole, small and large. At the till, one tile asks for the variant, then its options.",
+    "colonnes": {
+      "variante": "Variant",
+      "prix": "Price",
+      "cout": "Cost"
+    },
+    "desactivee": "Disabled",
+    "modifier": "Edit",
+    "modifierNomme": "Edit {{nom}}",
+    "nouvelle": "New variant",
+    "exemple": "Half, Whole, Large…",
+    "prix": "Variant price",
+    "cout": "Cost (optional)",
+    "ajouter": "Add variant",
+    "invalide": "Give the variant a name and a readable price.",
+    "titreModification": "Edit variant “{{nom}}”",
+    "consequence": "Orders already taken keep their price.",
+    "libelle": "Variant name",
+    "prixTtc": "Price incl. tax",
+    "coutRevient": "Cost",
+    "seModifieDepuisLeParent": "A variant is edited from its product’s page.",
+    "ouvrirLeParent": "Open the product",
+    "badge": "Variant",
+    "des": "from {{prix}}"
   }
 }

@@ -62,6 +62,40 @@ describe('PageProduits', () => {
     )
   })
 
+  it('montre un produit à variantes à son prix le plus bas, et renvoie une variante à son produit', async () => {
+    const demi = {
+      ...POULET,
+      id: 'b0000000-0000-4000-8000-0000000000d1',
+      nom: 'Poulet braisé, Demi',
+      prix: 3000,
+      parentId: POULET.id,
+      libelleVariante: 'Demi',
+    }
+    const parent = {
+      ...POULET,
+      variantes: [{ id: demi.id, libelle: 'Demi', prix: 3000, actif: true, version: 0 }],
+    }
+    backendSimule()
+    serveurMsw.use(
+      http.get(`${API}/produits`, () =>
+        HttpResponse.json({ elements: [parent, demi], page: 0, taille: 50, total: 2 }),
+      ),
+    )
+    await ouvrirProduits()
+
+    const tableau = await screen.findByRole('table', { name: 'Produits de la carte' })
+    const ligneParent = within(tableau)
+      .getAllByRole('row')
+      .find((ligne) => ligne.textContent.startsWith('Poulet braiséPlat'))
+    expect(ligneParent).toHaveTextContent(/dès 3\s000/)
+    const ligneDemi = within(tableau).getByRole('row', { name: /Poulet braisé, Demi/ })
+    expect(ligneDemi).toHaveTextContent('Variante')
+    expect(within(ligneDemi).getByRole('link', { name: /Modifier/ })).toHaveAttribute(
+      'href',
+      `/gestion/produits/${POULET.id}`,
+    )
+  })
+
   it('filtre par catégorie, par recherche et par statut', async () => {
     const { requetes } = backendSimule()
     const tableau = await ouvrirProduits()

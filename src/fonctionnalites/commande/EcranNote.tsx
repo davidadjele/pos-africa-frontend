@@ -39,6 +39,8 @@ import { useValidation } from './useValidation'
 import { CarteCaisse } from './CarteCaisse'
 import { DialogueAnnulation, DialogueLigne } from './DialoguesLigne'
 import { DialogueOptions } from './DialogueOptions'
+import { DialogueVariantes } from './DialogueVariantes'
+import { variantesDe } from './variantes'
 import { ouEstLaNote, PanneauNote, type Rupture } from './PanneauNote'
 import { RubanNotes } from './RubanNotes'
 import { envoiVersLaCuisine, pasEncorePret } from './service'
@@ -80,6 +82,7 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
   const [noteOuverte, setNoteOuverte] = useState(false)
   const [ligneOuverte, setLigneOuverte] = useState<LigneNote | null>(null)
   const [aAnnuler, setAAnnuler] = useState<LigneNote | null>(null)
+  const [aVarier, setAVarier] = useState<LigneCarteEtablissement | null>(null)
   const [aOptionner, setAOptionner] = useState<{
     produit: LigneCarteEtablissement
     /** Ligne pas encore envoyée dont on change les options ; vide pour un nouvel ajout. */
@@ -149,6 +152,10 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
 
   /** Ajouter, ou d'abord prévenir si l'établissement le demande pour un article qui n'a plus de stock. */
   function choisir(produit: LigneCarteEtablissement) {
+    if (variantesDe(carte.data ?? [], produit.produitId).length > 0) {
+      setAVarier(produit)
+      return
+    }
     const article = stockDuProduit(stock.data, produit.produitId)
     const dejaSurLaNote = (note.data?.lignes ?? [])
       .filter((ligne) => ligne.statut === 'BROUILLON' && ligne.produitId === produit.produitId)
@@ -432,9 +439,13 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
                 if (modifiable) choisir(produit)
               }}
               surRetirer={(produit) => {
-                // La dernière ligne à envoyer de ce produit : celle qu'on vient d'ajouter.
+                // La dernière ligne à envoyer de ce produit, ou d'une de ses variantes.
+                const ids = new Set([
+                  produit.produitId,
+                  ...variantesDe(carte.data, produit.produitId).map((un) => un.produitId),
+                ])
                 const derniere = note.data.lignes.findLast(
-                  (ligne) => ligne.statut === 'BROUILLON' && ligne.produitId === produit.produitId,
+                  (ligne) => ligne.statut === 'BROUILLON' && ids.has(ligne.produitId),
                 )
                 if (derniere !== undefined)
                   void modifier(derniere, { quantite: derniere.quantite - 1 })
@@ -590,6 +601,20 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
             surEnregistrer={(demande) => {
               setLigneOuverte(null)
               void modifier(ligneOuverte, demande)
+            }}
+          />
+        )}
+        {aVarier !== null && (
+          <DialogueVariantes
+            produit={aVarier}
+            variantes={variantesDe(carte.data ?? [], aVarier.produitId)}
+            devise={devise}
+            surFermer={() => {
+              setAVarier(null)
+            }}
+            surChoisir={(variante) => {
+              setAVarier(null)
+              choisir(variante)
             }}
           />
         )}

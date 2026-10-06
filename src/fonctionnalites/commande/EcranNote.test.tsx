@@ -675,6 +675,47 @@ describe('EcranNote', () => {
     ).toBeVisible()
   })
 
+  it('propose une seule tuile par produit à variantes, puis fait choisir la variante', async () => {
+    const parent: LigneCarteEtablissement = { ...POULET, prix: 5500 }
+    const demi: LigneCarteEtablissement = {
+      ...POULET,
+      produitId: 'b0000000-0000-4000-8000-0000000000d1',
+      nom: 'Poulet braisé, Demi',
+      prix: 3000,
+      parentId: POULET.produitId,
+      libelleVariante: 'Demi',
+    }
+    const entier: LigneCarteEtablissement = {
+      ...demi,
+      produitId: 'b0000000-0000-4000-8000-0000000000e1',
+      nom: 'Poulet braisé, Entier',
+      prix: 5500,
+      libelleVariante: 'Entier',
+      epuise: true,
+    }
+    const ajouts: DemandeAjout[] = []
+    serveurMsw.use(
+      http.post(`${API}/caisse/commandes/${NOTE_VIDE.id}/lignes`, async ({ request }) => {
+        ajouts.push((await request.json()) as DemandeAjout)
+        return HttpResponse.json(NOTE_VIDE)
+      }),
+    )
+    noteServie(NOTE_VIDE, [FLAG, parent, demi, entier])
+
+    const produits = await screen.findByRole('list', { name: 'Produits' })
+    expect(within(produits).queryByRole('button', { name: /Poulet braisé, Demi/ })).toBeNull()
+    const tuile = within(produits).getByRole('button', { name: /^Poulet braisé/ })
+    expect(tuile).toHaveTextContent(/dès 3\s000/)
+    await userEvent.click(tuile)
+
+    const choix = screen.getByRole('dialog', { name: 'Poulet braisé' })
+    expect(within(choix).getByRole('button', { name: /Entier/ })).toBeDisabled()
+    await userEvent.click(within(choix).getByRole('button', { name: /Demi/ }))
+    await waitFor(() => {
+      expect(ajouts).toEqual([{ produitId: demi.produitId }])
+    })
+  })
+
   it('filtre la carte par catégorie et par nom', async () => {
     noteServie()
 

@@ -120,7 +120,8 @@
       "nombreProduits_other": "{{count}} produits",
       "surLaNote_one": "{{count}} sur la note",
       "surLaNote_other": "{{count}} sur la note",
-      "retirerUn": "En retirer un"
+      "retirerUn": "En retirer un",
+      "des": "dès"
     },
     "note": {
       "titre": "Note en cours",
@@ -2639,5 +2640,32 @@
       "ajouter": "Ajouter un groupe",
       "choisir": "Choisir un groupe…"
     }
+  },
+  "variantes": {
+    "titre": "Variantes",
+    "phrase": "Des versions du même plat, chacune avec son prix, son coût et son stock : demi et entier, petit et grand. En caisse, une seule tuile fait choisir la variante, puis ses options.",
+    "colonnes": {
+      "variante": "Variante",
+      "prix": "Prix TTC",
+      "cout": "Coût"
+    },
+    "desactivee": "Désactivée",
+    "modifier": "Modifier",
+    "modifierNomme": "Modifier {{nom}}",
+    "nouvelle": "Nouvelle variante",
+    "exemple": "Demi, Entier, Grand…",
+    "prix": "Prix de la variante",
+    "cout": "Coût (facultatif)",
+    "ajouter": "Ajouter la variante",
+    "invalide": "Donnez un nom et un prix lisible à la variante.",
+    "titreModification": "Modifier la variante « {{nom}} »",
+    "consequence": "Les notes déjà prises gardent leur prix.",
+    "libelle": "Nom de la variante",
+    "prixTtc": "Prix TTC",
+    "coutRevient": "Coût de revient",
+    "seModifieDepuisLeParent": "Une variante se modifie depuis la fiche de son produit.",
+    "ouvrirLeParent": "Ouvrir le produit",
+    "badge": "Variante",
+    "des": "dès {{prix}}"
   }
 }

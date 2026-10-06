@@ -42,6 +42,7 @@ export const POULET: ProduitResume = {
   categorie: { id: GRILLADES.id, nom: GRILLADES.nom, couleur: GRILLADES.couleur },
   taxe: { id: TVA.id, nom: TVA.nom, tauxPointsDeBase: TVA.tauxPointsDeBase },
   groupesOptionIds: [],
+  variantes: [],
 }
 
 export const FLAG: ProduitResume = {
@@ -55,4 +56,5 @@ export const FLAG: ProduitResume = {
   categorie: { id: BIERES.id, nom: BIERES.nom, couleur: BIERES.couleur },
   taxe: { id: TVA.id, nom: TVA.nom, tauxPointsDeBase: TVA.tauxPointsDeBase },
   groupesOptionIds: [],
+  variantes: [],
 }
