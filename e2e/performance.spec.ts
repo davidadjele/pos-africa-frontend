@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page, type TestInfo } from '@playwright/test'
 import type { CommandeDetail, LigneCarteEtablissement, LigneNote } from '../src/partage/api/contrat'
 import { BIERES, FLAG, GRILLADES, NOTE_VIDE, POULET, POULET_A_ENVOYER } from '../tests/commandes'
 import { simulerApi } from './simulation'
@@ -7,9 +7,13 @@ import { simulerApi } from './simulation'
 // plafonds sont larges : un runner partagé est bruité, ils attrapent une régression nette, pas 10 ms.
 const RALENTISSEMENT_CPU = 4
 const ESSAIS = 5
-const PLAFONDS_MS = { ouvertureNote: 1000, ajoutArticle: 250, ouvertureGuide: 800 }
-/** Mesuré à 2,5 s de LCP et 80 ms de blocage : les plafonds laissent la marge d'un runner plus lent. */
-const PLAFONDS_CHARGEMENT = { lcpMs: 3500, cls: 0.1, tbtMs: 300 }
+/** Environ 200, 90 et 250 ms sur un poste de développement ; un runner GitHub est plusieurs fois plus lent. */
+const PLAFONDS_MS = { ouvertureNote: 1500, ajoutArticle: 400, ouvertureGuide: 1500 }
+/**
+ * Mesuré à 2,5 s de LCP. Le blocage dépend surtout de la machine : 80 ms sur un poste de développement, 340 à
+ * 500 ms sur un runner GitHub, déjà lent avant le ralentissement ×4. Le plafond attrape une vraie régression.
+ */
+const PLAFONDS_CHARGEMENT = { lcpMs: 3500, cls: 0.1, tbtMs: 800 }
 
 /** Une carte réaliste : 40 produits, sans options ni variantes pour qu'un toucher ajoute directement. */
 const CARTE: LigneCarteEtablissement[] = Array.from({ length: 40 }, (_, rang) => {
@@ -145,12 +149,22 @@ async function chronometrer(geste: () => Promise<void>, attendu: () => Promise<u
   return Date.now() - debut
 }
 
+/** La mesure dans le rapport et dans le journal du CI : de quoi resserrer les plafonds sur des chiffres réels. */
+function noter(testInfo: TestInfo, mesures: object) {
+  const description = JSON.stringify(mesures)
+  testInfo.annotations.push({ type: 'performance', description })
+  console.log(`Performance, ${testInfo.title} : ${description}`)
+}
+
 function mediane(valeurs: number[]): number {
   const triees = [...valeurs].sort((a, b) => a - b)
   return triees[Math.floor(triees.length / 2)] ?? Number.POSITIVE_INFINITY
 }
 
 test.describe('performance sur tablette bas de gamme', () => {
+  // Une mesure à la fois : deux pages ralenties en même temps se disputeraient le processeur.
+  test.describe.configure({ mode: 'serial' })
+
   test.beforeEach(({ browserName }, testInfo) => {
     test.skip(
       browserName !== 'chromium' || testInfo.project.name !== 'tablette-paysage',
@@ -192,10 +206,7 @@ test.describe('performance sur tablette bas de gamme', () => {
     await expect(note).toContainText(`Grillade n°${String(2 * ESSAIS - 1)}`)
 
     const mesures = { ouvertureNote, ajoutArticle: mediane(ajouts) }
-    testInfo.annotations.push({
-      type: 'performance',
-      description: JSON.stringify({ ...mesures, ajouts }),
-    })
+    noter(testInfo, { ...mesures, ajouts })
     expect(mesures.ouvertureNote).toBeLessThanOrEqual(PLAFONDS_MS.ouvertureNote)
     expect(mesures.ajoutArticle).toBeLessThanOrEqual(PLAFONDS_MS.ajoutArticle)
   })
@@ -208,7 +219,7 @@ test.describe('performance sur tablette bas de gamme', () => {
       await simulerApi(page, { connecte: false })
       const signaux = await mesurerChargement(page, chemin, titre)
 
-      testInfo.annotations.push({ type: 'performance', description: JSON.stringify(signaux) })
+      noter(testInfo, signaux)
       expect(signaux.lcp).toBeLessThanOrEqual(PLAFONDS_CHARGEMENT.lcpMs)
       expect(signaux.cls).toBeLessThanOrEqual(PLAFONDS_CHARGEMENT.cls)
       expect(signaux.tbt).toBeLessThanOrEqual(PLAFONDS_CHARGEMENT.tbtMs)
@@ -232,10 +243,7 @@ test.describe('performance sur tablette bas de gamme', () => {
       () => page.getByRole('heading', { level: 1, name: 'Encaisser une note' }).waitFor(),
     )
 
-    testInfo.annotations.push({
-      type: 'performance',
-      description: JSON.stringify({ ouvertureGuide }),
-    })
+    noter(testInfo, { ouvertureGuide })
     expect(ouvertureGuide).toBeLessThanOrEqual(PLAFONDS_MS.ouvertureGuide)
   })
 })
