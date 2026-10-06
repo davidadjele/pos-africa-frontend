@@ -196,7 +196,7 @@ test('la gestion présente sa navigation et mène à la caisse', async ({ page }
 
   await expect(navigation.getByRole('link', { name: 'Aide' })).toHaveAttribute(
     'href',
-    '/aide/suivre-les-ventes',
+    '/aide?depuis=%2Fgestion',
   )
   await navigation.getByRole('link', { name: 'Caisse' }).click()
   await expect(page).toHaveURL(/\/caisse$/)

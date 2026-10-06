@@ -15,7 +15,8 @@ export function BandeauMiseAJour() {
   return (
     <div
       role="status"
-      className="fixed inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-2 border-t border-trait bg-surface px-4 py-2"
+      // Au-dessus du menu latéral fixe (z-20), sous les dialogues (z-40) : il n'interrompt pas un encaissement.
+      className="fixed inset-x-0 bottom-0 z-30 flex flex-wrap items-center justify-between gap-2 border-t border-trait bg-surface px-4 py-2"
     >
       <p className="m-0 text-corps text-encre">{t('miseAJour.message')}</p>
       <Bouton onClick={() => void updateServiceWorker(true)}>{t('miseAJour.recharger')}</Bouton>

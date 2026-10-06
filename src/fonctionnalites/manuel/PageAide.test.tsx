@@ -23,6 +23,25 @@ describe('Aide', () => {
     ).toHaveAttribute('href', '/aide/premier-jour#etape-1')
   })
 
+  it('propose en tête le guide de l’écran que l’on quittait', async () => {
+    sessionAbsente()
+    ouvrir('/aide?depuis=%2Fgestion%2Fstock%2Freception')
+
+    const suggestion = await screen.findByRole('region', { name: 'Pour l’écran que vous quittiez' })
+    expect(within(suggestion).getByRole('link', { name: /Suivre le stock/ })).toHaveAttribute(
+      'href',
+      '/aide/stock',
+    )
+  })
+
+  it('n’affiche aucune suggestion sans écran d’origine', async () => {
+    sessionAbsente()
+    ouvrir('/aide')
+
+    await screen.findByRole('heading', { level: 1, name: 'Comment pouvons-nous vous aider ?' })
+    expect(screen.queryByRole('region', { name: 'Pour l’écran que vous quittiez' })).toBeNull()
+  })
+
   it('cherche un geste et dit quand rien ne correspond', async () => {
     sessionAbsente()
     ouvrir('/aide')

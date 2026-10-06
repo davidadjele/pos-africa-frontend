@@ -2711,6 +2711,7 @@
     "introuvable": {
       "titre": "This guide does not exist",
       "phrase": "It may have been renamed. Find it from the help home."
-    }
+    },
+    "depuis": "For the screen you just left"
   }
 }
