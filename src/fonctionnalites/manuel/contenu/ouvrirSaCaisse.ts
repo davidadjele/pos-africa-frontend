@@ -53,6 +53,11 @@ export const ouvrirSaCaisse: Guide = {
       titre: 'Le verrouillage automatique',
       texte:
         'Sans toucher l’écran pendant quelques minutes, la caisse se verrouille seule et revient à **Qui prend la caisse ?**. Le délai est rappelé en bas de cet écran. Retapez votre code : la tablette reprend là où elle était, sur la même note.',
+      capture: {
+        fichier: 'premier-jour/qui-prend-la-caisse',
+        legende:
+          'Écran « Qui prend la caisse ? », avec en bas le délai après lequel la caisse se verrouille seule.',
+      },
     },
   ],
   bonASavoir: [

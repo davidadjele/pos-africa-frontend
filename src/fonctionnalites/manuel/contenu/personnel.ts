@@ -24,6 +24,11 @@ export const personnel: Guide = {
       titre: 'L’accès au back-office',
       texte:
         'Un gérant ou un administrateur peut aussi gérer depuis un téléphone ou un ordinateur. Cochez **Donner un accès au back-office** et saisissez son téléphone ou son e-mail : ce sera son identifiant. Serveurs, caissiers et cuisine n’utilisent que la caisse.',
+      capture: {
+        fichier: 'premier-jour/employe',
+        legende:
+          'Formulaire « Ajouter un employé » : la case Donner un accès au back-office cochée et le téléphone qui servira d’identifiant.',
+      },
     },
     {
       titre: 'Remettre les codes',

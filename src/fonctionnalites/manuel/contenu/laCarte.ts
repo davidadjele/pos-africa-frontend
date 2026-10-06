@@ -63,6 +63,11 @@ export const laCarte: Guide = {
       titre: 'Épuisé pour la journée',
       texte:
         'Quand un produit manque, touchez **Épuisé ce jour** sur sa ligne : la caisse ne le propose plus. Il revient seul en vente le lendemain à 4 h, ou plus tôt avec **Remettre en vente**. Un gérant le fait aussi depuis son téléphone.',
+      capture: {
+        fichier: 'la-carte/epuise',
+        legende:
+          'Carte de Bè Kpota : la ligne Flag 65 cl, avec son prix propre et le bouton Épuisé ce jour.',
+      },
     },
   ],
   bonASavoir: [

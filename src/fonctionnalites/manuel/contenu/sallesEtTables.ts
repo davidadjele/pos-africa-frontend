@@ -14,6 +14,10 @@ export const sallesEtTables: Guide = {
       titre: 'Créer les salles',
       texte:
         'Dans **Réglages**, onglet **Salles et tables**, choisissez l’établissement si vous en gérez plusieurs. Touchez **Nouvelle salle**, saisissez son nom, puis **Créer la salle**. Chaque salle devient un onglet de la caisse.',
+      capture: {
+        fichier: 'salles-et-tables/nouvelle-salle',
+        legende: 'Dialogue « Nouvelle salle » : nom Terrasse et bouton Créer la salle.',
+      },
     },
     {
       titre: 'Ajouter des tables en lot',
@@ -38,6 +42,10 @@ export const sallesEtTables: Guide = {
       titre: 'L’ordre des onglets',
       texte:
         'Les salles s’affichent sur la caisse dans l’ordre de cette page. Dans le menu de la salle, **Monter** ou **Descendre** la déplace. **Renommer « Terrasse »** change le nom de la salle ouverte.',
+      capture: {
+        fichier: 'salles-et-tables/ordre',
+        legende: 'Menu d’actions de la Terrasse, première salle : Descendre la place après le Bar.',
+      },
     },
   ],
   bonASavoir: [

@@ -517,6 +517,17 @@ test('Tanti enregistre une tablette avec un code, Kossi y prend la caisse, puis 
     'tablettes/liste',
     page.getByRole('button', { name: 'Plus d’actions pour Caisse 1, bar' }),
   )
+  // La révocation se confirme : la tablette est gardée, la suite du parcours s'en sert.
+  await page.getByRole('button', { name: 'Plus d’actions pour Caisse 1, bar' }).click()
+  await page.getByRole('menuitem', { name: 'Révoquer' }).click()
+  const revocation = page.getByRole('dialog', { name: 'Révoquer « Caisse 1, bar » ?' })
+  await capturerManuel(
+    page,
+    'tablettes/revoquer',
+    revocation.getByRole('button', { name: 'Révoquer la tablette' }),
+  )
+  await revocation.getByRole('button', { name: 'Garder la tablette' }).click()
+  await expect(revocation).toHaveCount(0)
 
   // Révoquée, la tablette revient à l'écran d'enregistrement.
   await page.getByRole('button', { name: 'Plus d’actions pour Caisse 1, bar' }).click()
@@ -628,6 +639,11 @@ test('Tanti fixe un prix à Bè Kpota, puis la gérante déclare une rupture dep
     page,
     'la-carte/carte-etablissement',
     carte.getByRole('row', { name: /Flag 65 cl/ }),
+  )
+  await capturerManuel(
+    page,
+    'la-carte/epuise',
+    carte.getByRole('button', { name: 'Déclarer Flag 65 cl épuisé ce jour' }),
   )
   await seDeconnecter(page)
 
@@ -787,12 +803,29 @@ test('La gérante crée les salles de Bè Kpota et leurs tables', async ({ page 
     await page.getByRole('button', { name: 'Nouvelle salle' }).click()
     const dialogue = page.getByRole('dialog', { name: 'Nouvelle salle' })
     await dialogue.getByLabel(/^Nom/).fill(nom)
+    if (nom === 'Terrasse') {
+      await capturerManuel(
+        page,
+        'salles-et-tables/nouvelle-salle',
+        dialogue.getByRole('button', { name: 'Créer la salle' }),
+      )
+    }
     await dialogue.getByRole('button', { name: 'Créer la salle' }).click()
     await expect(page.getByText(`La salle « ${nom} » est créée.`)).toBeVisible()
   }
 
   const onglets = page.getByRole('tablist', { name: 'Salles' })
   await onglets.getByRole('tab', { name: /Terrasse/ }).click()
+  // Le menu d'une salle règle sa place parmi les onglets de la caisse ; refermé sans rien changer.
+  await page.getByRole('button', { name: /^Plus d’actions pour la salle Terrasse/ }).click()
+  await capturerManuel(
+    page,
+    'salles-et-tables/ordre',
+    page.getByRole('menuitem', { name: 'Descendre' }),
+  )
+  await page.keyboard.press('Escape')
+  await page.getByRole('heading', { level: 1 }).click()
+  await expect(page.getByRole('menuitem', { name: 'Descendre' })).toHaveCount(0)
   await page.getByRole('button', { name: 'Ajouter des tables' }).click()
   const lot = page.getByRole('dialog', { name: 'Ajouter des tables à « Terrasse »' })
   await lot.getByLabel(/^Nombre/).fill('8')
@@ -1254,6 +1287,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     tablette,
     'rembourser/rembourser',
     tablette.getByRole('region', { name: 'Rendre l’argent en' }),
+  )
+  await capturerManuel(
+    tablette,
+    'rembourser/valider',
+    tablette.getByRole('button', { name: /^Rembourser 4\s500\sF en carte/ }),
   )
   await tablette.setViewportSize({ width: 390, height: 844 })
   await capturer(tablette, '58-rembourser-telephone')
@@ -1846,6 +1884,16 @@ test('Tanti crée des options, les attache aux côtelettes, et Kossi les choisit
         'options-et-variantes/groupe',
         dialogue.getByRole('radio', { name: /Plusieurs choix/ }),
       )
+      // « Lier au stock » s'ouvre sous le choix ; refermé sans lier, la suite vend l'Œuf sans stock.
+      const lier = dialogue.getByRole('button', { name: 'Lier au stock' }).first()
+      await lier.click()
+      await capturerManuel(
+        page,
+        'options-et-variantes/lier-au-stock',
+        dialogue.getByLabel('Décompter le stock de'),
+      )
+      await lier.click()
+      await expect(dialogue.getByLabel('Décompter le stock de')).toHaveCount(0)
     }
     await dialogue.getByRole('button', { name: 'Créer le groupe' }).click()
     await expect(page.getByText(`Le groupe « ${nom} » est créé.`)).toBeVisible()

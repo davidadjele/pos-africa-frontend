@@ -24,6 +24,11 @@ export const optionsEtVariantes: Guide = {
       titre: 'Stock et coût d’un choix',
       texte:
         'Sous un choix, touchez **Lier au stock**. **Décompter le stock de** fait sortir un produit du stock à chaque vente avec ce choix, et compte son coût dans la marge. Sans produit lié, saisissez un **Coût d’achat**. Le coût ne se voit jamais en caisse.',
+      capture: {
+        fichier: 'options-et-variantes/lier-au-stock',
+        legende:
+          'Groupe Suppléments : sous le choix Œuf, le panneau Lier au stock avec les champs Décompter le stock de et Coût d’achat.',
+      },
     },
     {
       titre: 'Les groupes de la carte',

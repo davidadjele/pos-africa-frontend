@@ -34,6 +34,10 @@ export const rembourser: Guide = {
       titre: 'Valider le remboursement',
       texte:
         'Touchez le bouton du montant, ici **Rembourser 4 500 F en carte**. Pour un retour en Mobile Money, saisissez d’abord l’opérateur et la référence du transfert. Si votre rôle l’exige, un gérant valide avec son code.',
+      capture: {
+        fichier: 'rembourser/valider',
+        legende: 'Remboursement de la note n°4, T6 : le bouton Rembourser 4 500 F en carte.',
+      },
     },
     {
       titre: 'Remettre l’avoir',

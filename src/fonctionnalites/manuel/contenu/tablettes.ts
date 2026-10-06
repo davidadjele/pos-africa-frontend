@@ -53,6 +53,11 @@ export const tablettes: Guide = {
       titre: 'Révoquer une tablette',
       texte:
         'Une tablette perdue, volée ou remplacée se révoque : dans le menu de sa ligne, touchez **Révoquer**, puis **Révoquer la tablette**. Elle est coupée aussitôt. Pour la réutiliser, enregistrez-la de nouveau avec un code.',
+      capture: {
+        fichier: 'tablettes/revoquer',
+        legende:
+          'Dialogue « Révoquer « Caisse 1, bar » ? » : la tablette sera coupée aussitôt ; boutons Garder la tablette et Révoquer la tablette.',
+      },
     },
   ],
   bonASavoir: [
