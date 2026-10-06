@@ -188,7 +188,13 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
         (echec.code === 'PRODUIT_EPUISE' || echec.code === 'PRODUIT_INDISPONIBLE')
       ) {
         const aJour = (await carteAJour()).find((ligne) => ligne.produitId === produit.produitId)
-        setRefus(messageRefus(echec.code, produit.nom, aJour, fuseauHoraire, t))
+        // Le plat se vend encore : c'est une option choisie qui vient d'être épuisée.
+        const option = aJour?.epuise === false ? optionEpuisee(aJour, optionIds) : undefined
+        setRefus(
+          option === undefined
+            ? messageRefus(echec.code, produit.nom, aJour, fuseauHoraire, t)
+            : t('caisse.options.choixEpuise', { option, produit: produit.nom }),
+        )
       } else {
         setErreur(echec)
       }
@@ -708,6 +714,16 @@ function rupturesDe(
     else if (produit.epuise) ruptures.set(ligne.produitId, 'EPUISE')
   }
   return ruptures
+}
+
+/** Le nom d'un choix retenu que la carte relue montre épuisé, s'il y en a un. */
+function optionEpuisee(
+  produit: LigneCarteEtablissement,
+  optionIds: readonly string[],
+): string | undefined {
+  return produit.options
+    .flatMap((groupe) => groupe.choix)
+    .find((choix) => choix.epuise && optionIds.includes(choix.id))?.nom
 }
 
 function messageRefus(

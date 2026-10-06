@@ -628,6 +628,53 @@ describe('EcranNote', () => {
     })
   })
 
+  it('dit que c’est l’option qui est épuisée, et non le plat', async () => {
+    const cotelettes: LigneCarteEtablissement = {
+      ...POULET,
+      produitId: 'b0000000-0000-4000-8000-000000000009',
+      nom: 'Côtelettes d’agneau',
+      options: [
+        {
+          id: 'g-supplements',
+          nom: 'Suppléments',
+          choixMultiple: true,
+          obligatoire: false,
+          choix: [{ id: 'oeuf', nom: 'Œuf', supplement: 200, epuise: false }],
+        },
+      ],
+    }
+    const epuisee = structuredClone(cotelettes)
+    const choixOeuf = epuisee.options[0]?.choix[0]
+    if (choixOeuf !== undefined) choixOeuf.epuise = true
+    let lectures = 0
+    noteServie(NOTE_VIDE, [FLAG, cotelettes])
+    serveurMsw.use(
+      // L'œuf est déclaré épuisé entre l'affichage de la carte et l'ajout.
+      http.get(`${API}/caisse/carte`, () => {
+        lectures++
+        return HttpResponse.json([FLAG, lectures > 1 ? epuisee : cotelettes])
+      }),
+      http.post(`${API}/caisse/commandes/${NOTE_VIDE.id}/lignes`, () =>
+        HttpResponse.json(
+          { statut: 409, code: 'PRODUIT_EPUISE', message: 'x', traceId: 't' },
+          { status: 409 },
+        ),
+      ),
+    )
+
+    const produits = await screen.findByRole('list', { name: 'Produits' })
+    await userEvent.click(within(produits).getByRole('button', { name: /Côtelettes d’agneau/ }))
+    const panneau = screen.getByRole('dialog', { name: 'Côtelettes d’agneau' })
+    await userEvent.click(within(panneau).getByRole('button', { name: /Œuf/ }))
+    await userEvent.click(within(panneau).getByRole('button', { name: /^Ajouter/ }))
+
+    expect(
+      await screen.findByText(
+        'L’option « Œuf » est épuisée pour aujourd’hui : Côtelettes d’agneau n’a pas été ajouté.',
+      ),
+    ).toBeVisible()
+  })
+
   it('filtre la carte par catégorie et par nom', async () => {
     noteServie()
 

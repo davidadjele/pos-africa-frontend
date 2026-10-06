@@ -448,7 +448,8 @@
       "auPlus_one": "{{count}} au plus",
       "auPlus_other": "{{count}} au plus",
       "epuise": "Épuisé",
-      "inclus": "Inclus"
+      "inclus": "Inclus",
+      "choixEpuise": "L’option « {{option}} » est épuisée pour aujourd’hui : {{produit}} n’a pas été ajouté."
     }
   },
   "gestion": {

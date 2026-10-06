@@ -448,7 +448,8 @@
       "auPlus_one": "Up to {{count}}",
       "auPlus_other": "Up to {{count}}",
       "epuise": "Sold out",
-      "inclus": "Included"
+      "inclus": "Included",
+      "choixEpuise": "The option “{{option}}” is sold out for today: {{produit}} was not added."
     }
   },
   "gestion": {
