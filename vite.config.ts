@@ -71,6 +71,8 @@ export default defineConfig(({ mode }) => {
           // Seule la coquille de l'application est mise en cache. Le hors ligne des données
           // (commandes, catalogue) fera l'objet d'un chantier dédié : aucun appel API n'est intercepté.
           globPatterns: ['**/*.{js,css,html,svg,png,otf,woff2}'],
+          // Les captures du manuel se chargent à la lecture d'un guide : l'installation n'a pas à les télécharger.
+          globIgnores: ['manuel/**'],
           navigateFallback: '/index.html',
           navigateFallbackDenylist: [/^\/api\//],
           runtimeCaching: [],

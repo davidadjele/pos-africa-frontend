@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { TFunction } from 'i18next'
 import { clsx } from 'clsx'
-import { Bell, BellOff, LayoutDashboard } from 'lucide-react'
+import { Bell, BellOff, CircleHelp, LayoutDashboard } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from '@tanstack/react-router'
@@ -144,6 +144,15 @@ export function EcranCuisine() {
             {son ? t('cuisine.sonActif') : t('cuisine.sonCoupe')}
           </span>
         </button>
+        <Link
+          to="/aide/$guide"
+          params={{ guide: 'ecran-cuisine' }}
+          aria-label={t('aide.lien')}
+          className={CLASSES_CONTROLE_BARRE}
+        >
+          <CircleHelp aria-hidden="true" size={18} />
+          <span className="hidden sm:inline">{t('aide.lien')}</span>
+        </Link>
         <Link to="/gestion" aria-label={t('commun.gestion')} className={CLASSES_CONTROLE_BARRE}>
           <LayoutDashboard aria-hidden="true" size={18} />
           <span className="hidden sm:inline">{t('commun.gestion')}</span>

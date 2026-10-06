@@ -194,6 +194,10 @@ test('la gestion présente sa navigation et mène à la caisse', async ({ page }
     'page',
   )
 
+  await expect(navigation.getByRole('link', { name: 'Aide' })).toHaveAttribute(
+    'href',
+    '/aide/suivre-les-ventes',
+  )
   await navigation.getByRole('link', { name: 'Caisse' }).click()
   await expect(page).toHaveURL(/\/caisse$/)
   await expect(page.getByRole('banner')).toContainText('Maquis Chez Tanti')
@@ -211,6 +215,31 @@ test('un reçu public s’ouvre depuis son lien partagé, sans session', async (
 
   await expect(page.getByRole('heading', { level: 1, name: 'Votre reçu' })).toBeVisible()
   await expect(page.getByRole('article', { name: 'Reçu BE-000127' })).toContainText('Poulet braisé')
+  await verifierSansDefilementHorizontal(page)
+  expect(erreurs).toEqual([])
+})
+
+test('l’aide s’ouvre sans session, et ses captures passent la politique de sécurité', async ({
+  page,
+}) => {
+  const erreurs = surveillerErreursConsole(page)
+  await simulerApi(page, { connecte: false })
+  await page.goto('/aide')
+
+  await expect(
+    page.getByRole('heading', { level: 1, name: 'Comment pouvons-nous vous aider ?' }),
+  ).toBeVisible()
+  await page
+    .getByRole('region', { name: 'Je suis en caisse' })
+    .getByRole('link', { name: 'Encaisser une note' })
+    .click()
+  await expect(page.getByRole('heading', { level: 1, name: 'Encaisser une note' })).toBeVisible()
+  const capture = page.getByRole('list', { name: 'Étapes' }).getByRole('img').first()
+  await capture.scrollIntoViewIfNeeded()
+  // Une image chargée a une largeur réelle : ni bloquée par la CSP, ni réécrite vers index.html.
+  await expect
+    .poll(() => capture.evaluate((image: HTMLImageElement) => image.naturalWidth))
+    .toBeGreaterThan(0)
   await verifierSansDefilementHorizontal(page)
   expect(erreurs).toEqual([])
 })

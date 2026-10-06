@@ -39,6 +39,8 @@ import { PageNouvelleEntreprise } from '../fonctionnalites/plateforme/PageNouvel
 import { PageSupport } from '../fonctionnalites/plateforme/PageSupport'
 import { PageTableauDeBordPlateforme } from '../fonctionnalites/plateforme/PageTableauDeBordPlateforme'
 import { PageRecu } from '../fonctionnalites/recu/PageRecu'
+import { PageAide } from '../fonctionnalites/manuel/PageAide'
+import { PageGuide } from '../fonctionnalites/manuel/PageGuide'
 import { PageCaisses } from '../fonctionnalites/rapports/PageCaisses'
 import { PageDetailCaisse } from '../fonctionnalites/rapports/PageDetailCaisse'
 import { PageVentes } from '../fonctionnalites/rapports/PageVentes'
@@ -480,6 +482,22 @@ const recu = createRoute({
   },
 })
 
+/** L'aide se lit sans session : un employé l'ouvre depuis la caisse, la cuisine ou son téléphone. */
+const aide = createRoute({
+  getParentRoute: () => racine,
+  path: '/aide',
+  component: PageAide,
+})
+
+const aideGuide = createRoute({
+  getParentRoute: () => racine,
+  path: '/aide/$guide',
+  component: function RouteGuide() {
+    const { guide } = aideGuide.useParams()
+    return <PageGuide id={guide} />
+  },
+})
+
 const arbre = racine.addChildren([
   accueil,
   connexion,
@@ -522,6 +540,8 @@ const arbre = racine.addChildren([
     support,
   ]),
   recu,
+  aide,
+  aideGuide,
 ])
 
 export function creerRouteur({

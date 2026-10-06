@@ -7,7 +7,7 @@
       "destination": "https://tonti-api.onrender.com/:chemin*"
     },
     {
-      "source": "/((?!assets/|polices/|icones/|api/).*)",
+      "source": "/((?!assets/|polices/|icones/|manuel/|api/).*)",
       "destination": "/index.html"
     }
   ],
