@@ -27,7 +27,7 @@ export function PageAide() {
   const enRecherche = recherche.trim() !== ''
   return (
     <MiseEnPageAide>
-      <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4 md:p-8">
+      <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 md:p-8">
         <div className="flex flex-wrap items-end gap-4">
           <div className="min-w-0 flex-1 basis-80">
             <h1 className="m-0 text-titre-ecran text-encre">{t('aide.accueil.titre')}</h1>

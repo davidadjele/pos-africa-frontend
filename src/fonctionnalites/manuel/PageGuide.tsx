@@ -110,7 +110,7 @@ function ContenuGuide({ guide }: Readonly<{ guide: Guide }>) {
   const idProblemes = useId()
   const suivant = guide.suivant === undefined ? undefined : trouverGuide(guide.suivant)
   return (
-    <main className="flex min-w-0 max-w-4xl flex-1 flex-col gap-6 p-4 md:p-8">
+    <main className="mx-auto flex w-full min-w-0 max-w-5xl flex-1 flex-col gap-6 p-4 md:p-8">
       <div>
         <p className="m-0 text-legende text-attenue">{t(`aide.roles.${guide.role}`)}</p>
         <h1 className="m-0 mt-1 text-titre-ecran text-encre">{guide.titre}</h1>
