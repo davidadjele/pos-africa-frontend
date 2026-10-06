@@ -16,12 +16,7 @@ import { Tableau, type ColonneTableau } from '../../partage/ui/Tableau'
 import { requeteEtablissements } from '../etablissements/requetes'
 import { ChoixPeriode } from './ChoixPeriode'
 import { Carre, EcartsParJour, signe } from './Graphiques'
-import {
-  formaterJournee,
-  periodeDe,
-  type ClePeriode,
-  type Periode,
-} from './periodes'
+import { formaterJournee, periodeDe, type ClePeriode, type Periode } from './periodes'
 import { requeteCaisses } from './requetes'
 import { useJourneeCourante } from './useJourneeCourante'
 import { BadgeEcart } from './BadgeEcart'

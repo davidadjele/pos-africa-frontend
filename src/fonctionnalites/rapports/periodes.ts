@@ -24,7 +24,10 @@ export function journeeCourante(fuseauHoraire: string, maintenant: Date = new Da
  * Chaque note prend la journée de son établissement : avec des fuseaux différents, la plus avancée couvre toutes
  * les notes déjà payées.
  */
-export function journeeLaPlusAvancee(fuseauxHoraires: string[], maintenant: Date = new Date()): string {
+export function journeeLaPlusAvancee(
+  fuseauxHoraires: string[],
+  maintenant: Date = new Date(),
+): string {
   return fuseauxHoraires
     .map((fuseau) => journeeCourante(fuseau, maintenant))
     .reduce((plusAvancee, journee) => (journee > plusAvancee ? journee : plusAvancee))

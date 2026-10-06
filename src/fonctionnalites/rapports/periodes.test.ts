@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { journeeCourante, journeeLaPlusAvancee, nombreDeJours, periodeDe, variation } from './periodes'
+import {
+  journeeCourante,
+  journeeLaPlusAvancee,
+  nombreDeJours,
+  periodeDe,
+  variation,
+} from './periodes'
 
 describe('périodes des rapports', () => {
   it('compte une heure du matin dans la journée de la veille, comme la caisse', () => {
@@ -11,7 +17,9 @@ describe('périodes des rapports', () => {
   it('prend la journée la plus avancée des établissements, pour ne laisser aucune note payée hors période', () => {
     // 3 h 11 à Conakry (veille), 4 h 11 à Porto-Novo (nouvelle journée).
     const maintenant = new Date('2026-10-06T03:11:00Z')
-    expect(journeeLaPlusAvancee(['Africa/Conakry', 'Africa/Porto-Novo'], maintenant)).toBe('2026-10-06')
+    expect(journeeLaPlusAvancee(['Africa/Conakry', 'Africa/Porto-Novo'], maintenant)).toBe(
+      '2026-10-06',
+    )
     expect(journeeLaPlusAvancee(['Africa/Conakry'], maintenant)).toBe('2026-10-05')
   })
 
