@@ -1,4 +1,5 @@
 import { clsx } from 'clsx'
+import { variantesDe } from './variantes'
 import { Minus, Search } from 'lucide-react'
 import { useId, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -45,7 +46,9 @@ export function CarteCaisse({
     string,
     { nom: string; couleur: LigneCarteEtablissement['categorie']['couleur']; nombre: number }
   >()
-  for (const ligne of carte) {
+  // Une variante ne fait pas de tuile : elle se choisit depuis celle de son produit.
+  const tuiles = carte.filter((ligne) => ligne.parentId === undefined)
+  for (const ligne of tuiles) {
     const actuelle = categories.get(ligne.categorie.id)
     categories.set(ligne.categorie.id, {
       nom: ligne.categorie.nom,
@@ -54,7 +57,7 @@ export function CarteCaisse({
     })
   }
   const motif = recherche.trim().toLowerCase()
-  const visibles = carte.filter(
+  const visibles = tuiles.filter(
     (ligne) =>
       (categorieId === null || ligne.categorie.id === categorieId) &&
       (motif === '' || ligne.nom.toLowerCase().includes(motif)),
@@ -69,7 +72,7 @@ export function CarteCaisse({
         <OngletCategorie
           actif={categorieId === null}
           libelle={t('caisse.carte.tout')}
-          nombre={carte.length}
+          nombre={tuiles.length}
           surChoisir={() => {
             setCategorieId(null)
           }}
@@ -113,8 +116,12 @@ export function CarteCaisse({
                 <Tuile
                   stock={stock}
                   ligne={ligne}
+                  variantes={variantesDe(carte, ligne.produitId)}
                   devise={devise}
-                  quantite={quantites[ligne.produitId] ?? 0}
+                  quantite={[ligne, ...variantesDe(carte, ligne.produitId)].reduce(
+                    (somme, un) => somme + (quantites[un.produitId] ?? 0),
+                    0,
+                  )}
                   surChoisir={surChoisir}
                   surRetirer={surRetirer}
                 />
@@ -172,6 +179,7 @@ function OngletCategorie({
  */
 function Tuile({
   ligne,
+  variantes,
   devise,
   stock,
   quantite,
@@ -179,6 +187,8 @@ function Tuile({
   surRetirer,
 }: Readonly<{
   ligne: LigneCarteEtablissement
+  /** Vide pour un produit sans variante. */
+  variantes: readonly LigneCarteEtablissement[]
   devise: Devise
   stock: StockCaisse | undefined
   quantite: number
@@ -190,10 +200,11 @@ function Tuile({
   const article = stockDuProduit(stock, ligne.produitId)
   const vide = article !== undefined && sansStock(article)
   // En politique stricte, la caisse refuse ce qui n'a plus de stock : la tuile se grise comme une rupture.
-  const bloquee = ligne.epuise || (vide && stock?.politique === 'STRICT')
+  const toutesEpuisees = variantes.length > 0 && variantes.every((variante) => variante.epuise)
+  const bloquee = ligne.epuise || toutesEpuisees || (vide && stock?.politique === 'STRICT')
   // Épuisé ce jour prime sur le stock ; un stock faible n'est signalé que s'il est compté.
   let badge: ReactNode = null
-  if (ligne.epuise) {
+  if (ligne.epuise || toutesEpuisees) {
     badge = <BadgeStatut ton="neutre">{t('caisse.carte.epuise')}</BadgeStatut>
   } else if (vide) {
     badge = <BadgeStatut ton="danger">{t('caisse.carte.plusEnStock')}</BadgeStatut>
@@ -233,7 +244,13 @@ function Tuile({
           )}
         </span>
         <span className="chiffres text-montant-tuile text-encre">
-          {formaterMontant({ unitesMineures: ligne.prix, devise }, { forme: 'nombre' })}
+          {variantes.length > 0 && (
+            <span className="text-legende font-texte text-attenue">{t('caisse.carte.des')} </span>
+          )}
+          {formaterMontant(
+            { unitesMineures: variantes[0]?.prix ?? ligne.prix, devise },
+            { forme: 'nombre' },
+          )}
         </span>
         <span className={clsx('mt-auto flex min-h-11 items-end justify-end', surLaNote && 'pl-13')}>
           {badge}

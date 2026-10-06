@@ -24,11 +24,13 @@ const BON_T7: BonCuisine = {
       ligneId: '1e000000-0000-4000-8000-000000000071',
       nom: 'Pintade braisée',
       quantite: 4,
+      options: ['Bien cuite', 'Frites'],
     },
     {
       ligneId: '1e000000-0000-4000-8000-000000000072',
       nom: 'Poulet braisé',
       quantite: 1,
+      options: [],
       annuleeLe: '2026-10-03T21:41:00Z',
     },
   ],
@@ -47,12 +49,14 @@ const BON_COMPTOIR: BonCuisine = {
       ligneId: '1e000000-0000-4000-8000-000000000121',
       nom: 'Brochettes de bœuf',
       quantite: 3,
+      options: [],
       note: 'bien cuites',
     },
     {
       ligneId: '1e000000-0000-4000-8000-000000000122',
       nom: 'Attiéké',
       quantite: 2,
+      options: [],
       preteLe: '2026-10-03T21:44:00Z',
     },
   ],
@@ -73,6 +77,7 @@ const BON_PRET: BonCuisine = {
       ligneId: '1e000000-0000-4000-8000-000000000041',
       nom: 'Alloco',
       quantite: 2,
+      options: [],
       preteLe: '2026-10-03T21:38:00Z',
     },
   ],
@@ -112,6 +117,7 @@ describe('EcranCuisine', () => {
     expect(routeur.state.location.pathname).toBe('/cuisine')
     expect(screen.getByRole('banner')).toHaveTextContent('Bè Kpota, Cuisine')
     expect(t7).toHaveTextContent('Terrasse')
+    expect(t7).toHaveTextContent('Bien cuite, Frites')
     expect(t7).toHaveTextContent('Kossi A., 8 couverts')
     expect(t7).toHaveTextContent('16:30')
     expect(t7).toHaveTextContent('En préparation')
@@ -203,6 +209,7 @@ describe('EcranCuisine', () => {
               ligneId: '1e000000-0000-4000-8000-000000000041',
               nom: 'Alloco',
               quantite: 2,
+              options: [],
               servieLe: '2026-10-03T21:40:00Z',
               serviPar: 'Afi M.',
             },

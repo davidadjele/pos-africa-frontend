@@ -49,6 +49,7 @@ const FLAG: LigneCarteEtablissement = {
   tauxTaxePointsDeBase: 1800,
   propose: true,
   epuise: false,
+  options: [],
 }
 const POULET: LigneCarteEtablissement = {
   produitId: 'b0000000-0000-4000-8000-000000000001',
@@ -62,6 +63,7 @@ const POULET: LigneCarteEtablissement = {
   tauxTaxePointsDeBase: 1800,
   propose: true,
   epuise: true,
+  options: [],
   epuisePar: 'Afi M.',
   epuiseLe: '2026-09-29T19:42:00Z',
   epuiseJusquA: '2026-09-30T04:00:00Z',

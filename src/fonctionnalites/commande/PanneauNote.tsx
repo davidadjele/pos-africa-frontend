@@ -384,6 +384,17 @@ function LigneDeNote({
           </BadgeStatut>
         )}
       </span>
+      {ligne.options.map((option) => (
+        <span key={option.choixId} className={clsx('text-legende text-encre', barre)}>
+          {option.nom}
+          {option.supplement > 0 && (
+            <span className="chiffres">
+              {' '}
+              +{formaterMontant({ unitesMineures: option.supplement, devise }, { forme: 'nombre' })}
+            </span>
+          )}
+        </span>
+      ))}
       {ligne.note !== undefined && (
         <span className="text-legende text-encre">« {ligne.note} »</span>
       )}

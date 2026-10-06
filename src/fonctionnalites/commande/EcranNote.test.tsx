@@ -531,6 +531,191 @@ describe('EcranNote', () => {
     expect(remise).toBe(true)
   })
 
+  it('fait choisir les options avant d’ajouter, puis les montre et les modifie sur la ligne', async () => {
+    const cotelettes: LigneCarteEtablissement = {
+      ...POULET,
+      produitId: 'b0000000-0000-4000-8000-000000000009',
+      nom: 'Côtelettes d’agneau',
+      prix: 5000,
+      options: [
+        {
+          id: 'g-cuisson',
+          nom: 'Cuisson',
+          choixMultiple: false,
+          obligatoire: true,
+          choix: [
+            { id: 'saignant', nom: 'Saignant', supplement: 0, epuise: false },
+            { id: 'a-point', nom: 'À point', supplement: 0, epuise: false },
+          ],
+        },
+        {
+          id: 'g-supplements',
+          nom: 'Suppléments',
+          choixMultiple: true,
+          obligatoire: false,
+          maximum: 2,
+          choix: [
+            { id: 'oeuf', nom: 'Œuf', supplement: 200, epuise: false },
+            { id: 'riz', nom: 'Riz gras', supplement: 500, epuise: true },
+          ],
+        },
+      ],
+    }
+    const ligne = {
+      ...POULET_A_ENVOYER,
+      id: '1e000000-0000-4000-8000-000000000009',
+      produitId: cotelettes.produitId,
+      nomProduit: 'Côtelettes d’agneau',
+      quantite: 1,
+      prixUnitaire: 5200,
+      montant: 5200,
+      montantBrut: 5200,
+      options: [
+        { choixId: 'a-point', groupe: 'Cuisson', nom: 'À point', supplement: 0 },
+        { choixId: 'oeuf', groupe: 'Suppléments', nom: 'Œuf', supplement: 200 },
+      ],
+    }
+    const ajouts: DemandeAjout[] = []
+    const modifications: DemandeLigne[] = []
+    serveurMsw.use(
+      http.post(`${API}/caisse/commandes/${NOTE_VIDE.id}/lignes`, async ({ request }) => {
+        ajouts.push((await request.json()) as DemandeAjout)
+        return HttpResponse.json({ ...NOTE_VIDE, lignes: [ligne] })
+      }),
+      http.put(
+        `${API}/caisse/commandes/${NOTE_VIDE.id}/lignes/${ligne.id}`,
+        async ({ request }) => {
+          modifications.push((await request.json()) as DemandeLigne)
+          return HttpResponse.json({ ...NOTE_VIDE, lignes: [ligne] })
+        },
+      ),
+    )
+    noteServie(NOTE_VIDE, [FLAG, cotelettes])
+
+    const produits = await screen.findByRole('list', { name: 'Produits' })
+    await userEvent.click(within(produits).getByRole('button', { name: /Côtelettes d’agneau/ }))
+    const panneau = screen.getByRole('dialog', { name: 'Côtelettes d’agneau' })
+    expect(within(panneau).getByRole('button', { name: /Riz gras/ })).toBeDisabled()
+    await userEvent.click(within(panneau).getByRole('button', { name: /^Ajouter/ }))
+    expect(panneau).toHaveTextContent('Choisissez : Cuisson.')
+    expect(ajouts).toEqual([])
+
+    await userEvent.click(within(panneau).getByRole('button', { name: /À point/ }))
+    await userEvent.click(within(panneau).getByRole('button', { name: /Œuf/ }))
+    expect(within(panneau).getByRole('button', { name: /^Ajouter/ })).toHaveTextContent('5 200')
+    await userEvent.click(within(panneau).getByRole('button', { name: /^Ajouter/ }))
+
+    await waitFor(() => {
+      expect(ajouts).toEqual([{ produitId: cotelettes.produitId, optionIds: ['a-point', 'oeuf'] }])
+    })
+    const note = await noteEnCours()
+    expect(note).toHaveTextContent('À point')
+    expect(note).toHaveTextContent('Œuf +200')
+
+    await userEvent.click(
+      within(note).getByRole('button', { name: 'Actions sur Côtelettes d’agneau' }),
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Modifier les options' }))
+    const modification = screen.getByRole('dialog', { name: 'Côtelettes d’agneau' })
+    expect(within(modification).getByRole('button', { name: /À point/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    await userEvent.click(within(modification).getByRole('button', { name: /Saignant/ }))
+    await userEvent.click(within(modification).getByRole('button', { name: 'Enregistrer' }))
+    await waitFor(() => {
+      expect(modifications).toEqual([{ quantite: 1, optionIds: ['saignant', 'oeuf'] }])
+    })
+  })
+
+  it('dit que c’est l’option qui est épuisée, et non le plat', async () => {
+    const cotelettes: LigneCarteEtablissement = {
+      ...POULET,
+      produitId: 'b0000000-0000-4000-8000-000000000009',
+      nom: 'Côtelettes d’agneau',
+      options: [
+        {
+          id: 'g-supplements',
+          nom: 'Suppléments',
+          choixMultiple: true,
+          obligatoire: false,
+          choix: [{ id: 'oeuf', nom: 'Œuf', supplement: 200, epuise: false }],
+        },
+      ],
+    }
+    const epuisee = structuredClone(cotelettes)
+    const choixOeuf = epuisee.options[0]?.choix[0]
+    if (choixOeuf !== undefined) choixOeuf.epuise = true
+    let lectures = 0
+    noteServie(NOTE_VIDE, [FLAG, cotelettes])
+    serveurMsw.use(
+      // L'œuf est déclaré épuisé entre l'affichage de la carte et l'ajout.
+      http.get(`${API}/caisse/carte`, () => {
+        lectures++
+        return HttpResponse.json([FLAG, lectures > 1 ? epuisee : cotelettes])
+      }),
+      http.post(`${API}/caisse/commandes/${NOTE_VIDE.id}/lignes`, () =>
+        HttpResponse.json(
+          { statut: 409, code: 'PRODUIT_EPUISE', message: 'x', traceId: 't' },
+          { status: 409 },
+        ),
+      ),
+    )
+
+    const produits = await screen.findByRole('list', { name: 'Produits' })
+    await userEvent.click(within(produits).getByRole('button', { name: /Côtelettes d’agneau/ }))
+    const panneau = screen.getByRole('dialog', { name: 'Côtelettes d’agneau' })
+    await userEvent.click(within(panneau).getByRole('button', { name: /Œuf/ }))
+    await userEvent.click(within(panneau).getByRole('button', { name: /^Ajouter/ }))
+
+    expect(
+      await screen.findByText(
+        'L’option « Œuf » est épuisée pour aujourd’hui : Côtelettes d’agneau n’a pas été ajouté.',
+      ),
+    ).toBeVisible()
+  })
+
+  it('propose une seule tuile par produit à variantes, puis fait choisir la variante', async () => {
+    const parent: LigneCarteEtablissement = { ...POULET, prix: 5500 }
+    const demi: LigneCarteEtablissement = {
+      ...POULET,
+      produitId: 'b0000000-0000-4000-8000-0000000000d1',
+      nom: 'Poulet braisé, Demi',
+      prix: 3000,
+      parentId: POULET.produitId,
+      libelleVariante: 'Demi',
+    }
+    const entier: LigneCarteEtablissement = {
+      ...demi,
+      produitId: 'b0000000-0000-4000-8000-0000000000e1',
+      nom: 'Poulet braisé, Entier',
+      prix: 5500,
+      libelleVariante: 'Entier',
+      epuise: true,
+    }
+    const ajouts: DemandeAjout[] = []
+    serveurMsw.use(
+      http.post(`${API}/caisse/commandes/${NOTE_VIDE.id}/lignes`, async ({ request }) => {
+        ajouts.push((await request.json()) as DemandeAjout)
+        return HttpResponse.json(NOTE_VIDE)
+      }),
+    )
+    noteServie(NOTE_VIDE, [FLAG, parent, demi, entier])
+
+    const produits = await screen.findByRole('list', { name: 'Produits' })
+    expect(within(produits).queryByRole('button', { name: /Poulet braisé, Demi/ })).toBeNull()
+    const tuile = within(produits).getByRole('button', { name: /^Poulet braisé/ })
+    expect(tuile).toHaveTextContent(/dès 3\s000/)
+    await userEvent.click(tuile)
+
+    const choix = screen.getByRole('dialog', { name: 'Poulet braisé' })
+    expect(within(choix).getByRole('button', { name: /Entier/ })).toBeDisabled()
+    await userEvent.click(within(choix).getByRole('button', { name: /Demi/ }))
+    await waitFor(() => {
+      expect(ajouts).toEqual([{ produitId: demi.produitId }])
+    })
+  })
+
   it('filtre la carte par catégorie et par nom', async () => {
     noteServie()
 

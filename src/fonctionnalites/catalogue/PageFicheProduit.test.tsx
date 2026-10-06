@@ -115,6 +115,135 @@ describe('PageFicheProduit', () => {
     })
   })
 
+  it('attache des groupes d’options au produit, dans l’ordre de la caisse', async () => {
+    backendSimule()
+    const cuisson = {
+      id: '90000000-0000-4000-8000-000000000001',
+      nom: 'Cuisson',
+      choixMultiple: false,
+      obligatoire: true,
+      nbProduits: 1,
+      version: 0,
+      choix: [{ id: 'c1', nom: 'À point', supplement: 0 }],
+    }
+    const supplements = {
+      ...cuisson,
+      id: '90000000-0000-4000-8000-000000000002',
+      nom: 'Suppléments',
+      choixMultiple: true,
+      obligatoire: false,
+    }
+    const attaches: unknown[] = []
+    serveurMsw.use(
+      http.get(`${API}/produits/:id`, () =>
+        HttpResponse.json({ ...FLAG, groupesOptionIds: [cuisson.id] }),
+      ),
+      http.get(`${API}/groupes-options`, () => HttpResponse.json([cuisson, supplements])),
+      http.put(`${API}/produits/:id/options`, async ({ request }) => {
+        const corps = (await request.json()) as { groupeIds: string[] }
+        attaches.push(corps)
+        return HttpResponse.json({ ...FLAG, groupesOptionIds: corps.groupeIds })
+      }),
+    )
+    await ouvrirFiche(`/gestion/produits/${FLAG.id}`)
+
+    const section = await screen.findByRole('region', { name: 'Options' })
+    expect(within(section).getByRole('list')).toHaveTextContent('Cuisson')
+    await userEvent.selectOptions(
+      within(section).getByLabelText(/^Ajouter un groupe/),
+      'Suppléments',
+    )
+    await waitFor(() => {
+      expect(attaches).toEqual([{ groupeIds: [cuisson.id, supplements.id] }])
+    })
+    await userEvent.click(within(section).getByRole('button', { name: 'Monter Suppléments' }))
+    await userEvent.click(within(section).getByRole('button', { name: 'Retirer Cuisson' }))
+    await waitFor(() => {
+      expect(attaches.slice(1)).toEqual([
+        { groupeIds: [supplements.id, cuisson.id] },
+        { groupeIds: [supplements.id] },
+      ])
+    })
+  })
+
+  it('ajoute et modifie les variantes d’un produit', async () => {
+    backendSimule()
+    const demi = {
+      id: 'b0000000-0000-4000-8000-0000000000d1',
+      libelle: 'Demi',
+      prix: 3000,
+      actif: true,
+      coutRevient: 1400,
+      version: 0,
+    }
+    const envois: { methode: string; chemin: string; corps: unknown }[] = []
+    serveurMsw.use(
+      http.get(`${API}/produits/:id`, () => HttpResponse.json({ ...FLAG, variantes: [demi] })),
+      http.get(`${API}/groupes-options`, () => HttpResponse.json([])),
+      http.post(`${API}/produits/:id/variantes`, async ({ request }) => {
+        envois.push({ methode: 'POST', chemin: 'variantes', corps: await request.json() })
+        return HttpResponse.json({ ...FLAG, variantes: [demi] }, { status: 201 })
+      }),
+      http.put(`${API}/produits/:id/variantes/:variante`, async ({ request, params }) => {
+        envois.push({
+          methode: 'PUT',
+          chemin: `variantes/${String(params.variante)}`,
+          corps: await request.json(),
+        })
+        return HttpResponse.json({ ...FLAG, variantes: [demi] })
+      }),
+    )
+    await ouvrirFiche(`/gestion/produits/${FLAG.id}`)
+
+    const section = await screen.findByRole('region', { name: 'Variantes' })
+    expect(within(section).getByRole('row', { name: /Demi/ })).toHaveTextContent(/3\s000/)
+    await userEvent.type(within(section).getByLabelText(/^Nouvelle variante/), 'Entier')
+    await userEvent.type(within(section).getByLabelText(/^Prix de la variante/), '5500')
+    await userEvent.click(within(section).getByRole('button', { name: 'Ajouter la variante' }))
+    await userEvent.click(within(section).getByRole('button', { name: 'Modifier Demi' }))
+    const dialogue = screen.getByRole('dialog', { name: 'Modifier la variante « Demi »' })
+    const prix = within(dialogue).getByLabelText(/^Prix TTC/)
+    await userEvent.clear(prix)
+    await userEvent.type(prix, '3200')
+    await userEvent.click(within(dialogue).getByRole('button', { name: 'Enregistrer' }))
+
+    await waitFor(() => {
+      expect(envois).toEqual([
+        { methode: 'POST', chemin: 'variantes', corps: { libelle: 'Entier', prix: 5500 } },
+        {
+          methode: 'PUT',
+          chemin: `variantes/${demi.id}`,
+          corps: { libelle: 'Demi', prix: 3200, coutRevient: 1400, version: 0 },
+        },
+      ])
+    })
+  })
+
+  it('renvoie à la fiche du parent pour modifier une variante', async () => {
+    backendSimule()
+    serveurMsw.use(
+      http.get(`${API}/produits/:id`, () =>
+        HttpResponse.json({
+          ...FLAG,
+          nom: 'Flag 65 cl, Grande',
+          parentId: 'b0000000-0000-4000-8000-0000000000aa',
+          libelleVariante: 'Grande',
+        }),
+      ),
+    )
+    sessionOuverte({ ...MOI_TANTI, permissions: [...PERMISSIONS] })
+    ouvrir(`/gestion/produits/${FLAG.id}`)
+
+    expect(
+      await screen.findByText('Une variante se modifie depuis la fiche de son produit.'),
+    ).toBeVisible()
+    expect(screen.getByRole('link', { name: 'Ouvrir le produit' })).toHaveAttribute(
+      'href',
+      '/gestion/produits/b0000000-0000-4000-8000-0000000000aa',
+    )
+    expect(screen.queryByLabelText(/^Prix TTC/)).toBeNull()
+  })
+
   it('réserve le changement de prix à qui en a le droit', async () => {
     backendSimule()
     await ouvrirFiche(`/gestion/produits/${FLAG.id}`, [...MOI_TANTI.permissions, 'CATALOGUE_GERER'])

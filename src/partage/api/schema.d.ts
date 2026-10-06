@@ -15,7 +15,7 @@ export interface paths {
          * Lister l'activité, de la plus récente
          * @description Permission ACTIVITE_CONSULTER. Un gérant ne voit que ses établissements, la carte commune et le personnel de ses établissements. Par défaut, seulement les actions critiques.
          */
-        get: operations["lister_12"];
+        get: operations["lister_13"];
         put?: never;
         post?: never;
         delete?: never;
@@ -252,7 +252,7 @@ export interface paths {
             cookie?: never;
         };
         /** Lister les tablettes visibles, actives d'abord */
-        get: operations["lister_11"];
+        get: operations["lister_12"];
         put?: never;
         post?: never;
         delete?: never;
@@ -444,10 +444,10 @@ export interface paths {
             cookie?: never;
         };
         /** Les clients actifs de l'établissement de la tablette, par nom */
-        get: operations["lister_8"];
+        get: operations["lister_9"];
         put?: never;
         /** Ouvrir une ardoise à un client depuis la caisse */
-        post: operations["creer_7"];
+        post: operations["creer_8"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1280,13 +1280,13 @@ export interface paths {
             cookie?: never;
         };
         /** Lister les catégories, dans l'ordre de la caisse */
-        get: operations["lister_7"];
+        get: operations["lister_8"];
         put?: never;
         /**
          * Créer une catégorie, placée en dernier
          * @description Permission CATALOGUE_GERER.
          */
-        post: operations["creer_6"];
+        post: operations["creer_7"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1325,7 +1325,7 @@ export interface paths {
          * Modifier une catégorie
          * @description Erreurs : RESSOURCE_INTROUVABLE, CONFLIT_MODIFICATION, REQUETE_INVALIDE.
          */
-        put: operations["modifier_7"];
+        put: operations["modifier_8"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1383,7 +1383,7 @@ export interface paths {
         /** L'identité de l'entreprise */
         get: operations["identite"];
         /** Modifier le numéro fiscal, le téléphone, l'e-mail ou l'adresse de l'entreprise */
-        put: operations["modifier_6"];
+        put: operations["modifier_7"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1399,13 +1399,13 @@ export interface paths {
             cookie?: never;
         };
         /** Lister les établissements, triés par code */
-        get: operations["lister_5"];
+        get: operations["lister_6"];
         put?: never;
         /**
          * Créer un établissement
          * @description Permission ETABLISSEMENT_GERER. Erreur : CODE_ETABLISSEMENT_DEJA_UTILISE (409).
          */
-        post: operations["creer_4"];
+        post: operations["creer_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1530,7 +1530,7 @@ export interface paths {
          * Ouvrir une ardoise à un client
          * @description Le téléphone est unique dans l'établissement.
          */
-        post: operations["creer_5"];
+        post: operations["creer_6"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1550,7 +1550,7 @@ export interface paths {
          * Modifier un client
          * @description Un changement de plafond est tracé comme action critique.
          */
-        put: operations["modifier_5"];
+        put: operations["modifier_6"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1606,7 +1606,7 @@ export interface paths {
          * Salles et tables de l'établissement, dans l'ordre de la caisse
          * @description Erreurs : RESSOURCE_INTROUVABLE (404), ACCES_REFUSE (hors du périmètre d'un gérant).
          */
-        get: operations["lister_6"];
+        get: operations["lister_7"];
         put?: never;
         /**
          * Créer une salle, placée en dernier
@@ -1770,7 +1770,7 @@ export interface paths {
          * Modifier un établissement
          * @description Permission ETABLISSEMENT_GERER. Erreurs : RESSOURCE_INTROUVABLE (404), CONFLIT_MODIFICATION (409, version dépassée), CODE_ETABLISSEMENT_DEJA_UTILISE (409).
          */
-        put: operations["modifier_4"];
+        put: operations["modifier_5"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1791,6 +1791,51 @@ export interface paths {
         put: operations["reglerRecu"];
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/groupes-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lister les groupes d'options, par nom */
+        get: operations["lister_5"];
+        put?: never;
+        /**
+         * Créer un groupe d'options
+         * @description Permission CATALOGUE_GERER. Erreur : REQUETE_INVALIDE (nom déjà pris, choix en double, produit lié inconnu).
+         */
+        post: operations["creer_4"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/groupes-options/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Modifier un groupe d'options
+         * @description Les choix gardent leur identifiant ; un choix absent est retiré. Les notes passées gardent leur copie. Erreurs : RESSOURCE_INTROUVABLE, CONFLIT_MODIFICATION, REQUETE_INVALIDE.
+         */
+        put: operations["modifier_4"];
+        post?: never;
+        /**
+         * Supprimer un groupe d'options
+         * @description Erreur : REQUETE_INVALIDE s'il est encore attaché à un produit.
+         */
+        delete: operations["supprimer"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1962,7 +2007,7 @@ export interface paths {
          * L'activité de l'équipe plateforme, la plus récente d'abord
          * @description Filtres facultatifs : type d'action, auteur (compte), entreprise, ou recherche dans le nom de l'entreprise.
          */
-        get: operations["lister_10"];
+        get: operations["lister_11"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2282,6 +2327,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/produits/{id}/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Attacher des groupes d'options à un produit
+         * @description Remplace les groupes du produit, dans l'ordre de la caisse. Erreurs : RESSOURCE_INTROUVABLE, REQUETE_INVALIDE (groupe inconnu ou en double).
+         */
+        put: operations["attacherOptions"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/produits/{id}/reactivation": {
         parameters: {
             query?: never;
@@ -2296,6 +2361,46 @@ export interface paths {
          * @description Permission CATALOGUE_GERER.
          */
         post: operations["reactiver_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/produits/{id}/variantes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ajouter une variante à un produit
+         * @description Un produit à part entière (prix, stock, coût, rapports), nommé « Poulet braisé, Demi », qui reprend la catégorie, la taxe et les options du parent. Erreurs : RESSOURCE_INTROUVABLE, REQUETE_INVALIDE (nom déjà pris, produit qui est lui-même une variante).
+         */
+        post: operations["ajouterVariante"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/produits/{id}/variantes/{varianteId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Modifier une variante
+         * @description PRIX_MODIFIER pour changer le prix. Erreurs : RESSOURCE_INTROUVABLE, CONFLIT_MODIFICATION, REQUETE_INVALIDE, ACCES_REFUSE.
+         */
+        put: operations["modifierVariante"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -2351,7 +2456,7 @@ export interface paths {
          * Les caisses d'une période et leurs écarts
          * @description Permission RAPPORT_FINANCIER. Les ouvertures de caisse de la période (par journée), clôturées ou non, dans le périmètre de la personne connectée. Erreurs : REQUETE_INVALIDE (400) sur le champ au, ACCES_REFUSE (403) hors périmètre.
          */
-        get: operations["lister_9"];
+        get: operations["lister_10"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2807,6 +2912,7 @@ export interface components {
             ligneId: string;
             nom: string;
             note?: string;
+            options: string[];
             /** Format: date-time */
             preteLe?: string;
             /** Format: int32 */
@@ -2936,6 +3042,26 @@ export interface components {
             champ: string;
             message: string;
         };
+        Choix: {
+            /** Format: int64 */
+            coutRevient?: number;
+            /** Format: uuid */
+            id: string;
+            nom: string;
+            /** Format: uuid */
+            produitLieId?: string;
+            produitLieNom?: string;
+            /** Format: int64 */
+            supplement: number;
+        };
+        ChoixCarte: {
+            epuise: boolean;
+            /** Format: uuid */
+            id: string;
+            nom: string;
+            /** Format: int64 */
+            supplement: number;
+        };
         ClientArdoise: {
             actif: boolean;
             dernierMouvement?: components["schemas"]["EcritureArdoise"];
@@ -3018,6 +3144,7 @@ export interface components {
         DemandeAjout: {
             /** @example sans piment */
             note?: string;
+            optionIds?: string[];
             /** Format: uuid */
             produitId: string;
         };
@@ -3071,6 +3198,18 @@ export interface components {
             pinActuel: string;
             /** Format: uuid */
             utilisateurId: string;
+        };
+        DemandeChoix: {
+            /** Format: int64 */
+            coutRevient?: number;
+            /** Format: uuid */
+            id?: string;
+            /** @example Œuf */
+            nom: string;
+            /** Format: uuid */
+            produitLieId?: string;
+            /** Format: int64 */
+            supplement: number;
         };
         DemandeClient: {
             /** @example Komlan D. */
@@ -3159,6 +3298,17 @@ export interface components {
              */
             fond: number;
         };
+        DemandeGroupeOption: {
+            choix: components["schemas"]["DemandeChoix"][];
+            choixMultiple: boolean;
+            /** Format: int32 */
+            maximum?: number;
+            /** @example Suppléments */
+            nom: string;
+            obligatoire: boolean;
+            /** Format: int64 */
+            version?: number;
+        };
         DemandeIdentiteEntreprise: {
             adresse?: string;
             /** Format: email */
@@ -3178,6 +3328,7 @@ export interface components {
         };
         DemandeLigne: {
             note?: string;
+            optionIds?: string[];
             /** Format: int32 */
             quantite: number;
         };
@@ -3251,6 +3402,9 @@ export interface components {
             quantite: number;
             /** Format: uuid */
             validationId?: string;
+        };
+        DemandeOptionsProduit: {
+            groupeIds: string[];
         };
         DemandeOrdre: {
             ids: string[];
@@ -3496,6 +3650,19 @@ export interface components {
             pin: string;
             /** Format: uuid */
             validateurId: string;
+        };
+        DemandeVariante: {
+            /** Format: int64 */
+            coutRevient?: number;
+            /** @example Demi */
+            libelle: string;
+            /**
+             * Format: int64
+             * @example 3000
+             */
+            prix: number;
+            /** Format: int64 */
+            version?: number;
         };
         DetailCaisse: {
             caisse: components["schemas"]["CaisseResume"];
@@ -3886,6 +4053,30 @@ export interface components {
             /** Format: int64 */
             version: number;
         };
+        GroupeCarte: {
+            choix: components["schemas"]["ChoixCarte"][];
+            choixMultiple: boolean;
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            maximum?: number;
+            nom: string;
+            obligatoire: boolean;
+        };
+        GroupeOptionResume: {
+            choix: components["schemas"]["Choix"][];
+            choixMultiple: boolean;
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            maximum?: number;
+            /** Format: int64 */
+            nbProduits: number;
+            nom: string;
+            obligatoire: boolean;
+            /** Format: int64 */
+            version: number;
+        };
         HistoriqueCaisses: {
             caisses: components["schemas"]["CaisseResume"][];
             parJour: components["schemas"]["EcartDuJour"][];
@@ -3941,6 +4132,7 @@ export interface components {
             montant: number;
             nom: string;
             offert: boolean;
+            options: components["schemas"]["OptionRecu"][];
             /** Format: int32 */
             quantite: number;
         };
@@ -3952,8 +4144,12 @@ export interface components {
             /** Format: date-time */
             epuiseLe?: string;
             epuisePar?: string;
+            libelleVariante?: string;
             nom: string;
             nomTaxe?: string;
+            options: components["schemas"]["GroupeCarte"][];
+            /** Format: uuid */
+            parentId?: string;
             /** Format: int64 */
             prix: number;
             /** Format: int64 */
@@ -4001,6 +4197,7 @@ export interface components {
             nomProduit: string;
             note?: string;
             offert: boolean;
+            options: components["schemas"]["OptionNote"][];
             /** Format: date-time */
             preteLe?: string;
             /** Format: int64 */
@@ -4212,6 +4409,19 @@ export interface components {
             code: string;
             libelle: string;
         };
+        OptionNote: {
+            /** Format: uuid */
+            choixId: string;
+            groupe: string;
+            nom: string;
+            /** Format: int64 */
+            supplement: number;
+        };
+        OptionRecu: {
+            nom: string;
+            /** Format: int64 */
+            supplement: number;
+        };
         OuvertureResume: {
             /** Format: int64 */
             fondInitial: number;
@@ -4349,15 +4559,20 @@ export interface components {
             categorie: components["schemas"]["CategorieProduit"];
             /** Format: int64 */
             coutRevient?: number;
+            groupesOptionIds: string[];
             /** Format: uuid */
             id: string;
+            libelleVariante?: string;
             nom: string;
+            /** Format: uuid */
+            parentId?: string;
             /** Format: int64 */
             prix: number;
             suiviStock: boolean;
             taxe?: components["schemas"]["TaxeProduit"];
             /** @enum {string} */
             type: "PLAT" | "BOISSON" | "ARTICLE";
+            variantes: components["schemas"]["VarianteResume"][];
             /** Format: int64 */
             version: number;
         };
@@ -4788,6 +5003,18 @@ export interface components {
             /** Format: uuid */
             id: string;
         };
+        VarianteResume: {
+            actif: boolean;
+            /** Format: int64 */
+            coutRevient?: number;
+            /** Format: uuid */
+            id: string;
+            libelle: string;
+            /** Format: int64 */
+            prix: number;
+            /** Format: int64 */
+            version: number;
+        };
         VentesCaisse: {
             /** Format: int64 */
             ardoise: number;
@@ -4907,7 +5134,7 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    lister_12: {
+    lister_13: {
         parameters: {
             query?: {
                 depuis?: string;
@@ -5291,7 +5518,7 @@ export interface operations {
             };
         };
     };
-    lister_11: {
+    lister_12: {
         parameters: {
             query?: {
                 page?: number;
@@ -5635,7 +5862,7 @@ export interface operations {
             };
         };
     };
-    lister_8: {
+    lister_9: {
         parameters: {
             query?: never;
             header?: never;
@@ -5664,7 +5891,7 @@ export interface operations {
             };
         };
     };
-    creer_7: {
+    creer_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -7160,7 +7387,7 @@ export interface operations {
             };
         };
     };
-    lister_7: {
+    lister_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -7189,7 +7416,7 @@ export interface operations {
             };
         };
     };
-    creer_6: {
+    creer_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -7253,7 +7480,7 @@ export interface operations {
             };
         };
     };
-    modifier_7: {
+    modifier_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -7375,7 +7602,7 @@ export interface operations {
             };
         };
     };
-    modifier_6: {
+    modifier_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -7408,7 +7635,7 @@ export interface operations {
             };
         };
     };
-    lister_5: {
+    lister_6: {
         parameters: {
             query?: {
                 page?: number;
@@ -7440,7 +7667,7 @@ export interface operations {
             };
         };
     };
-    creer_4: {
+    creer_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -7689,7 +7916,7 @@ export interface operations {
             };
         };
     };
-    creer_5: {
+    creer_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -7756,7 +7983,7 @@ export interface operations {
             };
         };
     };
-    modifier_5: {
+    modifier_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -7856,7 +8083,7 @@ export interface operations {
             };
         };
     };
-    lister_6: {
+    lister_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -8194,7 +8421,7 @@ export interface operations {
             };
         };
     };
-    modifier_4: {
+    modifier_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -8283,6 +8510,132 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ReglagesRecu"];
                 };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    lister_5: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupeOptionResume"][];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    creer_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeGroupeOption"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupeOptionResume"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    modifier_4: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeGroupeOption"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroupeOptionResume"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    supprimer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
             default: {
@@ -8577,7 +8930,7 @@ export interface operations {
             };
         };
     };
-    lister_10: {
+    lister_11: {
         parameters: {
             query?: {
                 type?: string;
@@ -9246,6 +9599,41 @@ export interface operations {
             };
         };
     };
+    attacherOptions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeOptionsProduit"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProduitResume"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
     reactiver_1: {
         parameters: {
             query?: never;
@@ -9263,6 +9651,77 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    ajouterVariante: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeVariante"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProduitResume"];
+                };
+            };
+            /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReponseErreur"];
+                };
+            };
+        };
+    };
+    modifierVariante: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                varianteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemandeVariante"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProduitResume"];
+                };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
             default: {
@@ -9335,7 +9794,7 @@ export interface operations {
             };
         };
     };
-    lister_9: {
+    lister_10: {
         parameters: {
             query: {
                 du: string;

@@ -33,6 +33,7 @@ export const FLAG: LigneCarteEtablissement = {
   tauxTaxePointsDeBase: 1800,
   propose: true,
   epuise: false,
+  options: [],
 }
 export const POULET: LigneCarteEtablissement = {
   ...FLAG,
@@ -127,6 +128,7 @@ export const FLAG_ENVOYE: LigneNote = {
   remise: 0,
   offert: false,
   enCuisine: false,
+  options: [],
 }
 
 export const POULET_A_ENVOYER: LigneNote = {
@@ -142,6 +144,7 @@ export const POULET_A_ENVOYER: LigneNote = {
   remise: 0,
   offert: false,
   enCuisine: false,
+  options: [],
 }
 
 /** T4 : un Flag envoyé en cuisine plus tôt, deux poulets pas encore envoyés. */

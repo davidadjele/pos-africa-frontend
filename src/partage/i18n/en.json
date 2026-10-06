@@ -120,7 +120,8 @@
       "nombreProduits_other": "{{count}} products",
       "surLaNote_one": "{{count}} on the bill",
       "surLaNote_other": "{{count}} on the bill",
-      "retirerUn": "Remove one"
+      "retirerUn": "Remove one",
+      "des": "from"
     },
     "note": {
       "titre": "Current tab",
@@ -349,7 +350,8 @@
       "validation": "manager approval",
       "fermer": "Close",
       "envoyes_one": "{{count}} sent to preparation at {{heure}}, {{montant}}.",
-      "envoyes_other": "{{count}} sent to preparation at {{heure}}, {{montant}}."
+      "envoyes_other": "{{count}} sent to preparation at {{heure}}, {{montant}}.",
+      "options": "Change options"
     },
     "remise": {
       "titreLigne": "Discount on {{produit}}",
@@ -435,6 +437,20 @@
       "resumeAEnvoyer_other": "{{count}} items, {{aEnvoyer}} to send",
       "voir": "See the bill",
       "voirEtEnvoyer": "See the bill and send"
+    },
+    "options": {
+      "phrase": "Base price {{prix}}. Extras add to the price.",
+      "ajouter": "Add, {{prix}}",
+      "choisissez": "Choose: {{groupes}}.",
+      "obligatoire": "Required",
+      "facultatif": "Optional",
+      "unSeul": "One choice",
+      "plusieurs": "Several choices",
+      "auPlus_one": "Up to {{count}}",
+      "auPlus_other": "Up to {{count}}",
+      "epuise": "Sold out",
+      "inclus": "Included",
+      "choixEpuise": "The option “{{option}}” is sold out for today: {{produit}} was not added."
     }
   },
   "gestion": {
@@ -456,7 +472,11 @@
       "ardoises": "Tabs",
       "entreprise": "Company",
       "ventes": "Sales",
-      "caisses": "Tills"
+      "caisses": "Tills",
+      "reglages": "Settings",
+      "rapports": "Reports",
+      "ouvrir": "Menu",
+      "options": "Options"
     },
     "tableauDeBord": {
       "titre": "Dashboard",
@@ -2524,5 +2544,128 @@
     },
     "serviPar": "Served by {{nom}}",
     "serviA": "Served at {{heure}}"
+  },
+  "options": {
+    "titre": "Options",
+    "phrase": "Choices offered at the till with a product: cooking, side, extras. A group is set up once and attached to several products from their page.",
+    "nouveau": "New group",
+    "tableau": "Option groups",
+    "chargement": "Loading options…",
+    "colonnes": {
+      "groupe": "Group",
+      "regle": "Rule",
+      "choix": "Choices",
+      "stock": "Stock",
+      "produits": "Used by",
+      "actions": "Actions"
+    },
+    "regle": {
+      "uniqueObligatoire": "Single choice, required",
+      "uniqueFacultatif": "Single choice, optional",
+      "multiple": "Multiple choice",
+      "multipleObligatoire": "Multiple choice, required",
+      "auPlus_one": "up to {{count}}",
+      "auPlus_other": "up to {{count}}"
+    },
+    "aucunLie": "None",
+    "lies_one": "{{count}} linked to stock",
+    "lies_other": "{{count}} linked to stock",
+    "nbProduits_one": "{{count}} product",
+    "nbProduits_other": "{{count}} products",
+    "modifier": "Edit",
+    "modifierNomme": "Edit {{nom}}",
+    "plusDActions": "More actions for {{nom}}",
+    "supprimer": "Delete",
+    "enUsage_one": "“{{nom}}” is attached to {{count}} product: remove it from its page before deleting it.",
+    "enUsage_other": "“{{nom}}” is attached to {{count}} products: remove it from their page before deleting it.",
+    "cree": "Group “{{nom}}” created.",
+    "modifie": "Group “{{nom}}” updated.",
+    "supprime": "Group “{{nom}}” deleted.",
+    "vide": {
+      "titre": "No option groups",
+      "phrase": "Create cooking, sides or extras, then attach them to products from their page."
+    },
+    "formulaire": {
+      "titreCreation": "New option group",
+      "titreModification": "Edit “{{nom}}”",
+      "consequence": "Orders already taken keep the choices and prices of the time.",
+      "creer": "Create group",
+      "nom": "Group name",
+      "auPlus": "Up to",
+      "obligatoire": "Required",
+      "obligatoireAide": "The till asks for a choice before adding the dish",
+      "choix": "Choices",
+      "choixNumero": "Choice {{numero}}",
+      "nomChoix": "Name",
+      "supplement": "Extra price",
+      "produitLie": "Use the stock of",
+      "cout": "Purchase cost",
+      "aucunProduit": "None",
+      "ajouterChoix": "Add a choice…",
+      "montantInvalide": "Unreadable amount for “{{nom}}”.",
+      "auMoinsUn": "Add at least one choice with a name.",
+      "coutAide": "What it costs you, for the margin.",
+      "nomExemple": "Cooking, Side, Extras…",
+      "leClientChoisit": "The customer picks",
+      "unSeul": "One choice",
+      "unSeulExemple": "Rare or Medium",
+      "plusieurs": "Several choices",
+      "plusieursExemple": "Egg and Cheese",
+      "jusqua": "up to",
+      "colonneNom": "Name",
+      "colonnePrix": "Extra price",
+      "colonneStock": "Stock and cost",
+      "inclus": "Included",
+      "lierAuStock": "Link to stock",
+      "modifierStock": "change",
+      "resumeStock": "Stock: {{nom}}",
+      "resumeCout": "Cost entered {{cout}}",
+      "lieExplication": "Each item sold with this choice takes one {{nom}} out of stock, and its cost counts in the margin.",
+      "monterNomme": "Move {{nom}} up",
+      "retirerNomme": "Remove {{nom}}",
+      "aideBas": "Enter goes to the next choice. The extra price is paid by the customer; the cost is for the margin and never shown at the till."
+    },
+    "suppression": {
+      "titre": "Delete “{{nom}}”?",
+      "consequence": "The group leaves the menu. Orders already taken keep their choices.",
+      "confirmer": "Delete group"
+    },
+    "fiche": {
+      "titre": "Options",
+      "phrase": "Offered at the till with this product, in this order. A required group must be chosen before adding.",
+      "aucun": "No options: the product is added in one tap.",
+      "monter": "Move {{nom}} up",
+      "descendre": "Move {{nom}} down",
+      "retirer": "Remove {{nom}}",
+      "ajouter": "Add a group",
+      "choisir": "Choose a group…"
+    }
+  },
+  "variantes": {
+    "titre": "Variants",
+    "phrase": "Versions of the same dish, each with its own price, cost and stock: half and whole, small and large. At the till, one tile asks for the variant, then its options.",
+    "colonnes": {
+      "variante": "Variant",
+      "prix": "Price",
+      "cout": "Cost"
+    },
+    "desactivee": "Disabled",
+    "modifier": "Edit",
+    "modifierNomme": "Edit {{nom}}",
+    "nouvelle": "New variant",
+    "exemple": "Half, Whole, Large…",
+    "prix": "Variant price",
+    "cout": "Cost (optional)",
+    "ajouter": "Add variant",
+    "invalide": "Give the variant a name and a readable price.",
+    "titreModification": "Edit variant “{{nom}}”",
+    "consequence": "Orders already taken keep their price.",
+    "libelle": "Variant name",
+    "prixTtc": "Price incl. tax",
+    "coutRevient": "Cost",
+    "seModifieDepuisLeParent": "A variant is edited from its product’s page.",
+    "ouvrirLeParent": "Open the product",
+    "badge": "Variant",
+    "des": "from {{prix}}"
   }
 }

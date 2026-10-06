@@ -1,3 +1,4 @@
+import { clsx } from 'clsx'
 import { useId, useRef, type ReactNode } from 'react'
 import { Bouton } from './Bouton'
 import { usePiegeFocus } from './usePiegeFocus'
@@ -16,6 +17,7 @@ export function Dialogue({
   libelleConfirmer,
   tonConfirmation = 'principal',
   enCours = false,
+  large = false,
   surAnnuler,
   surConfirmer,
   children,
@@ -26,6 +28,8 @@ export function Dialogue({
   libelleConfirmer: string
   tonConfirmation?: 'principal' | 'danger'
   enCours?: boolean
+  /** Pour un contenu qui a besoin de place : choix en grille, tableau. */
+  large?: boolean
   surAnnuler?: () => void
   surConfirmer: () => void
   children?: ReactNode
@@ -38,14 +42,17 @@ export function Dialogue({
   usePiegeFocus(cadre, boutonSur, surAnnuler)
 
   return (
-    <div className="fixed inset-0 z-10 flex items-end justify-center bg-voile sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-voile sm:items-center sm:p-4">
       <section
         ref={cadre}
         role="dialog"
         aria-modal="true"
         aria-labelledby={`${id}-titre`}
         aria-describedby={`${id}-consequence`}
-        className="flex w-full max-w-[440px] flex-col gap-4 rounded-t-moyen bg-surface p-6 shadow-dialogue sm:rounded-moyen"
+        className={clsx(
+          'flex max-h-dvh w-full flex-col gap-4 overflow-y-auto rounded-t-moyen bg-surface p-6 shadow-dialogue sm:rounded-moyen',
+          large ? 'max-w-3xl' : 'max-w-[440px]',
+        )}
       >
         <h2 id={`${id}-titre`} className="m-0 text-titre-section text-encre">
           {titre}

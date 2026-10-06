@@ -25,8 +25,9 @@ import {
   LegendeModes,
   signe,
 } from './Graphiques'
-import { journeeCourante, periodeDe, variation, type ClePeriode, type Periode } from './periodes'
+import { periodeDe, variation, type ClePeriode, type Periode } from './periodes'
 import { requeteVentes } from './requetes'
+import { useJourneeCourante } from './useJourneeCourante'
 import { pointsDeVigilance, type PointVigilance } from './vigilance'
 
 /** Sous ce taux, la marge d'un produit est signalée en ambre : à regarder, sans être une alerte. */
@@ -66,14 +67,15 @@ export function PageVentes({
 }>) {
   const { t } = useTranslation()
   const { moi } = useSession()
-  const fuseauHoraire = moi?.entrepriseCourante?.fuseauHoraire ?? 'Africa/Lome'
   const devise = (moi?.entrepriseCourante?.devise ?? 'XOF') as Devise
-  const journee = journeeCourante(fuseauHoraire)
-  const [periode, setPeriode] = useState<Periode>(
+  const [etablissementId, setEtablissementId] = useState(etablissement ?? '')
+  const journee = useJourneeCourante(etablissementId)
+  const [dates, setDates] = useState<Periode>(
     du !== undefined && au !== undefined ? { du, au } : periodeDe('SEPT_JOURS', journee),
   )
-  const [cle, setCle] = useState<ClePeriode>(() => cleDe(periode, journee))
-  const [etablissementId, setEtablissementId] = useState(etablissement ?? '')
+  const [cle, setCle] = useState<ClePeriode>(() => cleDe(dates, journee))
+  // Un raccourci suit la journée : elle peut avancer une fois les fuseaux des établissements connus.
+  const periode = cle === 'DATES' ? dates : periodeDe(cle, journee)
   const [vue, setVue] = useState<'jours' | 'heures'>('jours')
   const [regroupement, setRegroupement] = useState<'produits' | 'categories'>('produits')
   const etablissements = useQuery(requeteEtablissements(0))
@@ -128,7 +130,7 @@ export function PageVentes({
             journee={journee}
             surChanger={(nouvelle, nouvellePeriode) => {
               setCle(nouvelle)
-              setPeriode(nouvellePeriode)
+              setDates(nouvellePeriode)
             }}
           />
         </div>

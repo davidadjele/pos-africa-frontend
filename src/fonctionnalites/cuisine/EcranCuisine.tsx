@@ -402,6 +402,11 @@ function Article({
         >
           {article.nom}
         </span>
+        {article.options.length > 0 && (
+          <span className={clsx('text-corps-fort text-encre', annule && 'line-through')}>
+            {article.options.join(', ')}
+          </span>
+        )}
         {article.note !== undefined && !annule && (
           <span className="text-libelle font-semibold text-alerte-texte">{article.note}</span>
         )}

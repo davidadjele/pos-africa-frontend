@@ -56,6 +56,21 @@ async function impressions(page: Page): Promise<number> {
   )
 }
 
+/** Le menu de la gestion : une entrée, puis l'onglet de la page s'il y en a plusieurs. Sur téléphone, ouvre le menu. */
+async function allerA(page: Page, section: string, onglet?: string) {
+  const menu = page.getByRole('navigation', { name: 'Navigation principale' })
+  // Juste après une connexion, la page n'est pas encore affichée : on attend le menu avant de regarder.
+  await menu.waitFor()
+  const bouton = menu.getByRole('button', { name: 'Menu' })
+  if (await bouton.isVisible()) await bouton.click()
+  // Le nom peut finir par un compteur (« Stock, 2 produits à traiter ») : on ne regarde que le début.
+  await menu.getByRole('link', { name: new RegExp(`^${section}`) }).click()
+  const onglets = page.getByRole('navigation', { name: section })
+  if (onglet !== undefined && (await onglets.count()) > 0) {
+    await onglets.getByRole('link', { name: new RegExp(`^${onglet}`) }).click()
+  }
+}
+
 async function capturer(page: Page, nom: string) {
   // Transitions terminées : un bouton qui vient de s'activer apparaît avec sa couleur finale.
   await page.screenshot({
@@ -198,10 +213,7 @@ test('l’admin crée Maquis Chez Tanti, puis Tanti gère ses établissements', 
   await premiereConnexion(page, TANTI.saisie, temporaire ?? '', TANTI.motDePasse)
   await expect(page).toHaveURL(/\/gestion$/)
   await expect(page.getByRole('banner')).toContainText('Maquis Chez Tanti')
-  await page
-    .getByRole('navigation', { name: 'Navigation principale' })
-    .getByRole('link', { name: 'Établissements' })
-    .click()
+  await allerA(page, 'Réglages', 'Établissements')
   const tableau = page.getByRole('table', { name: 'Établissements de l’entreprise' })
   await expect(tableau).toContainText('Bè Kpota')
 
@@ -250,10 +262,7 @@ test('un compte à plusieurs entreprises choisit la sienne après connexion', as
     page.getByRole('banner').locator('span', { hasText: /^Bar Le Flamboyant$/ }),
   ).toBeVisible()
   await expect(selecteur).toBeEnabled()
-  await page
-    .getByRole('navigation', { name: 'Navigation principale' })
-    .getByRole('link', { name: 'Établissements' })
-    .click()
+  await allerA(page, 'Réglages', 'Établissements')
   const tableau = page.getByRole('table', { name: 'Établissements de l’entreprise' })
   await expect(tableau).toContainText('Tokoin')
   await expect(tableau).not.toContainText('Bè Kpota')
@@ -264,10 +273,7 @@ test('Tanti ajoute son personnel, et la gérante ne voit que le sien', async ({ 
   await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
   await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
   await expect(page).toHaveURL(/\/gestion$/)
-  await page
-    .getByRole('navigation', { name: 'Navigation principale' })
-    .getByRole('link', { name: 'Personnel' })
-    .click()
+  await allerA(page, 'Réglages', 'Personnel')
   await expect(page.getByRole('table', { name: 'Personnel de l’entreprise' })).toContainText(
     'Tanti Akouvi',
   )
@@ -330,10 +336,7 @@ test('Tanti ajoute son personnel, et la gérante ne voit que le sien', async ({ 
   await capturer(page, '10-mot-de-passe-obligatoire')
   await remplacerMotDePasse(page, AFI.telephone, motDePasseAfi, AFI.motDePasse)
   await expect(page).toHaveURL(/\/gestion$/)
-  await page
-    .getByRole('navigation', { name: 'Navigation principale' })
-    .getByRole('link', { name: 'Personnel' })
-    .click()
+  await allerA(page, 'Réglages', 'Personnel')
   const vueGerante = page.getByRole('table', { name: 'Personnel de l’entreprise' })
   await expect(vueGerante).toContainText('Kossi Agbeko')
   await expect(vueGerante).not.toContainText('Tanti Akouvi')
@@ -368,10 +371,7 @@ test('Tanti enregistre une tablette avec un code, Kossi y prend la caisse, puis 
 }) => {
   await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
   await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
-  await page
-    .getByRole('navigation', { name: 'Navigation principale' })
-    .getByRole('link', { name: 'Tablettes' })
-    .click()
+  await allerA(page, 'Réglages', 'Tablettes')
   await page.getByRole('button', { name: 'Enregistrer une tablette' }).click()
   const formulaire = page.getByRole('form', { name: 'Enregistrer une tablette' })
   await formulaire.getByLabel(/^Établissement/).selectOption({ label: 'Bè Kpota' })
@@ -441,16 +441,15 @@ test('Tanti compose sa carte : taxe, catégories, produits et changement de prix
 }) => {
   await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
   await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
-  const navigation = page.getByRole('navigation', { name: 'Navigation principale' })
 
   // La TVA saisie à la création de l'entreprise est là.
-  await navigation.getByRole('link', { name: 'Taxes' }).click()
+  await allerA(page, 'Carte', 'Taxes')
   const taxes = page.getByRole('table', { name: 'Taxes de l’entreprise' })
   await expect(taxes.getByRole('row', { name: /TVA/ })).toContainText('18 %')
   await capturer(page, '16-taxes')
 
   // Deux catégories, la seconde remontée en tête.
-  await navigation.getByRole('link', { name: 'Produits' }).click()
+  await allerA(page, 'Carte', 'Produits')
   await expect(page.getByRole('heading', { level: 2, name: 'La carte est vide' })).toBeVisible()
   await page.getByRole('button', { name: 'Gérer les catégories' }).click()
   const dialogue = page.getByRole('dialog', { name: 'Catégories de la carte' })
@@ -504,10 +503,7 @@ test('Tanti fixe un prix à Bè Kpota, puis la gérante déclare une rupture dep
 }) => {
   await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
   await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
-  await page
-    .getByRole('navigation', { name: 'Navigation principale' })
-    .getByRole('link', { name: 'Par établissement' })
-    .click()
+  await allerA(page, 'Carte', 'Par établissement')
   await page.getByLabel(/^Établissement/).selectOption({ label: 'Bè Kpota' })
   await expect(page.getByRole('heading', { level: 1, name: 'Carte de Bè Kpota' })).toBeVisible()
 
@@ -525,10 +521,7 @@ test('Tanti fixe un prix à Bè Kpota, puis la gérante déclare une rupture dep
   // La gérante, sur son téléphone : seule la rupture lui est proposée.
   await page.setViewportSize({ width: 390, height: 844 })
   await seConnecter(page, AFI.telephone, AFI.motDePasse)
-  await page
-    .getByRole('navigation', { name: 'Navigation principale' })
-    .getByRole('link', { name: 'Par établissement' })
-    .click()
+  await allerA(page, 'Carte', 'Par établissement')
   await expect(page.getByRole('heading', { level: 1, name: 'Carte de Bè Kpota' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Plus d’actions pour Flag 65 cl' })).toHaveCount(0)
   await page.getByRole('button', { name: 'Déclarer Flag 65 cl épuisé ce jour' }).click()
@@ -545,8 +538,7 @@ test('La gérante compte le stock de Bè Kpota, réceptionne une livraison et d�
   page,
 }) => {
   await seConnecter(page, AFI.telephone, AFI.motDePasse)
-  const navigation = page.getByRole('navigation', { name: 'Navigation principale' })
-  await navigation.getByRole('link', { name: /Stock/ }).click()
+  await allerA(page, 'Stock')
   const stock = page.getByRole('table', { name: 'Stock de Bè Kpota' })
   await expect(stock.getByRole('row', { name: /Flag 65 cl/ })).toContainText('À compter')
   await capturer(page, '60-stock-a-compter')
@@ -619,8 +611,7 @@ test('Tanti retrouve dans l’activité les changements de la journée et l’hi
 }) => {
   await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
   await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
-  const navigation = page.getByRole('navigation', { name: 'Navigation principale' })
-  await navigation.getByRole('link', { name: 'Activité' }).click()
+  await allerA(page, 'Activité')
 
   const activite = page.getByRole('region', { name: 'Activité' })
   await expect(activite).toContainText('a changé le prix de Flag 65 cl à Bè Kpota')
@@ -636,7 +627,7 @@ test('Tanti retrouve dans l’activité les changements de la journée et l’hi
   await expect(activite).toContainText('Équipe Tonti a créé la taxe TVA')
   await capturer(page, '24-activite')
 
-  await navigation.getByRole('link', { name: 'Produits' }).click()
+  await allerA(page, 'Carte', 'Produits')
   await page.getByRole('button', { name: 'Plus d’actions pour Flag 65 cl' }).click()
   await page.getByRole('menuitem', { name: 'Historique des prix' }).click()
   const historique = page.getByRole('dialog', { name: 'Historique des prix de « Flag 65 cl »' })
@@ -645,17 +636,14 @@ test('Tanti retrouve dans l’activité les changements de la journée et l’hi
   await capturer(page, '25-historique-prix')
   await page.setViewportSize({ width: 390, height: 844 })
   await historique.getByRole('button', { name: 'Fermer' }).click()
-  await navigation.getByRole('link', { name: 'Activité' }).click()
+  await allerA(page, 'Activité')
   await expect(activite).toContainText('Flag 65 cl')
   await capturer(page, '24-activite-telephone')
 })
 
 test('La gérante crée les salles de Bè Kpota et leurs tables', async ({ page }) => {
   await seConnecter(page, AFI.telephone, AFI.motDePasse)
-  await page
-    .getByRole('navigation', { name: 'Navigation principale' })
-    .getByRole('link', { name: 'Salles et tables' })
-    .click()
+  await allerA(page, 'Réglages', 'Salles et tables')
   await expect(
     page.getByRole('heading', { level: 1, name: 'Salles et tables de Bè Kpota' }),
   ).toBeVisible()
@@ -697,10 +685,9 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
 }) => {
   await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
   await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
-  const navigation = page.getByRole('navigation', { name: 'Navigation principale' })
 
   // Un plat à vendre, à côté de la bière déclarée épuisée par la gérante.
-  await navigation.getByRole('link', { name: 'Produits' }).click()
+  await allerA(page, 'Carte', 'Produits')
   await page.getByRole('link', { name: 'Ajouter un produit' }).click()
   await page.getByLabel(/^Nom/).fill('Poulet braisé')
   await page.getByLabel(/^Catégorie/).selectOption({ label: 'Grillades' })
@@ -709,7 +696,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await page.getByRole('button', { name: 'Enregistrer le produit' }).click()
   await expect(page.getByText('« Poulet braisé » est enregistré.')).toBeVisible()
 
-  await navigation.getByRole('link', { name: 'Tablettes' }).click()
+  await allerA(page, 'Réglages', 'Tablettes')
   await page.getByRole('button', { name: 'Enregistrer une tablette' }).click()
   const formulaire = page.getByRole('form', { name: 'Enregistrer une tablette' })
   await formulaire.getByLabel(/^Établissement/).selectOption({ label: 'Bè Kpota' })
@@ -1074,7 +1061,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
 
   // Le stock suit la vente : le Flag, de nouveau en vente, sort à l'envoi et revient s'il n'est pas servi.
   await tablette.getByRole('button', { name: 'Plan de salle' }).click()
-  await navigation.getByRole('link', { name: 'Par établissement' }).click()
+  await allerA(page, 'Carte', 'Par établissement')
   await page.getByLabel(/^Établissement/).selectOption({ label: 'Bè Kpota' })
   await page.getByRole('button', { name: 'Remettre Flag 65 cl en vente' }).click()
   await expect(page.getByText('« Flag 65 cl » est de nouveau en vente.')).toBeVisible()
@@ -1106,7 +1093,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await note.getByRole('button', { name: 'Plan de salle' }).click()
   await tablette.getByRole('button', { name: 'Caisse', exact: true }).click()
 
-  await navigation.getByRole('link', { name: /Stock/ }).click()
+  await allerA(page, 'Stock')
   await page.getByLabel(/^Établissement/).selectOption({ label: 'Bè Kpota' })
   await expect(page.getByRole('table', { name: 'Stock de Bè Kpota' })).toBeVisible()
   await page.getByRole('button', { name: 'Plus d’actions pour Flag 65 cl' }).click()
@@ -1119,7 +1106,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await historiqueFlag.getByRole('button', { name: 'Fermer' }).click()
 
   // Ardoise : Tanti ouvre un compte à un habitué ; au comptoir, sa bière dépasse le plafond, la gérante confirme.
-  await navigation.getByRole('link', { name: 'Ardoises' }).click()
+  await allerA(page, 'Ventes', 'Ardoises')
   await page.getByLabel(/^Établissement/).selectOption({ label: 'Bè Kpota' })
   await page.getByRole('button', { name: 'Nouveau client' }).click()
   const nouveauClient = page.getByRole('dialog', { name: 'Nouveau client' })
@@ -1288,7 +1275,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await contexteTablette.close()
 
   // Le propriétaire retrouve l'annulation, son motif et qui l'a validée.
-  await navigation.getByRole('link', { name: 'Activité' }).click()
+  await allerA(page, 'Activité')
   const activite = page.getByRole('region', { name: 'Activité' })
   await expect(activite).toContainText('Kossi A. a annulé Poulet braisé à Bè Kpota')
   await expect(activite).toContainText('Motif : Non servie (trop d’attente). Validé par Afi M.')
@@ -1311,7 +1298,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await capturer(page, '40-activite-caisse')
 
   // Le soir, Tanti regarde ses ventes de la semaine, puis ses caisses : l'écart du Z n°1 ressort tout de suite.
-  await navigation.getByRole('link', { name: 'Ventes' }).click()
+  await allerA(page, 'Ventes', 'Rapports')
   const indicateurs = page.getByRole('list', { name: 'Indicateurs' })
   await expect(indicateurs).toContainText('Chiffre d’affaires')
   // Le Flag a été reçu à 650 : ses ventes ont un coût figé, la marge brute apparaît.
@@ -1332,7 +1319,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await capturer(page, '80-ventes-telephone')
   await page.setViewportSize({ width: 1280, height: 800 })
 
-  await navigation.getByRole('link', { name: 'Caisses', exact: true }).click()
+  await allerA(page, 'Ventes', 'Caisses')
   const listeCaisses = page.getByRole('table', { name: 'Caisses de la période' })
   await expect(listeCaisses.getByRole('row', { name: /Z n°1/ })).toContainText('−500')
   await expect(listeCaisses.getByRole('row', { name: /En cours/ })).toBeVisible()
@@ -1354,7 +1341,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await page.setViewportSize({ width: 1280, height: 800 })
 
   // Le tableau de bord : ce qui est à traiter, et ce qui se passe en ce moment à Bè Kpota.
-  await navigation.getByRole('link', { name: 'Tableau de bord' }).click()
+  await allerA(page, 'Tableau de bord')
   await expect(page.getByRole('region', { name: 'Vendu aujourd’hui' })).toContainText(/F/)
   const maintenant = page.getByRole('region', { name: 'Bè Kpota en ce moment' })
   await expect(maintenant).toContainText('Caisses ouvertes')
@@ -1389,8 +1376,7 @@ test('La cuisine de Bè Kpota reçoit les bons, les commence et les marque prêt
 }) => {
   await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
   await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
-  const navigation = page.getByRole('navigation', { name: 'Navigation principale' })
-  await navigation.getByRole('link', { name: 'Tablettes' }).click()
+  await allerA(page, 'Réglages', 'Tablettes')
 
   // Une tablette de la cuisine, enregistrée comme écran cuisine : pas de PIN, elle va droit aux bons.
   const codeCuisine = await codeDeTablette(page, 'Cuisine', 'Écran cuisine')
@@ -1469,6 +1455,137 @@ test('La cuisine de Bè Kpota reçoit les bons, les commence et les marque prêt
   await note.getByRole('button', { name: 'Plan de salle' }).click()
   await expect(tuile).not.toContainText('prêts à servir')
   await contexteCuisine.close()
+  await contexteCaisse.close()
+})
+
+test('Tanti crée des options, les attache aux côtelettes, et Kossi les choisit en caisse', async ({
+  page,
+  browser,
+}) => {
+  await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
+  await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
+
+  // Un plat à options.
+  await allerA(page, 'Carte', 'Produits')
+  await page.getByRole('link', { name: 'Ajouter un produit' }).click()
+  await page.getByLabel(/^Nom/).fill('Côtelettes d’agneau')
+  await page.getByLabel(/^Catégorie/).selectOption({ label: 'Grillades' })
+  await page.getByRole('radio', { name: 'Plat' }).check({ force: true })
+  await page.getByLabel(/^Prix TTC/).fill('5000')
+  await page.getByRole('button', { name: 'Enregistrer le produit' }).click()
+  await expect(page.getByText('« Côtelettes d’agneau » est enregistré.')).toBeVisible()
+
+  // Deux groupes : la cuisson, obligatoire ; les suppléments, deux au plus, dont un lié à la Flag (stock et coût).
+  await allerA(page, 'Carte', 'Options')
+  for (const [nom, multiple, obligatoire, choix] of [
+    [
+      'Cuisson',
+      false,
+      true,
+      [
+        ['Saignant', ''],
+        ['À point', ''],
+      ],
+    ],
+    [
+      'Suppléments',
+      true,
+      false,
+      [
+        ['Œuf', '200'],
+        ['Piment', ''],
+      ],
+    ],
+  ] as const) {
+    await page.getByRole('button', { name: 'Nouveau groupe' }).click()
+    const dialogue = page.getByRole('dialog', { name: 'Nouveau groupe d’options' })
+    await dialogue.getByLabel(/^Nom du groupe/).fill(nom)
+    if (multiple) {
+      await dialogue.getByRole('radio', { name: /Plusieurs choix/ }).click()
+      await dialogue.getByLabel('Au plus').fill('2')
+    }
+    if (obligatoire) await dialogue.getByRole('switch', { name: /Obligatoire/ }).click()
+    // La ligne vide du bas devient le choix suivant dès qu'on y tape.
+    for (const [rang, [libelle, supplement]] of choix.entries()) {
+      const ligne = dialogue.getByRole('group', { name: `Choix ${String(rang + 1)}` })
+      await ligne.getByLabel('Nom', { exact: true }).fill(libelle)
+      await ligne.getByLabel('Prix en plus').fill(supplement)
+    }
+    if (nom === 'Suppléments') {
+      await capturer(page, '90-groupe-options')
+    }
+    await dialogue.getByRole('button', { name: 'Créer le groupe' }).click()
+    await expect(page.getByText(`Le groupe « ${nom} » est créé.`)).toBeVisible()
+  }
+  const groupes = page.getByRole('table', { name: 'Groupes d’options' })
+  await expect(groupes.getByRole('row', { name: /Cuisson/ })).toContainText(
+    'Choix unique, obligatoire',
+  )
+  await capturer(page, '90-options')
+
+  // Sur la fiche des côtelettes, dans l'ordre de la caisse.
+  await allerA(page, 'Carte', 'Produits')
+  await page.getByRole('link', { name: 'Modifier Côtelettes d’agneau' }).click()
+  const section = page.getByRole('region', { name: 'Options' })
+  for (const groupe of ['Cuisson', 'Suppléments']) {
+    await section.getByLabel(/^Ajouter un groupe/).selectOption({ label: groupe })
+    await expect(section.getByRole('list')).toContainText(groupe)
+  }
+  await capturer(page, '91-fiche-options')
+
+  // Deux variantes : 2 ou 4 côtelettes, chacune à son prix.
+  const variantes = page.getByRole('region', { name: 'Variantes' })
+  for (const [libelle, prix] of [
+    ['2 pièces', '5000'],
+    ['4 pièces', '9000'],
+  ] as const) {
+    await variantes.getByLabel(/^Nouvelle variante/).fill(libelle)
+    await variantes.getByLabel(/^Prix de la variante/).fill(prix)
+    await variantes.getByRole('button', { name: 'Ajouter la variante' }).click()
+    await expect(variantes.getByRole('row', { name: new RegExp(libelle) })).toBeVisible()
+  }
+  await capturer(page, '91-fiche-variantes')
+
+  // Kossi, sur une nouvelle caisse : la cuisson est demandée avant l'ajout, le supplément s'ajoute au prix.
+  await allerA(page, 'Réglages', 'Tablettes')
+  const codeCaisse = await codeDeTablette(page, 'Caisse 4, grill')
+  const contexteCaisse = await browser.newContext({ viewport: { width: 1280, height: 800 } })
+  const caisse = await contexteCaisse.newPage()
+  await caisse.goto('/caisse')
+  await taperCode(caisse, codeCaisse)
+  await caisse.getByRole('button', { name: /Kossi A\./ }).click()
+  await taperCode(caisse, '4827')
+  await caisse.getByRole('button', { name: 'Ouvrir la caisse' }).click()
+  await caisse.getByRole('button', { name: 'Vente au comptoir' }).click()
+  const note = caisse.getByRole('region', { name: 'Note en cours' })
+  const tuile = caisse.getByRole('list', { name: 'Produits' }).getByRole('button', {
+    name: /Côtelettes d’agneau/,
+  })
+  await expect(tuile).toContainText('dès')
+  await tuile.click()
+  // D'abord la variante, puis les options du produit.
+  await capturer(caisse, '92-caisse-variantes')
+  await caisse
+    .getByRole('dialog', { name: 'Côtelettes d’agneau' })
+    .getByRole('button', { name: /4 pièces/ })
+    .click()
+  const panneau = caisse.getByRole('dialog', { name: 'Côtelettes d’agneau, 4 pièces' })
+  await panneau.getByRole('button', { name: /^Ajouter/ }).click()
+  await expect(panneau).toContainText('Choisissez : Cuisson.')
+  await panneau.getByRole('button', { name: /À point/ }).click()
+  await panneau.getByRole('button', { name: /Œuf/ }).click()
+  await expect(panneau.getByRole('button', { name: /^Ajouter/ })).toContainText('9 200')
+  await capturer(caisse, '92-caisse-options')
+  await caisse.setViewportSize({ width: 390, height: 844 })
+  await capturer(caisse, '92-caisse-options-telephone')
+  await caisse.setViewportSize({ width: 1280, height: 800 })
+  await panneau.getByRole('button', { name: /^Ajouter/ }).click()
+  await expect(note).toContainText('Œuf +200')
+  await expect(note).toContainText('9 200 FCFA')
+  await expect(note).toContainText('Côtelettes d’agneau, 4 pièces')
+  await capturer(caisse, '93-note-options')
+  await note.getByRole('button', { name: /Envoyer 1 article/ }).click()
+  await expect(note.getByRole('button', { name: /Envoyer \d+ article/ })).toHaveCount(0)
   await contexteCaisse.close()
 })
 

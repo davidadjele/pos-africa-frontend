@@ -16,14 +16,9 @@ import { Tableau, type ColonneTableau } from '../../partage/ui/Tableau'
 import { requeteEtablissements } from '../etablissements/requetes'
 import { ChoixPeriode } from './ChoixPeriode'
 import { Carre, EcartsParJour, signe } from './Graphiques'
-import {
-  formaterJournee,
-  journeeCourante,
-  periodeDe,
-  type ClePeriode,
-  type Periode,
-} from './periodes'
+import { formaterJournee, periodeDe, type ClePeriode, type Periode } from './periodes'
 import { requeteCaisses } from './requetes'
+import { useJourneeCourante } from './useJourneeCourante'
 import { BadgeEcart } from './BadgeEcart'
 
 const PERIODES: ClePeriode[] = ['SEPT_JOURS', 'CE_MOIS', 'MOIS_DERNIER', 'DATES']
@@ -34,10 +29,11 @@ export function PageCaisses() {
   const { moi } = useSession()
   const fuseauHoraire = moi?.entrepriseCourante?.fuseauHoraire ?? 'Africa/Lome'
   const devise = (moi?.entrepriseCourante?.devise ?? 'XOF') as Devise
-  const journee = journeeCourante(fuseauHoraire)
-  const [periode, setPeriode] = useState<Periode>(periodeDe('SEPT_JOURS', journee))
-  const [cle, setCle] = useState<ClePeriode>('SEPT_JOURS')
   const [etablissementId, setEtablissementId] = useState('')
+  const journee = useJourneeCourante(etablissementId)
+  const [dates, setDates] = useState<Periode>(periodeDe('SEPT_JOURS', journee))
+  const [cle, setCle] = useState<ClePeriode>('SEPT_JOURS')
+  const periode = cle === 'DATES' ? dates : periodeDe(cle, journee)
   const [ecartsSeulement, setEcartsSeulement] = useState(false)
   const etablissements = useQuery(requeteEtablissements(0))
   const caisses = useQuery(requeteCaisses(periode, etablissementId, ecartsSeulement))
@@ -158,7 +154,7 @@ export function PageCaisses() {
             journee={journee}
             surChanger={(nouvelle, nouvellePeriode) => {
               setCle(nouvelle)
-              setPeriode(nouvellePeriode)
+              setDates(nouvellePeriode)
             }}
           />
           <label className="flex min-h-cible-min items-center gap-2 text-libelle font-bold text-encre">

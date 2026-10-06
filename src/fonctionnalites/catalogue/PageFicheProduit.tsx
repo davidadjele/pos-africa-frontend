@@ -27,6 +27,8 @@ import { Bouton, classesBouton } from '../../partage/ui/Bouton'
 import { ChampSaisie, ChampSelection } from '../../partage/ui/ChampSaisie'
 import { Chargement } from '../../partage/ui/Chargement'
 import { COULEURS_CATEGORIE } from './couleurs'
+import { SectionOptionsProduit } from './SectionOptionsProduit'
+import { SectionVariantesProduit } from './SectionVariantesProduit'
 import { requeteCategories, requeteProduit, requeteTaxes } from './requetes'
 
 const TYPES: TypeProduit[] = ['PLAT', 'BOISSON', 'ARTICLE']
@@ -80,6 +82,8 @@ export function PageFicheProduit({ produitId }: Readonly<{ produitId?: string }>
   const categories = useQuery(requeteCategories)
   const taxes = useQuery(requeteTaxes)
   const produit = useQuery({ ...requeteProduit(produitId ?? ''), enabled: produitId !== undefined })
+  const { moi } = useSession()
+  const devise = (moi?.entrepriseCourante?.devise ?? 'XOF') as Devise
   const pret =
     categories.data !== undefined &&
     taxes.data !== undefined &&
@@ -104,7 +108,21 @@ export function PageFicheProduit({ produitId }: Readonly<{ produitId?: string }>
       </div>
       {erreur !== null && <AlerteErreur erreur={erreur} />}
       {!pret && erreur === null && <Chargement texte={t('produits.fiche.chargement')} />}
-      {pret && (
+      {pret && produit.data?.parentId !== undefined && (
+        <Alerte ton="info">
+          <span className="flex flex-wrap items-center gap-3">
+            {t('variantes.seModifieDepuisLeParent')}
+            <Link
+              to="/gestion/produits/$produitId"
+              params={{ produitId: produit.data.parentId }}
+              className="font-semibold text-encre underline"
+            >
+              {t('variantes.ouvrirLeParent')}
+            </Link>
+          </span>
+        </Alerte>
+      )}
+      {pret && produit.data?.parentId === undefined && (
         <FormulaireProduit
           categories={categories.data.filter(
             (categorie) => categorie.active || categorie.id === produit.data?.categorie.id,
@@ -112,6 +130,12 @@ export function PageFicheProduit({ produitId }: Readonly<{ produitId?: string }>
           taxes={taxes.data.filter((taxe) => taxe.active || taxe.id === produit.data?.taxe?.id)}
           {...(produit.data === undefined ? {} : { produit: produit.data })}
         />
+      )}
+      {pret && produit.data !== undefined && produit.data.parentId === undefined && (
+        <>
+          <SectionVariantesProduit produit={produit.data} devise={devise} />
+          <SectionOptionsProduit produit={produit.data} />
+        </>
       )}
     </div>
   )

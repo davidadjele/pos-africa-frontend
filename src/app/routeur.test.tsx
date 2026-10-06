@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
@@ -184,7 +184,12 @@ describe('routeur', () => {
         ),
       )
 
-      await userEvent.click(screen.getByRole('link', { name: 'Établissements' }))
+      await userEvent.click(screen.getByRole('link', { name: 'Réglages' }))
+      await userEvent.click(
+        within(await screen.findByRole('navigation', { name: 'Réglages' })).getByRole('link', {
+          name: 'Établissements',
+        }),
+      )
 
       await screen.findByRole('heading', { name: 'Se connecter' })
       await attendreChemin(routeur, '/connexion')
@@ -217,34 +222,72 @@ describe('routeur', () => {
     await attendreChemin(routeur, '/enregistrement-tablette')
   })
 
-  it('ouvre la gestion avec sa navigation latérale et l’entrée active marquée', async () => {
+  it('ouvre la gestion sur un menu de sept entrées, l’entrée active marquée', async () => {
     sessionOuverte(MOI_TANTI)
     ouvrir('/gestion')
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Tableau de bord' })).toBeVisible()
-    expect(screen.getByRole('navigation', { name: 'Navigation principale' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Tableau de bord' })).toHaveAttribute(
+    const menu = screen.getByRole('navigation', { name: 'Navigation principale' })
+    expect(within(menu).getByRole('link', { name: 'Tableau de bord' })).toHaveAttribute(
       'aria-current',
       'page',
     )
-    expect(screen.getByRole('link', { name: 'Caisse' })).not.toHaveAttribute('aria-current')
-    expect(screen.getByRole('link', { name: 'Établissements' })).toHaveAttribute(
+    expect(within(menu).getByRole('link', { name: 'Caisse' })).not.toHaveAttribute('aria-current')
+    expect(within(menu).getByRole('link', { name: 'Réglages' })).toHaveAttribute(
+      'href',
+      '/gestion/entreprise',
+    )
+    expect(within(menu).queryByRole('link', { name: 'Personnel' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Tableau de bord' })).not.toBeInTheDocument()
+  })
+
+  it('range les pages d’une entrée en onglets, l’onglet de la page marqué', async () => {
+    sessionOuverte(MOI_TANTI)
+    serveurMsw.use(
+      http.get(`${API}/personnel`, () =>
+        HttpResponse.json({ elements: [], page: 0, taille: 50, total: 0 }),
+      ),
+    )
+    ouvrir('/gestion/personnel')
+
+    const menu = await screen.findByRole('navigation', { name: 'Navigation principale' })
+    expect(within(menu).getByRole('link', { name: 'Réglages' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+    const onglets = screen.getByRole('navigation', { name: 'Réglages' })
+    expect(within(onglets).getByRole('link', { name: 'Personnel' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+    expect(within(onglets).getByRole('link', { name: 'Établissements' })).toHaveAttribute(
       'href',
       '/gestion/etablissements',
     )
-    expect(screen.getByRole('link', { name: 'Personnel' })).toHaveAttribute(
-      'href',
-      '/gestion/personnel',
-    )
+    expect(within(onglets).queryByRole('link', { name: 'Tablettes' })).not.toBeInTheDocument()
   })
 
-  it('masque le personnel et les établissements dans le menu sans le droit de les gérer', async () => {
+  it('ouvre et referme le menu sur téléphone', async () => {
+    sessionOuverte(MOI_TANTI)
+    ouvrir('/gestion')
+
+    const bouton = await screen.findByRole('button', { name: 'Menu' })
+    expect(bouton).toHaveAttribute('aria-expanded', 'false')
+    await userEvent.click(bouton)
+    expect(bouton).toHaveAttribute('aria-expanded', 'true')
+    await userEvent.keyboard('{Escape}')
+    expect(bouton).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('masque une entrée dont aucune page n’est permise', async () => {
     sessionOuverte(MOI_SERVEUR)
     ouvrir('/gestion')
 
     await screen.findByRole('heading', { level: 1, name: 'Tableau de bord' })
-    expect(screen.queryByRole('link', { name: 'Personnel' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'Établissements' })).not.toBeInTheDocument()
+    const menu = screen.getByRole('navigation', { name: 'Navigation principale' })
+    expect(within(menu).queryByRole('link', { name: 'Réglages' })).not.toBeInTheDocument()
+    expect(within(menu).queryByRole('link', { name: 'Ventes' })).not.toBeInTheDocument()
+    expect(within(menu).getByRole('link', { name: 'Carte' })).toBeInTheDocument()
   })
 
   it('ouvre un reçu public sans rien demander à la session', async () => {

@@ -1,5 +1,5 @@
 import { clsx } from 'clsx'
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { OperateurMobileMoney, RecuCaisse, RecuEnLigne } from '../../partage/api/contrat'
 import { formaterDate, formaterDateHeure, formaterHeure } from '../../partage/dates/formaterDate'
@@ -71,12 +71,19 @@ export function TicketRecu({
       <span>{t('recu.servi', { serveur: recu.serveur, caissier: recu.caissier })}</span>
       <SeparateurTicket />
       {recu.lignes.map((ligne, rang) => (
-        <LigneTicket
-          key={`${ligne.nom}-${String(rang)}`}
-          gauche={`${String(ligne.quantite)}× ${ligne.nom}`}
-        >
-          {ligne.offert ? t('recu.offert') : nombre(ligne.montant)}
-        </LigneTicket>
+        <Fragment key={`${ligne.nom}-${String(rang)}`}>
+          <LigneTicket gauche={`${String(ligne.quantite)}× ${ligne.nom}`}>
+            {ligne.offert ? t('recu.offert') : nombre(ligne.montant)}
+          </LigneTicket>
+          {ligne.options.map((option) => (
+            <span key={option.nom} className="flex justify-between gap-2 pl-4">
+              <span>{option.nom}</span>
+              {option.supplement > 0 && (
+                <span className="chiffres shrink-0">+{nombre(option.supplement)}</span>
+              )}
+            </span>
+          ))}
+        </Fragment>
       ))}
       {recu.remise > 0 && (
         <LigneTicket gauche={t('recu.remise')}>−{nombre(recu.remise)}</LigneTicket>

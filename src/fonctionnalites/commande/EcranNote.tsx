@@ -38,6 +38,9 @@ import {
 import { useValidation } from './useValidation'
 import { CarteCaisse } from './CarteCaisse'
 import { DialogueAnnulation, DialogueLigne } from './DialoguesLigne'
+import { DialogueOptions } from './DialogueOptions'
+import { DialogueVariantes } from './DialogueVariantes'
+import { variantesDe } from './variantes'
 import { ouEstLaNote, PanneauNote, type Rupture } from './PanneauNote'
 import { RubanNotes } from './RubanNotes'
 import { envoiVersLaCuisine, pasEncorePret } from './service'
@@ -79,6 +82,12 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
   const [noteOuverte, setNoteOuverte] = useState(false)
   const [ligneOuverte, setLigneOuverte] = useState<LigneNote | null>(null)
   const [aAnnuler, setAAnnuler] = useState<LigneNote | null>(null)
+  const [aVarier, setAVarier] = useState<LigneCarteEtablissement | null>(null)
+  const [aOptionner, setAOptionner] = useState<{
+    produit: LigneCarteEtablissement
+    /** Ligne pas encore envoyée dont on change les options ; vide pour un nouvel ajout. */
+    ligne?: LigneNote
+  } | null>(null)
   const [servirAvantCuisine, setServirAvantCuisine] = useState<{
     lignes: LigneNote[]
     servir: () => void
@@ -143,6 +152,10 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
 
   /** Ajouter, ou d'abord prévenir si l'établissement le demande pour un article qui n'a plus de stock. */
   function choisir(produit: LigneCarteEtablissement) {
+    if (variantesDe(carte.data ?? [], produit.produitId).length > 0) {
+      setAVarier(produit)
+      return
+    }
     const article = stockDuProduit(stock.data, produit.produitId)
     const dejaSurLaNote = (note.data?.lignes ?? [])
       .filter((ligne) => ligne.statut === 'BROUILLON' && ligne.produitId === produit.produitId)
@@ -155,16 +168,25 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
       setSansStockAConfirmer(produit)
       return
     }
-    void ajouter(produit)
+    continuer(produit)
   }
 
-  async function ajouter(produit: LigneCarteEtablissement) {
+  /** Un produit à options ouvre leur choix ; les autres s'ajoutent d'un toucher. */
+  function continuer(produit: LigneCarteEtablissement) {
+    if (produit.options.length > 0) setAOptionner({ produit })
+    else void ajouter(produit)
+  }
+
+  async function ajouter(produit: LigneCarteEtablissement, optionIds: string[] = []) {
     effacerMessages()
     try {
       retenir(
         await appelerCaisse<CommandeDetail>(`/caisse/commandes/${commandeId}/lignes`, {
           methode: 'POST',
-          corps: { produitId: produit.produitId },
+          corps:
+            optionIds.length === 0
+              ? { produitId: produit.produitId }
+              : { produitId: produit.produitId, optionIds },
         }),
       )
     } catch (echec) {
@@ -173,7 +195,13 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
         (echec.code === 'PRODUIT_EPUISE' || echec.code === 'PRODUIT_INDISPONIBLE')
       ) {
         const aJour = (await carteAJour()).find((ligne) => ligne.produitId === produit.produitId)
-        setRefus(messageRefus(echec.code, produit.nom, aJour, fuseauHoraire, t))
+        // Le plat se vend encore : c'est une option choisie qui vient d'être épuisée.
+        const option = aJour?.epuise === false ? optionEpuisee(aJour, optionIds) : undefined
+        setRefus(
+          option === undefined
+            ? messageRefus(echec.code, produit.nom, aJour, fuseauHoraire, t)
+            : t('caisse.options.choixEpuise', { option, produit: produit.nom }),
+        )
       } else {
         setErreur(echec)
       }
@@ -334,7 +362,9 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
 
   function choisirPourLaLigne(ligne: LigneNote, action: ActionLigne) {
     setLigneActions(null)
-    if (action === 'consigne') setLigneOuverte(ligne)
+    const produit = carte.data?.find((un) => un.produitId === ligne.produitId)
+    if (action === 'options' && produit !== undefined) setAOptionner({ produit, ligne })
+    else if (action === 'consigne') setLigneOuverte(ligne)
     else if (action === 'remise') setARemiser(ligne)
     else if (action === 'offrir') setAOffrir(ligne)
     else if (action === 'annuler') setAAnnuler(ligne)
@@ -409,9 +439,13 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
                 if (modifiable) choisir(produit)
               }}
               surRetirer={(produit) => {
-                // La dernière ligne à envoyer de ce produit : celle qu'on vient d'ajouter.
+                // La dernière ligne à envoyer de ce produit, ou d'une de ses variantes.
+                const ids = new Set([
+                  produit.produitId,
+                  ...variantesDe(carte.data, produit.produitId).map((un) => un.produitId),
+                ])
                 const derniere = note.data.lignes.findLast(
-                  (ligne) => ligne.statut === 'BROUILLON' && ligne.produitId === produit.produitId,
+                  (ligne) => ligne.statut === 'BROUILLON' && ids.has(ligne.produitId),
                 )
                 if (derniere !== undefined)
                   void modifier(derniere, { quantite: derniere.quantite - 1 })
@@ -516,6 +550,10 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
             devise={devise}
             fuseauHoraire={fuseauHoraire}
             session={session}
+            avecOptions={
+              (carte.data?.find((un) => un.produitId === ligneActions.produitId)?.options.length ??
+                0) > 0
+            }
             surFermer={() => {
               setLigneActions(null)
             }}
@@ -566,6 +604,42 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
             }}
           />
         )}
+        {aVarier !== null && (
+          <DialogueVariantes
+            produit={aVarier}
+            variantes={variantesDe(carte.data ?? [], aVarier.produitId)}
+            devise={devise}
+            surFermer={() => {
+              setAVarier(null)
+            }}
+            surChoisir={(variante) => {
+              setAVarier(null)
+              choisir(variante)
+            }}
+          />
+        )}
+        {aOptionner !== null && (
+          <DialogueOptions
+            produit={aOptionner.produit}
+            devise={devise}
+            choisisAuDepart={aOptionner.ligne?.options.map((option) => option.choixId) ?? []}
+            modification={aOptionner.ligne !== undefined}
+            surFermer={() => {
+              setAOptionner(null)
+            }}
+            surValider={(optionIds) => {
+              const { produit, ligne } = aOptionner
+              setAOptionner(null)
+              if (ligne === undefined) void ajouter(produit, optionIds)
+              else
+                void modifier(ligne, {
+                  quantite: ligne.quantite,
+                  ...(ligne.note === undefined ? {} : { note: ligne.note }),
+                  optionIds,
+                })
+            }}
+          />
+        )}
         {servirAvantCuisine !== null && (
           <Dialogue
             titre={t('caisse.service.avantCuisine.titre')}
@@ -602,7 +676,7 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
             surConfirmer={() => {
               const produit = sansStockAConfirmer
               setSansStockAConfirmer(null)
-              void ajouter(produit)
+              continuer(produit)
             }}
           />
         )}
@@ -665,6 +739,16 @@ function rupturesDe(
     else if (produit.epuise) ruptures.set(ligne.produitId, 'EPUISE')
   }
   return ruptures
+}
+
+/** Le nom d'un choix retenu que la carte relue montre épuisé, s'il y en a un. */
+function optionEpuisee(
+  produit: LigneCarteEtablissement,
+  optionIds: readonly string[],
+): string | undefined {
+  return produit.options
+    .flatMap((groupe) => groupe.choix)
+    .find((choix) => choix.epuise && optionIds.includes(choix.id))?.nom
 }
 
 function messageRefus(

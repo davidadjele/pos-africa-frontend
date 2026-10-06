@@ -11,6 +11,7 @@ import { PageActivite } from '../fonctionnalites/activite/PageActivite'
 import { PageCarteEtablissement } from '../fonctionnalites/catalogue/PageCarteEtablissement'
 import { PageFicheProduit } from '../fonctionnalites/catalogue/PageFicheProduit'
 import { PageProduits, type RechercheProduits } from '../fonctionnalites/catalogue/PageProduits'
+import { PageOptions } from '../fonctionnalites/catalogue/PageOptions'
 import { PageTaxes } from '../fonctionnalites/catalogue/PageTaxes'
 import { PageSalles } from '../fonctionnalites/salles/PageSalles'
 import { PageArdoises } from '../fonctionnalites/ardoise/PageArdoises'
@@ -384,6 +385,12 @@ const entreprise = createRoute({
   component: PageEntreprise,
 })
 
+const options = createRoute({
+  getParentRoute: () => gestion,
+  path: '/options',
+  component: PageOptions,
+})
+
 const taxes = createRoute({
   getParentRoute: () => gestion,
   path: '/taxes',
@@ -492,6 +499,7 @@ const arbre = racine.addChildren([
     ficheProduit,
     carteEtablissement,
     taxes,
+    options,
     activite,
     salles,
     stock,
