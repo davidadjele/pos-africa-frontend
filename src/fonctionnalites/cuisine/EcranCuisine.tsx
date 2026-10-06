@@ -145,8 +145,8 @@ export function EcranCuisine() {
           </span>
         </button>
         <Link
-          to="/aide/$guide"
-          params={{ guide: 'ecran-cuisine' }}
+          to="/aide"
+          search={{ depuis: '/cuisine' }}
           aria-label={t('aide.lien')}
           className={CLASSES_CONTROLE_BARRE}
         >

@@ -4,7 +4,7 @@ import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChampSaisie } from '../../partage/ui/ChampSaisie'
 import { EtatVide } from '../../partage/ui/EtatVide'
-import { chercherGuides, GUIDES, trouverGuide, type RoleGuide } from './guides'
+import { chercherGuides, guideDe, GUIDES, trouverGuide, type RoleGuide } from './guides'
 import { MiseEnPageAide } from './MiseEnPageAide'
 
 type RoleAccueil = Exclude<RoleGuide, 'depannage'>
@@ -21,7 +21,7 @@ const ICONES: Record<RoleAccueil, typeof Store> = {
 const CLASSES_CARTE = 'rounded-moyen border border-trait bg-surface'
 
 /** L'accueil de l'aide : un point d'entrée par rôle, le premier jour dans l'ordre, et une recherche. */
-export function PageAide() {
+export function PageAide({ depuis }: Readonly<{ depuis?: string }>) {
   const { t } = useTranslation()
   const [recherche, setRecherche] = useState('')
   const enRecherche = recherche.trim() !== ''
@@ -45,9 +45,35 @@ export function PageAide() {
             />
           </div>
         </div>
+        {!enRecherche && depuis !== undefined && <Suggestion depuis={depuis} />}
         {enRecherche ? <Resultats recherche={recherche} /> : <Accueil />}
       </main>
     </MiseEnPageAide>
+  )
+}
+
+function Suggestion({ depuis }: Readonly<{ depuis: string }>) {
+  const { t } = useTranslation()
+  const id = useId()
+  const guide = trouverGuide(guideDe(depuis))
+  if (guide === undefined) return null
+  return (
+    <section aria-labelledby={id} className="rounded-moyen bg-accent-doux p-4">
+      <h2 id={id} className="m-0 text-legende text-accent-lisible">
+        {t('aide.depuis')}
+      </h2>
+      <Link
+        to="/aide/$guide"
+        params={{ guide: guide.id }}
+        className="mt-1 flex min-h-cible-min items-center gap-3 text-encre"
+      >
+        <span className="min-w-0 flex-1">
+          <span className="block text-titre-carte">{guide.titre}</span>
+          <span className="block text-libelle text-attenue">{guide.objectif}</span>
+        </span>
+        <ChevronRight aria-hidden="true" size={20} />
+      </Link>
+    </section>
   )
 }
 

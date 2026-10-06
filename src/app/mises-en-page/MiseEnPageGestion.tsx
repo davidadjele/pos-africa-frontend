@@ -10,7 +10,6 @@ import { AlerteErreur } from '../../partage/ui/Alerte'
 import { BarreHaute } from '../../partage/ui/BarreHaute'
 import { requeteARelancer } from '../../fonctionnalites/ardoise/requetes'
 import { requeteStockATraiter } from '../../fonctionnalites/stock/requetes'
-import { guideDe } from '../../fonctionnalites/manuel/guides'
 import { MenuCompte } from './MenuCompte'
 import {
   ongletDe,
@@ -143,11 +142,11 @@ export function MiseEnPageGestion() {
                 </li>
               )
             })}
-            {/* L'aide est à part des sections de travail : elle ouvre le guide de la page en cours. */}
+            {/* L'aide est à part des sections de travail ; son accueil propose le guide de la page en cours. */}
             <li className="mt-2 border-t border-trait pt-2">
               <Link
-                to="/aide/$guide"
-                params={{ guide: guideDe(chemin) }}
+                to="/aide"
+                search={{ depuis: chemin }}
                 className="flex min-h-cible-min items-center gap-3 whitespace-nowrap rounded-normal px-3 text-corps text-encre hover:bg-fond"
               >
                 <CircleHelp aria-hidden="true" size={20} />

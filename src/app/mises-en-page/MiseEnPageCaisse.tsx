@@ -3,7 +3,6 @@ import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { CircleHelp, LayoutDashboard, UserRoundCog } from 'lucide-react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { guideDe } from '../../fonctionnalites/manuel/guides'
 import { PriseDeCaisse } from '../../fonctionnalites/caisse/PriseDeCaisse'
 import { requeteSessionCaisse } from '../../fonctionnalites/caisse/requetes'
 import { useVerrouillageInactivite } from '../../fonctionnalites/caisse/useVerrouillageInactivite'
@@ -64,8 +63,8 @@ export function MiseEnPageCaisse() {
           </>
         )}
         <Link
-          to="/aide/$guide"
-          params={{ guide: guideDe(chemin) }}
+          to="/aide"
+          search={{ depuis: chemin }}
           aria-label={t('aide.lien')}
           className={CLASSES_CONTROLE_BARRE}
         >

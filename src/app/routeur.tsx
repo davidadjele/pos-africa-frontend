@@ -486,7 +486,13 @@ const recu = createRoute({
 const aide = createRoute({
   getParentRoute: () => racine,
   path: '/aide',
-  component: PageAide,
+  // L'écran d'où l'on vient : l'accueil de l'aide propose son guide en tête.
+  validateSearch: (recherche: Record<string, unknown>): { depuis?: string } =>
+    typeof recherche.depuis === 'string' ? { depuis: recherche.depuis } : {},
+  component: function RouteAide() {
+    const { depuis } = aide.useSearch()
+    return <PageAide {...(depuis === undefined ? {} : { depuis })} />
+  },
 })
 
 const aideGuide = createRoute({

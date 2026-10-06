@@ -2711,6 +2711,7 @@
     "introuvable": {
       "titre": "Ce guide n’existe pas",
       "phrase": "Il a peut-être été renommé. Retrouvez-le depuis l’accueil de l’aide."
-    }
+    },
+    "depuis": "Pour l’écran que vous quittiez"
   }
 }
