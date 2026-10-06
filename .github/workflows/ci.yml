@@ -26,6 +26,8 @@ jobs:
       - run: npm run typecheck
       - run: npm run test
       - run: npm run build
+      # Budgets de poids (budgets-perf.json) ; la réactivité sous CPU ralenti est mesurée par e2e/performance.spec.ts.
+      - run: npm run perf:poids
 
       - name: Installer Chromium pour Playwright
         run: npx playwright install --with-deps chromium
