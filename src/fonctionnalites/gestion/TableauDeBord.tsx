@@ -18,7 +18,8 @@ import { requeteARelancer } from '../ardoise/requetes'
 import { requeteEtablissements } from '../etablissements/requetes'
 import { Carre, signe } from '../rapports/Graphiques'
 import { ListePoints, type ElementPoint } from '../rapports/ListePoints'
-import { formaterJournee, journeeCourante, variation } from '../rapports/periodes'
+import { formaterJournee, variation } from '../rapports/periodes'
+import { useJourneeCourante } from '../rapports/useJourneeCourante'
 import { requeteCaisses, requeteCaissesOuvertes, requeteTableauDeBord } from '../rapports/requetes'
 import { requeteStockATraiter } from '../stock/requetes'
 import {
@@ -55,7 +56,7 @@ export function TableauDeBord() {
   const [etablissementId, setEtablissementId] = useState('')
   const ventes = aLaPermission('RAPPORT_VENTES')
   const financier = aLaPermission('RAPPORT_FINANCIER')
-  const journee = journeeCourante(fuseauHoraire)
+  const journee = useJourneeCourante(etablissementId, ventes)
   const vivant = { refetchInterval: RAFRAICHIR }
   const etablissements = useQuery({ ...requeteEtablissements(0), enabled: ventes })
   const tableau = useQuery({ ...requeteTableauDeBord(etablissementId), ...vivant, enabled: ventes })

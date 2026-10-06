@@ -20,6 +20,16 @@ export function journeeCourante(fuseauHoraire: string, maintenant: Date = new Da
   }).format(new Date(maintenant.getTime() - HEURE_BASCULE * 60 * 60 * 1000))
 }
 
+/**
+ * Chaque note prend la journée de son établissement : avec des fuseaux différents, la plus avancée couvre toutes
+ * les notes déjà payées.
+ */
+export function journeeLaPlusAvancee(fuseauxHoraires: string[], maintenant: Date = new Date()): string {
+  return fuseauxHoraires
+    .map((fuseau) => journeeCourante(fuseau, maintenant))
+    .reduce((plusAvancee, journee) => (journee > plusAvancee ? journee : plusAvancee))
+}
+
 function versDate(journee: string): Date {
   return new Date(`${journee}T00:00:00Z`)
 }
