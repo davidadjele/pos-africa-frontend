@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:reel": "./scripts/e2e-reel.sh",
+    "perf:poids": "node scripts/verifier-poids.ts",
     "manuel:captures": "CAPTURES_MANUEL=public/manuel ./scripts/e2e-reel.sh",
     "api:generer": "openapi-typescript ${URL_OPENAPI:-../pos-africa-backend/docs/api/openapi.json} -o src/partage/api/schema.d.ts"
   },
