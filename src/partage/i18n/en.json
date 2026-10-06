@@ -2667,5 +2667,50 @@
     "ouvrirLeParent": "Open the product",
     "badge": "Variant",
     "des": "from {{prix}}"
+  },
+  "aide": {
+    "titre": "Help",
+    "lien": "Help",
+    "retour": "Back to the app",
+    "accueilAide": "Help home",
+    "accueil": {
+      "titre": "How can we help?",
+      "phrase": "Short step-by-step guides with Tonti's screens. Choose your role or search for a task."
+    },
+    "rechercher": "Search help",
+    "exempleRecherche": "Take payment, refund, PIN…",
+    "resultats": "Results",
+    "aucunResultat": "No guide matches “{{recherche}}”.",
+    "roles": {
+      "gestion": "I manage the venue",
+      "caisse": "I work the till",
+      "cuisine": "I work in the kitchen",
+      "depannage": "Troubleshooting"
+    },
+    "rolesPhrase": {
+      "gestion": "Owner or manager: set up the menu, the team and the tablets, then follow sales.",
+      "caisse": "Cashier or waiter: take an order, send it to the kitchen, take payment.",
+      "cuisine": "Read the tickets, start a dish, mark it ready for the floor."
+    },
+    "premierJour": {
+      "phrase": "In this order, from Management. Each step opens its explanation.",
+      "ouvrir": "See step {{numero}}"
+    },
+    "erreur": {
+      "titre": "An error message?",
+      "phrase": "Write down the code shown under the message and give it to support: they find your case in one search.",
+      "lien": "Open troubleshooting"
+    },
+    "guides": "Guides",
+    "exemple": "Example",
+    "etapes": "Steps",
+    "bonASavoir": "Good to know",
+    "problemes": "Common problems",
+    "suivant": "Next guide",
+    "agrandir": "Enlarge the screenshot: {{legende}}",
+    "introuvable": {
+      "titre": "This guide does not exist",
+      "phrase": "It may have been renamed. Find it from the help home."
+    }
   }
 }

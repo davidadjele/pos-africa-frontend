@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link, Outlet } from '@tanstack/react-router'
-import { LayoutDashboard, UserRoundCog } from 'lucide-react'
+import { Link, Outlet, useRouterState } from '@tanstack/react-router'
+import { CircleHelp, LayoutDashboard, UserRoundCog } from 'lucide-react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import { guideDe } from '../../fonctionnalites/manuel/guides'
 import { PriseDeCaisse } from '../../fonctionnalites/caisse/PriseDeCaisse'
 import { requeteSessionCaisse } from '../../fonctionnalites/caisse/requetes'
 import { useVerrouillageInactivite } from '../../fonctionnalites/caisse/useVerrouillageInactivite'
@@ -28,6 +29,7 @@ export function MiseEnPageCaisse() {
   const { t } = useTranslation()
   const { data: appareil } = useQuery(requeteAppareil)
   const jeton = useJetonCaisse()
+  const chemin = useRouterState({ select: (etat) => etat.location.pathname })
   const session = useQuery({ ...requeteSessionCaisse(jeton ?? ''), enabled: jeton !== null })
   return (
     <div className="flex h-dvh flex-col bg-fond">
@@ -61,6 +63,15 @@ export function MiseEnPageCaisse() {
             </button>
           </>
         )}
+        <Link
+          to="/aide/$guide"
+          params={{ guide: guideDe(chemin) }}
+          aria-label={t('aide.lien')}
+          className={CLASSES_CONTROLE_BARRE}
+        >
+          <CircleHelp aria-hidden="true" size={18} />
+          <span className="hidden sm:inline">{t('aide.lien')}</span>
+        </Link>
         <Link to="/gestion" aria-label={t('commun.gestion')} className={CLASSES_CONTROLE_BARRE}>
           <LayoutDashboard aria-hidden="true" size={18} />
           <span className="hidden sm:inline">{t('commun.gestion')}</span>

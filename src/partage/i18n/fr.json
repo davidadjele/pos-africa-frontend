@@ -2667,5 +2667,50 @@
     "ouvrirLeParent": "Ouvrir le produit",
     "badge": "Variante",
     "des": "dès {{prix}}"
+  },
+  "aide": {
+    "titre": "Aide",
+    "lien": "Aide",
+    "retour": "Retour à l’application",
+    "accueilAide": "Accueil de l’aide",
+    "accueil": {
+      "titre": "Comment pouvons-nous vous aider ?",
+      "phrase": "Des guides courts, pas à pas, avec les écrans de Tonti. Choisissez votre rôle ou cherchez un geste."
+    },
+    "rechercher": "Rechercher dans l’aide",
+    "exempleRecherche": "Encaisser, rembourser, PIN…",
+    "resultats": "Résultats",
+    "aucunResultat": "Aucun guide ne correspond à « {{recherche}} ».",
+    "roles": {
+      "gestion": "Je gère l’établissement",
+      "caisse": "Je suis en caisse",
+      "cuisine": "Je suis en cuisine",
+      "depannage": "Dépannage"
+    },
+    "rolesPhrase": {
+      "gestion": "Propriétaire ou gérant : mettre en place la carte, l’équipe et les tablettes, puis suivre les ventes.",
+      "caisse": "Caissier ou serveur : prendre une commande, l’envoyer en cuisine, encaisser.",
+      "cuisine": "Lire les bons, commencer un plat, le marquer prêt pour la salle."
+    },
+    "premierJour": {
+      "phrase": "Dans cet ordre, depuis Gestion. Chaque étape ouvre son explication.",
+      "ouvrir": "Voir l’étape {{numero}}"
+    },
+    "erreur": {
+      "titre": "Un message d’erreur ?",
+      "phrase": "Notez le code affiché sous le message et donnez-le au support : il retrouve votre cas en une recherche.",
+      "lien": "Ouvrir le dépannage"
+    },
+    "guides": "Guides",
+    "exemple": "Exemple",
+    "etapes": "Étapes",
+    "bonASavoir": "Bon à savoir",
+    "problemes": "Problèmes fréquents",
+    "suivant": "Guide suivant",
+    "agrandir": "Agrandir la capture : {{legende}}",
+    "introuvable": {
+      "titre": "Ce guide n’existe pas",
+      "phrase": "Il a peut-être été renommé. Retrouvez-le depuis l’accueil de l’aide."
+    }
   }
 }

@@ -1,5 +1,5 @@
 import { mkdirSync } from 'node:fs'
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 // Le backend est neuf à chaque lancement (scripts/e2e-reel.sh) : ces données n'existent pas encore.
 const ADMIN = {
@@ -68,6 +68,41 @@ async function allerA(page: Page, section: string, onglet?: string) {
   const onglets = page.getByRole('navigation', { name: section })
   if (onglet !== undefined && (await onglets.count()) > 0) {
     await onglets.getByRole('link', { name: new RegExp(`^${onglet}`) }).click()
+  }
+}
+
+/** Captures du manuel (/aide), prises seulement par `npm run manuel:captures`. */
+const DOSSIER_MANUEL = process.env.CAPTURES_MANUEL
+
+/**
+ * L'écran tel que le voit l'utilisateur (pas la page entière), l'élément à toucher entouré de la couleur du
+ * focus. En JPEG : une capture d'écran pèse quatre à cinq fois moins qu'en PNG.
+ */
+async function capturerManuel(page: Page, fichier: string, cible?: Locator) {
+  if (DOSSIER_MANUEL === undefined) return
+  // L'anneau de focus du dernier champ saisi se confondrait avec l'élément entouré.
+  await page.evaluate(() => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur()
+  })
+  if (cible !== undefined) {
+    await cible.scrollIntoViewIfNeeded()
+    // Contour à l'intérieur : un parent qui coupe ce qui dépasse ne le masque pas.
+    await cible.evaluate((element: HTMLElement) => {
+      element.style.outline = '3px solid #ED4F28'
+      element.style.outlineOffset = '-3px'
+    })
+  }
+  await page.screenshot({
+    path: `${DOSSIER_MANUEL}/${fichier}.jpg`,
+    type: 'jpeg',
+    quality: 80,
+    animations: 'disabled',
+  })
+  if (cible !== undefined) {
+    await cible.evaluate((element: HTMLElement) => {
+      element.style.outline = ''
+      element.style.outlineOffset = ''
+    })
   }
 }
 
@@ -223,6 +258,11 @@ test('l’admin crée Maquis Chez Tanti, puis Tanti gère ses établissements', 
   await formulaire.getByLabel(/^Nom/).fill('Agbalépédo')
   await formulaire.getByLabel(/^Ville/).fill('Lomé')
   await capturer(page, '05-etablissements-formulaire')
+  await capturerManuel(
+    page,
+    'premier-jour/etablissement',
+    page.getByRole('button', { name: 'Créer l’établissement' }),
+  )
   await page.getByRole('button', { name: 'Créer l’établissement' }).click()
 
   await expect(page.getByRole('status')).toContainText('Agbalépédo a été créé.')
@@ -307,9 +347,19 @@ test('Tanti ajoute son personnel, et la gérante ne voit que le sien', async ({ 
   await formulaire.getByLabel('Donner un accès au back-office').check()
   await formulaire.getByLabel(/^Téléphone/).fill(AFI.telephone)
   await capturer(page, '07-personnel-formulaire')
+  await capturerManuel(
+    page,
+    'premier-jour/employe',
+    page.getByRole('button', { name: 'Enregistrer l’employé' }),
+  )
   await page.getByRole('button', { name: 'Enregistrer l’employé' }).click()
   await expect(page.getByRole('dialog')).toContainText('Mot de passe temporaire du back-office')
   await capturer(page, '08-personnel-codes')
+  await capturerManuel(
+    page,
+    'personnel/codes',
+    page.getByRole('dialog').getByRole('button', { name: 'J’ai noté les codes' }),
+  )
   pinTemporaireAfi = await lireCode(page, 'PIN de caisse temporaire')
   const motDePasseAfi = await noterCode(
     page,
@@ -322,6 +372,11 @@ test('Tanti ajoute son personnel, et la gérante ne voit que le sien', async ({ 
   await page.getByRole('button', { name: 'Plus d’actions pour Kossi Agbeko' }).click()
   await expect(page.getByRole('menuitem', { name: 'Réinitialiser le PIN' })).toBeFocused()
   await capturer(page, '09-personnel-menu-actions')
+  await capturerManuel(
+    page,
+    'personnel/actions',
+    page.getByRole('menuitem', { name: 'Réinitialiser le PIN' }),
+  )
   await page.keyboard.press('Escape')
   // Dernière ligne : le menu sort du tableau au lieu d'y être coupé.
   await page.getByRole('button', { name: 'Plus d’actions pour Afi Mensah' }).click()
@@ -334,6 +389,11 @@ test('Tanti ajoute son personnel, et la gérante ne voit que le sien', async ({ 
   await seConnecter(page, AFI.telephone, motDePasseAfi)
   await expect(page).toHaveURL(/\/changer-mot-de-passe$/)
   await capturer(page, '10-mot-de-passe-obligatoire')
+  await capturerManuel(
+    page,
+    'personnel/mot-de-passe',
+    page.getByRole('button', { name: 'Enregistrer et me reconnecter' }),
+  )
   await remplacerMotDePasse(page, AFI.telephone, motDePasseAfi, AFI.motDePasse)
   await expect(page).toHaveURL(/\/gestion$/)
   await allerA(page, 'Réglages', 'Personnel')
@@ -350,6 +410,11 @@ test('Tanti ajoute son personnel, et la gérante ne voit que le sien', async ({ 
   await page.getByRole('button', { name: 'Plus d’actions pour Sena Gbeasor' }).click()
   await expect(page.getByRole('menuitem', { name: 'Désactiver' })).toHaveCount(0)
   await capturer(page, '11-personnel-employe-partage')
+  await capturerManuel(
+    page,
+    'personnel/vue-gerante',
+    page.getByRole('menuitem', { name: 'Réinitialiser le PIN' }),
+  )
   await page.getByRole('menuitem', { name: 'Réinitialiser le PIN' }).click()
   await page.getByRole('button', { name: 'Générer un nouveau PIN' }).click()
   await expect(page.getByRole('dialog', { name: 'Nouveau PIN de Sena Gbeasor' })).toBeVisible()
@@ -381,6 +446,7 @@ test('Tanti enregistre une tablette avec un code, Kossi y prend la caisse, puis 
   const code = ((await panneau.locator('[data-code]').textContent()) ?? '').replace(/\D/g, '')
   expect(code).toMatch(/^\d{6}$/)
   await capturer(page, '12-tablettes-code')
+  await capturerManuel(page, 'premier-jour/tablette', panneau.locator('[data-code]'))
 
   // Une autre fenêtre joue la tablette : aucune session, seulement le code.
   const contexteTablette = await browser.newContext({ viewport: { width: 1280, height: 800 } })
@@ -388,6 +454,7 @@ test('Tanti enregistre une tablette avec un code, Kossi y prend la caisse, puis 
   await tablette.goto('/caisse')
   await expect(tablette).toHaveURL(/\/enregistrement-tablette$/)
   await capturer(tablette, '13-tablette-enregistrement')
+  await capturerManuel(tablette, 'tablettes/saisie-code')
   await taperCode(tablette, code)
   await expect(tablette).toHaveURL(/\/caisse$/)
   await expect(tablette.getByRole('banner')).toContainText('Bè Kpota, Caisse 1, bar')
@@ -395,11 +462,21 @@ test('Tanti enregistre une tablette avec un code, Kossi y prend la caisse, puis 
     tablette.getByRole('heading', { level: 1, name: 'Qui prend la caisse ?' }),
   ).toBeVisible()
   await capturer(tablette, '14-tablette-qui-prend-la-caisse')
+  await capturerManuel(
+    tablette,
+    'premier-jour/qui-prend-la-caisse',
+    tablette.getByRole('button', { name: /Kossi A\./ }),
+  )
 
   // Kossi tape le PIN temporaire donné par Tanti, puis choisit le sien, tapé deux fois.
   await tablette.getByRole('button', { name: /Kossi A\./ }).click()
   await taperCode(tablette, pinTemporaireKossi)
   await capturer(tablette, '14-tablette-pin')
+  await capturerManuel(
+    tablette,
+    'ouvrir-sa-caisse/pin',
+    tablette.getByRole('button', { name: 'Ouvrir la caisse' }),
+  )
   await tablette.getByRole('button', { name: 'Ouvrir la caisse' }).click()
   await expect(
     tablette.getByRole('heading', { level: 1, name: 'Choisissez votre code personnel' }),
@@ -408,10 +485,20 @@ test('Tanti enregistre une tablette avec un code, Kossi y prend la caisse, puis 
   await tablette.getByRole('button', { name: 'Continuer' }).click()
   await taperCode(tablette, '4827')
   await capturer(tablette, '14-tablette-nouveau-pin')
+  await capturerManuel(
+    tablette,
+    'ouvrir-sa-caisse/nouveau-code',
+    tablette.getByRole('button', { name: 'Enregistrer mon code' }),
+  )
   await tablette.getByRole('button', { name: 'Enregistrer mon code' }).click()
   const barreTablette = tablette.getByRole('banner')
   await expect(barreTablette).toContainText('Kossi A.')
   await capturer(tablette, '14-tablette-caisse-ouverte')
+  await capturerManuel(
+    tablette,
+    'ouvrir-sa-caisse/caisse-ouverte',
+    barreTablette.getByRole('button', { name: 'Changer d’utilisateur' }),
+  )
 
   // Changement d'utilisateur, puis retour de Kossi avec son propre code.
   await barreTablette.getByRole('button', { name: 'Changer d’utilisateur' }).click()
@@ -425,6 +512,11 @@ test('Tanti enregistre une tablette avec un code, Kossi y prend la caisse, puis 
   const tableau = page.getByRole('table', { name: 'Tablettes de l’entreprise' })
   await expect(tableau.getByRole('row', { name: /Caisse 1, bar/ })).toContainText('Active')
   await capturer(page, '15-tablettes-liste')
+  await capturerManuel(
+    page,
+    'tablettes/liste',
+    page.getByRole('button', { name: 'Plus d’actions pour Caisse 1, bar' }),
+  )
 
   // Révoquée, la tablette revient à l'écran d'enregistrement.
   await page.getByRole('button', { name: 'Plus d’actions pour Caisse 1, bar' }).click()
@@ -447,6 +539,7 @@ test('Tanti compose sa carte : taxe, catégories, produits et changement de prix
   const taxes = page.getByRole('table', { name: 'Taxes de l’entreprise' })
   await expect(taxes.getByRole('row', { name: /TVA/ })).toContainText('18 %')
   await capturer(page, '16-taxes')
+  await capturerManuel(page, 'premier-jour/taxes', taxes.getByRole('row', { name: /TVA/ }))
 
   // Deux catégories, la seconde remontée en tête.
   await allerA(page, 'Carte', 'Produits')
@@ -473,6 +566,11 @@ test('Tanti compose sa carte : taxe, catégories, produits et changement de prix
   await dialogue.getByRole('button', { name: 'Monter Bières' }).click()
   await expect(dialogue.getByRole('listitem').first()).toContainText('Bières')
   await capturer(page, '17-categories')
+  await capturerManuel(
+    page,
+    'premier-jour/categories',
+    dialogue.getByRole('list', { name: 'Catégories' }),
+  )
   await dialogue.getByRole('button', { name: 'Fermer' }).click()
 
   // Une boisson, suivie en stock d'office, avec la TVA comprise calculée.
@@ -484,6 +582,11 @@ test('Tanti compose sa carte : taxe, catégories, produits et changement de prix
   await expect(page.getByText('Dont TVA : 153 F par unité.')).toBeVisible()
   await expect(page.getByRole('checkbox', { name: /Suivre le stock/ })).toBeChecked()
   await capturer(page, '18-fiche-produit')
+  await capturerManuel(
+    page,
+    'premier-jour/produit',
+    page.getByRole('button', { name: 'Enregistrer le produit' }),
+  )
   await page.getByRole('button', { name: 'Enregistrer le produit' }).click()
   await expect(page.getByText('« Flag 65 cl » est enregistré.')).toBeVisible()
 
@@ -512,10 +615,20 @@ test('Tanti fixe un prix à Bè Kpota, puis la gérante déclare une rupture dep
   const dialogue = page.getByRole('dialog', { name: 'Prix de « Flag 65 cl » à Bè Kpota' })
   await dialogue.getByLabel(/^Prix TTC à Bè Kpota/).fill('1200')
   await capturer(page, '20-prix-etablissement')
+  await capturerManuel(
+    page,
+    'la-carte/prix-etablissement',
+    dialogue.getByRole('button', { name: 'Enregistrer le prix' }),
+  )
   await dialogue.getByRole('button', { name: 'Enregistrer le prix' }).click()
   const carte = page.getByRole('table', { name: 'Carte de l’établissement' })
   await expect(carte.getByRole('row', { name: /Flag 65 cl/ })).toContainText('Prix propre')
   await capturer(page, '21-carte-etablissement')
+  await capturerManuel(
+    page,
+    'la-carte/carte-etablissement',
+    carte.getByRole('row', { name: /Flag 65 cl/ }),
+  )
   await seDeconnecter(page)
 
   // La gérante, sur son téléphone : seule la rupture lui est proposée.
@@ -542,6 +655,7 @@ test('La gérante compte le stock de Bè Kpota, réceptionne une livraison et d�
   const stock = page.getByRole('table', { name: 'Stock de Bè Kpota' })
   await expect(stock.getByRole('row', { name: /Flag 65 cl/ })).toContainText('À compter')
   await capturer(page, '60-stock-a-compter')
+  await capturerManuel(page, 'stock/a-compter', stock.getByRole('row', { name: /Flag 65 cl/ }))
 
   // Premier comptage : il devient le stock, sans écart à justifier.
   await page.getByRole('link', { name: 'Faire l’inventaire' }).click()
@@ -561,6 +675,11 @@ test('La gérante compte le stock de Bè Kpota, réceptionne une livraison et d�
   await page.getByRole('textbox', { name: 'Quantité de Flag 65 cl' }).fill('24')
   await page.getByRole('textbox', { name: 'Coût unitaire de Flag 65 cl' }).fill('650')
   await capturer(page, '61-stock-reception')
+  await capturerManuel(
+    page,
+    'stock/reception',
+    page.getByRole('button', { name: 'Enregistrer : 1 produit, 24 unités' }),
+  )
   await page.getByRole('button', { name: 'Enregistrer : 1 produit, 24 unités' }).click()
   await expect(page.getByText('Réception enregistrée : 1 produit, 24 unités.')).toBeVisible()
   await expect(stock.getByRole('row', { name: /Flag 65 cl/ })).toContainText('36')
@@ -578,6 +697,11 @@ test('La gérante compte le stock de Bè Kpota, réceptionne une livraison et d�
   await perte.getByRole('textbox', { name: /^Quantité/ }).fill('2')
   await perte.getByRole('radio', { name: 'Casse' }).click()
   await capturer(page, '62-stock-perte')
+  await capturerManuel(
+    page,
+    'stock/perte',
+    perte.getByRole('button', { name: 'Retirer 2 du stock' }),
+  )
   await perte.getByRole('button', { name: 'Retirer 2 du stock' }).click()
   await expect(page.getByText('2 Flag 65 cl retirés du stock.')).toBeVisible()
   await capturer(page, '63-stock')
@@ -592,6 +716,11 @@ test('La gérante compte le stock de Bè Kpota, réceptionne une livraison et d�
   await expect(page.getByRole('button', { name: 'Valider l’inventaire' })).toBeDisabled()
   await ecarts.getByRole('combobox', { name: 'Motif de l’écart : Flag 65 cl' }).selectOption('VOL')
   await capturer(page, '65-inventaire-ecarts')
+  await capturerManuel(
+    page,
+    'stock/inventaire-ecarts',
+    ecarts.getByRole('combobox', { name: 'Motif de l’écart : Flag 65 cl' }),
+  )
   await page.getByRole('button', { name: 'Valider l’inventaire' }).click()
   await expect(page.getByText('Inventaire enregistré : 1 écart.')).toBeVisible()
 
@@ -601,6 +730,7 @@ test('La gérante compte le stock de Bè Kpota, réceptionne une livraison et d�
   await expect(historique.getByRole('listitem')).toHaveCount(4)
   await expect(historique).toContainText('BL 2240')
   await capturer(page, '66-stock-historique')
+  await capturerManuel(page, 'stock/historique')
   await historique.getByRole('button', { name: 'Fermer' }).click()
   await page.setViewportSize({ width: 390, height: 844 })
   await capturer(page, '63-stock-telephone')
@@ -634,6 +764,11 @@ test('Tanti retrouve dans l’activité les changements de la journée et l’hi
   await expect(historique.getByRole('listitem')).toHaveCount(2)
   await expect(historique).toContainText('Bè Kpota')
   await capturer(page, '25-historique-prix')
+  await capturerManuel(
+    page,
+    'la-carte/historique-prix',
+    historique.getByRole('list', { name: 'Changements de prix' }),
+  )
   await page.setViewportSize({ width: 390, height: 844 })
   await historique.getByRole('button', { name: 'Fermer' }).click()
   await allerA(page, 'Activité')
@@ -663,6 +798,11 @@ test('La gérante crée les salles de Bè Kpota et leurs tables', async ({ page 
   await lot.getByLabel(/^Nombre/).fill('8')
   await expect(lot.getByRole('status')).toContainText('T1, T2, T3, T4, T5, T6, T7, T8')
   await capturer(page, '26-tables-en-lot')
+  await capturerManuel(
+    page,
+    'premier-jour/tables',
+    lot.getByRole('button', { name: 'Ajouter 8 tables' }),
+  )
   await lot.getByRole('button', { name: 'Ajouter 8 tables' }).click()
   const grille = page.getByRole('list', { name: 'Tables de Terrasse' })
   await expect(grille.getByRole('listitem')).toHaveCount(8)
@@ -675,6 +815,7 @@ test('La gérante crée les salles de Bè Kpota et leurs tables', async ({ page 
   await expect(grille.getByRole('listitem', { name: 'T7' })).toContainText('8 places')
   await expect(onglets.getByRole('tab').first()).toContainText('Terrasse')
   await capturer(page, '27-salles-et-tables')
+  await capturerManuel(page, 'salles-et-tables/plan', grille.getByRole('listitem', { name: 'T7' }))
   await page.setViewportSize({ width: 390, height: 844 })
   await capturer(page, '27-salles-et-tables-telephone')
 })
@@ -735,6 +876,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   const ouverture = tablette.getByRole('dialog', { name: 'Ouvrir une note sur T4' })
   await ouverture.getByRole('button', { name: 'Un couvert de plus' }).click()
   await capturer(tablette, '28-ouvrir-une-note')
+  await capturerManuel(
+    tablette,
+    'prendre-une-commande/ouvrir',
+    ouverture.getByRole('button', { name: 'Ouvrir la note' }),
+  )
   await ouverture.getByRole('button', { name: 'Ouvrir la note' }).click()
 
   const note = tablette.getByRole('region', { name: 'Note en cours' })
@@ -758,6 +904,16 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await expect(note).toContainText('« sans piment »')
   await expect(note).toContainText('2 articles')
   await capturer(tablette, '29-note-en-cours')
+  await capturerManuel(
+    tablette,
+    'prendre-une-commande/ajouter',
+    produits.getByRole('button', { name: /Poulet braisé/ }),
+  )
+  await capturerManuel(
+    tablette,
+    'prendre-une-commande/envoyer',
+    note.getByRole('button', { name: 'Envoyer 2 articles en préparation' }),
+  )
 
   // Tout part en préparation ; un poulet non servi est annulé, validé par le PIN de la gérante.
   await note.getByRole('button', { name: 'Envoyer 2 articles en préparation' }).click()
@@ -770,9 +926,19 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   const annulation = tablette.getByRole('dialog', { name: 'Annuler Poulet braisé ?' })
   await annulation.getByRole('radio', { name: 'Non servie (trop d’attente)' }).check()
   await capturer(tablette, '30-annuler-un-article')
+  await capturerManuel(
+    tablette,
+    'remises-et-annulations/annuler-article',
+    annulation.getByRole('button', { name: 'Annuler 1 article' }),
+  )
   await annulation.getByRole('button', { name: 'Annuler 1 article' }).click()
   const validation = tablette.getByRole('dialog', { name: 'Annuler 1 Poulet braisé ?' })
   await validation.getByRole('button', { name: /Afi M\./ }).click()
+  await capturerManuel(
+    tablette,
+    'remises-et-annulations/validation-gerante',
+    validation.getByRole('button', { name: 'Valider' }),
+  )
   // Un code erroné est refusé dans le dialogue : la caisse de Kossi reste ouverte.
   await taperCode(tablette, '1357')
   await validation.getByRole('button', { name: 'Valider' }).click()
@@ -802,11 +968,21 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await tablette.getByRole('menuitem', { name: 'Addition demandée' }).click()
   await expect(note).toContainText('Addition demandée à')
   await capturer(tablette, '34-addition-demandee')
+  await capturerManuel(
+    tablette,
+    'remises-et-annulations/addition-demandee',
+    note.getByText(/^Addition demandée à/),
+  )
   await note.getByRole('button', { name: 'Actions sur la note' }).click()
   await tablette.getByRole('menuitem', { name: 'Transférer vers une autre table' }).click()
   const transfert = tablette.getByRole('dialog', { name: 'Transférer la note de T4' })
   await transfert.getByRole('button', { name: /^T5/ }).click()
   await capturer(tablette, '35-transfert')
+  await capturerManuel(
+    tablette,
+    'remises-et-annulations/transfert',
+    transfert.getByRole('button', { name: 'Transférer vers T5' }),
+  )
   await transfert.getByRole('button', { name: 'Transférer vers T5' }).click()
   await expect(note.getByRole('heading', { name: /T5/ })).toBeVisible()
   await note.getByRole('button', { name: 'Plan de salle' }).click()
@@ -828,6 +1004,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await remise.getByLabel(/^Montant de la remise/).fill('500')
   await remise.getByRole('radio', { name: 'Réclamation' }).check()
   await capturer(tablette, '37-remise')
+  await capturerManuel(
+    tablette,
+    'remises-et-annulations/remise',
+    remise.getByRole('button', { name: /^Appliquer/ }),
+  )
   await remise.getByRole('button', { name: /^Appliquer/ }).click()
   const validationRemise = tablette.getByRole('dialog', {
     name: /^Remise de 500\sF sur Poulet braisé/,
@@ -855,6 +1036,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   const annulationNote = tablette.getByRole('dialog', { name: 'Annuler la note de T5 ?' })
   await annulationNote.getByRole('radio', { name: 'Le client est parti' }).check()
   await capturer(tablette, '39-annuler-la-note')
+  await capturerManuel(
+    tablette,
+    'remises-et-annulations/annuler-la-note',
+    annulationNote.getByRole('button', { name: 'Annuler la note' }),
+  )
   await annulationNote.getByRole('button', { name: 'Annuler la note' }).click()
   const validationNote = tablette.getByRole('dialog', { name: 'Annuler la note de T5 ?' })
   await validationNote.getByRole('button', { name: /Afi M\./ }).click()
@@ -878,6 +1064,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await tablette.getByRole('button', { name: 'Ouvrir la caisse' }).click()
   // La tablette reprend là où elle était : la note n°3, désormais encaissable.
   await expect(note.getByRole('heading', { name: /n°3/ })).toBeVisible()
+  await capturerManuel(tablette, 'encaisser/note', note.getByRole('button', { name: /Encaisser/ }))
   await note.getByRole('button', { name: /Encaisser/ }).click()
   // Première ouverture : la gérante compte le fond, billet par billet.
   await tablette.getByRole('textbox', { name: /^Nombre de billets de 10\s000\sF$/ }).fill('1')
@@ -887,6 +1074,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await tablette.getByRole('textbox', { name: /^Nombre de pièces de 500\sF$/ }).fill('2')
   await expect(tablette.getByRole('status', { name: 'Espèces comptées' })).toContainText('20 000 F')
   await capturer(tablette, '40b-ouverture-comptage')
+  await capturerManuel(
+    tablette,
+    'encaisser/fond-de-caisse',
+    tablette.getByRole('button', { name: /^Ouvrir la caisse avec 20\s000/ }),
+  )
   await tablette.getByRole('button', { name: /^Ouvrir la caisse avec 20\s000/ }).click()
   const modes = tablette.getByRole('radiogroup', { name: 'Mode de paiement' })
   await modes.getByRole('radio', { name: /Mobile Money/ }).click()
@@ -894,6 +1086,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await tablette.getByLabel(/^Montant payé/).fill('2000')
   await tablette.getByLabel(/^Référence de la transaction/).fill('7F3K29')
   await capturer(tablette, '41-encaisser-mobile-money')
+  await capturerManuel(
+    tablette,
+    'encaisser/mobile-money',
+    tablette.getByRole('button', { name: /^Valider 2\s000\sF en Mobile Money/ }),
+  )
   await tablette.getByRole('button', { name: /^Valider 2\s000\sF en Mobile Money/ }).click()
   const recap = tablette.getByRole('region', { name: 'Note à encaisser' })
   await expect(recap).toContainText('Reste à payer2 500 F')
@@ -901,11 +1098,21 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await tablette.getByLabel(/^Espèces reçues/).fill('5000')
   await expect(tablette.getByRole('status', { name: 'Monnaie à rendre' })).toContainText('2 500 F')
   await capturer(tablette, '42-encaisser-especes')
+  await capturerManuel(
+    tablette,
+    'encaisser/especes',
+    tablette.getByRole('status', { name: 'Monnaie à rendre' }),
+  )
   await tablette.getByRole('button', { name: /^Valider 2\s500\sF en espèces/ }).click()
   await expect(tablette.getByRole('heading', { name: 'n°3 est encaissée' })).toBeVisible()
   // Le reçu est numéroté dès l'encaissement ; on l'imprime, sans ouvrir la boîte d'impression du navigateur.
   await expect(tablette.getByRole('heading', { name: /^Reçu n° / })).toBeVisible()
   await capturer(tablette, '43-note-encaissee')
+  await capturerManuel(
+    tablette,
+    'encaisser/recu',
+    tablette.getByRole('button', { name: 'Imprimer le reçu' }),
+  )
   await tablette.setViewportSize({ width: 390, height: 844 })
   await capturer(tablette, '43-note-encaissee-telephone')
   await tablette.setViewportSize({ width: 1280, height: 800 })
@@ -986,6 +1193,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await expect(tablette.getByRole('status', { name: 'Sélection' })).toContainText('4 500 F')
   await modes.getByRole('radio', { name: /Carte/ }).click()
   await capturer(tablette, '55-partage-par-articles')
+  await capturerManuel(
+    tablette,
+    'partager-l-addition/par-articles',
+    tablette.getByRole('button', { name: /^Valider 4\s500\sF en carte/ }),
+  )
   await tablette.getByRole('button', { name: /^Valider 4\s500\sF en carte/ }).click()
   await expect(recap).toContainText('1× Poulet braisé, carte')
   await partage.getByRole('radio', { name: /Parts égales/ }).click()
@@ -994,6 +1206,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await expect(parts).toContainText('Part 2À payer4 500')
   await modes.getByRole('radio', { name: /Carte/ }).click()
   await capturer(tablette, '56-partage-parts-egales')
+  await capturerManuel(tablette, 'partager-l-addition/parts-egales', parts)
   await tablette.getByRole('button', { name: /^Valider 4\s500\sF en carte/ }).click()
   await expect(recap).toContainText('Part 1, carte')
   await modes.getByRole('radio', { name: /Mobile Money/ }).click()
@@ -1016,6 +1229,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     .click()
   await expect(tablette.getByRole('button', { name: 'Rembourser' })).toBeVisible()
   await capturer(tablette, '57-notes-encaissees')
+  await capturerManuel(
+    tablette,
+    'rembourser/notes-encaissees',
+    tablette.getByRole('button', { name: 'Rembourser' }),
+  )
   // Le client revient chercher son reçu : la réimpression est un duplicata, comptée côté serveur.
   await tablette.getByRole('button', { name: 'Réimprimer le reçu' }).click()
   await expect.poll(() => impressions(tablette)).toBe(2)
@@ -1032,6 +1250,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   )
   await tablette.getByRole('radio', { name: 'Article non conforme' }).click()
   await capturer(tablette, '58-rembourser')
+  await capturerManuel(
+    tablette,
+    'rembourser/rembourser',
+    tablette.getByRole('region', { name: 'Rendre l’argent en' }),
+  )
   await tablette.setViewportSize({ width: 390, height: 844 })
   await capturer(tablette, '58-rembourser-telephone')
   await tablette.setViewportSize({ width: 1280, height: 800 })
@@ -1040,6 +1263,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   const fait = tablette.getByRole('region', { name: 'Remboursement fait' })
   await expect(fait).toContainText(/Avoir BE-AV-\d{6}/)
   await capturer(tablette, '59-avoir')
+  await capturerManuel(
+    tablette,
+    'rembourser/avoir',
+    fait.getByRole('button', { name: 'Imprimer l’avoir' }),
+  )
   await fait.getByRole('button', { name: 'Imprimer l’avoir' }).click()
   await expect.poll(() => impressions(tablette)).toBe(3)
   await fait.getByRole('button', { name: 'Retour aux notes' }).click()
@@ -1047,6 +1275,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     '1× Poulet braisé, carte',
   )
   await capturer(tablette, '59-note-remboursee')
+  await capturerManuel(
+    tablette,
+    'rembourser/note-remboursee',
+    tablette.getByRole('region', { name: /, T6$/ }),
+  )
   // Le reçu en ligne de T6, rouvert par le client, mentionne le remboursement ; le reçu lui-même ne change pas.
   await client.goto(recuT6)
   await expect(client.getByRole('article', { name: /^Reçu BE-/ })).toContainText(
@@ -1069,6 +1302,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   const flag = carte.getByRole('button', { name: /Flag 65 cl/ })
   await expect(flag).toContainText('33 restants')
   await capturer(tablette, '67-tuile-stock-faible')
+  await capturerManuel(tablette, 'stock/tuile-stock-faible', flag)
   await flag.click()
   await flag.click()
   // Les bières se servent au bar : rien ne part en cuisine, la caisse dit « Valider ».
@@ -1116,6 +1350,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await nouveauClient.getByLabel(/^Plafond/).fill('1000')
   await nouveauClient.getByLabel(/^Note interne/).fill('Paie chaque fin de mois.')
   await capturer(page, '70-ardoise-nouveau-client')
+  await capturerManuel(
+    page,
+    'ardoise/nouveau-client',
+    nouveauClient.getByRole('button', { name: 'Ouvrir l’ardoise' }),
+  )
   await nouveauClient.getByRole('button', { name: 'Ouvrir l’ardoise' }).click()
   await expect(page.getByText('Ardoise ouverte pour Komlan D.')).toBeVisible()
 
@@ -1130,6 +1369,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     .click()
   await expect(tablette.getByRole('alert')).toContainText('Plafond dépassé de 200 F')
   await capturer(tablette, '71-encaisser-ardoise')
+  await capturerManuel(
+    tablette,
+    'ardoise/encaisser',
+    tablette.getByRole('button', { name: /^Dépasser le plafond/ }),
+  )
   await tablette
     .getByRole('button', { name: /^Dépasser le plafond : 1\s200\sF sur l’ardoise de Komlan D\./ })
     .click()
@@ -1145,9 +1389,15 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     'Vente à crédit',
   )
   await capturer(page, '72-fiche-client')
+  await capturerManuel(page, 'ardoise/fiche-client', ficheKomlan)
   await page.getByRole('link', { name: 'Ardoises' }).last().click()
   await expect(page.getByRole('region', { name: 'Résumé des ardoises' })).toContainText('1 200 F')
   await capturer(page, '73-ardoises')
+  await capturerManuel(
+    page,
+    'ardoise/ardoises',
+    page.getByRole('region', { name: 'Résumé des ardoises' }),
+  )
   await page.setViewportSize({ width: 390, height: 844 })
   await capturer(page, '73-ardoises-telephone')
   await page.setViewportSize({ width: 1280, height: 800 })
@@ -1164,6 +1414,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await reglement.getByLabel(/^Espèces reçues/).fill('2000')
   await expect(reglement).toContainText('Monnaie à rendre : 800 F')
   await capturer(tablette, '74-reglement-ardoise')
+  await capturerManuel(
+    tablette,
+    'ardoise/reglement',
+    reglement.getByRole('button', { name: /^Encaisser 1\s200\sF en espèces/ }),
+  )
   await reglement.getByRole('button', { name: /^Encaisser 1\s200\sF en espèces/ }).click()
   await expect(
     tablette.getByText('Règlement de 1 200 F encaissé. L’ardoise de Komlan D. est soldée.'),
@@ -1200,10 +1455,16 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await mouvement.getByRole('textbox', { name: /^Montant/ }).fill('10000')
   await mouvement.getByRole('textbox', { name: /^Motif/ }).fill('Vers le coffre')
   await capturer(tablette, '47-mouvement-de-caisse')
+  await capturerManuel(
+    tablette,
+    'cloturer-la-caisse/mouvement',
+    mouvement.getByRole('button', { name: /^Sortir 10\s000\sF du tiroir/ }),
+  )
   await mouvement.getByRole('button', { name: /^Sortir 10\s000\sF du tiroir/ }).click()
   await expect(ventes).toContainText('RetraitVers le coffre')
   await expect(especes).toContainText('Attendu13 700 F')
   await capturer(tablette, '48-caisse-de-la-tablette')
+  await capturerManuel(tablette, 'cloturer-la-caisse/caisse', especes)
   await tablette.setViewportSize({ width: 390, height: 844 })
   await capturer(tablette, '48-caisse-de-la-tablette-telephone')
   await tablette.setViewportSize({ width: 1280, height: 800 })
@@ -1216,6 +1477,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await tablette.getByRole('button', { name: /^Un de plus : 200\sF$/ }).click()
   await expect(tablette.getByRole('status', { name: 'Espèces comptées' })).toContainText('13 200 F')
   await capturer(tablette, '49-cloture-comptage')
+  await capturerManuel(
+    tablette,
+    'cloturer-la-caisse/comptage',
+    tablette.getByRole('button', { name: 'Valider le comptage' }),
+  )
   await tablette.setViewportSize({ width: 390, height: 844 })
   await capturer(tablette, '49-cloture-comptage-telephone')
   await tablette.setViewportSize({ width: 1280, height: 800 })
@@ -1228,6 +1494,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     .fill('Monnaie rendue en trop')
   await expect(tablette.getByRole('button', { name: 'Clôturer la caisse' })).toBeEnabled()
   await capturer(tablette, '50-cloture-ecart')
+  await capturerManuel(tablette, 'cloturer-la-caisse/ecart', ecart)
   await tablette.getByRole('button', { name: 'Clôturer la caisse' }).click()
   const z = tablette.getByRole('region', { name: 'Rapport Z n°1' })
   await expect(z).toContainText('Écart−500')
@@ -1238,6 +1505,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await expect(z).toContainText('Règlements d’ardoise1 200')
   await expect(z).toContainText('Ventes nettes14 700')
   await capturer(tablette, '51-rapport-z')
+  await capturerManuel(tablette, 'premier-jour/rapport-z')
   await tablette.setViewportSize({ width: 390, height: 844 })
   await capturer(tablette, '51-rapport-z-telephone')
   await tablette.setViewportSize({ width: 1280, height: 800 })
@@ -1250,6 +1518,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await tablette.getByRole('textbox', { name: /^Nombre de billets de 10\s000\sF$/ }).fill('1')
   await tablette.getByRole('button', { name: /^Un de plus : 5\s000\sF$/ }).click()
   await capturer(tablette, '52-reouverture-comptage')
+  await capturerManuel(
+    tablette,
+    'cloturer-la-caisse/reouverture',
+    tablette.getByRole('button', { name: 'Valider le comptage' }),
+  )
   await tablette.setViewportSize({ width: 390, height: 844 })
   await capturer(tablette, '52-reouverture-comptage-telephone')
   await tablette.setViewportSize({ width: 1280, height: 800 })
@@ -1296,6 +1569,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     'Afi M. a dépassé le plafond de l’ardoise de Komlan D. à Bè Kpota',
   )
   await capturer(page, '40-activite-caisse')
+  await capturerManuel(
+    page,
+    'suivre-les-ventes/activite',
+    page.getByRole('button', { name: 'Critiques seulement' }),
+  )
 
   // Le soir, Tanti regarde ses ventes de la semaine, puis ses caisses : l'écart du Z n°1 ressort tout de suite.
   await allerA(page, 'Ventes', 'Rapports')
@@ -1311,10 +1589,20 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await expect(vigilance).toContainText(/vendus sur l’ardoise/)
   await expect(page.getByRole('table', { name: 'Par produit' })).toContainText('Poulet braisé')
   await capturer(page, '80-ventes')
+  await capturerManuel(
+    page,
+    'suivre-les-ventes/ventes',
+    page.getByRole('group', { name: 'Période' }),
+  )
   await page.getByRole('button', { name: 'Par heure' }).click()
   await expect(page.getByRole('list', { name: 'Chiffre d’affaires par heure' })).toBeVisible()
   await page.getByRole('button', { name: 'Catégories' }).click()
   await capturer(page, '80-ventes-heures-categories')
+  await capturerManuel(
+    page,
+    'suivre-les-ventes/categories',
+    page.getByRole('button', { name: 'Catégories' }),
+  )
   await page.setViewportSize({ width: 390, height: 844 })
   await capturer(page, '80-ventes-telephone')
   await page.setViewportSize({ width: 1280, height: 800 })
@@ -1324,6 +1612,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await expect(listeCaisses.getByRole('row', { name: /Z n°1/ })).toContainText('−500')
   await expect(listeCaisses.getByRole('row', { name: /En cours/ })).toBeVisible()
   await capturer(page, '81-caisses')
+  await capturerManuel(
+    page,
+    'suivre-les-ventes/caisses',
+    listeCaisses.getByRole('row', { name: /Z n°1/ }),
+  )
   await page.setViewportSize({ width: 390, height: 844 })
   await capturer(page, '81-caisses-telephone')
   await page.setViewportSize({ width: 1280, height: 800 })
@@ -1336,6 +1629,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     'Article non conforme',
   )
   await capturer(page, '82-detail-z')
+  await capturerManuel(
+    page,
+    'suivre-les-ventes/detail-z',
+    page.getByRole('button', { name: 'Imprimer le Z' }),
+  )
   await page.setViewportSize({ width: 390, height: 844 })
   await capturer(page, '82-detail-z-telephone')
   await page.setViewportSize({ width: 1280, height: 800 })
@@ -1350,6 +1648,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     /Écart à la clôture : −500/,
   )
   await capturer(page, '83-tableau-de-bord')
+  await capturerManuel(
+    page,
+    'suivre-les-ventes/tableau-de-bord',
+    page.getByRole('region', { name: 'À traiter' }),
+  )
   await page.setViewportSize({ width: 390, height: 844 })
   await capturer(page, '83-tableau-de-bord-telephone')
 })
@@ -1381,6 +1684,11 @@ test('La cuisine de Bè Kpota reçoit les bons, les commence et les marque prêt
   // Une tablette de la cuisine, enregistrée comme écran cuisine : pas de PIN, elle va droit aux bons.
   const codeCuisine = await codeDeTablette(page, 'Cuisine', 'Écran cuisine')
   await capturer(page, '84-tablette-cuisine-code')
+  await capturerManuel(
+    page,
+    'tablettes/ecran-cuisine',
+    page.getByRole('region', { name: 'Code d’enregistrement' }).locator('[data-code]'),
+  )
   const contexteCuisine = await browser.newContext({ viewport: { width: 1280, height: 960 } })
   const cuisine = await contexteCuisine.newPage()
   await cuisine.goto('/caisse')
@@ -1428,9 +1736,19 @@ test('La cuisine de Bè Kpota reçoit les bons, les commence et les marque prêt
   await expect(bon).toContainText('Poulet braisé', { timeout: 10_000 })
   await expect(bon).toContainText('Kossi A.')
   await capturer(cuisine, '85-cuisine-bons')
+  await capturerManuel(
+    cuisine,
+    'ecran-cuisine/bons',
+    bon.getByRole('button', { name: 'Commencer' }),
+  )
   await bon.getByRole('button', { name: 'Commencer' }).click()
   await expect(bon).toContainText('En préparation')
   await capturer(cuisine, '86-cuisine-en-preparation')
+  await capturerManuel(
+    cuisine,
+    'ecran-cuisine/en-preparation',
+    bon.getByRole('button', { name: 'Tout est prêt' }),
+  )
   await expect(tuile).toContainText('En préparation', { timeout: 20_000 })
   await capturer(caisse, '87-plan-en-preparation')
 
@@ -1442,9 +1760,19 @@ test('La cuisine de Bè Kpota reçoit les bons, les commence et les marque prêt
     caisse.getByRole('list', { name: 'À servir' }).getByRole('link').first(),
   ).toContainText('2 prêts')
   await capturer(caisse, '88-plan-prets-a-servir')
+  await capturerManuel(
+    caisse,
+    'prendre-une-commande/servir',
+    caisse.getByRole('list', { name: 'À servir' }),
+  )
   await cuisine.getByRole('tab', { name: /Prêts/ }).click()
   await expect(bon.getByRole('button', { name: 'Rappeler' })).toBeVisible()
   await capturer(cuisine, '89-cuisine-prets')
+  await capturerManuel(
+    cuisine,
+    'ecran-cuisine/prets',
+    bon.getByRole('button', { name: 'Rappeler' }),
+  )
   await cuisine.setViewportSize({ width: 390, height: 844 })
   await cuisine.getByRole('tab', { name: /À préparer/ }).click()
   await capturer(cuisine, '85-cuisine-telephone')
@@ -1513,6 +1841,11 @@ test('Tanti crée des options, les attache aux côtelettes, et Kossi les choisit
     }
     if (nom === 'Suppléments') {
       await capturer(page, '90-groupe-options')
+      await capturerManuel(
+        page,
+        'options-et-variantes/groupe',
+        dialogue.getByRole('radio', { name: /Plusieurs choix/ }),
+      )
     }
     await dialogue.getByRole('button', { name: 'Créer le groupe' }).click()
     await expect(page.getByText(`Le groupe « ${nom} » est créé.`)).toBeVisible()
@@ -1522,6 +1855,11 @@ test('Tanti crée des options, les attache aux côtelettes, et Kossi les choisit
     'Choix unique, obligatoire',
   )
   await capturer(page, '90-options')
+  await capturerManuel(
+    page,
+    'options-et-variantes/groupes',
+    groupes.getByRole('row', { name: /Cuisson/ }),
+  )
 
   // Sur la fiche des côtelettes, dans l'ordre de la caisse.
   await allerA(page, 'Carte', 'Produits')
@@ -1532,6 +1870,7 @@ test('Tanti crée des options, les attache aux côtelettes, et Kossi les choisit
     await expect(section.getByRole('list')).toContainText(groupe)
   }
   await capturer(page, '91-fiche-options')
+  await capturerManuel(page, 'options-et-variantes/fiche-options', section)
 
   // Deux variantes : 2 ou 4 côtelettes, chacune à son prix.
   const variantes = page.getByRole('region', { name: 'Variantes' })
@@ -1545,6 +1884,7 @@ test('Tanti crée des options, les attache aux côtelettes, et Kossi les choisit
     await expect(variantes.getByRole('row', { name: new RegExp(libelle) })).toBeVisible()
   }
   await capturer(page, '91-fiche-variantes')
+  await capturerManuel(page, 'options-et-variantes/variantes', variantes)
 
   // Kossi, sur une nouvelle caisse : la cuisson est demandée avant l'ajout, le supplément s'ajoute au prix.
   await allerA(page, 'Réglages', 'Tablettes')
@@ -1565,6 +1905,13 @@ test('Tanti crée des options, les attache aux côtelettes, et Kossi les choisit
   await tuile.click()
   // D'abord la variante, puis les options du produit.
   await capturer(caisse, '92-caisse-variantes')
+  await capturerManuel(
+    caisse,
+    'options-et-variantes/caisse',
+    caisse
+      .getByRole('dialog', { name: 'Côtelettes d’agneau' })
+      .getByRole('button', { name: /4 pièces/ }),
+  )
   await caisse
     .getByRole('dialog', { name: 'Côtelettes d’agneau' })
     .getByRole('button', { name: /4 pièces/ })
@@ -1576,6 +1923,11 @@ test('Tanti crée des options, les attache aux côtelettes, et Kossi les choisit
   await panneau.getByRole('button', { name: /Œuf/ }).click()
   await expect(panneau.getByRole('button', { name: /^Ajouter/ })).toContainText('9 200')
   await capturer(caisse, '92-caisse-options')
+  await capturerManuel(
+    caisse,
+    'prendre-une-commande/options',
+    panneau.getByRole('button', { name: /^Ajouter/ }),
+  )
   await caisse.setViewportSize({ width: 390, height: 844 })
   await capturer(caisse, '92-caisse-options-telephone')
   await caisse.setViewportSize({ width: 1280, height: 800 })

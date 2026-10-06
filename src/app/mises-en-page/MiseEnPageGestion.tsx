@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { clsx } from 'clsx'
-import { Menu, X } from 'lucide-react'
+import { CircleHelp, Menu, X } from 'lucide-react'
 import { useEffect, useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSession } from '../../partage/auth/useSession'
@@ -10,6 +10,7 @@ import { AlerteErreur } from '../../partage/ui/Alerte'
 import { BarreHaute } from '../../partage/ui/BarreHaute'
 import { requeteARelancer } from '../../fonctionnalites/ardoise/requetes'
 import { requeteStockATraiter } from '../../fonctionnalites/stock/requetes'
+import { guideDe } from '../../fonctionnalites/manuel/guides'
 import { MenuCompte } from './MenuCompte'
 import {
   ongletDe,
@@ -142,6 +143,17 @@ export function MiseEnPageGestion() {
                 </li>
               )
             })}
+            {/* L'aide est à part des sections de travail : elle ouvre le guide de la page en cours. */}
+            <li className="mt-2 border-t border-trait pt-2">
+              <Link
+                to="/aide/$guide"
+                params={{ guide: guideDe(chemin) }}
+                className="flex min-h-cible-min items-center gap-3 whitespace-nowrap rounded-normal px-3 text-corps text-encre hover:bg-fond"
+              >
+                <CircleHelp aria-hidden="true" size={20} />
+                {t('aide.lien')}
+              </Link>
+            </li>
           </ul>
         </nav>
         <main className="flex min-w-0 flex-1 flex-col gap-4 p-4 md:p-6">
