@@ -31,7 +31,8 @@ export const MOTIFS_REMISE: MotifRemise[] = [
 const TAUX_RAPIDES = [500, 1000, 1500, 2000]
 const PREFIXE_MOTIFS = 'caisse.motifsRemise'
 
-export type ActionLigne = 'consigne' | 'remise' | 'retirerRemise' | 'offrir' | 'retirer' | 'annuler'
+export type ActionLigne =
+  'options' | 'consigne' | 'remise' | 'retirerRemise' | 'offrir' | 'retirer' | 'annuler'
 
 /** « 10 % » ou « 500 F » : ce que la remise demandée retire. */
 export function libelleRemise(demande: DemandeRemise, devise: Devise): string {
@@ -62,12 +63,18 @@ interface ActionProposee {
 function actionsDeLigne(
   ligne: LigneNote,
   droits: ReturnType<typeof droitsDe>,
+  avecOptions: boolean,
   t: TFunction,
 ): ActionProposee[] {
   const brouillon = ligne.statut === 'BROUILLON'
   const validation = t('caisse.ligne.validation')
   const consigne: ActionProposee[] = brouillon
-    ? [{ action: 'consigne', libelle: t('caisse.ligne.consigne') }]
+    ? [
+        ...(avecOptions
+          ? [{ action: 'options' as const, libelle: t('caisse.ligne.options') }]
+          : []),
+        { action: 'consigne', libelle: t('caisse.ligne.consigne') },
+      ]
     : []
   const fin: ActionProposee = brouillon
     ? { action: 'retirer', libelle: t('caisse.ligne.retirer'), danger: true }
@@ -102,6 +109,7 @@ export function DialogueActionsLigne({
   devise,
   fuseauHoraire,
   session,
+  avecOptions = false,
   surFermer,
   surChoisir,
 }: Readonly<{
@@ -109,6 +117,8 @@ export function DialogueActionsLigne({
   devise: Devise
   fuseauHoraire: string
   session: SessionCaisseCourante | undefined
+  /** Le produit a des options : une ligne pas encore envoyée peut les changer. */
+  avecOptions?: boolean
   surFermer: () => void
   surChoisir: (action: ActionLigne) => void
 }>) {
@@ -119,10 +129,10 @@ export function DialogueActionsLigne({
   usePiegeFocus(cadre, boutonFermer, surFermer)
   const brouillon = ligne.statut === 'BROUILLON'
   const montant = formaterMontant({ unitesMineures: ligne.montant, devise }, { forme: 'courte' })
-  const actions = actionsDeLigne(ligne, droitsDe(session), t)
+  const actions = actionsDeLigne(ligne, droitsDe(session), avecOptions, t)
 
   return (
-    <div className="fixed inset-0 z-10 flex items-end justify-center bg-voile sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-voile sm:items-center sm:p-4">
       <section
         ref={cadre}
         role="dialog"

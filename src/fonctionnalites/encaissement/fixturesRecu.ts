@@ -21,8 +21,17 @@ export const RECU: RecuCaisse = {
   serveur: 'Kossi A.',
   caissier: 'Yawa T.',
   lignes: [
-    { quantite: 1, nom: 'Flag 65 cl', montant: 1200, offert: false },
-    { quantite: 2, nom: 'Poulet braisé', montant: 9000, offert: false },
+    { quantite: 1, nom: 'Flag 65 cl', montant: 1200, offert: false, options: [] },
+    {
+      quantite: 2,
+      nom: 'Poulet braisé',
+      montant: 9000,
+      offert: false,
+      options: [
+        { nom: 'Alloco', supplement: 0 },
+        { nom: 'Œuf', supplement: 200 },
+      ],
+    },
   ],
   remise: 0,
   total: 10_200,
@@ -61,7 +70,7 @@ export const AVOIR: AvoirCaisse = {
   recu: 'BE-000127',
   recuEmisLe: '2026-09-29T21:05:00Z',
   note: 'n°42, T4',
-  lignes: [{ quantite: 1, nom: 'Poulet braisé', montant: 4500, offert: false }],
+  lignes: [{ quantite: 1, nom: 'Poulet braisé', montant: 4500, offert: false, options: [] }],
   motif: 'ARTICLE_NON_CONFORME',
   total: 4500,
   tva: 686,

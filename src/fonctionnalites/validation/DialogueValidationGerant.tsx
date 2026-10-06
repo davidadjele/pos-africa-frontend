@@ -132,7 +132,7 @@ export function DialogueValidationGerant({
   }
 
   return (
-    <div className="fixed inset-0 z-10 flex items-end justify-center bg-voile sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-voile sm:items-center sm:p-4">
       <section
         ref={cadre}
         role="dialog"

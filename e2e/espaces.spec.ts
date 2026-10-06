@@ -49,7 +49,7 @@ const RECU_EN_LIGNE = {
     note: 'n°42, T4',
     serveur: 'Kossi A.',
     caissier: 'Yawa T.',
-    lignes: [{ quantite: 2, nom: 'Poulet braisé', montant: 9000, offert: false }],
+    lignes: [{ quantite: 2, nom: 'Poulet braisé', montant: 9000, offert: false, options: [] }],
     remise: 0,
     total: 9000,
     taxes: [],
@@ -82,6 +82,8 @@ async function simulerApi(page: Page, { connecte }: { connecte: boolean }) {
     route.fulfill({ json: { inscriptionOuverte: false } }),
   )
   await page.route('**/api/etablissements?*', (route) => route.fulfill({ json: ETABLISSEMENTS }))
+  // « Réglages » ouvre d'abord la fiche de l'entreprise.
+  await page.route('**/api/entreprise', (route) => route.fulfill({ json: { nom: MAQUIS.nom } }))
   // Cette machine est une tablette enregistrée comme caisse de Bè Kpota.
   await page.route('**/api/appareil', (route) =>
     route.fulfill({

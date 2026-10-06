@@ -349,7 +349,8 @@
       "validation": "validation d’un gérant",
       "fermer": "Fermer",
       "envoyes_one": "{{count}} envoyé en préparation à {{heure}}, {{montant}}.",
-      "envoyes_other": "{{count}} envoyés en préparation à {{heure}}, {{montant}}."
+      "envoyes_other": "{{count}} envoyés en préparation à {{heure}}, {{montant}}.",
+      "options": "Modifier les options"
     },
     "remise": {
       "titreLigne": "Remise sur {{produit}}",
@@ -435,6 +436,19 @@
       "resumeAEnvoyer_other": "{{count}} articles, {{aEnvoyer}} à envoyer",
       "voir": "Voir la note",
       "voirEtEnvoyer": "Voir la note et envoyer"
+    },
+    "options": {
+      "phrase": "Prix de base {{prix}}. Les suppléments s’ajoutent au prix.",
+      "ajouter": "Ajouter, {{prix}}",
+      "choisissez": "Choisissez : {{groupes}}.",
+      "obligatoire": "Obligatoire",
+      "facultatif": "Facultatif",
+      "unSeul": "Un seul choix",
+      "plusieurs": "Plusieurs choix",
+      "auPlus_one": "{{count}} au plus",
+      "auPlus_other": "{{count}} au plus",
+      "epuise": "Épuisé",
+      "inclus": "Inclus"
     }
   },
   "gestion": {
@@ -459,7 +473,8 @@
       "caisses": "Caisses",
       "reglages": "Réglages",
       "rapports": "Rapports",
-      "ouvrir": "Menu"
+      "ouvrir": "Menu",
+      "options": "Options"
     },
     "tableauDeBord": {
       "titre": "Tableau de bord",
@@ -2527,5 +2542,101 @@
     },
     "serviPar": "Servi par {{nom}}",
     "serviA": "Servi à {{heure}}"
+  },
+  "options": {
+    "titre": "Options",
+    "phrase": "Les choix proposés en caisse avec un produit : cuisson, accompagnement, suppléments. Un groupe se définit une fois et s’attache à plusieurs produits depuis leur fiche.",
+    "nouveau": "Nouveau groupe",
+    "tableau": "Groupes d’options",
+    "chargement": "Chargement des options…",
+    "colonnes": {
+      "groupe": "Groupe",
+      "regle": "Règle",
+      "choix": "Choix",
+      "stock": "Stock",
+      "produits": "Utilisé par",
+      "actions": "Actions"
+    },
+    "regle": {
+      "uniqueObligatoire": "Choix unique, obligatoire",
+      "uniqueFacultatif": "Choix unique, facultatif",
+      "multiple": "Choix multiple",
+      "multipleObligatoire": "Choix multiple, obligatoire",
+      "auPlus_one": "{{count}} au plus",
+      "auPlus_other": "{{count}} au plus"
+    },
+    "aucunLie": "Aucun",
+    "lies_one": "{{count}} lié au stock",
+    "lies_other": "{{count}} liés au stock",
+    "nbProduits_one": "{{count}} produit",
+    "nbProduits_other": "{{count}} produits",
+    "modifier": "Modifier",
+    "modifierNomme": "Modifier {{nom}}",
+    "plusDActions": "Plus d’actions pour {{nom}}",
+    "supprimer": "Supprimer",
+    "enUsage_one": "« {{nom}} » est attaché à {{count}} produit : retirez-le de sa fiche avant de le supprimer.",
+    "enUsage_other": "« {{nom}} » est attaché à {{count}} produits : retirez-le de leur fiche avant de le supprimer.",
+    "cree": "Le groupe « {{nom}} » est créé.",
+    "modifie": "Le groupe « {{nom}} » est modifié.",
+    "supprime": "Le groupe « {{nom}} » est supprimé.",
+    "vide": {
+      "titre": "Aucun groupe d’options",
+      "phrase": "Créez la cuisson, les accompagnements ou les suppléments, puis attachez-les aux produits depuis leur fiche."
+    },
+    "formulaire": {
+      "titreCreation": "Nouveau groupe d’options",
+      "titreModification": "Modifier « {{nom}} »",
+      "consequence": "Les notes déjà prises gardent les choix et les prix du moment.",
+      "creer": "Créer le groupe",
+      "nom": "Nom du groupe",
+      "auPlus": "Au plus",
+      "obligatoire": "Obligatoire",
+      "obligatoireAide": "La caisse demande un choix avant d’ajouter le plat",
+      "choix": "Choix",
+      "choixNumero": "Choix {{numero}}",
+      "nomChoix": "Nom",
+      "supplement": "Prix en plus",
+      "produitLie": "Décompter le stock de",
+      "cout": "Coût d’achat",
+      "aucunProduit": "Aucun",
+      "ajouterChoix": "Ajouter un choix…",
+      "montantInvalide": "Montant illisible pour « {{nom}} ».",
+      "auMoinsUn": "Ajoutez au moins un choix avec un nom.",
+      "coutAide": "Ce qu’il vous coûte, pour la marge.",
+      "nomExemple": "Cuisson, Accompagnement, Suppléments…",
+      "leClientChoisit": "Le client choisit",
+      "unSeul": "Un seul choix",
+      "unSeulExemple": "Saignant ou À point",
+      "plusieurs": "Plusieurs choix",
+      "plusieursExemple": "Œuf et Fromage",
+      "jusqua": "jusqu’à",
+      "colonneNom": "Nom",
+      "colonnePrix": "Prix en plus",
+      "colonneStock": "Stock et coût",
+      "inclus": "Inclus",
+      "lierAuStock": "Lier au stock",
+      "modifierStock": "modifier",
+      "resumeStock": "Stock : {{nom}}",
+      "resumeCout": "Coût saisi {{cout}} F",
+      "lieExplication": "Chaque article vendu avec ce choix sort un {{nom}} du stock, et son coût entre dans la marge.",
+      "monterNomme": "Monter {{nom}}",
+      "retirerNomme": "Retirer {{nom}}",
+      "aideBas": "Entrée passe au choix suivant. Le prix en plus est payé par le client ; le coût sert à la marge et ne se voit jamais en caisse."
+    },
+    "suppression": {
+      "titre": "Supprimer « {{nom}} » ?",
+      "consequence": "Le groupe disparaît de la carte. Les notes déjà prises gardent leurs choix.",
+      "confirmer": "Supprimer le groupe"
+    },
+    "fiche": {
+      "titre": "Options",
+      "phrase": "Proposées en caisse avec ce produit, dans cet ordre. Un groupe obligatoire doit être choisi avant l’ajout.",
+      "aucun": "Aucune option : le produit s’ajoute d’un toucher.",
+      "monter": "Monter {{nom}}",
+      "descendre": "Descendre {{nom}}",
+      "retirer": "Retirer {{nom}}",
+      "ajouter": "Ajouter un groupe",
+      "choisir": "Choisir un groupe…"
+    }
   }
 }

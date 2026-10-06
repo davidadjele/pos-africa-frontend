@@ -27,6 +27,7 @@ import { Bouton, classesBouton } from '../../partage/ui/Bouton'
 import { ChampSaisie, ChampSelection } from '../../partage/ui/ChampSaisie'
 import { Chargement } from '../../partage/ui/Chargement'
 import { COULEURS_CATEGORIE } from './couleurs'
+import { SectionOptionsProduit } from './SectionOptionsProduit'
 import { requeteCategories, requeteProduit, requeteTaxes } from './requetes'
 
 const TYPES: TypeProduit[] = ['PLAT', 'BOISSON', 'ARTICLE']
@@ -113,6 +114,7 @@ export function PageFicheProduit({ produitId }: Readonly<{ produitId?: string }>
           {...(produit.data === undefined ? {} : { produit: produit.data })}
         />
       )}
+      {pret && produit.data !== undefined && <SectionOptionsProduit produit={produit.data} />}
     </div>
   )
 }

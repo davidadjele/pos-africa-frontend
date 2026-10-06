@@ -531,6 +531,103 @@ describe('EcranNote', () => {
     expect(remise).toBe(true)
   })
 
+  it('fait choisir les options avant d’ajouter, puis les montre et les modifie sur la ligne', async () => {
+    const cotelettes: LigneCarteEtablissement = {
+      ...POULET,
+      produitId: 'b0000000-0000-4000-8000-000000000009',
+      nom: 'Côtelettes d’agneau',
+      prix: 5000,
+      options: [
+        {
+          id: 'g-cuisson',
+          nom: 'Cuisson',
+          choixMultiple: false,
+          obligatoire: true,
+          choix: [
+            { id: 'saignant', nom: 'Saignant', supplement: 0, epuise: false },
+            { id: 'a-point', nom: 'À point', supplement: 0, epuise: false },
+          ],
+        },
+        {
+          id: 'g-supplements',
+          nom: 'Suppléments',
+          choixMultiple: true,
+          obligatoire: false,
+          maximum: 2,
+          choix: [
+            { id: 'oeuf', nom: 'Œuf', supplement: 200, epuise: false },
+            { id: 'riz', nom: 'Riz gras', supplement: 500, epuise: true },
+          ],
+        },
+      ],
+    }
+    const ligne = {
+      ...POULET_A_ENVOYER,
+      id: '1e000000-0000-4000-8000-000000000009',
+      produitId: cotelettes.produitId,
+      nomProduit: 'Côtelettes d’agneau',
+      quantite: 1,
+      prixUnitaire: 5200,
+      montant: 5200,
+      montantBrut: 5200,
+      options: [
+        { choixId: 'a-point', groupe: 'Cuisson', nom: 'À point', supplement: 0 },
+        { choixId: 'oeuf', groupe: 'Suppléments', nom: 'Œuf', supplement: 200 },
+      ],
+    }
+    const ajouts: DemandeAjout[] = []
+    const modifications: DemandeLigne[] = []
+    serveurMsw.use(
+      http.post(`${API}/caisse/commandes/${NOTE_VIDE.id}/lignes`, async ({ request }) => {
+        ajouts.push((await request.json()) as DemandeAjout)
+        return HttpResponse.json({ ...NOTE_VIDE, lignes: [ligne] })
+      }),
+      http.put(
+        `${API}/caisse/commandes/${NOTE_VIDE.id}/lignes/${ligne.id}`,
+        async ({ request }) => {
+          modifications.push((await request.json()) as DemandeLigne)
+          return HttpResponse.json({ ...NOTE_VIDE, lignes: [ligne] })
+        },
+      ),
+    )
+    noteServie(NOTE_VIDE, [FLAG, cotelettes])
+
+    const produits = await screen.findByRole('list', { name: 'Produits' })
+    await userEvent.click(within(produits).getByRole('button', { name: /Côtelettes d’agneau/ }))
+    const panneau = screen.getByRole('dialog', { name: 'Côtelettes d’agneau' })
+    expect(within(panneau).getByRole('button', { name: /Riz gras/ })).toBeDisabled()
+    await userEvent.click(within(panneau).getByRole('button', { name: /^Ajouter/ }))
+    expect(panneau).toHaveTextContent('Choisissez : Cuisson.')
+    expect(ajouts).toEqual([])
+
+    await userEvent.click(within(panneau).getByRole('button', { name: /À point/ }))
+    await userEvent.click(within(panneau).getByRole('button', { name: /Œuf/ }))
+    expect(within(panneau).getByRole('button', { name: /^Ajouter/ })).toHaveTextContent('5 200')
+    await userEvent.click(within(panneau).getByRole('button', { name: /^Ajouter/ }))
+
+    await waitFor(() => {
+      expect(ajouts).toEqual([{ produitId: cotelettes.produitId, optionIds: ['a-point', 'oeuf'] }])
+    })
+    const note = await noteEnCours()
+    expect(note).toHaveTextContent('À point')
+    expect(note).toHaveTextContent('Œuf +200')
+
+    await userEvent.click(
+      within(note).getByRole('button', { name: 'Actions sur Côtelettes d’agneau' }),
+    )
+    await userEvent.click(screen.getByRole('button', { name: 'Modifier les options' }))
+    const modification = screen.getByRole('dialog', { name: 'Côtelettes d’agneau' })
+    expect(within(modification).getByRole('button', { name: /À point/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+    await userEvent.click(within(modification).getByRole('button', { name: /Saignant/ }))
+    await userEvent.click(within(modification).getByRole('button', { name: 'Enregistrer' }))
+    await waitFor(() => {
+      expect(modifications).toEqual([{ quantite: 1, optionIds: ['saignant', 'oeuf'] }])
+    })
+  })
+
   it('filtre la carte par catégorie et par nom', async () => {
     noteServie()
 

@@ -17,6 +17,7 @@ export type CheminGestion =
   | '/gestion/produits'
   | '/gestion/carte-etablissement'
   | '/gestion/taxes'
+  | '/gestion/options'
   | '/gestion/etablissements'
   | '/gestion/salles'
   | '/gestion/personnel'
@@ -72,6 +73,7 @@ export const SECTIONS: Section[] = [
     // La carte se consulte par tout le back-office ; les taxes seulement par qui les règle.
     onglets: [
       { vers: '/gestion/produits', cle: 'produits' },
+      { vers: '/gestion/options', cle: 'options', permission: 'CATALOGUE_GERER' },
       { vers: '/gestion/carte-etablissement', cle: 'parEtablissement' },
       { vers: '/gestion/taxes', cle: 'taxes', permission: 'CATALOGUE_GERER' },
     ],

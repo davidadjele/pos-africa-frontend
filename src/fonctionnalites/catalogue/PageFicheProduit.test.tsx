@@ -115,6 +115,57 @@ describe('PageFicheProduit', () => {
     })
   })
 
+  it('attache des groupes d’options au produit, dans l’ordre de la caisse', async () => {
+    backendSimule()
+    const cuisson = {
+      id: '90000000-0000-4000-8000-000000000001',
+      nom: 'Cuisson',
+      choixMultiple: false,
+      obligatoire: true,
+      nbProduits: 1,
+      version: 0,
+      choix: [{ id: 'c1', nom: 'À point', supplement: 0 }],
+    }
+    const supplements = {
+      ...cuisson,
+      id: '90000000-0000-4000-8000-000000000002',
+      nom: 'Suppléments',
+      choixMultiple: true,
+      obligatoire: false,
+    }
+    const attaches: unknown[] = []
+    serveurMsw.use(
+      http.get(`${API}/produits/:id`, () =>
+        HttpResponse.json({ ...FLAG, groupesOptionIds: [cuisson.id] }),
+      ),
+      http.get(`${API}/groupes-options`, () => HttpResponse.json([cuisson, supplements])),
+      http.put(`${API}/produits/:id/options`, async ({ request }) => {
+        const corps = (await request.json()) as { groupeIds: string[] }
+        attaches.push(corps)
+        return HttpResponse.json({ ...FLAG, groupesOptionIds: corps.groupeIds })
+      }),
+    )
+    await ouvrirFiche(`/gestion/produits/${FLAG.id}`)
+
+    const section = await screen.findByRole('region', { name: 'Options' })
+    expect(within(section).getByRole('list')).toHaveTextContent('Cuisson')
+    await userEvent.selectOptions(
+      within(section).getByLabelText(/^Ajouter un groupe/),
+      'Suppléments',
+    )
+    await waitFor(() => {
+      expect(attaches).toEqual([{ groupeIds: [cuisson.id, supplements.id] }])
+    })
+    await userEvent.click(within(section).getByRole('button', { name: 'Monter Suppléments' }))
+    await userEvent.click(within(section).getByRole('button', { name: 'Retirer Cuisson' }))
+    await waitFor(() => {
+      expect(attaches.slice(1)).toEqual([
+        { groupeIds: [supplements.id, cuisson.id] },
+        { groupeIds: [supplements.id] },
+      ])
+    })
+  })
+
   it('réserve le changement de prix à qui en a le droit', async () => {
     backendSimule()
     await ouvrirFiche(`/gestion/produits/${FLAG.id}`, [...MOI_TANTI.permissions, 'CATALOGUE_GERER'])

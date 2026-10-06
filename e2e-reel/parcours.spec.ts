@@ -1458,6 +1458,116 @@ test('La cuisine de Bè Kpota reçoit les bons, les commence et les marque prêt
   await contexteCaisse.close()
 })
 
+test('Tanti crée des options, les attache aux côtelettes, et Kossi les choisit en caisse', async ({
+  page,
+  browser,
+}) => {
+  await seConnecter(page, TANTI.saisie, TANTI.motDePasse)
+  await page.getByRole('button', { name: 'Maquis Chez Tanti' }).click()
+
+  // Un plat à options.
+  await allerA(page, 'Carte', 'Produits')
+  await page.getByRole('link', { name: 'Ajouter un produit' }).click()
+  await page.getByLabel(/^Nom/).fill('Côtelettes d’agneau')
+  await page.getByLabel(/^Catégorie/).selectOption({ label: 'Grillades' })
+  await page.getByRole('radio', { name: 'Plat' }).check({ force: true })
+  await page.getByLabel(/^Prix TTC/).fill('5000')
+  await page.getByRole('button', { name: 'Enregistrer le produit' }).click()
+  await expect(page.getByText('« Côtelettes d’agneau » est enregistré.')).toBeVisible()
+
+  // Deux groupes : la cuisson, obligatoire ; les suppléments, deux au plus, dont un lié à la Flag (stock et coût).
+  await allerA(page, 'Carte', 'Options')
+  for (const [nom, multiple, obligatoire, choix] of [
+    [
+      'Cuisson',
+      false,
+      true,
+      [
+        ['Saignant', ''],
+        ['À point', ''],
+      ],
+    ],
+    [
+      'Suppléments',
+      true,
+      false,
+      [
+        ['Œuf', '200'],
+        ['Piment', ''],
+      ],
+    ],
+  ] as const) {
+    await page.getByRole('button', { name: 'Nouveau groupe' }).click()
+    const dialogue = page.getByRole('dialog', { name: 'Nouveau groupe d’options' })
+    await dialogue.getByLabel(/^Nom du groupe/).fill(nom)
+    if (multiple) {
+      await dialogue.getByRole('radio', { name: /Plusieurs choix/ }).click()
+      await dialogue.getByLabel('Au plus').fill('2')
+    }
+    if (obligatoire) await dialogue.getByRole('switch', { name: /Obligatoire/ }).click()
+    // La ligne vide du bas devient le choix suivant dès qu'on y tape.
+    for (const [rang, [libelle, supplement]] of choix.entries()) {
+      const ligne = dialogue.getByRole('group', { name: `Choix ${String(rang + 1)}` })
+      await ligne.getByLabel('Nom', { exact: true }).fill(libelle)
+      await ligne.getByLabel('Prix en plus').fill(supplement)
+    }
+    if (nom === 'Suppléments') {
+      await capturer(page, '90-groupe-options')
+    }
+    await dialogue.getByRole('button', { name: 'Créer le groupe' }).click()
+    await expect(page.getByText(`Le groupe « ${nom} » est créé.`)).toBeVisible()
+  }
+  const groupes = page.getByRole('table', { name: 'Groupes d’options' })
+  await expect(groupes.getByRole('row', { name: /Cuisson/ })).toContainText(
+    'Choix unique, obligatoire',
+  )
+  await capturer(page, '90-options')
+
+  // Sur la fiche des côtelettes, dans l'ordre de la caisse.
+  await allerA(page, 'Carte', 'Produits')
+  await page.getByRole('link', { name: 'Modifier Côtelettes d’agneau' }).click()
+  const section = page.getByRole('region', { name: 'Options' })
+  for (const groupe of ['Cuisson', 'Suppléments']) {
+    await section.getByLabel(/^Ajouter un groupe/).selectOption({ label: groupe })
+    await expect(section.getByRole('list')).toContainText(groupe)
+  }
+  await capturer(page, '91-fiche-options')
+
+  // Kossi, sur une nouvelle caisse : la cuisson est demandée avant l'ajout, le supplément s'ajoute au prix.
+  await allerA(page, 'Réglages', 'Tablettes')
+  const codeCaisse = await codeDeTablette(page, 'Caisse 4, grill')
+  const contexteCaisse = await browser.newContext({ viewport: { width: 1280, height: 800 } })
+  const caisse = await contexteCaisse.newPage()
+  await caisse.goto('/caisse')
+  await taperCode(caisse, codeCaisse)
+  await caisse.getByRole('button', { name: /Kossi A\./ }).click()
+  await taperCode(caisse, '4827')
+  await caisse.getByRole('button', { name: 'Ouvrir la caisse' }).click()
+  await caisse.getByRole('button', { name: 'Vente au comptoir' }).click()
+  const note = caisse.getByRole('region', { name: 'Note en cours' })
+  await caisse
+    .getByRole('list', { name: 'Produits' })
+    .getByRole('button', { name: /Côtelettes d’agneau/ })
+    .click()
+  const panneau = caisse.getByRole('dialog', { name: 'Côtelettes d’agneau' })
+  await panneau.getByRole('button', { name: /^Ajouter/ }).click()
+  await expect(panneau).toContainText('Choisissez : Cuisson.')
+  await panneau.getByRole('button', { name: /À point/ }).click()
+  await panneau.getByRole('button', { name: /Œuf/ }).click()
+  await expect(panneau.getByRole('button', { name: /^Ajouter/ })).toContainText('5 200')
+  await capturer(caisse, '92-caisse-options')
+  await caisse.setViewportSize({ width: 390, height: 844 })
+  await capturer(caisse, '92-caisse-options-telephone')
+  await caisse.setViewportSize({ width: 1280, height: 800 })
+  await panneau.getByRole('button', { name: /^Ajouter/ }).click()
+  await expect(note).toContainText('Œuf +200')
+  await expect(note).toContainText('5 200 FCFA')
+  await capturer(caisse, '93-note-options')
+  await note.getByRole('button', { name: /Envoyer 1 article/ }).click()
+  await expect(note.getByRole('button', { name: /Envoyer \d+ article/ })).toHaveCount(0)
+  await contexteCaisse.close()
+})
+
 test('L’équipe plateforme ouvre la fiche de Maquis Chez Tanti, la modifie et la suspend', async ({
   page,
 }) => {

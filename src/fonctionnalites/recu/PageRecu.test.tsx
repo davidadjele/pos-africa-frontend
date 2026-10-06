@@ -33,6 +33,8 @@ describe('Reçu en ligne', () => {
     expect(screen.getByText('Maquis Chez Tanti', { selector: 'header *' })).toBeVisible()
     const ticket = screen.getByRole('article', { name: 'Reçu BE-000127' })
     expect(ticket).toHaveTextContent(/2× Poulet braisé9\s000/)
+    // Les options s'impriment sous l'article, avec leur supplément par unité.
+    expect(ticket).toHaveTextContent(/AllocoŒuf\+200/)
     expect(ticket).toHaveTextContent('Flooz (Moov Africa), réf. 7F3K29')
     // Le client est déjà sur son reçu en ligne : le QR code n'y renverrait que lui-même.
     expect(screen.queryByRole('img', { name: 'QR code du reçu en ligne' })).not.toBeInTheDocument()

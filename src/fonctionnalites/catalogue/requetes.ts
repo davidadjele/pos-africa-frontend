@@ -2,6 +2,7 @@ import { queryOptions } from '@tanstack/react-query'
 import { appelerApi } from '../../partage/api/appelerApi'
 import type {
   CategorieResume,
+  GroupeOptionResume,
   PageProduits,
   ProduitResume,
   TaxeResume,
@@ -12,6 +13,17 @@ export const TAILLE_PAGE_PRODUITS = 50
 export const requeteTaxes = queryOptions({
   queryKey: ['catalogue', 'taxes'],
   queryFn: ({ signal }) => appelerApi<TaxeResume[]>('/taxes', { signal }),
+})
+
+export const requeteGroupesOptions = queryOptions({
+  queryKey: ['catalogue', 'options'],
+  queryFn: ({ signal }) => appelerApi<GroupeOptionResume[]>('/groupes-options', { signal }),
+})
+
+/** Pour choisir un produit lié : les produits actifs, jusqu'à la taille de page maximale de l'API. */
+export const requeteProduitsActifs = queryOptions({
+  queryKey: ['catalogue', 'produits', 'actifs'],
+  queryFn: ({ signal }) => appelerApi<PageProduits>('/produits?actifs=true&taille=100', { signal }),
 })
 
 export const requeteCategories = queryOptions({

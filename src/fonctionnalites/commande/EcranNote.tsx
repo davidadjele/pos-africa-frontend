@@ -38,6 +38,7 @@ import {
 import { useValidation } from './useValidation'
 import { CarteCaisse } from './CarteCaisse'
 import { DialogueAnnulation, DialogueLigne } from './DialoguesLigne'
+import { DialogueOptions } from './DialogueOptions'
 import { ouEstLaNote, PanneauNote, type Rupture } from './PanneauNote'
 import { RubanNotes } from './RubanNotes'
 import { envoiVersLaCuisine, pasEncorePret } from './service'
@@ -79,6 +80,11 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
   const [noteOuverte, setNoteOuverte] = useState(false)
   const [ligneOuverte, setLigneOuverte] = useState<LigneNote | null>(null)
   const [aAnnuler, setAAnnuler] = useState<LigneNote | null>(null)
+  const [aOptionner, setAOptionner] = useState<{
+    produit: LigneCarteEtablissement
+    /** Ligne pas encore envoyée dont on change les options ; vide pour un nouvel ajout. */
+    ligne?: LigneNote
+  } | null>(null)
   const [servirAvantCuisine, setServirAvantCuisine] = useState<{
     lignes: LigneNote[]
     servir: () => void
@@ -155,16 +161,25 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
       setSansStockAConfirmer(produit)
       return
     }
-    void ajouter(produit)
+    continuer(produit)
   }
 
-  async function ajouter(produit: LigneCarteEtablissement) {
+  /** Un produit à options ouvre leur choix ; les autres s'ajoutent d'un toucher. */
+  function continuer(produit: LigneCarteEtablissement) {
+    if (produit.options.length > 0) setAOptionner({ produit })
+    else void ajouter(produit)
+  }
+
+  async function ajouter(produit: LigneCarteEtablissement, optionIds: string[] = []) {
     effacerMessages()
     try {
       retenir(
         await appelerCaisse<CommandeDetail>(`/caisse/commandes/${commandeId}/lignes`, {
           methode: 'POST',
-          corps: { produitId: produit.produitId },
+          corps:
+            optionIds.length === 0
+              ? { produitId: produit.produitId }
+              : { produitId: produit.produitId, optionIds },
         }),
       )
     } catch (echec) {
@@ -334,7 +349,9 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
 
   function choisirPourLaLigne(ligne: LigneNote, action: ActionLigne) {
     setLigneActions(null)
-    if (action === 'consigne') setLigneOuverte(ligne)
+    const produit = carte.data?.find((un) => un.produitId === ligne.produitId)
+    if (action === 'options' && produit !== undefined) setAOptionner({ produit, ligne })
+    else if (action === 'consigne') setLigneOuverte(ligne)
     else if (action === 'remise') setARemiser(ligne)
     else if (action === 'offrir') setAOffrir(ligne)
     else if (action === 'annuler') setAAnnuler(ligne)
@@ -516,6 +533,10 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
             devise={devise}
             fuseauHoraire={fuseauHoraire}
             session={session}
+            avecOptions={
+              (carte.data?.find((un) => un.produitId === ligneActions.produitId)?.options.length ??
+                0) > 0
+            }
             surFermer={() => {
               setLigneActions(null)
             }}
@@ -566,6 +587,28 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
             }}
           />
         )}
+        {aOptionner !== null && (
+          <DialogueOptions
+            produit={aOptionner.produit}
+            devise={devise}
+            choisisAuDepart={aOptionner.ligne?.options.map((option) => option.choixId) ?? []}
+            modification={aOptionner.ligne !== undefined}
+            surFermer={() => {
+              setAOptionner(null)
+            }}
+            surValider={(optionIds) => {
+              const { produit, ligne } = aOptionner
+              setAOptionner(null)
+              if (ligne === undefined) void ajouter(produit, optionIds)
+              else
+                void modifier(ligne, {
+                  quantite: ligne.quantite,
+                  ...(ligne.note === undefined ? {} : { note: ligne.note }),
+                  optionIds,
+                })
+            }}
+          />
+        )}
         {servirAvantCuisine !== null && (
           <Dialogue
             titre={t('caisse.service.avantCuisine.titre')}
@@ -602,7 +645,7 @@ export function EcranNote({ commandeId }: Readonly<{ commandeId: string }>) {
             surConfirmer={() => {
               const produit = sansStockAConfirmer
               setSansStockAConfirmer(null)
-              void ajouter(produit)
+              continuer(produit)
             }}
           />
         )}
