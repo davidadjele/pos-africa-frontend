@@ -34,7 +34,13 @@ function activiteServie() {
   serveurMsw.use(
     http.get(`${API}/plateforme/activite`, ({ request }) => {
       demandes.push(new URL(request.url).searchParams.toString())
-      return HttpResponse.json({ elements: [SUSPENSION, AJOUT], page: 0, taille: 50, total: 2 })
+      return HttpResponse.json({
+        elements: [SUSPENSION, AJOUT],
+        page: 0,
+        taille: 50,
+        total: 2,
+        totalPlafonne: false,
+      })
     }),
     http.get(`${API}/plateforme/equipe`, () => HttpResponse.json(EQUIPE)),
   )
@@ -88,6 +94,7 @@ describe('PageActivitePlateforme', () => {
           page: 0,
           taille: 50,
           total: 1,
+          totalPlafonne: false,
         }),
       ),
       http.get(`${API}/plateforme/equipe`, () => HttpResponse.json(EQUIPE)),

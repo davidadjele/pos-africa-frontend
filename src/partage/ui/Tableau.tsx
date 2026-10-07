@@ -81,24 +81,32 @@ export function Pagination({
   page,
   taille,
   total,
+  totalMinimum = false,
   surChangerPage,
 }: Readonly<{
   page: number
   taille: number
   total: number
+  /** Le serveur a cessé de compter : il y en a au moins autant, la page suivante existe. */
+  totalMinimum?: boolean
   surChangerPage: (page: number) => void
 }>) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   if (total <= taille) return null
   const debut = page * taille + 1
   const fin = Math.min(total, (page + 1) * taille)
+  const nombre = new Intl.NumberFormat(i18n.language)
   return (
     <nav
       aria-label={t('pagination.libelle')}
       className="flex flex-wrap items-center justify-end gap-3"
     >
       <span className="chiffres text-libelle text-attenue">
-        {t('pagination.resume', { debut, fin, total })}
+        {t(totalMinimum ? 'pagination.resumeMinimum' : 'pagination.resume', {
+          debut: nombre.format(debut),
+          fin: nombre.format(fin),
+          total: nombre.format(total),
+        })}
       </span>
       <Bouton
         icone={ChevronLeft}
@@ -110,7 +118,7 @@ export function Pagination({
         {t('pagination.precedente')}
       </Bouton>
       <Bouton
-        disabled={fin >= total}
+        disabled={!totalMinimum && fin >= total}
         onClick={() => {
           surChangerPage(page + 1)
         }}

@@ -633,7 +633,8 @@
     "libelle": "Pagination",
     "resume": "{{debut}}–{{fin}} of {{total}}",
     "precedente": "Previous page",
-    "suivante": "Next page"
+    "suivante": "Next page",
+    "resumeMinimum": "{{debut}}–{{fin}} of more than {{total}}"
   },
   "validation": {
     "obligatoire": "This field is required.",

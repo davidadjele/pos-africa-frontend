@@ -91,6 +91,7 @@ function ficheServie(depart: FicheEntreprisePlateforme = FICHE) {
         page: 0,
         taille: 5,
         total: 1,
+        totalPlafonne: false,
       }),
     ),
     http.put(`${API}/plateforme/entreprises/${ID}`, async ({ request }) => {

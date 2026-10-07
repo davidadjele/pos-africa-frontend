@@ -2005,7 +2005,7 @@ export interface paths {
         };
         /**
          * L'activité de l'équipe plateforme, la plus récente d'abord
-         * @description Filtres facultatifs : type d'action, auteur (compte), entreprise, ou recherche dans le nom de l'entreprise.
+         * @description Filtres facultatifs : type d'action, auteur (compte), entreprise, ou recherche dans le nom de l'entreprise. Le total n'est compté que jusqu'à 1 000 traces au-delà du début de la page : au-delà, totalPlafonne est vrai et le total est un minimum.
          */
         get: operations["lister_11"];
         put?: never;
@@ -4431,6 +4431,16 @@ export interface components {
             ouverteLe: string;
             ouvertePar: string;
         };
+        PageActivitePlateforme: {
+            elements: components["schemas"]["EntreeActivitePlateforme"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            taille: number;
+            /** Format: int64 */
+            total: number;
+            totalPlafonne: boolean;
+        };
         PageResultatsAppareilResume: {
             elements: components["schemas"]["AppareilResume"][];
             /** Format: int32 */
@@ -4442,15 +4452,6 @@ export interface components {
         };
         PageResultatsEmployeResume: {
             elements: components["schemas"]["EmployeResume"][];
-            /** Format: int32 */
-            page: number;
-            /** Format: int32 */
-            taille: number;
-            /** Format: int64 */
-            total: number;
-        };
-        PageResultatsEntreeActivitePlateforme: {
-            elements: components["schemas"]["EntreeActivitePlateforme"][];
             /** Format: int32 */
             page: number;
             /** Format: int32 */
@@ -8952,7 +8953,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PageResultatsEntreeActivitePlateforme"];
+                    "application/json": components["schemas"]["PageActivitePlateforme"];
                 };
             };
             /** @description Erreur : voir « code » (IDENTIFIANTS_INVALIDES, ACCES_REFUSE, REQUETE_INVALIDE…) */
