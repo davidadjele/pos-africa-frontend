@@ -92,6 +92,13 @@ describe('Pagination', () => {
     expect(surChangerPage.mock.calls).toEqual([[2], [0]])
   })
 
+  it('dit « plus de » quand le total n’est qu’un minimum, et laisse avancer', () => {
+    render(<Pagination page={0} taille={50} total={1000} totalMinimum surChangerPage={vi.fn()} />)
+
+    expect(screen.getByText('1–50 sur plus de 1 000')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Page suivante' })).toBeEnabled()
+  })
+
   it('désactive ce qui sort des pages existantes', () => {
     render(<Pagination page={2} taille={50} total={132} surChangerPage={vi.fn()} />)
 

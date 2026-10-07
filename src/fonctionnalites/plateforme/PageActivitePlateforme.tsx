@@ -182,6 +182,7 @@ export function PageActivitePlateforme({ entrepriseId }: Readonly<{ entrepriseId
             page={page}
             taille={TAILLE_PAGE}
             total={activite.data.total}
+            totalMinimum={activite.data.totalPlafonne}
             surChangerPage={setPage}
           />
         </>
