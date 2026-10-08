@@ -106,6 +106,122 @@ async function capturerManuel(page: Page, fichier: string, cible?: Locator) {
   }
 }
 
+/** Les tablettes du terrain, avec la hauteur laissée par la barre du navigateur (environ 88 px). */
+const FORMATS_TABLETTE = [
+  { nom: '10-paysage', width: 1280, height: 712 },
+  { nom: '10-portrait', width: 800, height: 1192 },
+  { nom: '7-paysage', width: 1024, height: 552 },
+  { nom: '7-portrait', width: 600, height: 976 },
+  { nom: 'ipad-paysage', width: 1180, height: 770 },
+]
+
+/**
+ * Ce qui déborde dans la page : défilement horizontal, contrôle hors de l'écran sans défilement pour l'atteindre,
+ * contenu coupé par un conteneur qui ne défile pas.
+ */
+async function debordements(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const problemes: string[] = []
+    const racine = document.documentElement
+    if (racine.scrollWidth > racine.clientWidth + 1) {
+      problemes.push(
+        `défilement horizontal de ${String(racine.scrollWidth - racine.clientWidth)} px`,
+      )
+    }
+    const decrire = (element: Element) => {
+      const nom = element.getAttribute('aria-label') ?? element.textContent.trim().slice(0, 40)
+      return `${element.tagName.toLowerCase()} « ${nom} »`
+    }
+    const defile = (element: Element, axe: 'x' | 'y') => {
+      const style = getComputedStyle(element)
+      const debord = axe === 'x' ? style.overflowX : style.overflowY
+      const plus =
+        axe === 'x'
+          ? element.scrollWidth > element.clientWidth + 1
+          : element.scrollHeight > element.clientHeight + 1
+      return (debord === 'auto' || debord === 'scroll') && plus
+    }
+    const pageDefile = racine.scrollHeight > window.innerHeight + 1
+    for (const controle of document.querySelectorAll('button, a[href], input, select, textarea')) {
+      const rect = controle.getBoundingClientRect()
+      if (
+        rect.width === 0 ||
+        rect.height === 0 ||
+        getComputedStyle(controle).visibility === 'hidden'
+      ) {
+        continue
+      }
+      const horsEcranX = rect.right > window.innerWidth + 1 || rect.left < -1
+      const horsEcranY = rect.bottom > window.innerHeight + 1
+      if (!horsEcranX && !horsEcranY) continue
+      let ancetre = controle.parentElement
+      let atteignable = horsEcranY && pageDefile && !horsEcranX
+      while (ancetre && !atteignable) {
+        if ((horsEcranX && defile(ancetre, 'x')) || (horsEcranY && defile(ancetre, 'y')))
+          atteignable = true
+        ancetre = ancetre.parentElement
+      }
+      if (!atteignable) problemes.push(`${decrire(controle)} hors de l’écran, inatteignable`)
+    }
+    // Un texte plus large que son bouton déborde de la tuile, même si rien ne le coupe.
+    for (const controle of document.querySelectorAll('button, [role="radio"], [role="tab"]')) {
+      if (controle.clientWidth > 0 && controle.scrollWidth > controle.clientWidth + 1) {
+        problemes.push(
+          `${decrire(controle)} : texte plus large que le bouton de ${String(controle.scrollWidth - controle.clientWidth)} px`,
+        )
+      }
+    }
+    for (const element of document.querySelectorAll('body *')) {
+      const style = getComputedStyle(element)
+      const coupeX =
+        (style.overflowX === 'hidden' || style.overflowX === 'clip') &&
+        element.scrollWidth > element.clientWidth + 2 &&
+        style.textOverflow !== 'ellipsis'
+      if (coupeX && element.clientWidth > 0 && element.querySelector('button, input, a[href]')) {
+        problemes.push(
+          `${decrire(element)} coupé à droite de ${String(element.scrollWidth - element.clientWidth)} px`,
+        )
+      }
+    }
+    return [...new Set(problemes)]
+  })
+}
+
+/** Rejoue l'écran courant dans chaque format de tablette ; chaque débordement est une erreur, capture à l'appui. */
+async function verifierFormatsTablette(page: Page, ecran: string, principale?: Locator) {
+  const initial = page.viewportSize() ?? { width: 1280, height: 800 }
+  for (const format of FORMATS_TABLETTE) {
+    await page.setViewportSize({ width: format.width, height: format.height })
+    // Le temps d'un rendu : les mises en page changent de colonnes à certaines largeurs.
+    await page.waitForTimeout(150)
+    await page.screenshot({
+      path: `${DOSSIER_CAPTURES}/formats/${ecran}-${format.nom}.png`,
+      animations: 'disabled',
+    })
+    const problemes = await debordements(page)
+    // En caisse, l'action principale reste à l'écran : on ne fait pas défiler pour encaisser.
+    if (principale !== undefined) {
+      const boite = await principale.filter({ visible: true }).first().boundingBox()
+      if (
+        boite === null ||
+        boite.y < 0 ||
+        boite.x < 0 ||
+        boite.y + boite.height > format.height + 1 ||
+        boite.x + boite.width > format.width + 1
+      ) {
+        problemes.push('action principale hors de l’écran sans défiler')
+      }
+    }
+    // FORMATS_RAPPORT=1 relève tout sans arrêter le parcours : utile pour faire l'inventaire avant de corriger.
+    if (process.env.FORMATS_RAPPORT === undefined) {
+      expect.soft(problemes, `${ecran}, tablette ${format.nom}`).toEqual([])
+    } else if (problemes.length > 0) {
+      console.log(`FORMAT ${ecran} ${format.nom} : ${problemes.join(' ; ')}`)
+    }
+  }
+  await page.setViewportSize(initial)
+}
+
 async function capturer(page: Page, nom: string) {
   // Transitions terminées : un bouton qui vient de s'activer apparaît avec sa couleur finale.
   await page.screenshot({
@@ -947,6 +1063,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     'prendre-une-commande/envoyer',
     note.getByRole('button', { name: 'Envoyer 2 articles en préparation' }),
   )
+  await verifierFormatsTablette(
+    tablette,
+    'note-en-cours',
+    tablette.getByRole('button', { name: /^(Envoyer 2 articles en préparation|Voir la note)/ }),
+  )
 
   // Tout part en préparation ; un poulet non servi est annulé, validé par le PIN de la gérante.
   await note.getByRole('button', { name: 'Envoyer 2 articles en préparation' }).click()
@@ -994,6 +1115,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await expect(resume).toContainText('Aucune note au comptoir ni à emporter.')
   await expect(resume).toContainText('1 note ouverte')
   await capturer(tablette, '33-plan-de-salle')
+  await verifierFormatsTablette(tablette, 'plan-de-salle')
 
   // Le client de T4 demande l'addition, puis la table déménage en T5 : la salle le voit dans « À traiter ».
   await tables.getByRole('button', { name: /T4, note de/ }).click()
@@ -1112,6 +1234,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     'encaisser/fond-de-caisse',
     tablette.getByRole('button', { name: /^Ouvrir la caisse avec 20\s000/ }),
   )
+  await verifierFormatsTablette(
+    tablette,
+    'ouverture-comptage',
+    tablette.getByRole('button', { name: /^Ouvrir la caisse avec/ }),
+  )
   await tablette.getByRole('button', { name: /^Ouvrir la caisse avec 20\s000/ }).click()
   const modes = tablette.getByRole('radiogroup', { name: 'Mode de paiement' })
   await modes.getByRole('radio', { name: /Mobile Money/ }).click()
@@ -1123,6 +1250,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     tablette,
     'encaisser/mobile-money',
     tablette.getByRole('button', { name: /^Valider 2\s000\sF en Mobile Money/ }),
+  )
+  await verifierFormatsTablette(
+    tablette,
+    'encaisser-mobile-money',
+    tablette.getByRole('button', { name: /^Valider / }),
   )
   await tablette.getByRole('button', { name: /^Valider 2\s000\sF en Mobile Money/ }).click()
   const recap = tablette.getByRole('region', { name: 'Note à encaisser' })
@@ -1136,6 +1268,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     'encaisser/especes',
     tablette.getByRole('status', { name: 'Monnaie à rendre' }),
   )
+  await verifierFormatsTablette(
+    tablette,
+    'encaisser-especes',
+    tablette.getByRole('button', { name: /^Valider / }),
+  )
   await tablette.getByRole('button', { name: /^Valider 2\s500\sF en espèces/ }).click()
   await expect(tablette.getByRole('heading', { name: 'n°3 est encaissée' })).toBeVisible()
   // Le reçu est numéroté dès l'encaissement ; on l'imprime, sans ouvrir la boîte d'impression du navigateur.
@@ -1144,6 +1281,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await capturerManuel(
     tablette,
     'encaisser/recu',
+    tablette.getByRole('button', { name: 'Imprimer le reçu' }),
+  )
+  await verifierFormatsTablette(
+    tablette,
+    'note-encaissee',
     tablette.getByRole('button', { name: 'Imprimer le reçu' }),
   )
   await tablette.setViewportSize({ width: 390, height: 844 })
@@ -1231,6 +1373,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     'partager-l-addition/par-articles',
     tablette.getByRole('button', { name: /^Valider 4\s500\sF en carte/ }),
   )
+  await verifierFormatsTablette(
+    tablette,
+    'partage-par-articles',
+    tablette.getByRole('button', { name: /^Valider / }),
+  )
   await tablette.getByRole('button', { name: /^Valider 4\s500\sF en carte/ }).click()
   await expect(recap).toContainText('1× Poulet braisé, carte')
   await partage.getByRole('radio', { name: /Parts égales/ }).click()
@@ -1267,6 +1414,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     'rembourser/notes-encaissees',
     tablette.getByRole('button', { name: 'Rembourser' }),
   )
+  await verifierFormatsTablette(tablette, 'notes-encaissees')
   // Le client revient chercher son reçu : la réimpression est un duplicata, comptée côté serveur.
   await tablette.getByRole('button', { name: 'Réimprimer le reçu' }).click()
   await expect.poll(() => impressions(tablette)).toBe(2)
@@ -1292,6 +1440,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
     tablette,
     'rembourser/valider',
     tablette.getByRole('button', { name: /^Rembourser 4\s500\sF en carte/ }),
+  )
+  await verifierFormatsTablette(
+    tablette,
+    'rembourser',
+    tablette.getByRole('button', { name: /^Rembourser 4\s500/ }),
   )
   await tablette.setViewportSize({ width: 390, height: 844 })
   await capturer(tablette, '58-rembourser-telephone')
@@ -1503,6 +1656,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await expect(especes).toContainText('Attendu13 700 F')
   await capturer(tablette, '48-caisse-de-la-tablette')
   await capturerManuel(tablette, 'cloturer-la-caisse/caisse', especes)
+  await verifierFormatsTablette(
+    tablette,
+    'caisse-de-la-tablette',
+    tablette.getByRole('button', { name: 'Clôturer la caisse' }),
+  )
   await tablette.setViewportSize({ width: 390, height: 844 })
   await capturer(tablette, '48-caisse-de-la-tablette-telephone')
   await tablette.setViewportSize({ width: 1280, height: 800 })
@@ -1518,6 +1676,11 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await capturerManuel(
     tablette,
     'cloturer-la-caisse/comptage',
+    tablette.getByRole('button', { name: 'Valider le comptage' }),
+  )
+  await verifierFormatsTablette(
+    tablette,
+    'cloture-comptage',
     tablette.getByRole('button', { name: 'Valider le comptage' }),
   )
   await tablette.setViewportSize({ width: 390, height: 844 })
@@ -1544,6 +1707,7 @@ test('Kossi ouvre une note sur T4 depuis une tablette de la terrasse et la rempl
   await expect(z).toContainText('Ventes nettes14 700')
   await capturer(tablette, '51-rapport-z')
   await capturerManuel(tablette, 'premier-jour/rapport-z')
+  await verifierFormatsTablette(tablette, 'rapport-z')
   await tablette.setViewportSize({ width: 390, height: 844 })
   await capturer(tablette, '51-rapport-z-telephone')
   await tablette.setViewportSize({ width: 1280, height: 800 })
@@ -1779,6 +1943,7 @@ test('La cuisine de Bè Kpota reçoit les bons, les commence et les marque prêt
     'ecran-cuisine/bons',
     bon.getByRole('button', { name: 'Commencer' }),
   )
+  await verifierFormatsTablette(cuisine, 'cuisine')
   await bon.getByRole('button', { name: 'Commencer' }).click()
   await expect(bon).toContainText('En préparation')
   await capturer(cuisine, '86-cuisine-en-preparation')
@@ -1975,6 +2140,11 @@ test('Tanti crée des options, les attache aux côtelettes, et Kossi les choisit
     caisse,
     'prendre-une-commande/options',
     panneau.getByRole('button', { name: /^Ajouter/ }),
+  )
+  await verifierFormatsTablette(
+    caisse,
+    'caisse-options',
+    caisse.getByRole('dialog').getByRole('button', { name: /^Ajouter/ }),
   )
   await caisse.setViewportSize({ width: 390, height: 844 })
   await capturer(caisse, '92-caisse-options-telephone')

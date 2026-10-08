@@ -558,210 +558,220 @@ function Paiement({
   return (
     <>
       {validation.dialogue}
-      <section className="flex min-w-0 flex-1 flex-col gap-3 rounded-moyen border border-trait bg-surface p-4">
-        {erreur !== null && <AlerteErreur erreur={erreur} />}
-        <div
-          role="radiogroup"
-          aria-label={t('encaissement.partage.titre')}
-          className="grid grid-cols-3 gap-2"
-        >
-          {PARTAGES.map((candidat) => (
-            <button
-              key={candidat}
-              type="button"
-              role="radio"
-              aria-checked={partage === candidat}
-              disabled={enCours}
-              onClick={() => {
-                if (partage !== candidat) choisirPartage(candidat)
+      {/* Le contenu défile, la validation reste en bas : sur une tablette basse, on n'encaisse pas à l'aveugle. */}
+      <section className="@container flex min-h-0 min-w-0 flex-1 flex-col rounded-moyen border border-trait bg-surface">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
+          {erreur !== null && <AlerteErreur erreur={erreur} />}
+          <div
+            role="radiogroup"
+            aria-label={t('encaissement.partage.titre')}
+            className="grid grid-cols-3 gap-2"
+          >
+            {PARTAGES.map((candidat) => (
+              <button
+                key={candidat}
+                type="button"
+                role="radio"
+                aria-checked={partage === candidat}
+                disabled={enCours}
+                onClick={() => {
+                  if (partage !== candidat) choisirPartage(candidat)
+                }}
+                className={clsx(
+                  'flex min-h-16 flex-col items-start justify-center gap-0.5 rounded-moyen bg-surface px-3 py-1.5 text-left text-encre',
+                  partage === candidat ? 'border-2 border-accent' : 'border border-trait',
+                )}
+              >
+                <span className="text-corps-fort">{t(`encaissement.partage.${candidat}`)}</span>
+                <span className="hidden text-legende text-attenue @lg:block">
+                  {t(`encaissement.partage.aides.${candidat}`)}
+                </span>
+              </button>
+            ))}
+          </div>
+          {partage === 'parts' && etat.parts !== undefined && (
+            <PartsEgales
+              etat={etat}
+              parts={etat.parts}
+              devise={devise}
+              enCours={enCours}
+              surChanger={(parts) => void partager(parts)}
+            />
+          )}
+          {partage === 'articles' && (
+            <ChoixArticles
+              articles={etat.articles}
+              selection={selection}
+              devise={devise}
+              libelles={{
+                titre: t('encaissement.partage.ceQuePaie'),
+                liste: t('encaissement.partage.articlesListe'),
+                tout: t('encaissement.partage.toutLeReste'),
+                total: t('encaissement.partage.selection'),
+                regle: t('encaissement.paye'),
+                tonRegle: 'succes',
               }}
-              className={clsx(
-                'flex min-h-16 flex-col items-start justify-center gap-0.5 rounded-moyen bg-surface px-3 py-1.5 text-left text-encre',
-                partage === candidat ? 'border-2 border-accent' : 'border border-trait',
-              )}
-            >
-              <span className="text-corps-fort">{t(`encaissement.partage.${candidat}`)}</span>
-              <span className="hidden text-legende text-attenue sm:block">
-                {t(`encaissement.partage.aides.${candidat}`)}
-              </span>
-            </button>
-          ))}
-        </div>
-        {partage === 'parts' && etat.parts !== undefined && (
-          <PartsEgales
-            etat={etat}
-            parts={etat.parts}
-            devise={devise}
-            enCours={enCours}
-            surChanger={(parts) => void partager(parts)}
-          />
-        )}
-        {partage === 'articles' && (
-          <ChoixArticles
-            articles={etat.articles}
-            selection={selection}
-            devise={devise}
-            libelles={{
-              titre: t('encaissement.partage.ceQuePaie'),
-              liste: t('encaissement.partage.articlesListe'),
-              tout: t('encaissement.partage.toutLeReste'),
-              total: t('encaissement.partage.selection'),
-              regle: t('encaissement.paye'),
-              tonRegle: 'succes',
-            }}
-            sousTitre={(article) =>
-              t('encaissement.partage.surLaNote', {
-                count: article.quantite,
-                payees: article.payees,
-              })
-            }
-            surChanger={setSelection}
-          />
-        )}
-        <div
-          role="radiogroup"
-          aria-label={t('encaissement.modes.titre')}
-          className="grid grid-cols-2 gap-2 sm:grid-cols-4"
-        >
-          {MODES.map((candidat) => (
-            <button
-              key={candidat}
-              type="button"
-              role="radio"
-              aria-checked={mode === candidat}
-              onClick={() => {
-                setMode(candidat)
-                setActif(candidat === 'ESPECES' ? 'recu' : 'montant')
-              }}
-              className={clsx(
-                'flex min-h-22 flex-col items-start justify-between gap-1.5 rounded-moyen px-3.5 py-3 text-left text-encre',
-                mode === candidat
-                  ? 'border-2 border-accent bg-accent-doux'
-                  : 'border border-bordure-controle bg-surface hover:bg-fond',
-              )}
-            >
-              {(() => {
-                const Icone = ICONES_MODES[candidat]
-                return <Icone aria-hidden="true" size={22} />
-              })()}
-              <span className="text-titre-carte leading-tight">
-                {t(`encaissement.modes.${candidat}`)}
-              </span>
-              <span className="text-legende text-attenue">
-                {t(`encaissement.aides.${candidat}`)}
-              </span>
-            </button>
-          ))}
-        </div>
-        {partage === 'libre' && (
-          <ChampSaisie
-            libelle={t('encaissement.montant')}
-            inputMode="numeric"
-            suffixe={symboleDe(devise)}
-            value={montant}
-            onFocus={() => {
-              setActif('montant')
-            }}
-            onChange={(evenement) => {
-              setMontant(evenement.target.value)
-            }}
-          />
-        )}
-        {mode === 'ESPECES' && (
-          <>
+              sousTitre={(article) =>
+                t('encaissement.partage.surLaNote', {
+                  count: article.quantite,
+                  payees: article.payees,
+                })
+              }
+              surChanger={setSelection}
+            />
+          )}
+          <div
+            role="radiogroup"
+            aria-label={t('encaissement.modes.titre')}
+            // Quatre tuiles côte à côte seulement si le panneau est large : sinon leur texte déborde.
+            className="grid grid-cols-2 gap-2 @xl:grid-cols-4"
+          >
+            {MODES.map((candidat) => (
+              <button
+                key={candidat}
+                type="button"
+                role="radio"
+                aria-checked={mode === candidat}
+                onClick={() => {
+                  setMode(candidat)
+                  setActif(candidat === 'ESPECES' ? 'recu' : 'montant')
+                }}
+                className={clsx(
+                  'flex min-h-22 flex-col items-start justify-between gap-1.5 rounded-moyen px-3.5 py-3 text-left text-encre',
+                  mode === candidat
+                    ? 'border-2 border-accent bg-accent-doux'
+                    : 'border border-bordure-controle bg-surface hover:bg-fond',
+                )}
+              >
+                {(() => {
+                  const Icone = ICONES_MODES[candidat]
+                  return <Icone aria-hidden="true" size={22} />
+                })()}
+                <span className="text-titre-carte leading-tight">
+                  {t(`encaissement.modes.${candidat}`)}
+                </span>
+                <span className="text-legende text-attenue">
+                  {t(`encaissement.aides.${candidat}`)}
+                </span>
+              </button>
+            ))}
+          </div>
+          {partage === 'libre' && (
             <ChampSaisie
-              libelle={t('encaissement.recu')}
+              libelle={t('encaissement.montant')}
               inputMode="numeric"
               suffixe={symboleDe(devise)}
-              value={recu ?? String(montantLu ?? '')}
+              value={montant}
               onFocus={() => {
-                setActif('recu')
+                setActif('montant')
               }}
               onChange={(evenement) => {
-                setRecu(evenement.target.value)
+                setMontant(evenement.target.value)
               }}
             />
-            {montantLu !== null && montantLu > 0 && (
-              <div className="grid grid-cols-4 gap-2">
-                {[montantLu, ...montantsRapides(montantLu)].map((valeur, rang) => (
-                  <Bouton
-                    key={valeur}
-                    aria-label={
-                      rang === 0 ? `${t('encaissement.exact')} ${courte(valeur)}` : undefined
-                    }
-                    className="chiffres min-h-cible-caisse text-corps-fort"
-                    onClick={() => {
-                      setRecu(String(valeur))
-                    }}
-                  >
-                    {formaterMontant({ unitesMineures: valeur, devise }, { forme: 'nombre' })}
-                  </Bouton>
-                ))}
-              </div>
-            )}
-            {manque > 0 ? (
-              <p className="m-0 text-corps text-danger">
-                {t('encaissement.manque', { montant: courte(manque) })}
-              </p>
-            ) : (
-              montantLu !== null &&
-              recuLu !== null && (
-                <div
-                  role="status"
-                  aria-label={t('encaissement.rendu')}
-                  className="flex items-center justify-between rounded-moyen bg-succes-fond px-4 py-3 text-succes"
-                >
-                  <span className="flex flex-col">
-                    <span className="text-corps-fort">{t('encaissement.rendu')}</span>
-                    <span className="text-legende">
-                      {t('encaissement.renduDetail', {
-                        recu: courte(recuLu),
-                        du: courte(montantLu),
-                      })}
-                    </span>
-                  </span>
-                  <span className="chiffres text-montant-total">{courte(recuLu - montantLu)}</span>
+          )}
+          {mode === 'ESPECES' && (
+            <>
+              <ChampSaisie
+                libelle={t('encaissement.recu')}
+                inputMode="numeric"
+                suffixe={symboleDe(devise)}
+                value={recu ?? String(montantLu ?? '')}
+                onFocus={() => {
+                  setActif('recu')
+                }}
+                onChange={(evenement) => {
+                  setRecu(evenement.target.value)
+                }}
+              />
+              {montantLu !== null && montantLu > 0 && (
+                <div className="grid grid-cols-4 gap-2">
+                  {[montantLu, ...montantsRapides(montantLu)].map((valeur, rang) => (
+                    <Bouton
+                      key={valeur}
+                      aria-label={
+                        rang === 0 ? `${t('encaissement.exact')} ${courte(valeur)}` : undefined
+                      }
+                      className="chiffres min-h-cible-caisse text-corps-fort"
+                      onClick={() => {
+                        setRecu(String(valeur))
+                      }}
+                    >
+                      {formaterMontant({ unitesMineures: valeur, devise }, { forme: 'nombre' })}
+                    </Bouton>
+                  ))}
                 </div>
-              )
-            )}
-          </>
-        )}
-        {mode === 'MOBILE_MONEY' && (
-          <>
-            <ChoixOperateur operateurs={operateurs} valeur={operateur} surChoisir={setOperateur} />
+              )}
+              {manque > 0 ? (
+                <p className="m-0 text-corps text-danger">
+                  {t('encaissement.manque', { montant: courte(manque) })}
+                </p>
+              ) : (
+                montantLu !== null &&
+                recuLu !== null && (
+                  <div
+                    role="status"
+                    aria-label={t('encaissement.rendu')}
+                    className="flex items-center justify-between rounded-moyen bg-succes-fond px-4 py-3 text-succes"
+                  >
+                    <span className="flex flex-col">
+                      <span className="text-corps-fort">{t('encaissement.rendu')}</span>
+                      <span className="text-legende">
+                        {t('encaissement.renduDetail', {
+                          recu: courte(recuLu),
+                          du: courte(montantLu),
+                        })}
+                      </span>
+                    </span>
+                    <span className="chiffres text-montant-total">
+                      {courte(recuLu - montantLu)}
+                    </span>
+                  </div>
+                )
+              )}
+            </>
+          )}
+          {mode === 'MOBILE_MONEY' && (
+            <>
+              <ChoixOperateur
+                operateurs={operateurs}
+                valeur={operateur}
+                surChoisir={setOperateur}
+              />
+              <ChampSaisie
+                libelle={t('encaissement.reference')}
+                obligatoire
+                maxLength={60}
+                value={reference}
+                onChange={(evenement) => {
+                  setReference(evenement.target.value)
+                }}
+              />
+              <p className="m-0 text-legende text-attenue">{t('encaissement.verifier')}</p>
+            </>
+          )}
+          {mode === 'CARTE' && (
             <ChampSaisie
-              libelle={t('encaissement.reference')}
-              obligatoire
+              libelle={t('encaissement.referenceFacultative')}
               maxLength={60}
               value={reference}
               onChange={(evenement) => {
                 setReference(evenement.target.value)
               }}
             />
-            <p className="m-0 text-legende text-attenue">{t('encaissement.verifier')}</p>
-          </>
-        )}
-        {mode === 'CARTE' && (
-          <ChampSaisie
-            libelle={t('encaissement.referenceFacultative')}
-            maxLength={60}
-            value={reference}
-            onChange={(evenement) => {
-              setReference(evenement.target.value)
-            }}
-          />
-        )}
-        {mode === 'ARDOISE' && (
-          <ChoixClientArdoise
-            client={client}
-            montant={montantLu ?? 0}
-            devise={devise}
-            pays={pays}
-            peutCreer={peutCrediter}
-            surChoisir={setClient}
-          />
-        )}
-        <div className="mt-auto flex flex-wrap items-center justify-end gap-3 pt-2">
+          )}
+          {mode === 'ARDOISE' && (
+            <ChoixClientArdoise
+              client={client}
+              montant={montantLu ?? 0}
+              devise={devise}
+              pays={pays}
+              peutCreer={peutCrediter}
+              surChoisir={setClient}
+            />
+          )}
+        </div>
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-trait px-4 py-3">
           <span className="min-w-48 flex-1 text-legende text-attenue">
             {aCompleter.length > 0
               ? t('encaissement.manques.pourValider', { liste: aCompleter.join(', ') })

@@ -662,153 +662,157 @@ function Rembourser({
   return (
     <section
       aria-label={t('remboursement.titreRembourser', { note: titre })}
-      className="flex flex-col gap-4 rounded-moyen border border-trait bg-surface p-5 lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
+      className="flex min-h-0 flex-1 flex-col rounded-moyen border border-trait bg-surface"
     >
-      <div className="flex flex-wrap items-center gap-3">
-        <Bouton icone={ArrowLeft} onClick={surFermer}>
-          {t('remboursement.retour')}
-        </Bouton>
-        <h2 className="m-0 text-titre-section text-encre">
-          {t('remboursement.titreRembourser', { note: titre })}
-        </h2>
-      </div>
-      {etat.autreJour && (
-        <p className="m-0 flex flex-col gap-1 rounded-normal border border-alerte-bord bg-alerte-fond px-3 py-2 text-corps text-alerte-texte">
-          <span className="font-bold">
-            {t('remboursement.autreJour.badge', { jour: formaterJournee(etat.journee) })}
-          </span>
-          {t('remboursement.autreJour.avertissement')}
-        </p>
-      )}
-      {erreur !== null && <AlerteErreur erreur={erreur} />}
-      <div className="grid gap-5 lg:grid-cols-2">
-        <ChoixArticles
-          articles={articles}
-          selection={selection}
-          devise={devise}
-          libelles={{
-            titre: t('remboursement.articles'),
-            liste: t('remboursement.articles'),
-            tout: t('remboursement.toutLaNote'),
-            total: t('remboursement.aRembourser'),
-            regle: t('remboursement.badge'),
-            tonRegle: 'danger',
-          }}
-          sousTitre={(article) =>
-            t('remboursement.surLaNote', { count: article.quantite, rembourses: article.payees })
-          }
-          surChanger={setSelection}
-        />
-        <div className="flex flex-col gap-4">
-          <section aria-label={t('remboursement.mode')} className="flex flex-col gap-2">
-            <h3 className="m-0 text-corps-fort text-encre">{t('remboursement.mode')}</h3>
-            <ul className="m-0 flex list-none flex-col overflow-hidden rounded-moyen border border-trait p-0">
-              {disponibles.map((candidat) => {
-                const part = parts?.find((rendue) => rendue.mode === candidat.mode)
-                return (
-                  <li
-                    key={candidat.mode}
-                    className={clsx(
-                      'flex items-center gap-3 border-b border-trait px-3 py-2.5 last:border-b-0',
-                      part === undefined ? 'bg-surface' : 'bg-fond',
-                    )}
-                  >
-                    <span className="flex min-w-0 flex-1 flex-col">
-                      <span className="text-corps-fort text-encre">
-                        {t(`encaissement.modes.${candidat.mode}`)}
+      {/* Comme à l'encaissement : le contenu défile, le bouton de remboursement reste en bas. */}
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5">
+        <div className="flex flex-wrap items-center gap-3">
+          <Bouton icone={ArrowLeft} onClick={surFermer}>
+            {t('remboursement.retour')}
+          </Bouton>
+          <h2 className="m-0 text-titre-section text-encre">
+            {t('remboursement.titreRembourser', { note: titre })}
+          </h2>
+        </div>
+        {etat.autreJour && (
+          <p className="m-0 flex flex-col gap-1 rounded-normal border border-alerte-bord bg-alerte-fond px-3 py-2 text-corps text-alerte-texte">
+            <span className="font-bold">
+              {t('remboursement.autreJour.badge', { jour: formaterJournee(etat.journee) })}
+            </span>
+            {t('remboursement.autreJour.avertissement')}
+          </p>
+        )}
+        {erreur !== null && <AlerteErreur erreur={erreur} />}
+        <div className="grid gap-5 lg:grid-cols-2">
+          <ChoixArticles
+            articles={articles}
+            selection={selection}
+            devise={devise}
+            libelles={{
+              titre: t('remboursement.articles'),
+              liste: t('remboursement.articles'),
+              tout: t('remboursement.toutLaNote'),
+              total: t('remboursement.aRembourser'),
+              regle: t('remboursement.badge'),
+              tonRegle: 'danger',
+            }}
+            sousTitre={(article) =>
+              t('remboursement.surLaNote', { count: article.quantite, rembourses: article.payees })
+            }
+            surChanger={setSelection}
+          />
+          <div className="flex flex-col gap-4">
+            <section aria-label={t('remboursement.mode')} className="flex flex-col gap-2">
+              <h3 className="m-0 text-corps-fort text-encre">{t('remboursement.mode')}</h3>
+              <ul className="m-0 flex list-none flex-col overflow-hidden rounded-moyen border border-trait p-0">
+                {disponibles.map((candidat) => {
+                  const part = parts?.find((rendue) => rendue.mode === candidat.mode)
+                  return (
+                    <li
+                      key={candidat.mode}
+                      className={clsx(
+                        'flex items-center gap-3 border-b border-trait px-3 py-2.5 last:border-b-0',
+                        part === undefined ? 'bg-surface' : 'bg-fond',
+                      )}
+                    >
+                      <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="text-corps-fort text-encre">
+                          {t(`encaissement.modes.${candidat.mode}`)}
+                        </span>
+                        <span className="text-legende text-attenue">
+                          {t(AIDES_REMBOURSEMENT[candidat.mode], {
+                            montant: courte(candidat.remboursable),
+                          })}
+                        </span>
                       </span>
-                      <span className="text-legende text-attenue">
-                        {t(AIDES_REMBOURSEMENT[candidat.mode], {
-                          montant: courte(candidat.remboursable),
-                        })}
+                      <span className="chiffres text-montant-ligne text-encre">
+                        {part === undefined ? '—' : courte(part.montant)}
                       </span>
-                    </span>
-                    <span className="chiffres text-montant-ligne text-encre">
-                      {part === undefined ? '—' : courte(part.montant)}
-                    </span>
-                  </li>
-                )
-              })}
-            </ul>
-            {disponibles.length > 1 && (
-              <p className="m-0 text-legende text-attenue">{t('remboursement.ordre')}</p>
+                    </li>
+                  )
+                })}
+              </ul>
+              {disponibles.length > 1 && (
+                <p className="m-0 text-legende text-attenue">{t('remboursement.ordre')}</p>
+              )}
+            </section>
+            {enMobile && (
+              <>
+                <ChoixOperateur
+                  operateurs={operateurs}
+                  valeur={operateur}
+                  surChoisir={setOperateur}
+                />
+                <ChampSaisie
+                  libelle={t('remboursement.referenceRetour')}
+                  obligatoire
+                  maxLength={60}
+                  value={reference}
+                  onChange={(evenement) => {
+                    setReference(evenement.target.value)
+                  }}
+                />
+              </>
             )}
-          </section>
-          {enMobile && (
-            <>
-              <ChoixOperateur
-                operateurs={operateurs}
-                valeur={operateur}
-                surChoisir={setOperateur}
-              />
+            {parCarte && !enMobile && (
               <ChampSaisie
-                libelle={t('remboursement.referenceRetour')}
-                obligatoire
+                libelle={t('remboursement.referenceCarte')}
                 maxLength={60}
                 value={reference}
                 onChange={(evenement) => {
                   setReference(evenement.target.value)
                 }}
               />
-            </>
-          )}
-          {parCarte && !enMobile && (
-            <ChampSaisie
-              libelle={t('remboursement.referenceCarte')}
-              maxLength={60}
-              value={reference}
-              onChange={(evenement) => {
-                setReference(evenement.target.value)
-              }}
-            />
-          )}
-          <div
-            role="radiogroup"
-            aria-label={t('remboursement.motif')}
-            className="grid grid-cols-1 gap-2 sm:grid-cols-2"
-          >
-            <span className="text-corps-fort text-encre sm:col-span-2">
-              {t('remboursement.motif')}
-            </span>
-            {MOTIFS.map((candidat) => (
-              <button
-                key={candidat}
-                type="button"
-                role="radio"
-                aria-checked={motif === candidat}
-                onClick={() => {
-                  setMotif(candidat)
+            )}
+            <div
+              role="radiogroup"
+              aria-label={t('remboursement.motif')}
+              className="grid grid-cols-1 gap-2 sm:grid-cols-2"
+            >
+              <span className="text-corps-fort text-encre sm:col-span-2">
+                {t('remboursement.motif')}
+              </span>
+              {MOTIFS.map((candidat) => (
+                <button
+                  key={candidat}
+                  type="button"
+                  role="radio"
+                  aria-checked={motif === candidat}
+                  onClick={() => {
+                    setMotif(candidat)
+                  }}
+                  className={clsx(
+                    'flex min-h-cible-caisse items-center rounded-normal bg-surface px-3 text-left text-corps text-encre',
+                    motif === candidat ? 'border-2 border-accent font-bold' : 'border border-trait',
+                  )}
+                >
+                  {t(`remboursement.motifs.${candidat}`)}
+                </button>
+              ))}
+            </div>
+            {motif === 'AUTRE' && (
+              <ChampSaisie
+                libelle={t('remboursement.detail')}
+                obligatoire
+                maxLength={120}
+                value={detail}
+                onChange={(evenement) => {
+                  setDetail(evenement.target.value)
                 }}
-                className={clsx(
-                  'flex min-h-cible-caisse items-center rounded-normal bg-surface px-3 text-left text-corps text-encre',
-                  motif === candidat ? 'border-2 border-accent font-bold' : 'border border-trait',
-                )}
-              >
-                {t(`remboursement.motifs.${candidat}`)}
-              </button>
-            ))}
+              />
+            )}
+            {suiviEnStock && motif !== null && (
+              <ChoixRetourStock
+                libelle={t('caisse.stock.articles')}
+                revient={revient}
+                surChoisir={setRetour}
+              />
+            )}
           </div>
-          {motif === 'AUTRE' && (
-            <ChampSaisie
-              libelle={t('remboursement.detail')}
-              obligatoire
-              maxLength={120}
-              value={detail}
-              onChange={(evenement) => {
-                setDetail(evenement.target.value)
-              }}
-            />
-          )}
-          {suiviEnStock && motif !== null && (
-            <ChoixRetourStock
-              libelle={t('caisse.stock.articles')}
-              revient={revient}
-              surChoisir={setRetour}
-            />
-          )}
         </div>
       </div>
-      <div className="mt-auto flex flex-wrap items-center justify-end gap-3 border-t border-trait pt-4">
+      {/* Sur une tablette en portrait, la page défile : le pied reste collé en bas, marge de la page comprise. */}
+      <div className="sticky -bottom-4 flex shrink-0 flex-wrap items-center justify-end gap-3 rounded-b-moyen border-t border-trait bg-surface px-5 py-3">
         <p className="m-0 min-w-0 flex-1 text-legende text-attenue">
           {manques.length > 0
             ? t('remboursement.manques.pour', { liste: manques.join(', ') })

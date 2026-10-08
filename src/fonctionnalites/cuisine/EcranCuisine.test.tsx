@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { API, CAISSE_BAR, ouvrir, tablette } from '../../../tests/application'
+import { simulerPleinEcran } from '../../../tests/pleinEcran'
 import { serveurMsw } from '../../../tests/serveurMsw'
 import type { AppareilCourant, BonCuisine, EcranCuisine } from '../../partage/api/contrat'
 
@@ -131,6 +132,30 @@ describe('EcranCuisine', () => {
     const onglets = screen.getByRole('tablist', { name: 'Bons' })
     expect(within(onglets).getByRole('tab', { name: /À préparer/ })).toHaveTextContent('2')
     expect(within(onglets).getByRole('tab', { name: /Prêts/ })).toHaveTextContent('1')
+  })
+
+  it('cache le plein écran quand le navigateur ne le permet pas, comme sur iPhone', async () => {
+    tablette(CUISINE)
+    cuisineServie()
+    ouvrir('/cuisine')
+
+    await screen.findByRole('region', { name: 'Bon n°12' })
+    expect(
+      within(screen.getByRole('banner')).queryByRole('button', { name: 'Plein écran' }),
+    ).toBeNull()
+  })
+
+  it('propose le plein écran dans sa barre', async () => {
+    const { demander } = simulerPleinEcran()
+    tablette(CUISINE)
+    cuisineServie()
+    ouvrir('/cuisine')
+
+    await screen.findByRole('region', { name: 'Bon n°12' })
+    await userEvent.click(
+      within(screen.getByRole('banner')).getByRole('button', { name: 'Plein écran' }),
+    )
+    expect(demander).toHaveBeenCalledOnce()
   })
 
   it('commence un bon, marque un article puis tout le bon prêt', async () => {

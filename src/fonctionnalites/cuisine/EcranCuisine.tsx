@@ -15,6 +15,7 @@ import { BarreHaute } from '../../partage/ui/BarreHaute'
 import { Bouton } from '../../partage/ui/Bouton'
 import { Chargement } from '../../partage/ui/Chargement'
 import { EtatVide } from '../../partage/ui/EtatVide'
+import { BoutonPleinEcran } from '../../app/mises-en-page/BoutonPleinEcran'
 import { CLASSES_CONTROLE_BARRE } from '../../app/mises-en-page/MenuCompte'
 import { requeteAppareil } from '../tablette/requetes'
 import { jouerBip } from './bip'
@@ -144,6 +145,7 @@ export function EcranCuisine() {
             {son ? t('cuisine.sonActif') : t('cuisine.sonCoupe')}
           </span>
         </button>
+        <BoutonPleinEcran />
         <Link
           to="/aide"
           search={{ depuis: '/cuisine' }}
