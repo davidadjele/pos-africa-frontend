@@ -15,6 +15,7 @@ import {
   useJetonCaisse,
 } from '../../partage/api/jetonCaisse'
 import { BarreHaute } from '../../partage/ui/BarreHaute'
+import { BoutonPleinEcran } from './BoutonPleinEcran'
 import { CLASSES_CONTROLE_BARRE } from './MenuCompte'
 
 /** Le jeton de caisse dure 15 minutes : il est prolongé bien avant, tant que la caisse est ouverte. */
@@ -62,6 +63,7 @@ export function MiseEnPageCaisse() {
             </button>
           </>
         )}
+        <BoutonPleinEcran />
         <Link
           to="/aide"
           search={{ depuis: chemin }}

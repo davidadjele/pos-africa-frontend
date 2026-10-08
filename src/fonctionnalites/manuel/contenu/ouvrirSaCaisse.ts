@@ -61,6 +61,7 @@ export const ouvrirSaCaisse: Guide = {
     },
   ],
   bonASavoir: [
+    'Touchez **Plein écran**, dans la barre du haut, pour masquer le navigateur. Échap ou le geste du système en sort, de même qu’un rechargement après une mise à jour. Le bouton n’existe pas sur iPhone.',
     'Votre code signe vos commandes et vos encaissements : ne le donnez à personne.',
     'Le délai de verrouillage se règle par établissement, dans **Réglages**, onglet **Établissements**, champ **Verrouillage de la caisse**.',
     'Un serveur prend les commandes ; un caissier ou un gérant encaisse. Le même écran sert à tous.',

@@ -13,6 +13,7 @@ import {
   POULET,
   T1_ID,
 } from '../../../tests/commandes'
+import { simulerPleinEcran } from '../../../tests/pleinEcran'
 import { serveurMsw } from '../../../tests/serveurMsw'
 import type { DemandeOuverture, PlanDeSalle } from '../../partage/api/contrat'
 
@@ -38,6 +39,20 @@ function ouvertures(reponse = NOTE_VIDE) {
 }
 
 describe('EcranPlan', () => {
+  it('propose de passer la caisse en plein écran, depuis sa barre', async () => {
+    const { demander } = simulerPleinEcran()
+    planServi()
+    caisseOuverte('/caisse')
+
+    await screen.findByRole('list', { name: 'Tables' })
+    const bouton = within(screen.getByRole('banner')).getByRole('button', { name: 'Plein écran' })
+    expect(bouton).toHaveAttribute('aria-pressed', 'false')
+    await userEvent.click(bouton)
+
+    expect(demander).toHaveBeenCalledOnce()
+    expect(bouton).toHaveAttribute('aria-pressed', 'true')
+  })
+
   it('montre les tables de la salle, libres ou avec leur note', async () => {
     planServi()
     caisseOuverte('/caisse')

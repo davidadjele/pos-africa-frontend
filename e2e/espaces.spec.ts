@@ -120,6 +120,11 @@ test('la gestion présente sa navigation et mène à la caisse', async ({ page }
   await expect(page.getByRole('banner')).toContainText('Maquis Chez Tanti')
   await expect(page.getByRole('heading', { level: 1, name: 'Qui prend la caisse ?' })).toBeVisible()
   await expect(page.getByRole('button', { name: /Kossi A\./ })).toBeVisible()
+  // Le plein écran masque le navigateur de la tablette ; il s'active d'un toucher dans la barre.
+  await page.getByRole('banner').getByRole('button', { name: 'Plein écran' }).click()
+  await expect.poll(() => page.evaluate(() => document.fullscreenElement !== null)).toBe(true)
+  await page.getByRole('banner').getByRole('button', { name: 'Plein écran' }).click()
+  await expect.poll(() => page.evaluate(() => document.fullscreenElement === null)).toBe(true)
   await verifierSansDefilementHorizontal(page)
   expect(erreurs).toEqual([])
 })

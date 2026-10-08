@@ -4,6 +4,7 @@ import { afterAll, afterEach, beforeAll } from 'vitest'
 import { effacerJetonCaisse } from '../src/partage/api/jetonCaisse'
 import { reinitialiserSession } from '../src/partage/auth/session'
 import '../src/partage/i18n/i18n'
+import { oublierPleinEcran } from './pleinEcran'
 import { serveurMsw } from './serveurMsw'
 
 // jsdom n'implémente pas le défilement, appelé par la restauration de défilement du routeur.
@@ -19,6 +20,7 @@ afterEach(() => {
   // La session vit dans des variables de module : chaque test repart d'une application neuve.
   reinitialiserSession()
   effacerJetonCaisse()
+  oublierPleinEcran()
 })
 
 afterAll(() => {

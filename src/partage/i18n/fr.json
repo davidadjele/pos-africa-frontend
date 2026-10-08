@@ -53,7 +53,9 @@
     "copier": "Copier",
     "copie": "Copié",
     "enregistrer": "Enregistrer",
-    "fermer": "Fermer"
+    "fermer": "Fermer",
+    "pleinEcran": "Plein écran",
+    "quitterPleinEcran": "Quitter le plein écran"
   },
   "caisse": {
     "vide": {

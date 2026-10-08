@@ -50,10 +50,10 @@ export function EtapeComptage({
   const { devise, saisies, total, changer } = comptage
   const coupures = coupuresDe(devise)
   return (
-    <div className="flex flex-col gap-3 lg:min-h-0 lg:flex-1 lg:flex-row">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
       <section
         aria-label={t('cloture.comptage')}
-        className="grid min-w-0 flex-1 content-start gap-x-10 gap-y-4 rounded-moyen border border-trait bg-surface p-4 sm:p-5 lg:overflow-y-auto xl:grid-cols-2"
+        className="grid min-h-0 min-w-0 flex-1 content-start gap-x-10 gap-y-4 overflow-y-auto rounded-moyen border border-trait bg-surface p-4 sm:p-5 xl:grid-cols-2"
       >
         {coupures === null ? (
           <ChampSaisie
@@ -90,7 +90,8 @@ export function EtapeComptage({
           })
         )}
       </section>
-      <aside className="flex shrink-0 flex-col gap-3 rounded-moyen border border-trait bg-surface p-5 lg:w-ticket-largeur">
+      {/* En portrait, la page défile : le total et sa validation restent collés en bas, marge de la page comprise. */}
+      <aside className="sticky -bottom-4 flex shrink-0 flex-col gap-3 rounded-moyen border border-trait bg-surface p-5 lg:static lg:w-ticket-largeur">
         <span className="text-legende text-attenue">{t('cloture.compte')}</span>
         <output aria-label={t('cloture.compte')} className="chiffres text-montant-total text-encre">
           {formaterMontant({ unitesMineures: total, devise }, { forme: 'courte' })}
