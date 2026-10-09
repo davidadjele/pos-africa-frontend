@@ -40,6 +40,7 @@ export const ecranCuisine: Guide = {
     },
   ],
   bonASavoir: [
+    'L’écran reste allumé tant que les bons sont affichés : inutile de régler la mise en veille de la tablette.',
     'Touchez **Plein écran**, dans la barre du haut, pour masquer le navigateur. Échap ou le geste du système en sort, de même qu’un rechargement après une mise à jour. Le bouton n’existe pas sur iPhone.',
     'Le bip d’un nouveau bon se coupe et se remet avec le bouton de son, en haut de l’écran.',
     'Un article annulé par la salle est barré sur le bon : inutile de le préparer.',
