@@ -39,7 +39,10 @@ describe('PageEnregistrementTablette', () => {
       expect(routeur.state.location.pathname).toBe('/caisse')
     })
     expect(corps).toEqual({ code: '482915' })
-    expect(await screen.findByRole('banner')).toHaveTextContent('Bè Kpota, Caisse 1, bar')
+    // La caisse se charge à part : sa barre remplace celle de l'enregistrement une fois le code accepté.
+    await waitFor(() => {
+      expect(screen.getByRole('banner')).toHaveTextContent('Bè Kpota, Caisse 1, bar')
+    })
   })
 
   it('ouvre l’écran cuisine d’une tablette enregistrée comme cuisine', async () => {

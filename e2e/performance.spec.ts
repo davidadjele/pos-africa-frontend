@@ -211,6 +211,25 @@ test.describe('performance sur tablette bas de gamme', () => {
     expect(mesures.ajoutArticle).toBeLessThanOrEqual(PLAFONDS_MS.ajoutArticle)
   })
 
+  test('la caisse ne télécharge que son espace, ni la gestion, ni la plateforme, ni le manuel', async ({
+    page,
+  }, testInfo) => {
+    const morceaux = new Set<string>()
+    page.on('response', (reponse) => {
+      const nom = /\/assets\/([a-z-]+)-[\w-]{8}\.js$/i.exec(reponse.url())?.[1]
+      if (nom !== undefined) morceaux.add(nom)
+    })
+    await simulerCaisse(page)
+    await page.goto('/caisse')
+    await expect(page.getByRole('button', { name: /Kossi A\./ })).toBeVisible()
+
+    noter(testInfo, { morceaux: [...morceaux].sort() })
+    expect([...morceaux]).toContain('caisse')
+    expect([...morceaux]).not.toContain('gestion')
+    expect([...morceaux]).not.toContain('plateforme')
+    expect([...morceaux]).not.toContain('aide')
+  })
+
   for (const [chemin, titre] of [
     ['/connexion', 'Se connecter'],
     ['/aide', 'Comment pouvons-nous vous aider ?'],

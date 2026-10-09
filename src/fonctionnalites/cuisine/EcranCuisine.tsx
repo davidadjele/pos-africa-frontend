@@ -20,6 +20,7 @@ import { CLASSES_CONTROLE_BARRE } from '../../app/mises-en-page/MenuCompte'
 import { requeteAppareil } from '../tablette/requetes'
 import { jouerBip } from './bip'
 import { chrono, enColonnes, nouveauxBons } from './presentation'
+import { useEcranAllume } from './useEcranAllume'
 import { requeteEcranCuisine } from './requetes'
 
 type Onglet = 'aPreparer' | 'prets'
@@ -88,6 +89,7 @@ function repereDuBon(bon: BonCuisine, t: TFunction): string {
 export function EcranCuisine() {
   const { t } = useTranslation()
   const clientRequetes = useQueryClient()
+  useEcranAllume()
   const { data: appareil } = useQuery(requeteAppareil)
   const ecran = useQuery(requeteEcranCuisine)
   const [onglet, setOnglet] = useState<Onglet>('aPreparer')

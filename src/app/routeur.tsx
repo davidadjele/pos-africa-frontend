@@ -3,50 +3,12 @@ import {
   createRootRouteWithContext,
   createRoute,
   createRouter,
+  lazyRouteComponent,
   Outlet,
   redirect,
   type RouterHistory,
 } from '@tanstack/react-router'
-import { PageActivite } from '../fonctionnalites/activite/PageActivite'
-import { PageCarteEtablissement } from '../fonctionnalites/catalogue/PageCarteEtablissement'
-import { PageFicheProduit } from '../fonctionnalites/catalogue/PageFicheProduit'
-import { PageProduits, type RechercheProduits } from '../fonctionnalites/catalogue/PageProduits'
-import { PageOptions } from '../fonctionnalites/catalogue/PageOptions'
-import { PageTaxes } from '../fonctionnalites/catalogue/PageTaxes'
-import { PageSalles } from '../fonctionnalites/salles/PageSalles'
-import { PageArdoises } from '../fonctionnalites/ardoise/PageArdoises'
-import { PageEntreprise } from '../fonctionnalites/etablissements/PageEntreprise'
-import { PageFicheClient } from '../fonctionnalites/ardoise/PageFicheClient'
-import { PageInventaireStock } from '../fonctionnalites/stock/PageInventaireStock'
-import { PageReceptionStock } from '../fonctionnalites/stock/PageReceptionStock'
-import { PageStock } from '../fonctionnalites/stock/PageStock'
-import { EcranNote } from '../fonctionnalites/commande/EcranNote'
-import { EcranPlan } from '../fonctionnalites/commande/EcranPlan'
-import { EcranEncaissement } from '../fonctionnalites/encaissement/EcranEncaissement'
-import { EcranTiroir } from '../fonctionnalites/encaissement/EcranTiroir'
-import { PageChangerMotDePasse } from '../fonctionnalites/connexion/PageChangerMotDePasse'
-import { PageChoixEntreprise } from '../fonctionnalites/connexion/PageChoixEntreprise'
-import { PageConnexion } from '../fonctionnalites/connexion/PageConnexion'
-import { PageEtablissements } from '../fonctionnalites/etablissements/PageEtablissements'
-import { TableauDeBord } from '../fonctionnalites/gestion/TableauDeBord'
-import { PageInscription } from '../fonctionnalites/inscription/PageInscription'
-import { PagePersonnel } from '../fonctionnalites/personnel/PagePersonnel'
-import { PageEntreprises } from '../fonctionnalites/plateforme/PageEntreprises'
-import { PageActivitePlateforme } from '../fonctionnalites/plateforme/PageActivitePlateforme'
-import { PageEquipe } from '../fonctionnalites/plateforme/PageEquipe'
-import { PageFicheEntreprise } from '../fonctionnalites/plateforme/PageFicheEntreprise'
-import { PageNouvelleEntreprise } from '../fonctionnalites/plateforme/PageNouvelleEntreprise'
-import { PageSupport } from '../fonctionnalites/plateforme/PageSupport'
-import { PageTableauDeBordPlateforme } from '../fonctionnalites/plateforme/PageTableauDeBordPlateforme'
-import { PageRecu } from '../fonctionnalites/recu/PageRecu'
-import { PageAide } from '../fonctionnalites/manuel/PageAide'
-import { PageGuide } from '../fonctionnalites/manuel/PageGuide'
-import { PageCaisses } from '../fonctionnalites/rapports/PageCaisses'
-import { PageDetailCaisse } from '../fonctionnalites/rapports/PageDetailCaisse'
-import { PageVentes } from '../fonctionnalites/rapports/PageVentes'
-import { EcranCuisine } from '../fonctionnalites/cuisine/EcranCuisine'
-import { PageEnregistrementTablette } from '../fonctionnalites/tablette/PageEnregistrementTablette'
-import { PageTablettes } from '../fonctionnalites/tablette/PageTablettes'
+import type { RechercheProduits } from '../fonctionnalites/catalogue/PageProduits'
 import {
   exigerChoixEntreprise,
   exigerInscriptionOuverte,
@@ -57,14 +19,31 @@ import {
   redirigerSiSessionOuverte,
   redirigerSiTabletteEnregistree,
 } from './gardes'
-import { MiseEnPageCaisse } from './mises-en-page/MiseEnPageCaisse'
-import { MiseEnPageGestion } from './mises-en-page/MiseEnPageGestion'
-import { MiseEnPagePlateforme } from './mises-en-page/MiseEnPagePlateforme'
+import { useTranslation } from 'react-i18next'
+import { Chargement } from '../partage/ui/Chargement'
 import { PageErreur } from './PageErreur'
 import { PageIntrouvable } from './PageIntrouvable'
 
 export interface ContexteRouteur {
   clientRequetes: QueryClient
+}
+
+/**
+ * Un morceau de code par espace, chargé à la demande : une tablette de caisse ne télécharge ni la gestion, ni la
+ * plateforme, ni le manuel. Le routeur charge le morceau avant d'afficher la page ; passé une seconde, il le dit.
+ */
+const espaces = {
+  public: () => import('./espaces/public'),
+  caisse: () => import('./espaces/caisse'),
+  cuisine: () => import('./espaces/cuisine'),
+  gestion: () => import('./espaces/gestion'),
+  plateforme: () => import('./espaces/plateforme'),
+  aide: () => import('./espaces/aide'),
+}
+
+function PageEnChargement() {
+  const { t } = useTranslation()
+  return <Chargement texte={t('commun.chargement')} />
 }
 
 const racine = createRootRouteWithContext<ContexteRouteur>()({
@@ -93,114 +72,104 @@ const connexion = createRoute({
   validateSearch: (recherche: Record<string, unknown>): RechercheConnexion =>
     recherche.motDePasseChange === true ? { motDePasseChange: true } : {},
   beforeLoad: ({ context }) => redirigerSiSessionOuverte(context.clientRequetes),
-  component: function RouteConnexion() {
-    const { motDePasseChange } = connexion.useSearch()
-    return <PageConnexion motDePasseChange={motDePasseChange === true} />
-  },
+  component: lazyRouteComponent(espaces.public, 'RouteConnexion'),
 })
 
 const changerMotDePasse = createRoute({
   getParentRoute: () => racine,
   path: '/changer-mot-de-passe',
   beforeLoad: ({ context }) => exigerMotDePasseTemporaire(context.clientRequetes),
-  component: PageChangerMotDePasse,
+  component: lazyRouteComponent(espaces.public, 'PageChangerMotDePasse'),
 })
 
 const choixEntreprise = createRoute({
   getParentRoute: () => racine,
   path: '/choix-entreprise',
   beforeLoad: ({ context }) => exigerChoixEntreprise(context.clientRequetes),
-  component: PageChoixEntreprise,
+  component: lazyRouteComponent(espaces.public, 'PageChoixEntreprise'),
 })
 
 const inscription = createRoute({
   getParentRoute: () => racine,
   path: '/inscription',
   beforeLoad: ({ context }) => exigerInscriptionOuverte(context.clientRequetes),
-  component: PageInscription,
+  component: lazyRouteComponent(espaces.public, 'PageInscription'),
 })
 
 const caisse = createRoute({
   getParentRoute: () => racine,
   path: '/caisse',
   beforeLoad: ({ context }) => exigerTablette(context.clientRequetes),
-  component: MiseEnPageCaisse,
+  component: lazyRouteComponent(espaces.caisse, 'MiseEnPageCaisse'),
 })
 
 const cuisine = createRoute({
   getParentRoute: () => racine,
   path: '/cuisine',
   beforeLoad: ({ context }) => exigerTabletteCuisine(context.clientRequetes),
-  component: EcranCuisine,
+  component: lazyRouteComponent(espaces.cuisine, 'EcranCuisine'),
 })
 
 const enregistrementTablette = createRoute({
   getParentRoute: () => racine,
   path: '/enregistrement-tablette',
   beforeLoad: ({ context }) => redirigerSiTabletteEnregistree(context.clientRequetes),
-  component: PageEnregistrementTablette,
+  component: lazyRouteComponent(espaces.public, 'PageEnregistrementTablette'),
 })
 
 const caisseAccueil = createRoute({
   getParentRoute: () => caisse,
   path: '/',
-  component: EcranPlan,
+  component: lazyRouteComponent(espaces.caisse, 'EcranPlan'),
 })
 
 const caisseEncaissement = createRoute({
   getParentRoute: () => caisse,
   path: '/notes/$commandeId/encaisser',
-  component: function RouteEncaissement() {
-    const { commandeId } = caisseEncaissement.useParams()
-    return <EcranEncaissement key={commandeId} commandeId={commandeId} />
-  },
+  component: lazyRouteComponent(espaces.caisse, 'RouteEncaissement'),
 })
 
 const caisseTiroir = createRoute({
   getParentRoute: () => caisse,
   path: '/tiroir',
-  component: EcranTiroir,
+  component: lazyRouteComponent(espaces.caisse, 'EcranTiroir'),
 })
 
 const caisseNote = createRoute({
   getParentRoute: () => caisse,
   path: '/notes/$commandeId',
-  component: function RouteNote() {
-    const { commandeId } = caisseNote.useParams()
-    // Une note par clé : passer d'une note à l'autre repart d'un écran propre (alerte, dialogue).
-    return <EcranNote key={commandeId} commandeId={commandeId} />
-  },
+  component: lazyRouteComponent(espaces.caisse, 'RouteNote'),
 })
 
 const gestion = createRoute({
   getParentRoute: () => racine,
   path: '/gestion',
   beforeLoad: ({ context }) => exigerPortee(context.clientRequetes, 'ENTREPRISE'),
-  component: MiseEnPageGestion,
+  component: lazyRouteComponent(espaces.gestion, 'MiseEnPageGestion'),
 })
 
 const gestionAccueil = createRoute({
   getParentRoute: () => gestion,
   path: '/',
-  component: TableauDeBord,
+  component: lazyRouteComponent(espaces.gestion, 'TableauDeBord'),
 })
 
 const etablissements = createRoute({
   getParentRoute: () => gestion,
   path: '/etablissements',
-  component: PageEtablissements,
+  component: lazyRouteComponent(espaces.gestion, 'PageEtablissements'),
 })
 
 const personnel = createRoute({
   getParentRoute: () => gestion,
   path: '/personnel',
-  component: PagePersonnel,
+  component: lazyRouteComponent(espaces.gestion, 'PagePersonnel'),
 })
 
 const tablettes = createRoute({
   getParentRoute: () => gestion,
   path: '/tablettes',
-  component: PageTablettes,
+  component: lazyRouteComponent(espaces.gestion, 'PageTablettes'),
 })
 
 const produits = createRoute({
@@ -208,46 +177,37 @@ const produits = createRoute({
   path: '/produits',
   validateSearch: (recherche: Record<string, unknown>): RechercheProduits =>
     typeof recherche.enregistre === 'string' ? { enregistre: recherche.enregistre } : {},
-  component: function RouteProduits() {
-    const recherche = produits.useSearch()
-    // La clé remonte la page à chaque enregistrement : la confirmation part de l'état initial.
-    return <PageProduits key={recherche.enregistre ?? ''} recherche={recherche} />
-  },
+  component: lazyRouteComponent(espaces.gestion, 'RouteProduits'),
 })
 
 const nouveauProduit = createRoute({
   getParentRoute: () => gestion,
   path: '/produits/nouveau',
-  component: function RouteNouveauProduit() {
-    return <PageFicheProduit />
-  },
+  component: lazyRouteComponent(espaces.gestion, 'RouteNouveauProduit'),
 })
 
 const ficheProduit = createRoute({
   getParentRoute: () => gestion,
   path: '/produits/$produitId',
-  component: function RouteFicheProduit() {
-    const { produitId } = ficheProduit.useParams()
-    return <PageFicheProduit key={produitId} produitId={produitId} />
-  },
+  component: lazyRouteComponent(espaces.gestion, 'RouteFicheProduit'),
 })
 
 const carteEtablissement = createRoute({
   getParentRoute: () => gestion,
   path: '/carte-etablissement',
-  component: PageCarteEtablissement,
+  component: lazyRouteComponent(espaces.gestion, 'PageCarteEtablissement'),
 })
 
 const activite = createRoute({
   getParentRoute: () => gestion,
   path: '/activite',
-  component: PageActivite,
+  component: lazyRouteComponent(espaces.gestion, 'PageActivite'),
 })
 
 const salles = createRoute({
   getParentRoute: () => gestion,
   path: '/salles',
-  component: PageSalles,
+  component: lazyRouteComponent(espaces.gestion, 'PageSalles'),
 })
 
 /** L'établissement choisi, et le message d'une action qui ramène à la liste. */
@@ -269,41 +229,21 @@ const stock = createRoute({
   getParentRoute: () => gestion,
   path: '/stock',
   validateSearch: lireRechercheStock,
-  component: function RouteStock() {
-    const recherche = stock.useSearch()
-    // La clé repart d'un état propre à chaque retour d'action : le message s'affiche une fois.
-    return (
-      <PageStock key={`${recherche.etablissement ?? ''}${recherche.fait ?? ''}`} {...recherche} />
-    )
-  },
+  component: lazyRouteComponent(espaces.gestion, 'RouteStock'),
 })
 
 const receptionStock = createRoute({
   getParentRoute: () => gestion,
   path: '/stock/reception',
   validateSearch: lireRechercheStock,
-  component: function RouteReceptionStock() {
-    const { etablissement } = receptionStock.useSearch()
-    return (
-      <PageReceptionStock
-        {...(etablissement === undefined ? {} : { etablissementId: etablissement })}
-      />
-    )
-  },
+  component: lazyRouteComponent(espaces.gestion, 'RouteReceptionStock'),
 })
 
 const inventaireStock = createRoute({
   getParentRoute: () => gestion,
   path: '/stock/inventaire',
   validateSearch: lireRechercheStock,
-  component: function RouteInventaireStock() {
-    const { etablissement } = inventaireStock.useSearch()
-    return (
-      <PageInventaireStock
-        {...(etablissement === undefined ? {} : { etablissementId: etablissement })}
-      />
-    )
-  },
+  component: lazyRouteComponent(espaces.gestion, 'RouteInventaireStock'),
 })
 
 interface RechercheVentes {
@@ -328,82 +268,58 @@ const ventes = createRoute({
   getParentRoute: () => gestion,
   path: '/ventes',
   validateSearch: lireRechercheVentes,
-  component: function RouteVentes() {
-    const recherche = ventes.useSearch()
-    return <PageVentes key={JSON.stringify(recherche)} {...recherche} />
-  },
+  component: lazyRouteComponent(espaces.gestion, 'RouteVentes'),
 })
 
 const caisses = createRoute({
   getParentRoute: () => gestion,
   path: '/caisses',
-  component: PageCaisses,
+  component: lazyRouteComponent(espaces.gestion, 'PageCaisses'),
 })
 
 const detailCaisse = createRoute({
   getParentRoute: () => gestion,
   path: '/caisses/$ouvertureId',
-  component: function RouteDetailCaisse() {
-    const { ouvertureId } = detailCaisse.useParams()
-    return <PageDetailCaisse ouvertureId={ouvertureId} />
-  },
+  component: lazyRouteComponent(espaces.gestion, 'RouteDetailCaisse'),
 })
 
 const ardoises = createRoute({
   getParentRoute: () => gestion,
   path: '/ardoises',
   validateSearch: lireRechercheStock,
-  component: function RouteArdoises() {
-    const { etablissement } = ardoises.useSearch()
-    return (
-      <PageArdoises
-        key={etablissement ?? ''}
-        {...(etablissement === undefined ? {} : { etablissement })}
-      />
-    )
-  },
+  component: lazyRouteComponent(espaces.gestion, 'RouteArdoises'),
 })
 
 const ficheClient = createRoute({
   getParentRoute: () => gestion,
   path: '/ardoises/$clientId',
   validateSearch: lireRechercheStock,
-  component: function RouteFicheClient() {
-    const { clientId } = ficheClient.useParams()
-    const { etablissement } = ficheClient.useSearch()
-    return (
-      <PageFicheClient
-        key={clientId}
-        clientId={clientId}
-        {...(etablissement === undefined ? {} : { etablissement })}
-      />
-    )
-  },
+  component: lazyRouteComponent(espaces.gestion, 'RouteFicheClient'),
 })
 
 const entreprise = createRoute({
   getParentRoute: () => gestion,
   path: '/entreprise',
-  component: PageEntreprise,
+  component: lazyRouteComponent(espaces.gestion, 'PageEntreprise'),
 })
 
 const options = createRoute({
   getParentRoute: () => gestion,
   path: '/options',
-  component: PageOptions,
+  component: lazyRouteComponent(espaces.gestion, 'PageOptions'),
 })
 
 const taxes = createRoute({
   getParentRoute: () => gestion,
   path: '/taxes',
-  component: PageTaxes,
+  component: lazyRouteComponent(espaces.gestion, 'PageTaxes'),
 })
 
 const plateforme = createRoute({
   getParentRoute: () => racine,
   path: '/plateforme',
   beforeLoad: ({ context }) => exigerPortee(context.clientRequetes, 'PLATEFORME'),
-  component: MiseEnPagePlateforme,
+  component: lazyRouteComponent(espaces.plateforme, 'MiseEnPagePlateforme'),
 })
 
 export interface RechercheEntreprises {
@@ -419,28 +335,25 @@ const plateformeAccueil = createRoute({
     ...(typeof recherche.creee === 'string' ? { creee: recherche.creee } : {}),
     ...(recherche.compteExistant === true ? { compteExistant: true } : {}),
   }),
-  component: function RouteEntreprises() {
-    const recherche = plateformeAccueil.useSearch()
-    return <PageEntreprises recherche={recherche} />
-  },
+  component: lazyRouteComponent(espaces.plateforme, 'RouteEntreprises'),
 })
 
 const nouvelleEntreprise = createRoute({
   getParentRoute: () => plateforme,
   path: '/entreprises/nouvelle',
-  component: PageNouvelleEntreprise,
+  component: lazyRouteComponent(espaces.plateforme, 'PageNouvelleEntreprise'),
 })
 
 const tableauDeBordPlateforme = createRoute({
   getParentRoute: () => plateforme,
   path: '/tableau-de-bord',
-  component: PageTableauDeBordPlateforme,
+  component: lazyRouteComponent(espaces.plateforme, 'PageTableauDeBordPlateforme'),
 })
 
 const equipe = createRoute({
   getParentRoute: () => plateforme,
   path: '/equipe',
-  component: PageEquipe,
+  component: lazyRouteComponent(espaces.plateforme, 'PageEquipe'),
 })
 
 const activitePlateforme = createRoute({
@@ -448,38 +361,25 @@ const activitePlateforme = createRoute({
   path: '/activite',
   validateSearch: (recherche: Record<string, unknown>): { entrepriseId?: string } =>
     typeof recherche.entrepriseId === 'string' ? { entrepriseId: recherche.entrepriseId } : {},
-  component: function RouteActivitePlateforme() {
-    const { entrepriseId } = activitePlateforme.useSearch()
-    return entrepriseId === undefined ? (
-      <PageActivitePlateforme />
-    ) : (
-      <PageActivitePlateforme key={entrepriseId} entrepriseId={entrepriseId} />
-    )
-  },
+  component: lazyRouteComponent(espaces.plateforme, 'RouteActivitePlateforme'),
 })
 
 const support = createRoute({
   getParentRoute: () => plateforme,
   path: '/support',
-  component: PageSupport,
+  component: lazyRouteComponent(espaces.plateforme, 'PageSupport'),
 })
 
 const ficheEntreprise = createRoute({
   getParentRoute: () => plateforme,
   path: '/entreprises/$entrepriseId',
-  component: function RouteFicheEntreprise() {
-    const { entrepriseId } = ficheEntreprise.useParams()
-    return <PageFicheEntreprise key={entrepriseId} entrepriseId={entrepriseId} />
-  },
+  component: lazyRouteComponent(espaces.plateforme, 'RouteFicheEntreprise'),
 })
 
 const recu = createRoute({
   getParentRoute: () => racine,
   path: '/r/$jeton',
-  component: function RouteRecu() {
-    const { jeton } = recu.useParams()
-    return <PageRecu jeton={jeton} />
-  },
+  component: lazyRouteComponent(espaces.public, 'RouteRecu'),
 })
 
 /** L'aide se lit sans session : un employé l'ouvre depuis la caisse, la cuisine ou son téléphone. */
@@ -489,19 +389,13 @@ const aide = createRoute({
   // L'écran d'où l'on vient : l'accueil de l'aide propose son guide en tête.
   validateSearch: (recherche: Record<string, unknown>): { depuis?: string } =>
     typeof recherche.depuis === 'string' ? { depuis: recherche.depuis } : {},
-  component: function RouteAide() {
-    const { depuis } = aide.useSearch()
-    return <PageAide {...(depuis === undefined ? {} : { depuis })} />
-  },
+  component: lazyRouteComponent(espaces.aide, 'RouteAide'),
 })
 
 const aideGuide = createRoute({
   getParentRoute: () => racine,
   path: '/aide/$guide',
-  component: function RouteGuide() {
-    const { guide } = aideGuide.useParams()
-    return <PageGuide id={guide} />
-  },
+  component: lazyRouteComponent(espaces.aide, 'RouteGuide'),
 })
 
 const arbre = racine.addChildren([
@@ -562,6 +456,7 @@ export function creerRouteur({
     context: { clientRequetes },
     // Une adresse inconnue affiche la page introuvable complète, jamais dans une mise en page d'espace.
     notFoundMode: 'root',
+    defaultPendingComponent: PageEnChargement,
     ...(historique ? { history: historique } : {}),
   })
 }

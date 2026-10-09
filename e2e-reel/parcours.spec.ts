@@ -57,6 +57,28 @@ async function impressions(page: Page): Promise<number> {
 }
 
 /** Le menu de la gestion : une entrée, puis l'onglet de la page s'il y en a plusieurs. Sur téléphone, ouvre le menu. */
+/**
+ * Clique un lien et attend d'être sur sa page : chaque espace se charge à part, et la page d'avant reste affichée
+ * un instant. Sans cette attente, le geste suivant pourrait viser un contrôle de l'ancienne page.
+ */
+async function suivre(page: Page, lien: Locator) {
+  const href = (await lien.getAttribute('href')) ?? ''
+  const titreAvant = await page
+    .locator('main h1')
+    .elementHandle({ timeout: 1000 })
+    .catch(() => null)
+  // Décidé avant le clic : le routeur change l'adresse aussitôt, avant d'afficher la page.
+  const memePage = new URL(href, page.url()).pathname === new URL(page.url()).pathname
+  await lien.click()
+  if (memePage) return
+  await page.waitForURL((url) => url.pathname === new URL(href, url).pathname)
+  // L'adresse change avant l'écran : on attend un titre qui n'est pas celui de la page d'avant.
+  await page.waitForFunction((ancien) => {
+    const titre = document.querySelector('main h1')
+    return titre !== null && titre !== ancien
+  }, titreAvant)
+}
+
 async function allerA(page: Page, section: string, onglet?: string) {
   const menu = page.getByRole('navigation', { name: 'Navigation principale' })
   // Juste après une connexion, la page n'est pas encore affichée : on attend le menu avant de regarder.
@@ -64,10 +86,10 @@ async function allerA(page: Page, section: string, onglet?: string) {
   const bouton = menu.getByRole('button', { name: 'Menu' })
   if (await bouton.isVisible()) await bouton.click()
   // Le nom peut finir par un compteur (« Stock, 2 produits à traiter ») : on ne regarde que le début.
-  await menu.getByRole('link', { name: new RegExp(`^${section}`) }).click()
+  await suivre(page, menu.getByRole('link', { name: new RegExp(`^${section}`) }))
   const onglets = page.getByRole('navigation', { name: section })
   if (onglet !== undefined && (await onglets.count()) > 0) {
-    await onglets.getByRole('link', { name: new RegExp(`^${onglet}`) }).click()
+    await suivre(page, onglets.getByRole('link', { name: new RegExp(`^${onglet}`) }))
   }
 }
 

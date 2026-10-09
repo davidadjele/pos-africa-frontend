@@ -7,6 +7,8 @@ export interface FichierCompresse {
 /** Plafonds en kilo-octets compressés (1 Ko = 1 000 octets). */
 export interface Budgets {
   jsTotalKo: number
+  /** Le point d'entrée seul : ce qu'une tablette télécharge avant d'afficher quoi que ce soit. */
+  jsPremierChargementKo: number
   plusGrosJsKo: number
   cssKo: number
   policesKo: number
@@ -32,6 +34,15 @@ export function verifierBudgets(
   const lignes = (
     [
       ['JavaScript, total', somme(js), budgets.jsTotalKo],
+      [
+        'JavaScript, premier chargement',
+        somme(
+          fichiers
+            .filter(({ nom }) => /^index-.*\.js$/.test(nom))
+            .map(({ octetsGzip }) => octetsGzip),
+        ),
+        budgets.jsPremierChargementKo,
+      ],
       ['JavaScript, plus gros fichier', Math.max(0, ...js), budgets.plusGrosJsKo],
       ['CSS', somme(tailles('.css')), budgets.cssKo],
       // Les .woff ne servent qu'aux navigateurs anciens : Chrome télécharge le .woff2, et Neulis est en .otf.
